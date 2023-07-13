@@ -534,8 +534,8 @@ namespace StreamVideo.Core.LowLevelClient
             // Handle ConnectedEvent with the OwnUserResponse
             
             
-            // RegisterEventType<HealthCheckEventInternalDTO>(WSEventType.HealthCheck,
-            //     HandleHealthCheckEvent);
+            RegisterEventType<HealthCheckEvent>(WSEventType.HealthCheck,
+                HandleHealthCheckEvent);
             //
             // RegisterEventType<MessageNewEventInternalDTO, EventMessageNew>(WSEventType.MessageNew,
             //     (e, dto) => MessageReceived?.Invoke(e), dto => InternalMessageReceived?.Invoke(dto));
@@ -611,6 +611,29 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     var eventObj = DeserializeEvent<TDto, TEvent>(serializedContent, out var dto);
                     handler?.Invoke(eventObj, dto);
+                    internalHandler?.Invoke(dto);
+                }
+                catch (Exception e)
+                {
+                    _logs.Exception(e);
+                }
+            });
+        }
+        
+        private void RegisterEventType<TDto>(string key,
+            Action<TDto> internalHandler = null)
+        {
+            if (_eventKeyToHandler.ContainsKey(key))
+            {
+                _logs.Warning($"Event handler with key `{key}` is already registered. Ignored");
+                return;
+            }
+
+            _eventKeyToHandler.Add(key, serializedContent =>
+            {
+                try
+                {
+                    var dto = _serializer.Deserialize<TDto>(serializedContent);
                     internalHandler?.Invoke(dto);
                 }
                 catch (Exception e)
@@ -720,7 +743,7 @@ namespace StreamVideo.Core.LowLevelClient
         
             if (ConnectionState == ConnectionState.Connecting)
             {
-                //OnConnectionConfirmed(healthCheckEvent, dto);
+                OnConnectionConfirmed(healthCheckEvent);
             }
         }
 

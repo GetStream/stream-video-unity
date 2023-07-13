@@ -14,7 +14,7 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class APIError
+    public partial class APIErrorInternalDTO
     {
         /// <summary>
         /// Response HTTP status code
@@ -32,7 +32,7 @@ namespace StreamVideo.Core.InternalDTO.Models
         /// Additional error-specific information
         /// </summary>
         [Newtonsoft.Json.JsonProperty("details", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<int> Details { get; set; } = new System.Collections.ObjectModel.Collection<int>();
+        public System.Collections.Generic.List<int> Details { get; set; }
 
         /// <summary>
         /// Request duration
@@ -44,7 +44,7 @@ namespace StreamVideo.Core.InternalDTO.Models
         /// Additional error info
         /// </summary>
         [Newtonsoft.Json.JsonProperty("exception_fields", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.IDictionary<string, string> ExceptionFields { get; set; }
+        public System.Collections.Generic.Dictionary<string, string> ExceptionFields { get; set; }
 
         /// <summary>
         /// Message describing an error

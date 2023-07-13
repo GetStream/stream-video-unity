@@ -72,7 +72,7 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
                 StopCoroutine(UpdateCoroutine());
 
 #if STREAM_DEBUG_ENABLED
-                Debug.Log($"Stream Chat Client Disposed - destroy {nameof(UnityStreamChatClientRunner)} instance");
+                Debug.Log($"Stream Chat Client Disposed - destroy {nameof(UnityStreamVideoClientRunner)} instance");
 #endif
                 Destroy(gameObject);
             }

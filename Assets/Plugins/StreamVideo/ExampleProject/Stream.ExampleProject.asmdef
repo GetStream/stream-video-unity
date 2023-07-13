@@ -1,0 +1,17 @@
+{
+    "name": "Stream.ExampleProject",
+    "rootNamespace": "",
+    "references": [
+        "Stream.Core",
+        "StreamVideo.Libs"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -52,7 +52,7 @@ namespace StreamVideo.Libs.Websockets
                 _connectionCts = new CancellationTokenSource();
 
                 _internalClient = new ClientWebSocket();
-                await _internalClient.ConnectAsync(_uri, _connectionCts.Token).ConfigureAwait(false);
+                await _internalClient.ConnectAsync(_uri, _connectionCts.Token);
             }
             catch (OperationCanceledException e)
             {

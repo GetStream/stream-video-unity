@@ -8,7 +8,7 @@ namespace StreamVideo.Core.Web
     /// </summary>
     internal interface IRequestUriFactory
     {
-        Uri CreateCoordinatorConnectionUri();
+        Uri CreateCoordinatorConnectionUri(Func<string> clientHeaderFactory);
 
         Uri CreateEndpointUri(string endpoint, Dictionary<string, string> parameters = null);
     }

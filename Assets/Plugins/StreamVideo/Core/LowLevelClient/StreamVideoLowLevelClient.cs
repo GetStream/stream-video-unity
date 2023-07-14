@@ -10,6 +10,7 @@ using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
+using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.Models;
 using StreamVideo.Core.Web;
@@ -95,7 +96,7 @@ namespace StreamVideo.Core.LowLevelClient
         /// <summary>
         /// SDK Version number
         /// </summary>
-        public static readonly Version SDKVersion = new Version(4, 2, 0);
+        public static readonly Version SDKVersion = new Version(0, 1, 0);
 
         /// <summary>
         /// Use this method to create the main client instance or use StreamChatClient constructor to create a client instance with custom dependencies
@@ -219,13 +220,33 @@ namespace StreamVideo.Core.LowLevelClient
             TryCancelWaitingForUserConnection();
 
             //StreamTodo: hidden dependency on SetUser being called
-            var connectionUri = _requestUriFactory.CreateCoordinatorConnectionUri();
+            //StreamTodo: remove injected Func
+            var connectionUri = _requestUriFactory.CreateCoordinatorConnectionUri(() => BuildStreamClientHeader(new UnityApplicationInfo()));
 
             _logs.Info($"Attempt to connect to: {connectionUri}");
 
             ConnectionState = ConnectionState.Connecting;
 
-            _websocketClient.ConnectAsync(connectionUri).LogIfFailed(_logs);
+            _websocketClient.ConnectAsync(connectionUri).ContinueWith(t =>
+            {
+                _logs.Info("WS connected! Let's send the connect message");
+                
+                var wsAuthMsg = new WSAuthMessageRequest
+                {
+                    Token = ((IAuthProvider)this).UserToken,
+                    UserDetails = new ConnectUserDetailsRequest
+                    {
+                        Id = ((IAuthProvider)this).UserId,
+                        //Image = null,
+                        //Name = null
+                    }
+                };
+
+                var serializedAuthMsg = _serializer.Serialize(wsAuthMsg);
+                
+                _websocketClient.Send(serializedAuthMsg);
+                
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         public async Task DisconnectAsync(bool permanent = false)
@@ -325,7 +346,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 await RefreshAuthTokenFromProvider();
 
-                var connectionUri = _requestUriFactory.CreateCoordinatorConnectionUri();
+                var connectionUri = _requestUriFactory.CreateCoordinatorConnectionUri(() => BuildStreamClientHeader(new UnityApplicationInfo()));
 
                 await _websocketClient.ConnectAsync(connectionUri);
 
@@ -798,36 +819,36 @@ namespace StreamVideo.Core.LowLevelClient
         private static string BuildStreamClientHeader(IApplicationInfo applicationInfo)
         {
             var sb = new StringBuilder();
-            sb.Append($"stream-chat-unity-client-");
+            sb.Append($"stream-video-unity-client-");
             sb.Append(SDKVersion);
-            sb.Append("|");
-
-            sb.Append("os=");
-            sb.Append(applicationInfo.OperatingSystem);
-            sb.Append("|");
-
-            sb.Append("platform=");
-            sb.Append(applicationInfo.Platform);
-            sb.Append("|");
-
-            sb.Append("engine=");
-            sb.Append(applicationInfo.Engine);
-            sb.Append("|");
-
-            sb.Append("engine_version=");
-            sb.Append(applicationInfo.EngineVersion);
-            sb.Append("|");
-
-            sb.Append("screen_size=");
-            sb.Append(applicationInfo.ScreenSize);
-            sb.Append("|");
-
-            sb.Append("memory_size=");
-            sb.Append(applicationInfo.MemorySize);
-            sb.Append("|");
-
-            sb.Append("graphics_memory_size=");
-            sb.Append(applicationInfo.GraphicsMemorySize);
+            // sb.Append("|");
+            //
+            // sb.Append("os=");
+            // sb.Append(applicationInfo.OperatingSystem);
+            // sb.Append("|");
+            //
+            // sb.Append("platform=");
+            // sb.Append(applicationInfo.Platform);
+            // sb.Append("|");
+            //
+            // sb.Append("engine=");
+            // sb.Append(applicationInfo.Engine);
+            // sb.Append("|");
+            //
+            // sb.Append("engine_version=");
+            // sb.Append(applicationInfo.EngineVersion);
+            // sb.Append("|");
+            //
+            // sb.Append("screen_size=");
+            // sb.Append(applicationInfo.ScreenSize);
+            // sb.Append("|");
+            //
+            // sb.Append("memory_size=");
+            // sb.Append(applicationInfo.MemorySize);
+            // sb.Append("|");
+            //
+            // sb.Append("graphics_memory_size=");
+            // sb.Append(applicationInfo.GraphicsMemorySize);
 
             return sb.ToString();
         }

@@ -21,7 +21,7 @@ namespace StreamVideo.Core.Web
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
 
-        public Uri CreateCoordinatorConnectionUri()
+        public Uri CreateCoordinatorConnectionUri(Func<string> clientInfoFactory)
         {
             // var connectPayloadDTO = new WS
             // {
@@ -49,14 +49,15 @@ namespace StreamVideo.Core.Web
 
             var uriParams = new Dictionary<string, string>
             {
-                { "json", Uri.EscapeDataString(serializedPayload) },
+                //{ "json", Uri.EscapeDataString(serializedPayload) },
                 { "api_key", _authProvider.ApiKey },
-                { "authorization", _authProvider.UserToken },
+                //{ "authorization", _authProvider.UserToken },
                 { "stream-auth-type", _authProvider.StreamAuthType },
+                {"X-Stream-Client", clientInfoFactory()}
             };
 
             var uriBuilder = new UriBuilder(_connectionProvider.ServerUri)
-                { Path = "connect", Query = uriParams.ToQueryParameters() };
+                { Path = "video/connect", Query = uriParams.ToQueryParameters() };
 
             return uriBuilder.Uri;
         }

@@ -2,7 +2,8 @@
     "name": "StreamVideo.Libs",
     "rootNamespace": "",
     "references": [
-        "GUID:04376767bc1f3b428aefa3d20743e819"
+        "GUID:04376767bc1f3b428aefa3d20743e819",
+        "GUID:89883f65dd3cc09459ed3d391f4964f2"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

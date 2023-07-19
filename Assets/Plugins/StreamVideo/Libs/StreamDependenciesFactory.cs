@@ -15,12 +15,12 @@ namespace StreamVideo.Libs
     /// Factory that provides external dependencies for the Stream Chat Client.
     /// Stream chat client depends only on the interfaces therefore you can provide your own implementation for any of the dependencies
     /// </summary>
-    public static class StreamDependenciesFactory
+    public class StreamDependenciesFactory : IStreamDependenciesFactory
     {
-        public static ILogs CreateLogger(LogLevel logLevel = LogLevel.All)
+        public virtual ILogs CreateLogger(LogLevel logLevel = LogLevel.All)
             => new UnityLogs(logLevel);
 
-        public static IWebsocketClient CreateWebsocketClient(ILogs logs, bool isDebugMode = false)
+        public virtual IWebsocketClient CreateWebsocketClient(ILogs logs, bool isDebugMode = false)
         {
 
 #if UNITY_WEBGL
@@ -31,7 +31,7 @@ namespace StreamVideo.Libs
 #endif
         }
 
-        public static IHttpClient CreateHttpClient()
+        public virtual IHttpClient CreateHttpClient()
         {
 #if UNITY_WEBGL
             return new UnityWebRequestHttpClient();
@@ -40,15 +40,15 @@ namespace StreamVideo.Libs
 #endif
         }
 
-        public static ISerializer CreateSerializer() => new NewtonsoftJsonSerializer();
+        public virtual ISerializer CreateSerializer() => new NewtonsoftJsonSerializer();
 
-        public static ITimeService CreateTimeService() => new UnityTime();
+        public virtual ITimeService CreateTimeService() => new UnityTime();
 
-        public static IApplicationInfo CreateApplicationInfo() => new UnityApplicationInfo();
+        public virtual IApplicationInfo CreateApplicationInfo() => new UnityApplicationInfo();
         
-        public static ITokenProvider CreateTokenProvider(TokenProvider.TokenUriHandler urlFactory) => new TokenProvider(CreateHttpClient(), urlFactory);
+        public virtual ITokenProvider CreateTokenProvider(TokenProvider.TokenUriHandler urlFactory) => new TokenProvider(CreateHttpClient(), urlFactory);
 
-        public static IStreamVideoClientRunner CreateChatClientRunner()
+        public virtual IStreamVideoClientRunner CreateChatClientRunner()
         {
             var go = new GameObject
             {
@@ -60,6 +60,6 @@ namespace StreamVideo.Libs
             return go.AddComponent<StreamMonoBehaviourWrapper.UnityStreamVideoClientRunner>();
         }
 
-        public static INetworkMonitor CreateNetworkMonitor() => new UnityNetworkMonitor();
+        public virtual INetworkMonitor CreateNetworkMonitor() => new UnityNetworkMonitor();
     }
 }

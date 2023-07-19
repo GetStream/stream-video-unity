@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace StreamVideo.Libs.Http
@@ -23,5 +24,7 @@ namespace StreamVideo.Libs.Http
         Task<HttpResponse> DeleteAsync(Uri uri);
 
         Task<HttpResponse> SendHttpRequestAsync(HttpMethodType methodType, Uri uri, object optionalRequestContent);
+
+        Task<HttpResponse> HeadAsync(Uri uri, ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null);
     }
 }

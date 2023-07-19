@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.Networking;
 
 namespace StreamVideo.Libs.Http
@@ -24,7 +23,7 @@ namespace StreamVideo.Libs.Http
         public Task<HttpResponse> PutAsync(Uri uri, object content)
             => SendWebRequest(uri, UnityWebRequest.kHttpVerbPUT, content);
 
-        public Task<HttpResponse> PatchAsync(Uri uri, object content) => SendWebRequest(uri, "PATCH", content);
+        public Task<HttpResponse> PatchAsync(Uri uri, object content) => SendWebRequest(uri, HttpPatchMethod, content);
 
         public Task<HttpResponse> DeleteAsync(Uri uri) => SendWebRequest(uri, UnityWebRequest.kHttpVerbDELETE);
 
@@ -34,6 +33,13 @@ namespace StreamVideo.Libs.Http
             var httpMethodKey = GetHttpMethodKey(methodType);
             return SendWebRequest(uri, httpMethodKey, optionalRequestContent);
         }
+
+        public Task<HttpResponse> HeadAsync(Uri uri,
+            ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders)
+            => SendWebRequest(uri, HttpHeadMethod, resultHeaders: resultHeaders);
+
+        private const string HttpHeadMethod = "HEAD";
+        private const string HttpPatchMethod = "PATCH";
 
         private readonly Dictionary<string, string> _headers = new Dictionary<string, string>();
 
@@ -51,14 +57,15 @@ namespace StreamVideo.Libs.Http
             }
         }
 
+        //StreamTodo: refactor to remove duplication
         private async Task<HttpResponse> SendWebRequest(Uri uri, string httpMethod,
-            object optionalContent = null)
+            object optionalContent = null, ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null)
         {
-            if (optionalContent is FileWrapper fileWrapper2)
+            if (optionalContent is FileWrapper fileWrapper)
             {
                 var formData = new List<IMultipartFormSection>
                 {
-                    new MultipartFormFileSection("file", fileWrapper2.FileContent, fileWrapper2.FileName,
+                    new MultipartFormFileSection("file", fileWrapper.FileContent, fileWrapper.FileName,
                         "multipart/form-data")
                 };
 
@@ -82,6 +89,15 @@ namespace StreamVideo.Libs.Http
                 if (unityWebRequest.result != UnityWebRequest.Result.Success)
                 {
                     throw new Exception(unityWebRequest.error);
+                }
+
+                if (resultHeaders != null)
+                {
+                    foreach (var header in unityWebRequest.GetResponseHeaders())
+                    {
+                        resultHeaders.Add(
+                            new KeyValuePair<string, IEnumerable<string>>(header.Key, new string[] { header.Value }));
+                    }
                 }
 
                 return HttpResponse.CreateFromUnityWebRequest(unityWebRequest);
@@ -120,6 +136,15 @@ namespace StreamVideo.Libs.Http
                 if (unityWebRequest.result != UnityWebRequest.Result.Success)
                 {
                     throw new Exception(unityWebRequest.error);
+                }
+
+                if (resultHeaders != null)
+                {
+                    foreach (var header in unityWebRequest.GetResponseHeaders())
+                    {
+                        resultHeaders.Add(
+                            new KeyValuePair<string, IEnumerable<string>>(header.Key, new string[] { header.Value }));
+                    }
                 }
 
                 return HttpResponse.CreateFromUnityWebRequest(unityWebRequest);

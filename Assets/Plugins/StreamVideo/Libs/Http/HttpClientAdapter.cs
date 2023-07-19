@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -71,6 +72,21 @@ namespace StreamVideo.Libs.Http
             var httpContent = TryGetHttpContent(content);
             var response = await _httpClient.SendAsync(new HttpRequestMessage(new HttpMethod("PATCH"), uri)
                 { Content = httpContent });
+            return await HttpResponse.CreateFromHttpResponseMessageAsync(response);
+        }
+
+        public async Task<HttpResponse> HeadAsync(Uri uri,
+            ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null)
+        {
+            var response = await _httpClient.SendAsync(new HttpRequestMessage(new HttpMethod("HEAD"), uri));
+            if (resultHeaders != null)
+            {
+                foreach (var header in response.Headers)
+                {
+                    resultHeaders.Add(header);
+                }
+            }
+
             return await HttpResponse.CreateFromHttpResponseMessageAsync(response);
         }
 

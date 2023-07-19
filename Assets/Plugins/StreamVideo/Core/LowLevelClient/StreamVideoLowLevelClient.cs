@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -7,11 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
-using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
+using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.Models;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs;
@@ -42,8 +43,12 @@ namespace StreamVideo.Core.LowLevelClient
     {
         public const string MenuPrefix = "Stream/";
 
+        //StreamTodo: make these all private 
         public static readonly Uri ServerBaseUrl = new Uri("wss://video.stream-io-api.com/video/connect");
         public static readonly Uri CoordinatorWebUri = new Uri("wss://chat.stream-io-api.com");
+        public static readonly Uri HintWebUri = new Uri("https://hint.stream-io-video.com/");
+
+        public const string LocationHintHeaderKey = "x-amz-cf-pop";
 
         public event ConnectionHandler Connected;
         public event Action Reconnecting;
@@ -185,6 +190,9 @@ namespace StreamVideo.Core.LowLevelClient
             
             _sfuWebSocket.ConnectionFailed += OnSfuWebsocketsConnectionFailed;
             _sfuWebSocket.Disconnected += OnSfuWebsocketDisconnected;
+            
+            InternalVideoClientApi
+                = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
 
             // InternalChannelApi
             //     = new InternalChannelApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
@@ -236,9 +244,11 @@ namespace StreamVideo.Core.LowLevelClient
 
             ConnectionState = ConnectionState.Connecting;
 
-            // StreamTodo: move to better place
+            // StreamTodo: move separate method + make few attempts + support reconnections
             _coordinatorWebSocket.ConnectAsync(coordinatorConnectUri).ContinueWith(t =>
             {
+                //StreamTodo: handle failure
+                
                 _logs.Info("WS connected! Let's send the connect message");
                 
                 var wsAuthMsg = new WSAuthMessageRequest
@@ -257,6 +267,28 @@ namespace StreamVideo.Core.LowLevelClient
                 _coordinatorWebSocket.Send(serializedAuthMsg);
                 
             }, TaskScheduler.FromCurrentSynchronizationContext());
+            
+            //StreamTodo: extract to reusable method that will make few attempts + can be awaited by the JoinCallAsync + support reconnections
+            // Hint location
+            var headers = new List<KeyValuePair<string, IEnumerable<string>>>();
+            _httpClient.HeadAsync(HintWebUri, headers).ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    _logs.Exception(t.Exception);
+                    return;
+                }
+
+                var locationHeader = headers.FirstOrDefault(_ => _.Key.ToLower() == LocationHintHeaderKey);
+                if (locationHeader.Key.IsNullOrEmpty() || !locationHeader.Value.Any())
+                {
+                    _logs.Error($"Failed to get `{LocationHintHeaderKey}` header from `{HintWebUri}` request");
+                    return;
+                }
+
+                _hintLocation = locationHeader.Value.First();
+                _logs.Info("Hint location: " + _hintLocation);
+            });
         }
 
         public async Task DisconnectAsync(bool permanent = false)
@@ -294,6 +326,41 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        //StreamTodo: add CreateCallOptions
+        public async Task JoinCallAsync(bool create, bool ring, bool notify)
+        {
+            // StreamTodo: check state if we don't have an active session already
+            var locationHint = GetLocationHintAsync();
+            
+            //Join call API request -> receive the sfuToken, sfuUrl, and iceServers
+            
+            //create RtcSession
+            
+            //session.connect() -> this calls sfuWS.connect()
+            
+            // sfuWs.connect calls:
+            /*
+             *             val request = JoinRequest(
+                session_id = sessionId,
+                token = token,
+                subscriber_sdp = getSubscriberSdp()
+            )
+            socket?.send(SfuRequest(join_request = request).encodeByteString())
+             */
+        }
+
+        private async Task<string> GetLocationHintAsync()
+        {
+            // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
+            if (_hintLocation.IsNullOrEmpty())
+            {
+                _logs.Error("No location hint");
+                throw new InvalidOperationException("No location hint");
+            }
+
+            return _hintLocation;
+        }
+
         //StreamTodo: move this to injected config object
         public void SetReconnectStrategySettings(ReconnectStrategy reconnectStrategy, float? exponentialMinInterval,
             float? exponentialMaxInterval, float? constantInterval)
@@ -327,6 +394,8 @@ namespace StreamVideo.Core.LowLevelClient
         string IConnectionProvider.ConnectionId => _connectionId;
         Uri IConnectionProvider.ServerUri => ServerBaseUrl;
 
+        internal IInternalVideoClientApi InternalVideoClientApi { get; }
+        
         // internal IInternalChannelApi InternalChannelApi { get; }
         // internal IInternalMessageApi InternalMessageApi { get; }
         // internal IInternalModerationApi InternalModerationApi { get; }
@@ -415,6 +484,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private bool _websocketConnectionFailed;
         private ITokenProvider _tokenProvider;
+        
+        private string _hintLocation;
 
         private async Task RefreshAuthTokenFromProvider()
         {

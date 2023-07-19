@@ -90,3 +90,6 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 /test_auth_data_xSpgxW.txt
+
+#protobuff compiler
+/[Pp]rotoc/

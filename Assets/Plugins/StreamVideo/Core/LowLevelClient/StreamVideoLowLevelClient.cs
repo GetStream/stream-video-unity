@@ -105,17 +105,21 @@ namespace StreamVideo.Core.LowLevelClient
         public static IStreamVideoLowLevelClient CreateDefaultClient(AuthCredentials authCredentials,
             IStreamClientConfig config = default)
         {
+            var factory = new StreamDependenciesFactory();
+            
             config ??= StreamClientConfig.Default;
-            var logs = StreamDependenciesFactory.CreateLogger(config.LogLevel.ToLogLevel());
-            var applicationInfo = StreamDependenciesFactory.CreateApplicationInfo();
-            var websocketClient
-                = StreamDependenciesFactory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
-            var httpClient = StreamDependenciesFactory.CreateHttpClient();
-            var serializer = StreamDependenciesFactory.CreateSerializer();
-            var timeService = StreamDependenciesFactory.CreateTimeService();
-            var networkMonitor = StreamDependenciesFactory.CreateNetworkMonitor();
+            var logs = factory.CreateLogger(config.LogLevel.ToLogLevel());
+            var applicationInfo = factory.CreateApplicationInfo();
+            var coordinatorWebSocket
+                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
+            var sfuWebSocket
+                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
+            var httpClient = factory.CreateHttpClient();
+            var serializer = factory.CreateSerializer();
+            var timeService = factory.CreateTimeService();
+            var networkMonitor = factory.CreateNetworkMonitor();
 
-            return new StreamVideoLowLevelClient(authCredentials, websocketClient, httpClient, serializer,
+            return new StreamVideoLowLevelClient(authCredentials, coordinatorWebSocket, sfuWebSocket, httpClient, serializer,
                 timeService, networkMonitor, applicationInfo, logs, config);
         }
 
@@ -152,12 +156,13 @@ namespace StreamVideo.Core.LowLevelClient
             return Regex.Replace(userId, @"[^\w\.@_-]", "", RegexOptions.None, TimeSpan.FromSeconds(1));
         }
 
-        public StreamVideoLowLevelClient(AuthCredentials authCredentials, IWebsocketClient websocketClient,
+        public StreamVideoLowLevelClient(AuthCredentials authCredentials, IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
         {
             _authCredentials = authCredentials;
-            _websocketClient = websocketClient ?? throw new ArgumentNullException(nameof(websocketClient));
+            _coordinatorWebSocket = coordinatorWebSocket ?? throw new ArgumentNullException(nameof(coordinatorWebSocket));
+            _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _timeService = timeService ?? throw new ArgumentNullException(nameof(timeService));
@@ -174,8 +179,12 @@ namespace StreamVideo.Core.LowLevelClient
             var header = BuildStreamClientHeader(applicationInfo);
             _httpClient.AddDefaultCustomHeader("X-Stream-Client", header);
 
-            _websocketClient.ConnectionFailed += OnWebsocketsConnectionFailed;
-            _websocketClient.Disconnected += OnWebsocketDisconnected;
+            // StreamTODO: setup a wrapper around WS that handles health checks, error handling and reconnections
+            _coordinatorWebSocket.ConnectionFailed += OnCoordinatorWebsocketsConnectionFailed;
+            _coordinatorWebSocket.Disconnected += OnCoordinatorWebsocketDisconnected;
+            
+            _sfuWebSocket.ConnectionFailed += OnSfuWebsocketsConnectionFailed;
+            _sfuWebSocket.Disconnected += OnSfuWebsocketDisconnected;
 
             // InternalChannelApi
             //     = new InternalChannelApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
@@ -221,13 +230,14 @@ namespace StreamVideo.Core.LowLevelClient
 
             //StreamTodo: hidden dependency on SetUser being called
             //StreamTodo: remove injected Func
-            var connectionUri = _requestUriFactory.CreateCoordinatorConnectionUri(() => BuildStreamClientHeader(new UnityApplicationInfo()));
+            var coordinatorConnectUri = _requestUriFactory.CreateCoordinatorConnectionUri(() => BuildStreamClientHeader(new UnityApplicationInfo()));
 
-            _logs.Info($"Attempt to connect to: {connectionUri}");
+            _logs.Info($"Attempt to connect to: {coordinatorConnectUri}");
 
             ConnectionState = ConnectionState.Connecting;
 
-            _websocketClient.ConnectAsync(connectionUri).ContinueWith(t =>
+            // StreamTodo: move to better place
+            _coordinatorWebSocket.ConnectAsync(coordinatorConnectUri).ContinueWith(t =>
             {
                 _logs.Info("WS connected! Let's send the connect message");
                 
@@ -244,7 +254,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var serializedAuthMsg = _serializer.Serialize(wsAuthMsg);
                 
-                _websocketClient.Send(serializedAuthMsg);
+                _coordinatorWebSocket.Send(serializedAuthMsg);
                 
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
@@ -259,7 +269,7 @@ namespace StreamVideo.Core.LowLevelClient
                 _reconnectScheduler.Stop();
             }
 
-            await _websocketClient.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
+            await _coordinatorWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
         }
 
         public void Update(float deltaTime)
@@ -273,9 +283,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             UpdateHealthCheck();
 
-            _websocketClient.Update();
+            _coordinatorWebSocket.Update();
 
-            while (_websocketClient.TryDequeueMessage(out var msg))
+            while (_coordinatorWebSocket.TryDequeueMessage(out var msg))
             {
 #if STREAM_DEBUG_ENABLED
                 _logs.Info("WS message: " + msg);
@@ -299,9 +309,13 @@ namespace StreamVideo.Core.LowLevelClient
 
             TryCancelWaitingForUserConnection();
 
-            _websocketClient.ConnectionFailed -= OnWebsocketsConnectionFailed;
-            _websocketClient.Disconnected -= OnWebsocketDisconnected;
-            _websocketClient.Dispose();
+            _coordinatorWebSocket.ConnectionFailed -= OnCoordinatorWebsocketsConnectionFailed;
+            _coordinatorWebSocket.Disconnected -= OnCoordinatorWebsocketDisconnected;
+            _coordinatorWebSocket.Dispose();
+            
+            _sfuWebSocket.ConnectionFailed -= OnSfuWebsocketsConnectionFailed;
+            _sfuWebSocket.Disconnected -= OnCoordinatorWebsocketDisconnected;
+            _sfuWebSocket.Dispose();
             
             _updateMonitorCts.Cancel();
         }
@@ -348,7 +362,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var connectionUri = _requestUriFactory.CreateCoordinatorConnectionUri(() => BuildStreamClientHeader(new UnityApplicationInfo()));
 
-                await _websocketClient.ConnectAsync(connectionUri);
+                await _coordinatorWebSocket.ConnectAsync(connectionUri);
 
                 // StreamTODO: Do we receive a user here?
                 var ownUserDto = await _connectUserTaskSource.Task;
@@ -368,7 +382,8 @@ namespace StreamVideo.Core.LowLevelClient
         // For WebGL there is a slight delay when sending therefore we send HC event a bit sooner just in case
         private const int HealthCheckSendInterval = HealthCheckMaxWaitingTime - 1;
 
-        private readonly IWebsocketClient _websocketClient;
+        private readonly IWebsocketClient _coordinatorWebSocket;
+        private readonly IWebsocketClient _sfuWebSocket;
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
         private readonly ITimeService _timeService;
@@ -443,19 +458,40 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void OnWebsocketDisconnected()
+        // StreamTodo: refactor how connected state is determined
+        private void OnCoordinatorWebsocketDisconnected()
         {
 #if STREAM_DEBUG_ENABLED
-            _logs.Warning("Websocket Disconnected");
+            _logs.Warning("Coordinator Websocket Disconnected");
 #endif
-            ConnectionState = ConnectionState.Disconnected;
+            //ConnectionState = ConnectionState.Disconnected;
+        }
+        
+        private void OnSfuWebsocketDisconnected()
+        {
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning("Coordinator Websocket Disconnected");
+#endif
+            //ConnectionState = ConnectionState.Disconnected;
         }
 
         /// <summary>
         /// This event can be called by a background thread and we must propagate it on the main thread
         /// Otherwise any call to Unity API would result in Exception. Unity API can only be called from the main thread
         /// </summary>
-        private void OnWebsocketsConnectionFailed()
+        private void OnCoordinatorWebsocketsConnectionFailed()
+        {
+            lock (_websocketConnectionFailedFlagLock)
+            {
+                _websocketConnectionFailed = true;
+            }
+        }
+        
+        /// <summary>
+        /// This event can be called by a background thread and we must propagate it on the main thread
+        /// Otherwise any call to Unity API would result in Exception. Unity API can only be called from the main thread
+        /// </summary>
+        private void OnSfuWebsocketsConnectionFailed()
         {
             lock (_websocketConnectionFailedFlagLock)
             {
@@ -736,7 +772,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (timeSinceLastHealthCheck > HealthCheckMaxWaitingTime)
             {
                 _logs.Warning($"Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
-                _websocketClient
+                _coordinatorWebSocket
                     .DisconnectAsync(WebSocketCloseStatus.InternalServerError,
                         $"Health check was not received since: {timeSinceLastHealthCheck}")
                     .ContinueWith(_ => _logs.Exception(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
@@ -750,7 +786,7 @@ namespace StreamVideo.Core.LowLevelClient
                 // StreamTodo: do we need to provide anything? Like connection_id? 
             };
 
-            _websocketClient.Send(_serializer.Serialize(healthCheck));
+            _coordinatorWebSocket.Send(_serializer.Serialize(healthCheck));
             _lastHealthCheckSendTime = _timeService.Time;
 
 #if STREAM_DEBUG_ENABLED

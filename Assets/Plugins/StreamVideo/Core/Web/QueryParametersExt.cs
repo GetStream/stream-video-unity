@@ -1,13 +1,15 @@
-﻿namespace StreamVideo.Core.Web
+﻿using System;
+
+namespace StreamVideo.Core.Web
 {
     internal static class QueryParametersExt
     {
-        public static QueryParameters Append(this QueryParameters queryParameters, string key, bool value)
-            => Append(queryParameters, key, value.ToString());
+        public static QueryParameters Set(this QueryParameters queryParameters, string key, bool value)
+            => Set(queryParameters, key, value.ToString());
 
-        public static QueryParameters Append(this QueryParameters queryParameters, string key, string value)
+        public static QueryParameters Set(this QueryParameters queryParameters, string key, string value)
         {
-            queryParameters[key] = value;
+            queryParameters[key] = Uri.EscapeDataString(value);
             return queryParameters;
         }
 

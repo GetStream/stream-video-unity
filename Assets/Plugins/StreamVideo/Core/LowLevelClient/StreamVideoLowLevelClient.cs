@@ -662,7 +662,7 @@ namespace StreamVideo.Core.LowLevelClient
             // Handle ConnectedEvent with the OwnUserResponse
             
             
-            RegisterEventType<HealthCheckEvent>(WSEventType.HealthCheck,
+            RegisterEventType<HealthCheckEvent>(CoordinatorEventType.HealthCheck,
                 HandleHealthCheckEvent);
             //
             // RegisterEventType<MessageNewEventInternalDTO, EventMessageNew>(WSEventType.MessageNew,

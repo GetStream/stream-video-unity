@@ -33,10 +33,10 @@ namespace StreamChat.Core.LowLevelClient.API.Internal
         protected Task<TResponse> Get<TResponse>(string endpoint, QueryParameters parameters = null)
             => HttpRequest<TResponse>(HttpMethodType.Get, endpoint, queryParameters: parameters);
 
-        protected Task<TResponse> Post<TRequest, TResponse>(string endpoint, TRequest request)
+        protected Task<TResponse> Post<TRequest, TResponse>(string endpoint, TRequest request = default)
             => HttpRequest<TResponse>(HttpMethodType.Post, endpoint, request);
 
-        protected Task<TResponse> Post<TResponse>(string endpoint, object request)
+        protected Task<TResponse> Post<TResponse>(string endpoint, object request = null)
             => HttpRequest<TResponse>(HttpMethodType.Post, endpoint, request);
 
         protected Task<TResponse> Put<TRequest, TResponse>(string endpoint, TRequest request)
@@ -78,11 +78,11 @@ namespace StreamChat.Core.LowLevelClient.API.Internal
         private async Task<TResponse> HttpRequest<TResponse>(HttpMethodType httpMethod, string endpoint,
             object requestBody = default, QueryParameters queryParameters = null)
         {
-            //StreamTodo: perhaps remove this requirement, sometimes we send empty body without any properties
-            if (requestBody == null && IsRequestBodyRequiredByHttpMethod(httpMethod))
-            {
-                throw new ArgumentException($"{nameof(requestBody)} is required by {httpMethod}");
-            }
+            // //StreamTodo: perhaps remove this requirement, sometimes we send empty body without any properties
+            // if (requestBody == null && IsRequestBodyRequiredByHttpMethod(httpMethod))
+            // {
+            //     throw new ArgumentException($"{nameof(requestBody)} is required by {httpMethod}");
+            // }
 
             var httpContent = TrySerializeRequestBodyContent(requestBody, out var serializedContent);
             var logContent = serializedContent ?? httpContent?.ToString();
@@ -90,7 +90,7 @@ namespace StreamChat.Core.LowLevelClient.API.Internal
             if (httpMethod == HttpMethodType.Get && serializedContent != null)
             {
                 queryParameters ??= QueryParameters.Default;
-                queryParameters.Append("payload", serializedContent);
+                queryParameters.Set("payload", serializedContent);
             }
 
             var uri = _requestUriFactory.CreateEndpointUri(endpoint, queryParameters);

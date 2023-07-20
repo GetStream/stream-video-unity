@@ -1,6 +1,6 @@
 namespace StreamVideo.Core
 {
-    internal static class WSEventType
+    internal static class CoordinatorEventType
     {
         public const string CallAccepted = "call.accepted";
         public const string CallBlockedUser = "call.blocked_user";

@@ -94,8 +94,13 @@ namespace StreamVideo.Core.Web
 
         private Uri CreateRequestUri(string endPoint, string query)
         {
+            if (!endPoint.StartsWith('/'))
+            {
+                //StreamTodo: error if debug mode
+                endPoint = "/" + endPoint;
+            }
             var uriBuilder = new UriBuilder(_connectionProvider.ServerUri)
-                { Path = endPoint, Scheme = "https", Query = query };
+                { Path = $"video{endPoint}", Scheme = "https", Query = query };
 
             return uriBuilder.Uri;
         }

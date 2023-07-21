@@ -70,5 +70,6 @@ namespace StreamVideo.Core.LowLevelClient
         void ConnectUser(AuthCredentials userAuthCredentials);
 
         Task DisconnectAsync(bool permanent = false);
+        Task JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring, bool notify);
     }
 }

@@ -326,18 +326,56 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        //StreamTodo: if ring and notify can't be both true then perhaps enum NotifyMode.Ring, NotifyMode.Notify?
         //StreamTodo: add CreateCallOptions
-        public async Task JoinCallAsync(bool create, bool ring, bool notify)
+        public async Task JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring, bool notify)
         {
             // StreamTodo: check state if we don't have an active session already
-            var locationHint = GetLocationHintAsync();
+            var locationHint = await GetLocationHintAsync();
+
+            // StreamTodo: expose params
+            var joinCallRequest = new JoinCallRequest
+            {
+                Create = create,
+                Data = new CallRequest
+                {
+                    CreatedBy = null,
+                    CreatedById = null,
+                    Custom = null,
+                    Members = null,
+                    SettingsOverride = null,
+                    StartsAt = DateTimeOffset.Now,
+                    Team = null
+                },
+                Location = locationHint,
+                MembersLimit = 10,
+                MigratingFrom = null,
+                Notify = notify,
+                Ring = ring
+            };
+
+            var joinCallResponse = await InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
+
+            var sfuUrl = joinCallResponse.Credentials.Server.Url;
+            var sfuToken = joinCallResponse.Credentials.Token;
+            var iceServers = joinCallResponse.Credentials.IceServers;
             
+            _logs.Warning(sfuUrl);
+            _logs.Warning(sfuToken);
+            _logs.Warning(sfuUrl);
+            
+            //var joinRequest = JoinRequest.Sa
+            
+            //wait _sfuWebSocket.ConnectAsync(sfuUrl)
+
+            var session = new RtcSession();
+
             //Join call API request -> receive the sfuToken, sfuUrl, and iceServers
-            
+
             //create RtcSession
-            
+
             //session.connect() -> this calls sfuWS.connect()
-            
+
             // sfuWs.connect calls:
             /*
              *             val request = JoinRequest(
@@ -588,28 +626,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             ConnectionState = ConnectionState.Disconnected;
         }
-        
-        /// <summary>
-        /// Based on receiving initial health check event from the server
-        /// </summary>
-        private void OnConnectionConfirmed(HealthCheckEvent healthCheckEvent)
-        {
-            //StreamTodo: resolve issue that expired token also triggers connection confirmed that gets immediately disconnected
-
-            _connectionId = healthCheckEvent.ConnectionId;
-#pragma warning disable 0618
-            //LocalUser = connectedEvent.Me;
-#pragma warning restore 0618
-            _lastHealthCheckReceivedTime = _timeService.Time;
-            
-            ConnectionState = ConnectionState.Connected;
-
-            //_connectUserTaskSource?.SetResult(healthCheckEvent.Me);
-
-            _logs.Info("Connection confirmed by server with connection id: " + _connectionId);
-            //Connected?.Invoke(connectedEvent.Me);
-            //InternalConnected?.Invoke(eventHealthCheckInternalDto);
-        }
 
         /// <summary>
         /// Based on receiving initial health check event from the server
@@ -664,6 +680,9 @@ namespace StreamVideo.Core.LowLevelClient
             
             RegisterEventType<HealthCheckEvent>(CoordinatorEventType.HealthCheck,
                 HandleHealthCheckEvent);
+            
+            RegisterEventType<ConnectedEvent>(CoordinatorEventType.ConnectionOk,
+                HandleConnectionOkEvent);
             //
             // RegisterEventType<MessageNewEventInternalDTO, EventMessageNew>(WSEventType.MessageNew,
             //     (e, dto) => MessageReceived?.Invoke(e), dto => InternalMessageReceived?.Invoke(dto));
@@ -722,6 +741,8 @@ namespace StreamVideo.Core.LowLevelClient
             //     (e, dto) => TypingStopped?.Invoke(e), dto => InternalTypingStopped?.Invoke(dto));
 
         }
+
+
 
         private void RegisterEventType<TDto, TEvent>(string key,
             Action<TEvent, TDto> handler, Action<TDto> internalHandler = null)
@@ -852,10 +873,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void PingHealthCheck()
         {
-            var healthCheck = new HealthCheckEvent
-            {
-                // StreamTodo: do we need to provide anything? Like connection_id? 
-            };
+            var healthCheck = new HealthCheckEvent();
 
             _coordinatorWebSocket.Send(_serializer.Serialize(healthCheck));
             _lastHealthCheckSendTime = _timeService.Time;
@@ -867,12 +885,20 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void HandleHealthCheckEvent(HealthCheckEvent healthCheckEvent)
         {
+            _logs.Info("Health check received");
             _lastHealthCheckReceivedTime = _timeService.Time;
+        }
         
-            if (ConnectionState == ConnectionState.Connecting)
-            {
-                OnConnectionConfirmed(healthCheckEvent);
-            }
+        private void HandleConnectionOkEvent(ConnectedEvent connectedEvent)
+        {
+            _connectionId = connectedEvent.ConnectionId;
+          
+            ConnectionState = ConnectionState.Connected;
+
+            _connectUserTaskSource?.SetResult(connectedEvent.Me);
+
+            _logs.Info("Connection confirmed by server with connection id: " + _connectionId);
+            Connected?.Invoke();
         }
 
         private static bool IsUserIdValid(string userId)

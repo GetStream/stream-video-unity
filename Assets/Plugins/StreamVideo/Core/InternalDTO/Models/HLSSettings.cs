@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,16 +16,16 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class HLSSettings
+    internal partial class HLSSettings
     {
         [Newtonsoft.Json.JsonProperty("auto_on", Required = Newtonsoft.Json.Required.Always)]
-        public bool AutoOn { get; set; }
+        public bool AutoOn { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Always)]
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("quality_tracks", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<string> QualityTracks { get; set; } = new System.Collections.ObjectModel.Collection<string>();
+        public System.Collections.Generic.List<string> QualityTracks { get; set; } = new System.Collections.Generic.List<string>();
 
     }
 

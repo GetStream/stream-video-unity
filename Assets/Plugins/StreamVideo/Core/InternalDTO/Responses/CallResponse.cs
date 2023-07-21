@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -17,25 +19,25 @@ namespace StreamVideo.Core.InternalDTO.Responses
     /// Represents a call
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallResponse
+    internal partial class CallResponse
     {
         [Newtonsoft.Json.JsonProperty("backstage", Required = Newtonsoft.Json.Required.Always)]
-        public bool Backstage { get; set; }
+        public bool Backstage { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("blocked_user_ids", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<string> BlockedUserIds { get; set; } = new System.Collections.ObjectModel.Collection<string>();
+        public System.Collections.Generic.List<string> BlockedUserIds { get; set; } = new System.Collections.Generic.List<string>();
 
         /// <summary>
         /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)
         /// </summary>
         [Newtonsoft.Json.JsonProperty("cid", Required = Newtonsoft.Json.Required.Always)]
-        public string Cid { get; set; }
+        public string Cid { get; set; } = default!;
 
         /// <summary>
         /// Date/time of creation
         /// </summary>
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// The user that created the call
@@ -44,13 +46,13 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public UserResponse CreatedBy { get; set; } = new UserResponse();
 
         [Newtonsoft.Json.JsonProperty("current_session_id", Required = Newtonsoft.Json.Required.Always)]
-        public string CurrentSessionId { get; set; }
+        public string CurrentSessionId { get; set; } = default!;
 
         /// <summary>
         /// Custom data for this object
         /// </summary>
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.IDictionary<string, object> Custom { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
+        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
 
         [Newtonsoft.Json.JsonProperty("egress", Required = Newtonsoft.Json.Required.Always)]
         public EgressResponse Egress { get; set; } = new EgressResponse();
@@ -58,23 +60,23 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Date/time when the call ended
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("ended_at", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.DateTimeOffset EndedAt { get; set; }
+        [Newtonsoft.Json.JsonProperty("ended_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset EndedAt { get; set; } = default!;
 
         /// <summary>
         /// Call ID
         /// </summary>
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        public string Id { get; set; }
+        public string Id { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("ingress", Required = Newtonsoft.Json.Required.Always)]
         public CallIngressResponse Ingress { get; set; } = new CallIngressResponse();
 
         [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.Always)]
-        public bool Recording { get; set; }
+        public bool Recording { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("session", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public CallSessionResponse Session { get; set; }
+        [Newtonsoft.Json.JsonProperty("session", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public CallSessionResponse Session { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("settings", Required = Newtonsoft.Json.Required.Always)]
         public CallSettingsResponse Settings { get; set; } = new CallSettingsResponse();
@@ -82,26 +84,26 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Date/time when the call will start
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.DateTimeOffset StartsAt { get; set; }
+        [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset StartsAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("team", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Team { get; set; }
+        [Newtonsoft.Json.JsonProperty("team", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Team { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("transcribing", Required = Newtonsoft.Json.Required.Always)]
-        public bool Transcribing { get; set; }
+        public bool Transcribing { get; set; } = default!;
 
         /// <summary>
         /// The type of call
         /// </summary>
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
-        public string Type { get; set; }
+        public string Type { get; set; } = default!;
 
         /// <summary>
         /// Date/time of the last update
         /// </summary>
         [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset UpdatedAt { get; set; }
+        public System.DateTimeOffset UpdatedAt { get; set; } = default!;
 
     }
 

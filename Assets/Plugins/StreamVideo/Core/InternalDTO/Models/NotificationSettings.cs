@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class NotificationSettings
+    internal partial class NotificationSettings
     {
         [Newtonsoft.Json.JsonProperty("call_live_started", Required = Newtonsoft.Json.Required.Always)]
         public EventNotificationSettings CallLiveStarted { get; set; } = new EventNotificationSettings();
@@ -26,7 +28,7 @@ namespace StreamVideo.Core.InternalDTO.Models
         public EventNotificationSettings CallRing { get; set; } = new EventNotificationSettings();
 
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Always)]
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("session_started", Required = Newtonsoft.Json.Required.Always)]
         public EventNotificationSettings SessionStarted { get; set; } = new EventNotificationSettings();

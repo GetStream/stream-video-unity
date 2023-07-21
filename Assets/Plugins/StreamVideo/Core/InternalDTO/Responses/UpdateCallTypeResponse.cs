@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,19 +16,19 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class UpdateCallTypeResponse
+    internal partial class UpdateCallTypeResponse
     {
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
-        public string Duration { get; set; }
+        public string Duration { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("grants", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.IDictionary<string, System.Collections.Generic.ICollection<string>> Grants { get; set; } = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.ICollection<string>>();
+        public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> Grants { get; set; } = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>();
 
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
-        public string Name { get; set; }
+        public string Name { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("notification_settings", Required = Newtonsoft.Json.Required.Always)]
         public NotificationSettings NotificationSettings { get; set; } = new NotificationSettings();
@@ -35,7 +37,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public CallSettingsResponse Settings { get; set; } = new CallSettingsResponse();
 
         [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset UpdatedAt { get; set; }
+        public System.DateTimeOffset UpdatedAt { get; set; } = default!;
 
     }
 

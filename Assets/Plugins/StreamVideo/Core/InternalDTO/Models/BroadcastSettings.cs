@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,10 +16,10 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class BroadcastSettings
+    internal partial class BroadcastSettings
     {
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Always)]
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("hls", Required = Newtonsoft.Json.Required.Always)]
         public HLSSettings Hls { get; set; } = new HLSSettings();

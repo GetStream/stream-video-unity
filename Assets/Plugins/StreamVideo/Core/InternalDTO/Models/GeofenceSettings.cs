@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,10 +16,10 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class GeofenceSettings
+    internal partial class GeofenceSettings
     {
         [Newtonsoft.Json.JsonProperty("names", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<string> Names { get; set; } = new System.Collections.ObjectModel.Collection<string>();
+        public System.Collections.Generic.List<string> Names { get; set; } = new System.Collections.Generic.List<string>();
 
     }
 

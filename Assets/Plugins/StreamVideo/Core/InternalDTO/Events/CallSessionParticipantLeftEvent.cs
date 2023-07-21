@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -17,37 +19,31 @@ namespace StreamVideo.Core.InternalDTO.Events
     /// This event is sent when a participant leaves a call session
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallSessionParticipantLeftEvent
+    internal partial class CallSessionParticipantLeftEvent
     {
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
-        public string CallCid { get; set; }
+        public string CallCid { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
+
+        /// <summary>
+        /// The participant that left the session
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("participant", Required = Newtonsoft.Json.Required.Always)]
+        public CallParticipantResponse Participant { get; set; } = new CallParticipantResponse();
 
         /// <summary>
         /// Call session ID
         /// </summary>
         [Newtonsoft.Json.JsonProperty("session_id", Required = Newtonsoft.Json.Required.Always)]
-        public string SessionId { get; set; }
+        public string SessionId { get; set; } = default!;
 
         /// <summary>
         /// The type of event: "call.session_participant_left" in this case
         /// </summary>
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
         public string Type { get; set; } = "call.session_participant_left";
-
-        /// <summary>
-        /// The user that left the call session
-        /// </summary>
-        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
-        public UserResponse User { get; set; } = new UserResponse();
-
-        /// <summary>
-        /// The user session ID of the user that left the call session
-        /// </summary>
-        [Newtonsoft.Json.JsonProperty("user_session_id", Required = Newtonsoft.Json.Required.Always)]
-        public string UserSessionId { get; set; }
 
     }
 

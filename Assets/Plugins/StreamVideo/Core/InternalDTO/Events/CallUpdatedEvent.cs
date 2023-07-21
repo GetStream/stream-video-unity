@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -18,7 +20,7 @@ namespace StreamVideo.Core.InternalDTO.Events
     /// <br/>This event also contains the capabilities by role for the call, clients should update the own_capability for the current.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallUpdatedEvent
+    internal partial class CallUpdatedEvent
     {
         /// <summary>
         /// Call object
@@ -27,16 +29,16 @@ namespace StreamVideo.Core.InternalDTO.Events
         public CallResponse Call { get; set; } = new CallResponse();
 
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
-        public string CallCid { get; set; }
+        public string CallCid { get; set; } = default!;
 
         /// <summary>
         /// The capabilities by role for this call
         /// </summary>
         [Newtonsoft.Json.JsonProperty("capabilities_by_role", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.IDictionary<string, System.Collections.Generic.ICollection<string>> CapabilitiesByRole { get; set; } = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.ICollection<string>>();
+        public System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> CapabilitiesByRole { get; set; } = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>();
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// The type of event: "call.ended" in this case

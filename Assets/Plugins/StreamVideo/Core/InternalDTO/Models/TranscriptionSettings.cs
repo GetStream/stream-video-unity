@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,14 +16,14 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class TranscriptionSettings
+    internal partial class TranscriptionSettings
     {
         [Newtonsoft.Json.JsonProperty("closed_caption_mode", Required = Newtonsoft.Json.Required.Always)]
-        public string ClosedCaptionMode { get; set; }
+        public string ClosedCaptionMode { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Always)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public TranscriptionSettingsMode Mode { get; set; }
+        public TranscriptionSettingsMode Mode { get; set; } = default!;
 
     }
 

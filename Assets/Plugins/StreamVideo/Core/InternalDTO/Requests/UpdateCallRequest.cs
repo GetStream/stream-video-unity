@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,25 +16,25 @@ namespace StreamVideo.Core.InternalDTO.Requests
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class UpdateCallRequest
+    internal partial class UpdateCallRequest
     {
         /// <summary>
         /// Custom data for this object
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.IDictionary<string, object> Custom { get; set; }
+        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
 
         /// <summary>
         /// the settings to change for this call
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("settings_override", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public CallSettingsRequest SettingsOverride { get; set; }
+        [Newtonsoft.Json.JsonProperty("settings_override", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public CallSettingsRequest SettingsOverride { get; set; } = default!;
 
         /// <summary>
         /// the time the call is scheduled to start
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.DateTimeOffset StartsAt { get; set; }
+        [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset StartsAt { get; set; } = default!;
 
     }
 

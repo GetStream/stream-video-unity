@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,13 +16,13 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class RingSettings
+    internal partial class RingSettings
     {
         [Newtonsoft.Json.JsonProperty("auto_cancel_timeout_ms", Required = Newtonsoft.Json.Required.Always)]
-        public int AutoCancelTimeoutMs { get; set; }
+        public int AutoCancelTimeoutMs { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("incoming_call_timeout_ms", Required = Newtonsoft.Json.Required.Always)]
-        public int IncomingCallTimeoutMs { get; set; }
+        public int IncomingCallTimeoutMs { get; set; } = default!;
 
     }
 

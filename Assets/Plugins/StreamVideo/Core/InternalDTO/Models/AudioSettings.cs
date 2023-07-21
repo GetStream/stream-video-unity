@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,26 +16,26 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class AudioSettings
+    internal partial class AudioSettings
     {
         [Newtonsoft.Json.JsonProperty("access_request_enabled", Required = Newtonsoft.Json.Required.Always)]
-        public bool AccessRequestEnabled { get; set; }
+        public bool AccessRequestEnabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("default_device", Required = Newtonsoft.Json.Required.Always)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public AudioSettingsDefaultDevice DefaultDevice { get; set; }
+        public AudioSettingsDefaultDevice DefaultDevice { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("mic_default_on", Required = Newtonsoft.Json.Required.Always)]
-        public bool MicDefaultOn { get; set; }
+        public bool MicDefaultOn { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("opus_dtx_enabled", Required = Newtonsoft.Json.Required.Always)]
-        public bool OpusDtxEnabled { get; set; }
+        public bool OpusDtxEnabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("redundant_coding_enabled", Required = Newtonsoft.Json.Required.Always)]
-        public bool RedundantCodingEnabled { get; set; }
+        public bool RedundantCodingEnabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("speaker_default_on", Required = Newtonsoft.Json.Required.Always)]
-        public bool SpeakerDefaultOn { get; set; }
+        public bool SpeakerDefaultOn { get; set; } = default!;
 
     }
 

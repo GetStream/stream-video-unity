@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -17,16 +19,16 @@ namespace StreamVideo.Core.InternalDTO.Events
     /// This event is sent when call broadcasting has started
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallBroadcastingStartedEvent
+    internal partial class CallBroadcastingStartedEvent
     {
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
-        public string CallCid { get; set; }
+        public string CallCid { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("hls_playlist_url", Required = Newtonsoft.Json.Required.Always)]
-        public string HlsPlaylistUrl { get; set; }
+        public string HlsPlaylistUrl { get; set; } = default!;
 
         /// <summary>
         /// The type of event: "call.broadcasting_started" in this case

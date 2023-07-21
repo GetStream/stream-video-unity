@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -17,19 +19,19 @@ namespace StreamVideo.Core.InternalDTO.Events
     /// This event is sent to notify about permission changes for a user, clients receiving this event should update their UI accordingly
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class UpdatedCallPermissionsEvent
+    internal partial class UpdatedCallPermissionsEvent
     {
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
-        public string CallCid { get; set; }
+        public string CallCid { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// The capabilities of the current user
         /// </summary>
         [Newtonsoft.Json.JsonProperty("own_capabilities", Required = Newtonsoft.Json.Required.Always, ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public System.Collections.Generic.ICollection<OwnCapability> OwnCapabilities { get; set; } = new System.Collections.ObjectModel.Collection<OwnCapability>();
+        public System.Collections.Generic.List<OwnCapability> OwnCapabilities { get; set; } = new System.Collections.Generic.List<OwnCapability>();
 
         /// <summary>
         /// The type of event: "call.permissions_updated" in this case

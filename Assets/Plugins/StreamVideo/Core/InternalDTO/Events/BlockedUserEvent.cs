@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -18,19 +20,19 @@ namespace StreamVideo.Core.InternalDTO.Events
     /// <br/>If the user is the current user, the client should leave the call screen as well
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class BlockedUserEvent
+    internal partial class BlockedUserEvent
     {
         /// <summary>
         /// The user that blocked the user, null if the user was blocked by server-side
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("blocked_by_user", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public UserResponse BlockedByUser { get; set; }
+        [Newtonsoft.Json.JsonProperty("blocked_by_user", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public UserResponse BlockedByUser { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
-        public string CallCid { get; set; }
+        public string CallCid { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// The type of event: "call.blocked_user" in this case

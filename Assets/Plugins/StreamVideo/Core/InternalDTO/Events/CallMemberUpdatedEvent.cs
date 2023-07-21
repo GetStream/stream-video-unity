@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -17,7 +19,7 @@ namespace StreamVideo.Core.InternalDTO.Events
     /// This event is sent when one or more members are updated
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallMemberUpdatedEvent
+    internal partial class CallMemberUpdatedEvent
     {
         /// <summary>
         /// Call object
@@ -26,16 +28,16 @@ namespace StreamVideo.Core.InternalDTO.Events
         public CallResponse Call { get; set; } = new CallResponse();
 
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
-        public string CallCid { get; set; }
+        public string CallCid { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// The list of members that were updated
         /// </summary>
         [Newtonsoft.Json.JsonProperty("members", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<MemberResponse> Members { get; set; } = new System.Collections.ObjectModel.Collection<MemberResponse>();
+        public System.Collections.Generic.List<MemberResponse> Members { get; set; } = new System.Collections.Generic.List<MemberResponse>();
 
         /// <summary>
         /// The type of event: "call.member_updated" in this case

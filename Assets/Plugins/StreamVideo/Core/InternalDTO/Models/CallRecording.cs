@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,19 +16,19 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallRecording
+    internal partial class CallRecording
     {
         [Newtonsoft.Json.JsonProperty("end_time", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset EndTime { get; set; }
+        public System.DateTimeOffset EndTime { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("filename", Required = Newtonsoft.Json.Required.Always)]
-        public string Filename { get; set; }
+        public string Filename { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("start_time", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset StartTime { get; set; }
+        public System.DateTimeOffset StartTime { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.Always)]
-        public string Url { get; set; }
+        public string Url { get; set; } = default!;
 
     }
 

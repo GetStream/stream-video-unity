@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,19 +16,19 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class QueryCallsResponse
+    internal partial class QueryCallsResponse
     {
         [Newtonsoft.Json.JsonProperty("calls", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<CallStateResponseFields> Calls { get; set; } = new System.Collections.ObjectModel.Collection<CallStateResponseFields>();
+        public System.Collections.Generic.List<CallStateResponseFields> Calls { get; set; } = new System.Collections.Generic.List<CallStateResponseFields>();
 
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
-        public string Duration { get; set; }
+        public string Duration { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("next", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Next { get; set; }
+        [Newtonsoft.Json.JsonProperty("next", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Next { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("prev", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Prev { get; set; }
+        [Newtonsoft.Json.JsonProperty("prev", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Prev { get; set; } = default!;
 
     }
 

@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,37 +16,37 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class EdgeResponse
+    internal partial class EdgeResponse
     {
         [Newtonsoft.Json.JsonProperty("continent_code", Required = Newtonsoft.Json.Required.Always)]
-        public string ContinentCode { get; set; }
+        public string ContinentCode { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("country_iso_code", Required = Newtonsoft.Json.Required.Always)]
-        public string CountryIsoCode { get; set; }
+        public string CountryIsoCode { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("green", Required = Newtonsoft.Json.Required.Always)]
-        public int Green { get; set; }
+        public int Green { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
-        public string Id { get; set; }
+        public string Id { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("latency_test_url", Required = Newtonsoft.Json.Required.Always)]
-        public string LatencyTestUrl { get; set; }
+        public string LatencyTestUrl { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("latitude", Required = Newtonsoft.Json.Required.Always)]
-        public float Latitude { get; set; }
+        public float Latitude { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("longitude", Required = Newtonsoft.Json.Required.Always)]
-        public float Longitude { get; set; }
+        public float Longitude { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("red", Required = Newtonsoft.Json.Required.Always)]
-        public int Red { get; set; }
+        public int Red { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("subdivision_iso_code", Required = Newtonsoft.Json.Required.Always)]
-        public string SubdivisionIsoCode { get; set; }
+        public string SubdivisionIsoCode { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("yellow", Required = Newtonsoft.Json.Required.Always)]
-        public int Yellow { get; set; }
+        public int Yellow { get; set; } = default!;
 
     }
 

@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,16 +16,16 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class ListDevicesResponse
+    internal partial class ListDevicesResponse
     {
         /// <summary>
         /// List of devices
         /// </summary>
         [Newtonsoft.Json.JsonProperty("devices", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<Device> Devices { get; set; } = new System.Collections.ObjectModel.Collection<Device>();
+        public System.Collections.Generic.List<Device> Devices { get; set; } = new System.Collections.Generic.List<Device>();
 
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
-        public string Duration { get; set; }
+        public string Duration { get; set; } = default!;
 
     }
 

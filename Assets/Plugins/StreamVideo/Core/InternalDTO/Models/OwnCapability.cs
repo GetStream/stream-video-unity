@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -17,7 +19,7 @@ namespace StreamVideo.Core.InternalDTO.Models
     /// All possibility of string to use
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public enum OwnCapability
+    internal enum OwnCapability
     {
 
         [System.Runtime.Serialization.EnumMember(Value = @"block-users")]

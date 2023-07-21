@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,16 +16,16 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CreateGuestResponse
+    internal partial class CreateGuestResponse
     {
         /// <summary>
         /// the access token to authenticate the user
         /// </summary>
         [Newtonsoft.Json.JsonProperty("access_token", Required = Newtonsoft.Json.Required.Always)]
-        public string AccessToken { get; set; }
+        public string AccessToken { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
-        public string Duration { get; set; }
+        public string Duration { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
         public UserResponse User { get; set; } = new UserResponse();

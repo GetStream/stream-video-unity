@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -17,16 +19,16 @@ namespace StreamVideo.Core.InternalDTO.Events
     /// This event is sent when the WS connection is established and authenticated, this event contains the full user object as it is stored on the server
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class ConnectedEvent
+    internal partial class ConnectedEvent
     {
         /// <summary>
         /// The connection_id for this client
         /// </summary>
         [Newtonsoft.Json.JsonProperty("connection_id", Required = Newtonsoft.Json.Required.Always)]
-        public string ConnectionId { get; set; }
+        public string ConnectionId { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
-        public System.DateTimeOffset CreatedAt { get; set; }
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// The full user object as it is stored on the server

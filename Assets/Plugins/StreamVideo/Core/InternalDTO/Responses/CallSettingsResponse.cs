@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallSettingsResponse
+    internal partial class CallSettingsResponse
     {
         [Newtonsoft.Json.JsonProperty("audio", Required = Newtonsoft.Json.Required.Always)]
         public AudioSettings Audio { get; set; } = new AudioSettings();

@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -14,10 +16,10 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallStateResponseFields
+    internal partial class CallStateResponseFields
     {
         [Newtonsoft.Json.JsonProperty("blocked_users", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<UserResponse> BlockedUsers { get; set; } = new System.Collections.ObjectModel.Collection<UserResponse>();
+        public System.Collections.Generic.List<UserResponse> BlockedUsers { get; set; } = new System.Collections.Generic.List<UserResponse>();
 
         [Newtonsoft.Json.JsonProperty("call", Required = Newtonsoft.Json.Required.Always)]
         public CallResponse Call { get; set; } = new CallResponse();
@@ -26,16 +28,16 @@ namespace StreamVideo.Core.InternalDTO.Models
         /// List of call members
         /// </summary>
         [Newtonsoft.Json.JsonProperty("members", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<MemberResponse> Members { get; set; } = new System.Collections.ObjectModel.Collection<MemberResponse>();
+        public System.Collections.Generic.List<MemberResponse> Members { get; set; } = new System.Collections.Generic.List<MemberResponse>();
 
         /// <summary>
         /// Current user membership object
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("membership", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public MemberResponse Membership { get; set; }
+        [Newtonsoft.Json.JsonProperty("membership", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public MemberResponse Membership { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("own_capabilities", Required = Newtonsoft.Json.Required.Always, ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public System.Collections.Generic.ICollection<OwnCapability> OwnCapabilities { get; set; } = new System.Collections.ObjectModel.Collection<OwnCapability>();
+        public System.Collections.Generic.List<OwnCapability> OwnCapabilities { get; set; } = new System.Collections.Generic.List<OwnCapability>();
 
     }
 

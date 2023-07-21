@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,31 +16,34 @@ namespace StreamVideo.Core.InternalDTO.Requests
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class CallSettingsRequest
+    internal partial class CallSettingsRequest
     {
-        [Newtonsoft.Json.JsonProperty("audio", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public AudioSettingsRequest Audio { get; set; }
+        [Newtonsoft.Json.JsonProperty("audio", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public AudioSettingsRequest Audio { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("backstage", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public BackstageSettingsRequest Backstage { get; set; }
+        [Newtonsoft.Json.JsonProperty("backstage", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public BackstageSettingsRequest Backstage { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("geofencing", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public GeofenceSettingsRequest Geofencing { get; set; }
+        [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public BroadcastSettingsRequest Broadcasting { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public RecordSettingsRequest Recording { get; set; }
+        [Newtonsoft.Json.JsonProperty("geofencing", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public GeofenceSettingsRequest Geofencing { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("ring", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public RingSettingsRequest Ring { get; set; }
+        [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public RecordSettingsRequest Recording { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("screensharing", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public ScreensharingSettingsRequest Screensharing { get; set; }
+        [Newtonsoft.Json.JsonProperty("ring", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public RingSettingsRequest Ring { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("transcription", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public TranscriptionSettingsRequest Transcription { get; set; }
+        [Newtonsoft.Json.JsonProperty("screensharing", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public ScreensharingSettingsRequest Screensharing { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("video", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public VideoSettingsRequest Video { get; set; }
+        [Newtonsoft.Json.JsonProperty("transcription", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public TranscriptionSettingsRequest Transcription { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("video", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public VideoSettingsRequest Video { get; set; } = default!;
 
     }
 

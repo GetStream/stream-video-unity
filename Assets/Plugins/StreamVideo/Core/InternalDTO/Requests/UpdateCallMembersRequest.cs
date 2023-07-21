@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,19 +16,19 @@ namespace StreamVideo.Core.InternalDTO.Requests
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class UpdateCallMembersRequest
+    internal partial class UpdateCallMembersRequest
     {
         /// <summary>
         /// List of userID to remove
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("remove_members", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.ICollection<string> RemoveMembers { get; set; }
+        [Newtonsoft.Json.JsonProperty("remove_members", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.List<string> RemoveMembers { get; set; } = default!;
 
         /// <summary>
         /// List of members to update or insert
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("update_members", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.ICollection<MemberRequest> UpdateMembers { get; set; }
+        [Newtonsoft.Json.JsonProperty("update_members", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.List<MemberRequest> UpdateMembers { get; set; } = default!;
 
     }
 

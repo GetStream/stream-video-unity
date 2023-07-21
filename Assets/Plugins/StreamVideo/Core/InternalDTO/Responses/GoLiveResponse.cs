@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class GoLiveResponse
+    internal partial class GoLiveResponse
     {
         [Newtonsoft.Json.JsonProperty("call", Required = Newtonsoft.Json.Required.Always)]
         public CallResponse Call { get; set; } = new CallResponse();
@@ -23,7 +25,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// Duration of the request in human-readable format
         /// </summary>
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
-        public string Duration { get; set; }
+        public string Duration { get; set; } = default!;
 
     }
 

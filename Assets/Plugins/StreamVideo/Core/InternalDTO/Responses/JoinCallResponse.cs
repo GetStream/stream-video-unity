@@ -4,6 +4,8 @@
 // </auto-generated>
 //----------------------
 
+#nullable enable
+
 
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Events;
@@ -14,31 +16,31 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.19.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    public partial class JoinCallResponse
+    internal partial class JoinCallResponse
     {
         [Newtonsoft.Json.JsonProperty("blocked_users", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<UserResponse> BlockedUsers { get; set; } = new System.Collections.ObjectModel.Collection<UserResponse>();
+        public System.Collections.Generic.List<UserResponse> BlockedUsers { get; set; } = new System.Collections.Generic.List<UserResponse>();
 
         [Newtonsoft.Json.JsonProperty("call", Required = Newtonsoft.Json.Required.Always)]
         public CallResponse Call { get; set; } = new CallResponse();
 
         [Newtonsoft.Json.JsonProperty("created", Required = Newtonsoft.Json.Required.Always)]
-        public bool Created { get; set; }
+        public bool Created { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("credentials", Required = Newtonsoft.Json.Required.Always)]
         public Credentials Credentials { get; set; } = new Credentials();
 
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
-        public string Duration { get; set; }
+        public string Duration { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("members", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.ICollection<MemberResponse> Members { get; set; } = new System.Collections.ObjectModel.Collection<MemberResponse>();
+        public System.Collections.Generic.List<MemberResponse> Members { get; set; } = new System.Collections.Generic.List<MemberResponse>();
 
-        [Newtonsoft.Json.JsonProperty("membership", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public MemberResponse Membership { get; set; }
+        [Newtonsoft.Json.JsonProperty("membership", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public MemberResponse Membership { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("own_capabilities", Required = Newtonsoft.Json.Required.Always, ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public System.Collections.Generic.ICollection<OwnCapability> OwnCapabilities { get; set; } = new System.Collections.ObjectModel.Collection<OwnCapability>();
+        public System.Collections.Generic.List<OwnCapability> OwnCapabilities { get; set; } = new System.Collections.Generic.List<OwnCapability>();
 
     }
 

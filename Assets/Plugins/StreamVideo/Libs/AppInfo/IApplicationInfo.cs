@@ -12,5 +12,9 @@ namespace StreamVideo.Libs.AppInfo
         int MemorySize { get; }
         int GraphicsMemorySize { get; }
         string ScreenSize { get; }
+        string OperatingSystemFamily { get; }
+        string CpuArchitecture { get; }
+        string DeviceName { get; }
+        string DeviceModel { get; }
     }
 }

@@ -37,8 +37,17 @@ namespace StreamVideo.Core.Web
             return uriBuilder.Uri;
         }
 
-        public Uri CreateSfuConnectionUri(string sfuUrl)
+        //StreamTodo: sfuToken and clientInfo probably not needed
+        public Uri CreateSfuConnectionUri(string sfuUrl, string sfuToken, Func<string> clientInfoFactory)
         {
+            // var uriParams = new Dictionary<string, string>
+            // {
+            //     { "api_key", _authProvider.ApiKey },
+            //     { "stream-auth-type", _authProvider.StreamAuthType },
+            //     { "X-Stream-Client", clientInfoFactory() },
+            //     { "Authorization", sfuToken }
+            // };
+            
             var absolutePath = sfuUrl;
             absolutePath = absolutePath.Replace("/twirp", "/ws");
             

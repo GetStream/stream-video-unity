@@ -33,7 +33,7 @@ namespace StreamVideo.Libs.Websockets
             _isDebugMode = isDebugMode;
         }
 
-        public bool TryDequeueMessage(out string message) => _receiveQueue.TryDequeue(out message);
+        public bool TryDequeueMessage(out byte[] message) => _receiveQueue.TryDequeue(out message);
 
         public async Task ConnectAsync(Uri serverUri)
         {
@@ -145,7 +145,7 @@ namespace StreamVideo.Libs.Websockets
         private static readonly WebSocketState[] _clientClosedStates = new[]
             { WebSocketState.Closed, WebSocketState.CloseSent, WebSocketState.CloseReceived, WebSocketState.Aborted };
 
-        private readonly ConcurrentQueue<string> _receiveQueue = new ConcurrentQueue<string>();
+        private readonly ConcurrentQueue<byte[]> _receiveQueue = new ConcurrentQueue<byte[]>();
         private readonly ConcurrentQueue<Exception> _threadExceptionsLog = new ConcurrentQueue<Exception>();
 
         private readonly ConcurrentQueue<WebSocketException> _threadWebsocketExceptionsLog =
@@ -227,7 +227,7 @@ namespace StreamVideo.Libs.Websockets
             try
             {
                 var result = await TryReceiveSingleMessageAsync();
-                if (!string.IsNullOrEmpty(result))
+                if (result != null)
                 {
                     _receiveQueue.Enqueue(result);
                 }
@@ -309,7 +309,7 @@ namespace StreamVideo.Libs.Websockets
             => DisconnectAsync(WebSocketCloseStatus.InternalServerError, "Server closed the connection")
                 .ContinueWith(_ => LogThreadExceptionIfDebugMode(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
 
-        private async Task<string> TryReceiveSingleMessageAsync()
+        private async Task<byte[]> TryReceiveSingleMessageAsync()
         {
             using (var ms = new MemoryStream())
             {
@@ -327,7 +327,7 @@ namespace StreamVideo.Libs.Websockets
                     if (chunkResult.MessageType == WebSocketMessageType.Close)
                     {
                         OnReceivedCloseMessage();
-                        return "";
+                        return null;
                     }
 
                     ms.Write(_bufferSegment.Array, _bufferSegment.Offset, chunkResult.Count);
@@ -338,20 +338,27 @@ namespace StreamVideo.Libs.Websockets
                 //reset position before reading from stream
                 ms.Seek(0, SeekOrigin.Begin);
 
-                if (chunkResult.MessageType == WebSocketMessageType.Text)
+                switch (chunkResult.MessageType)
                 {
-                    using (var reader = new StreamReader(ms, Encoding.UTF8))
-                    {
-                        return await reader.ReadToEndAsync();
-                    }
+                    case WebSocketMessageType.Text:
+                    case WebSocketMessageType.Binary:
+                        return ms.ToArray();
+                        break;
+                    case WebSocketMessageType.Close:
+                        // Handled above
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
                 if (chunkResult.MessageType == WebSocketMessageType.Binary)
                 {
-                    throw new Exception("Unhandled WebSocket message type: " + WebSocketMessageType.Binary);
+                    var exception = new Exception("Unhandled WebSocket message type: " + WebSocketMessageType.Binary);
+                    LogThreadExceptionIfDebugMode(exception);
+                    throw exception;
                 }
 
-                return "";
+                return null;
             }
         }
 

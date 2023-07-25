@@ -20,7 +20,7 @@ namespace StreamVideo.Libs.AppInfo
 
         public string ScreenSize => Screen.width + "x" + Screen.height;
         
-        public string DeviceName => SystemInfo.deviceName;
+        public string DeviceName => SystemInfo.deviceModel;
         public string DeviceModel => SystemInfo.deviceModel;
     }
 }

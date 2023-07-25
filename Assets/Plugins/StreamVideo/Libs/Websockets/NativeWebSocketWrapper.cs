@@ -28,7 +28,7 @@ namespace StreamVideo.Libs.Websockets
 
         public void Dispose() => DisconnectAsync().LogIfFailed(_logs);
 
-        public bool TryDequeueMessage(out string message)
+        public bool TryDequeueMessage(out byte[] message)
         {
             message = _messages.Count > 0 ? _messages.Dequeue() : null;
             return message != null;
@@ -155,7 +155,7 @@ namespace StreamVideo.Libs.Websockets
         }
 
         private readonly ILogs _logs;
-        private readonly Queue<string> _messages = new Queue<string>();
+        private readonly Queue<byte[]> _messages = new Queue<byte[]>();
 
         private WebSocket _webSocket;
         private readonly bool _isDebugMode;
@@ -180,7 +180,7 @@ namespace StreamVideo.Libs.Websockets
 
         private void OnWebSocketClose(WebSocketCloseCode closeCode) => Disconnected?.Invoke();
 
-        private void OnWebSocketMessage(byte[] data) => _messages.Enqueue(Encoding.UTF8.GetString(data));
+        private void OnWebSocketMessage(byte[] data) => _messages.Enqueue(data);
 
         private void OnWebSocketError(string errorMsg) => _logs.Error(errorMsg);
         

@@ -13,7 +13,7 @@ namespace StreamVideo.Libs.Websockets
         event Action Disconnected;
         event Action ConnectionFailed;
 
-        bool TryDequeueMessage(out string message);
+        bool TryDequeueMessage(out byte[] message);
 
         Task ConnectAsync(Uri serverUri);
 

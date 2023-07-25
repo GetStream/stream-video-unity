@@ -90,6 +90,13 @@ namespace StreamVideo.Libs.Websockets
 
             _sendQueue.Add(messageSegment);
         }
+        
+        public void Send(byte[] message)
+        {
+            var messageSegment = new ArraySegment<byte>(message);
+
+            _sendQueue.Add(messageSegment);
+        }
 
         public void Update()
         {

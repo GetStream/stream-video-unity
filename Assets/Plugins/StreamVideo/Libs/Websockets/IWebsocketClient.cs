@@ -21,6 +21,8 @@ namespace StreamVideo.Libs.Websockets
 
         void Send(string message);
 
+        void Send(byte[] message);
+        
         Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage);
     }
 }

@@ -122,6 +122,37 @@ namespace StreamVideo.Libs.Websockets
                 _logs.Exception(e);
             }
         }
+        
+        public void Send(byte[] message)
+        {
+            if (_webSocket == null)
+            {
+                _logs.Error($"Tried to send a message but {nameof(_webSocket)} is null.");
+                return;
+            }
+
+            if (_webSocket.State != WebSocketState.Open)
+            {
+                _logs.Error($"Tried to send a message but {nameof(_webSocket.State)} is: {_webSocket.State}. Expected: {nameof(WebSocketState.Open)}");
+                return;
+            }
+            
+            try
+            {
+                _webSocket.Send(message).ContinueWith(_ =>
+                    {
+                        if (_.IsFaulted)
+                        {
+                            _logs.Exception(_.Exception);
+                        }
+                    },
+                    TaskScheduler.FromCurrentSynchronizationContext());
+            }
+            catch (Exception e)
+            {
+                _logs.Exception(e);
+            }
+        }
 
         private readonly ILogs _logs;
         private readonly Queue<string> _messages = new Queue<string>();

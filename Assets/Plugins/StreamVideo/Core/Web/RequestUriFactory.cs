@@ -21,45 +21,28 @@ namespace StreamVideo.Core.Web
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
 
+        //StreamTodo: remove clientInfoFactory
         public Uri CreateCoordinatorConnectionUri(Func<string> clientInfoFactory)
         {
-            // var connectPayloadDTO = new WS
-            // {
-            //     UserId = _authProvider.UserId,
-            //     User = new UserObjectRequest()
-            //     {
-            //         Id = _authProvider.UserId
-            //     },
-            //     UserToken = _authProvider.UserToken,
-            //     ServerDeterminesConnectionId = true
-            // };
-
-            var wsAuthMsg = new WSAuthMessageRequest
-            {
-                Token = _authProvider.UserToken,
-                UserDetails = new ConnectUserDetailsRequest
-                {
-                    Id = _authProvider.UserId,
-                    //Image = null,
-                    //Name = null
-                }
-            };
-
-            var serializedPayload = _serializer.Serialize(wsAuthMsg);
-
             var uriParams = new Dictionary<string, string>
             {
-                //{ "json", Uri.EscapeDataString(serializedPayload) },
                 { "api_key", _authProvider.ApiKey },
-                //{ "authorization", _authProvider.UserToken },
                 { "stream-auth-type", _authProvider.StreamAuthType },
-                {"X-Stream-Client", clientInfoFactory()}
+                { "X-Stream-Client", clientInfoFactory() }
             };
 
             var uriBuilder = new UriBuilder(_connectionProvider.ServerUri)
                 { Path = "video/connect", Query = uriParams.ToQueryParameters() };
 
             return uriBuilder.Uri;
+        }
+
+        public Uri CreateSfuConnectionUri(string sfuUrl)
+        {
+            var absolutePath = sfuUrl;
+            absolutePath = absolutePath.Replace("/twirp", "/ws");
+            
+            return new UriBuilder(absolutePath) { Scheme = "wss"}.Uri;
         }
 
         public Uri CreateEndpointUri(string endpoint, Dictionary<string, string> parameters = null)
@@ -99,6 +82,7 @@ namespace StreamVideo.Core.Web
                 //StreamTodo: error if debug mode
                 endPoint = "/" + endPoint;
             }
+
             var uriBuilder = new UriBuilder(_connectionProvider.ServerUri)
                 { Path = $"video{endPoint}", Scheme = "https", Query = query };
 

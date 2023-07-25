@@ -11,5 +11,6 @@ namespace StreamVideo.Core.Web
         Uri CreateCoordinatorConnectionUri(Func<string> clientHeaderFactory);
 
         Uri CreateEndpointUri(string endpoint, Dictionary<string, string> parameters = null);
+        Uri CreateSfuConnectionUri(string sfuUrl);
     }
 }

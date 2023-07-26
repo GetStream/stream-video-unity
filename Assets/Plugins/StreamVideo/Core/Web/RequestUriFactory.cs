@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using StreamVideo.Core.Auth;
-using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient;
 
 namespace StreamVideo.Core.Web
@@ -37,21 +36,12 @@ namespace StreamVideo.Core.Web
             return uriBuilder.Uri;
         }
 
-        //StreamTodo: sfuToken and clientInfo probably not needed
-        public Uri CreateSfuConnectionUri(string sfuUrl, string sfuToken, Func<string> clientInfoFactory)
+        public Uri CreateSfuConnectionUri(string sfuUrl)
         {
-            // var uriParams = new Dictionary<string, string>
-            // {
-            //     { "api_key", _authProvider.ApiKey },
-            //     { "stream-auth-type", _authProvider.StreamAuthType },
-            //     { "X-Stream-Client", clientInfoFactory() },
-            //     { "Authorization", sfuToken }
-            // };
-            
             var absolutePath = sfuUrl;
             absolutePath = absolutePath.Replace("/twirp", "/ws");
-            
-            return new UriBuilder(absolutePath) { Scheme = "wss"}.Uri;
+
+            return new UriBuilder(absolutePath) { Scheme = "wss" }.Uri;
         }
 
         public Uri CreateEndpointUri(string endpoint, Dictionary<string, string> parameters = null)

@@ -329,19 +329,19 @@ namespace StreamVideo.Core.LowLevelClient
             while (_coordinatorWebSocket.TryDequeueMessage(out var msg))
             {
                 var decodedMessage = Encoding.UTF8.GetString(msg);
-                
+
 #if STREAM_DEBUG_ENABLED
                 _logs.Info("Coordinator WS message: " + decodedMessage);
 #endif
-        
+
                 HandleNewWebsocketMessage(decodedMessage);
             }
-            
+
             //StreamTodo: 
             while (_sfuWebSocket.TryDequeueMessage(out var msg))
             {
                 var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
-                
+
 #if STREAM_DEBUG_ENABLED
                 _logs.Info("SFU WS message: " + sfuEvent);
 #endif
@@ -384,9 +384,10 @@ namespace StreamVideo.Core.LowLevelClient
             var iceServers = joinCallResponse.Credentials.IceServers;
             //StreamTodo: what to do with iceServers?
 
+#if STREAM_DEBUG_ENABLED
             _logs.Warning(sfuUrl);
             _logs.Warning(sfuToken);
-            _logs.Warning(sfuUrl);
+#endif
 
             var sessionId = Guid.NewGuid().ToString();
 
@@ -406,7 +407,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     Sdk = new Sdk
                     {
-                        //StreamTodo: change to Unity but this probably require updating the backend, otherwise the sdk flag will be invalid
+                        //StreamTodo: change to Unity once this is merged https://github.com/GetStream/protocol/pull/171
                         Type = SdkType.Angular,
                         Major = SDKVersion.Major.ToString(),
                         Minor = SDKVersion.Minor.ToString(),
@@ -430,33 +431,21 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 JoinRequest = joinRequest,
             };
-            
-            //StreamTodo: remove
+
+#if STREAM_DEBUG_ENABLED
             var debugJson = _serializer.Serialize(sfuRequest);
             _logs.Warning(debugJson);
+#endif
 
-            var byteArray = sfuRequest.ToByteArray();
+            var sfuRequestByteArray = sfuRequest.ToByteArray();
 
-            var sfuUri = _requestUriFactory.CreateSfuConnectionUri(sfuUrl, sfuToken, () =>
-                    BuildStreamClientHeader(new UnityApplicationInfo()));
+            var sfuUri = _requestUriFactory.CreateSfuConnectionUri(sfuUrl);
 
             _logs.Info("SFU Connect URI: " + sfuUri);
             await _sfuWebSocket.ConnectAsync(sfuUri);
             _logs.Info("SFU WS Connected");
 
-            _sfuWebSocket.Send(byteArray);
-        }
-
-        private async Task<string> GetLocationHintAsync()
-        {
-            // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
-            if (_hintLocation.IsNullOrEmpty())
-            {
-                _logs.Error("No location hint");
-                throw new InvalidOperationException("No location hint");
-            }
-
-            return _hintLocation;
+            _sfuWebSocket.Send(sfuRequestByteArray);
         }
 
         //StreamTodo: move this to injected config object
@@ -492,14 +481,36 @@ namespace StreamVideo.Core.LowLevelClient
         string IAuthProvider.StreamAuthType => DefaultStreamAuthType;
         string IConnectionProvider.ConnectionId => _connectionId;
         Uri IConnectionProvider.ServerUri => ServerBaseUrl;
-
+        
+        internal event Action<CallCreatedEvent> InternalCallCreatedEvent;
+        internal event Action<CallUpdatedEvent> InternalCallUpdatedEvent;
+        internal event Action<CallEndedEvent> InternalCallEndedEvent;
+        internal event Action<ParticipantJoined> InternalParticipantJoinedEvent;
+        internal event Action<ParticipantLeft> InternalParticipantLeftEvent;
+        internal event Action<CallAcceptedEvent> InternalCallAcceptedEvent;
+        internal event Action<CallRejectedEvent> InternalCallRejectedEvent;
+        internal event Action<CallLiveStartedEvent> InternalCallLiveStartedEvent;
+        internal event Action<CallMemberAddedEvent> InternalCallMemberAddedEvent;
+        internal event Action<CallMemberRemovedEvent> InternalCallMemberRemovedEvent;
+        internal event Action<CallMemberUpdatedEvent> InternalCallMemberUpdatedEvent;
+        internal event Action<CallMemberUpdatedPermissionEvent> InternalCallMemberUpdatedPermissionEvent;
+        internal event Action<CallNotificationEvent> InternalCallNotificationEvent;
+        internal event Action<PermissionRequestEvent> InternalPermissionRequestEvent;
+        internal event Action<UpdatedCallPermissionsEvent> InternalUpdatedCallPermissionsEvent;
+        internal event Action<CallReactionEvent> InternalCallReactionEvent;
+        internal event Action<CallRecordingStartedEvent> InternalCallRecordingStartedEvent;
+        internal event Action<CallRecordingStoppedEvent> InternalCallRecordingStoppedEvent;
+        internal event Action<BlockedUserEvent> InternalBlockedUserEvent;
+        internal event Action<CallBroadcastingStartedEvent> InternalCallBroadcastingStartedEvent;
+        internal event Action<CallBroadcastingStoppedEvent> InternalCallBroadcastingStoppedEvent;
+        internal event Action<CallRingEvent> InternalCallRingEvent;
+        internal event Action<CallSessionEndedEvent> InternalCallSessionEndedEvent;
+        internal event Action<CallSessionStartedEvent> InternalCallSessionStartedEvent;
+        internal event Action<BlockedUserEvent> InternalCallUnblockedUserEvent;
+        internal event Action<ConnectionErrorEvent> InternalConnectionErrorEvent;
+        internal event Action<CustomVideoEvent> InternalCustomVideoEvent;
+        
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
-
-        // internal IInternalChannelApi InternalChannelApi { get; }
-        // internal IInternalMessageApi InternalMessageApi { get; }
-        // internal IInternalModerationApi InternalModerationApi { get; }
-        // internal InternalUserApi InternalUserApi { get; }
-        // internal IInternalDeviceApi InternalDeviceApi { get; }
 
         internal async Task<OwnUserResponse> ConnectUserAsync(string apiKey, string userId,
             ITokenProvider tokenProvider, CancellationToken cancellationToken = default)
@@ -612,6 +623,18 @@ namespace StreamVideo.Core.LowLevelClient
                     $"Failed to get token from the {nameof(ITokenProvider)}. Inspect {nameof(e.InnerException)} for more information. ",
                     e);
             }
+        }
+        
+        private async Task<string> GetLocationHintAsync()
+        {
+            // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
+            if (_hintLocation.IsNullOrEmpty())
+            {
+                _logs.Error("No location hint");
+                throw new InvalidOperationException("No location hint");
+            }
+
+            return _hintLocation;
         }
 
         private void TryCancelWaitingForUserConnection()
@@ -741,72 +764,93 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void RegisterEventHandlers()
         {
-            // Handle ConnectedEvent with the OwnUserResponse
-
-
             RegisterEventType<HealthCheckEvent>(CoordinatorEventType.HealthCheck,
                 HandleHealthCheckEvent);
 
             RegisterEventType<ConnectedEvent>(CoordinatorEventType.ConnectionOk,
                 HandleConnectionOkEvent);
-            //
-            // RegisterEventType<MessageNewEventInternalDTO, EventMessageNew>(WSEventType.MessageNew,
-            //     (e, dto) => MessageReceived?.Invoke(e), dto => InternalMessageReceived?.Invoke(dto));
-            // RegisterEventType<MessageDeletedEventInternalDTO, EventMessageDeleted>(WSEventType.MessageDeleted,
-            //     (e, dto) => MessageDeleted?.Invoke(e), dto => InternalMessageDeleted?.Invoke(dto));
-            // RegisterEventType<MessageUpdatedEventInternalDTO, EventMessageUpdated>(WSEventType.MessageUpdated,
-            //     (e, dto) => MessageUpdated?.Invoke(e), dto => InternalMessageUpdated?.Invoke(dto));
-            // RegisterEventType<MessageReadEventInternalDTO, EventMessageRead>(WSEventType.MessageRead,
-            //     (e, dto) => MessageRead?.Invoke(e), dto => InternalMessageRead?.Invoke(dto));
-            //
-            // RegisterEventType<ChannelUpdatedEventInternalDTO, EventChannelUpdated>(WSEventType.ChannelUpdated,
-            //     (e, dto) => ChannelUpdated?.Invoke(e), dto => InternalChannelUpdated?.Invoke(dto));
-            // RegisterEventType<ChannelDeletedEventInternalDTO, EventChannelDeleted>(WSEventType.ChannelDeleted,
-            //     (e, dto) => ChannelDeleted?.Invoke(e), dto => InternalChannelDeleted?.Invoke(dto));
-            // RegisterEventType<ChannelTruncatedEventInternalDTO, EventChannelTruncated>(WSEventType.ChannelTruncated,
-            //     (e, dto) => ChannelTruncated?.Invoke(e), dto => InternalChannelTruncated?.Invoke(dto));
-            // RegisterEventType<ChannelVisibleEventInternalDTO, EventChannelVisible>(WSEventType.ChannelVisible,
-            //     (e, dto) => ChannelVisible?.Invoke(e), dto => InternalChannelVisible?.Invoke(dto));
-            // RegisterEventType<ChannelHiddenEventInternalDTO, EventChannelHidden>(WSEventType.ChannelHidden,
-            //     (e, dto) => ChannelHidden?.Invoke(e), dto => InternalChannelHidden?.Invoke(dto));
-            //
-            // RegisterEventType<ReactionNewEventInternalDTO, EventReactionNew>(WSEventType.ReactionNew,
-            //     (e, dto) => ReactionReceived?.Invoke(e), dto => InternalReactionReceived?.Invoke(dto));
-            // RegisterEventType<ReactionUpdatedEventInternalDTO, EventReactionUpdated>(WSEventType.ReactionUpdated,
-            //     (e, dto) => ReactionUpdated?.Invoke(e), dto => InternalReactionUpdated?.Invoke(dto));
-            // RegisterEventType<ReactionDeletedEventInternalDTO, EventReactionDeleted>(WSEventType.ReactionDeleted,
-            //     (e, dto) => ReactionDeleted?.Invoke(e), dto => InternalReactionDeleted?.Invoke(dto));
-            //
-            // RegisterEventType<MemberAddedEventInternalDTO, EventMemberAdded>(WSEventType.MemberAdded,
-            //     (e, dto) => MemberAdded?.Invoke(e), dto => InternalMemberAdded?.Invoke(dto));
-            // RegisterEventType<MemberRemovedEventInternalDTO, EventMemberRemoved>(WSEventType.MemberRemoved,
-            //     (e, dto) => MemberRemoved?.Invoke(e), dto => InternalMemberRemoved?.Invoke(dto));
-            // RegisterEventType<MemberUpdatedEventInternalDTO, EventMemberUpdated>(WSEventType.MemberUpdated,
-            //     (e, dto) => MemberUpdated?.Invoke(e), dto => InternalMemberUpdated?.Invoke(dto));
-            //
-            // RegisterEventType<UserPresenceChangedEventInternalDTO, EventUserPresenceChanged>(
-            //     WSEventType.UserPresenceChanged,
-            //     (e, dto) => UserPresenceChanged?.Invoke(e), dto => InternalUserPresenceChanged?.Invoke(dto));
-            // RegisterEventType<UserUpdatedEventInternalDTO, EventUserUpdated>(WSEventType.UserUpdated,
-            //     (e, dto) => UserUpdated?.Invoke(e), dto => InternalUserUpdated?.Invoke(dto));
-            // RegisterEventType<UserDeletedEventInternalDTO, EventUserDeleted>(WSEventType.UserDeleted,
-            //     (e, dto) => UserDeleted?.Invoke(e), dto => InternalUserDeleted?.Invoke(dto));
-            // RegisterEventType<UserBannedEventInternalDTO, EventUserBanned>(WSEventType.UserBanned,
-            //     (e, dto) => UserBanned?.Invoke(e), dto => InternalUserBanned?.Invoke(dto));
-            // RegisterEventType<UserUnbannedEventInternalDTO, EventUserUnbanned>(WSEventType.UserUnbanned,
-            //     (e, dto) => UserUnbanned?.Invoke(e), dto => InternalUserUnbanned?.Invoke(dto));
-            //
-            // RegisterEventType<UserWatchingStartEventInternalDTO, EventUserWatchingStart>(WSEventType.UserWatchingStart,
-            //     (e, dto) => UserWatchingStart?.Invoke(e), dto => InternalUserWatchingStart?.Invoke(dto));
-            // RegisterEventType<UserWatchingStopEventInternalDTO, EventUserWatchingStop>(WSEventType.UserWatchingStop,
-            //     (e, dto) => UserWatchingStop?.Invoke(e), dto => InternalUserWatchingStop?.Invoke(dto));
-            //
-            // RegisterEventType<TypingStartEventInternalDTO, EventTypingStart>(WSEventType.TypingStart,
-            //     (e, dto) => TypingStarted?.Invoke(e), dto => InternalTypingStarted?.Invoke(dto));
-            // RegisterEventType<TypingStopEventInternalDTO, EventTypingStop>(WSEventType.TypingStop,
-            //     (e, dto) => TypingStopped?.Invoke(e), dto => InternalTypingStopped?.Invoke(dto));
-        }
 
+            RegisterEventType<CallCreatedEvent>(CoordinatorEventType.CallCreated,
+                e => InternalCallCreatedEvent?.Invoke(e));
+
+            RegisterEventType<CallUpdatedEvent>(CoordinatorEventType.CallUpdated,
+                e => InternalCallUpdatedEvent?.Invoke(e));
+
+            RegisterEventType<CallEndedEvent>(CoordinatorEventType.CallEnded,
+                e => InternalCallEndedEvent?.Invoke(e));
+
+            RegisterEventType<ParticipantJoined>(CoordinatorEventType.CallSessionParticipantJoined,
+                e => InternalParticipantJoinedEvent?.Invoke(e));
+
+            RegisterEventType<ParticipantLeft>(CoordinatorEventType.CallSessionParticipantLeft,
+                e => InternalParticipantLeftEvent?.Invoke(e));
+
+            RegisterEventType<CallAcceptedEvent>(CoordinatorEventType.CallAccepted,
+                e => InternalCallAcceptedEvent?.Invoke(e));
+
+            RegisterEventType<CallRejectedEvent>(CoordinatorEventType.CallRejected,
+                e => InternalCallRejectedEvent?.Invoke(e));
+
+            RegisterEventType<CallLiveStartedEvent>(CoordinatorEventType.CallLiveStarted,
+                e => InternalCallLiveStartedEvent?.Invoke(e));
+
+            RegisterEventType<CallMemberAddedEvent>(CoordinatorEventType.CallMemberAdded,
+                e => InternalCallMemberAddedEvent?.Invoke(e));
+
+            RegisterEventType<CallMemberRemovedEvent>(CoordinatorEventType.CallMemberRemoved,
+                e => InternalCallMemberRemovedEvent?.Invoke(e));
+
+            RegisterEventType<CallMemberUpdatedEvent>(CoordinatorEventType.CallMemberUpdated,
+                e => InternalCallMemberUpdatedEvent?.Invoke(e));
+
+            RegisterEventType<CallMemberUpdatedPermissionEvent>(CoordinatorEventType.CallMemberUpdatedPermission,
+                e => InternalCallMemberUpdatedPermissionEvent?.Invoke(e));
+
+            RegisterEventType<CallNotificationEvent>(CoordinatorEventType.CallNotification,
+                e => InternalCallNotificationEvent?.Invoke(e));
+
+            RegisterEventType<PermissionRequestEvent>(CoordinatorEventType.CallPermissionRequest,
+                e => InternalPermissionRequestEvent?.Invoke(e));
+
+            RegisterEventType<UpdatedCallPermissionsEvent>(CoordinatorEventType.CallPermissionsUpdated,
+                e => InternalUpdatedCallPermissionsEvent?.Invoke(e));
+
+            RegisterEventType<CallReactionEvent>(CoordinatorEventType.CallReactionNew,
+                e => InternalCallReactionEvent?.Invoke(e));
+
+            RegisterEventType<CallRecordingStartedEvent>(CoordinatorEventType.CallRecordingStarted,
+                e => InternalCallRecordingStartedEvent?.Invoke(e));
+
+            RegisterEventType<CallRecordingStoppedEvent>(CoordinatorEventType.CallRecordingStopped,
+                e => InternalCallRecordingStoppedEvent?.Invoke(e));
+
+            RegisterEventType<BlockedUserEvent>(CoordinatorEventType.CallBlockedUser,
+                e => InternalBlockedUserEvent?.Invoke(e));
+
+            RegisterEventType<CallBroadcastingStartedEvent>(CoordinatorEventType.CallBroadcastingStarted,
+                e => InternalCallBroadcastingStartedEvent?.Invoke(e));
+
+            RegisterEventType<CallBroadcastingStoppedEvent>(CoordinatorEventType.CallBroadcastingStopped,
+                e => InternalCallBroadcastingStoppedEvent?.Invoke(e));
+
+            RegisterEventType<CallRingEvent>(CoordinatorEventType.CallRing,
+                e => InternalCallRingEvent?.Invoke(e));
+
+            RegisterEventType<CallSessionEndedEvent>(CoordinatorEventType.CallSessionEnded,
+                e => InternalCallSessionEndedEvent?.Invoke(e));
+
+            RegisterEventType<CallSessionStartedEvent>(CoordinatorEventType.CallSessionStarted,
+                e => InternalCallSessionStartedEvent?.Invoke(e));
+
+            RegisterEventType<BlockedUserEvent>(CoordinatorEventType.CallUnblockedUser,
+                e => InternalCallUnblockedUserEvent?.Invoke(e));
+
+            RegisterEventType<ConnectionErrorEvent>(CoordinatorEventType.ConnectionError,
+                e => InternalConnectionErrorEvent?.Invoke(e));
+
+            RegisterEventType<CustomVideoEvent>(CoordinatorEventType.Custom,
+                e => InternalCustomVideoEvent?.Invoke(e));
+        }
 
         private void RegisterEventType<TDto, TEvent>(string key,
             Action<TEvent, TDto> handler, Action<TDto> internalHandler = null)
@@ -910,7 +954,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             handler(msg);
         }
-        
+
         private void HandleNewWebsocketMessage(string msg)
         {
             const string ErrorKey = "error";

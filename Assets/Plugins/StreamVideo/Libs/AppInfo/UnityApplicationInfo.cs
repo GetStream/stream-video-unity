@@ -20,7 +20,8 @@ namespace StreamVideo.Libs.AppInfo
 
         public string ScreenSize => Screen.width + "x" + Screen.height;
         
-        public string DeviceName => SystemInfo.deviceModel;
+        //StreamTodo: solve this, the deviceName is just a local name so perhaps not something we want 
+        public string DeviceName => SystemInfo.deviceName; 
         public string DeviceModel => SystemInfo.deviceModel;
     }
 }

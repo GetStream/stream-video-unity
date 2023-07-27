@@ -200,23 +200,6 @@ namespace StreamVideo.Core.LowLevelClient
             InternalVideoClientApi
                 = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
 
-            // InternalChannelApi
-            //     = new InternalChannelApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
-            // InternalMessageApi
-            //     = new InternalMessageApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
-            // InternalModerationApi
-            //     = new InternalModerationApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
-            // InternalUserApi
-            //     = new InternalUserApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
-            // InternalDeviceApi
-            //     = new InternalDeviceApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
-            //
-            // ChannelApi = new ChannelApi(InternalChannelApi);
-            // MessageApi = new MessageApi(InternalMessageApi);
-            // ModerationApi = new ModerationApi(InternalModerationApi);
-            // UserApi = new UserApi(InternalUserApi);
-            // DeviceApi = new DeviceApi(InternalDeviceApi);
-
             _reconnectScheduler = new ReconnectScheduler(_timeService, this, _networkMonitor);
             _reconnectScheduler.ReconnectionScheduled += OnReconnectionScheduled;
 

@@ -13,21 +13,22 @@ namespace StreamVideo.Core.Web
     internal class RequestUriFactory : IRequestUriFactory
     {
         public RequestUriFactory(IAuthProvider authProvider, IStreamVideoLowLevelClient connectionProvider,
-            ISerializer serializer)
+            ISerializer serializer, Func<string> clientInfoFactory)
         {
             _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
             _connectionProvider = connectionProvider ?? throw new ArgumentNullException(nameof(connectionProvider));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            _clientInfoFactory = clientInfoFactory ?? throw new ArgumentNullException(nameof(clientInfoFactory));
         }
 
         //StreamTodo: remove clientInfoFactory
-        public Uri CreateCoordinatorConnectionUri(Func<string> clientInfoFactory)
+        public Uri CreateCoordinatorConnectionUri()
         {
             var uriParams = new Dictionary<string, string>
             {
                 { "api_key", _authProvider.ApiKey },
                 { "stream-auth-type", _authProvider.StreamAuthType },
-                { "X-Stream-Client", clientInfoFactory() }
+                { "X-Stream-Client", _clientInfoFactory() }
             };
 
             var uriBuilder = new UriBuilder(_connectionProvider.ServerUri)
@@ -62,6 +63,7 @@ namespace StreamVideo.Core.Web
         private readonly IAuthProvider _authProvider;
         private readonly ISerializer _serializer;
         private readonly IStreamVideoLowLevelClient _connectionProvider;
+        private readonly Func<string> _clientInfoFactory;
 
         private Dictionary<string, string> GetDefaultParameters() =>
             new Dictionary<string, string>

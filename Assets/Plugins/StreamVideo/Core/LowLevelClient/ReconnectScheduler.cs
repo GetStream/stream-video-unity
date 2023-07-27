@@ -4,10 +4,14 @@ using StreamVideo.Libs.Time;
 
 namespace StreamVideo.Core.LowLevelClient
 {
+    internal interface IReconnectScheduler
+    {
+        double? NextReconnectTime { get; }
+    }
     /// <summary>
     /// Schedules next reconnection time based on the past attempts and network availability
     /// </summary>
-    internal class ReconnectScheduler : IDisposable
+    internal class ReconnectScheduler : IReconnectScheduler, IDisposable
     {
         public event Action ReconnectionScheduled;
         public ReconnectStrategy ReconnectStrategy { get; private set; } = ReconnectStrategy.Exponential;

@@ -16,10 +16,10 @@ namespace StreamVideo.ExampleProject
 
         protected void Start()
         {
-            var apiKey = "mmhfdzb5evj2";
-            var userId = "IG_88";
+            var apiKey = "r94gjesrb59f";
+            var userId = "yoda-admin";
             var userToken
-                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiSUdfODgiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL0lHXzg4IiwiaWF0IjoxNjkwMzYyMjg5LCJleHAiOjE2OTA5NjcwOTR9.6NivosNzdBnxhT1XRyiDLbT8rx466ErQcq41HtN8kL0";
+                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoieW9kYS1hZG1pbiJ9.2wVvXVatKCl2J8QACpDdUvGW48e7qYL9nlYgOXF-2L4";
 
             var credentials = new AuthCredentials(apiKey, userId, userToken);
 

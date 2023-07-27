@@ -17,6 +17,7 @@ using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.Models;
+using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
@@ -57,8 +58,6 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action Reconnecting;
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
-
-        public event Action<string> EventReceived;
 
 
         // public IChannelApi ChannelApi { get; }
@@ -171,9 +170,9 @@ namespace StreamVideo.Core.LowLevelClient
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
         {
             _authCredentials = authCredentials;
-            _coordinatorWebSocket =
-                coordinatorWebSocket ?? throw new ArgumentNullException(nameof(coordinatorWebSocket));
-            _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
+            // _coordinatorWebSocketOld =
+            //     coordinatorWebSocket ?? throw new ArgumentNullException(nameof(coordinatorWebSocket));
+            // _sfuWebSocketOld = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _timeService = timeService ?? throw new ArgumentNullException(nameof(timeService));
@@ -184,18 +183,27 @@ namespace StreamVideo.Core.LowLevelClient
 
             _logs.Prefix = "[Stream Chat] ";
 
-            _requestUriFactory = new RequestUriFactory(authProvider: this, connectionProvider: this, _serializer);
+            _requestUriFactory = new RequestUriFactory(authProvider: this, connectionProvider: this, _serializer, () =>
+                BuildStreamClientHeader(new UnityApplicationInfo()));
 
             _httpClient.AddDefaultCustomHeader("stream-auth-type", DefaultStreamAuthType);
             var header = BuildStreamClientHeader(_applicationInfo);
             _httpClient.AddDefaultCustomHeader("X-Stream-Client", header);
 
-            // StreamTODO: setup a wrapper around WS that handles health checks, error handling and reconnections
-            _coordinatorWebSocket.ConnectionFailed += OnCoordinatorWebsocketsConnectionFailed;
-            _coordinatorWebSocket.Disconnected += OnCoordinatorWebsocketDisconnected;
+            //StreamTodo: move to factory
+            var coordinatorReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor);
+            var sfuReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor);
 
-            _sfuWebSocket.ConnectionFailed += OnSfuWebsocketsConnectionFailed;
-            _sfuWebSocket.Disconnected += OnSfuWebsocketDisconnected;
+            //StreamTodo: move to factory
+            _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, _requestUriFactory, _serializer, _timeService, _logs);
+            _sfuWebSocket = new SfuWebSocket(sfuWebSocket, sfuReconnect, _requestUriFactory, _serializer, _timeService, _logs);
+
+            // StreamTODO: setup a wrapper around WS that handles health checks, error handling and reconnections
+            // _coordinatorWebSocketOld.ConnectionFailed += OnCoordinatorWebsocketsConnectionFailed;
+            // _coordinatorWebSocketOld.Disconnected += OnCoordinatorWebsocketDisconnected;
+            //
+            // _sfuWebSocketOld.ConnectionFailed += OnSfuWebsocketsConnectionFailed;
+            // _sfuWebSocketOld.Disconnected += OnSfuWebsocketDisconnected;
 
             InternalVideoClientApi
                 = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
@@ -203,7 +211,7 @@ namespace StreamVideo.Core.LowLevelClient
             _reconnectScheduler = new ReconnectScheduler(_timeService, this, _networkMonitor);
             _reconnectScheduler.ReconnectionScheduled += OnReconnectionScheduled;
 
-            RegisterEventHandlers();
+            RegisterCoordinatorEventHandlers();
 
             LogErrorIfUpdateIsNotBeingCalled();
         }
@@ -214,6 +222,7 @@ namespace StreamVideo.Core.LowLevelClient
             Connect();
         }
 
+        //StreamTodo: we should leave Async option only, this was left for backward compatibility
         public void Connect()
         {
             SetConnectionCredentials(_authCredentials);
@@ -228,35 +237,37 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: hidden dependency on SetUser being called
             //StreamTodo: remove injected Func
             var coordinatorConnectUri =
-                _requestUriFactory.CreateCoordinatorConnectionUri(() =>
-                    BuildStreamClientHeader(new UnityApplicationInfo()));
+                _requestUriFactory.CreateCoordinatorConnectionUri();
 
             _logs.Info($"Attempt to connect to: {coordinatorConnectUri}");
 
             ConnectionState = ConnectionState.Connecting;
 
+            //StreamTodo: this is async
+            _coordinatorWS.ConnectAsync();
+
             // StreamTodo: move separate method + make few attempts + support reconnections
-            _coordinatorWebSocket.ConnectAsync(coordinatorConnectUri).ContinueWith(t =>
-            {
-                //StreamTodo: handle failure
-
-                _logs.Info("WS connected! Let's send the connect message");
-
-                var wsAuthMsg = new WSAuthMessageRequest
-                {
-                    Token = ((IAuthProvider)this).UserToken,
-                    UserDetails = new ConnectUserDetailsRequest
-                    {
-                        Id = ((IAuthProvider)this).UserId,
-                        //Image = null,
-                        //Name = null
-                    }
-                };
-
-                var serializedAuthMsg = _serializer.Serialize(wsAuthMsg);
-
-                _coordinatorWebSocket.Send(serializedAuthMsg);
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            // _coordinatorWebSocketOld.ConnectAsync(coordinatorConnectUri).ContinueWith(t =>
+            // {
+            //     //StreamTodo: handle failure
+            //
+            //     _logs.Info("WS connected! Let's send the connect message");
+            //
+            //     var wsAuthMsg = new WSAuthMessageRequest
+            //     {
+            //         Token = ((IAuthProvider)this).UserToken,
+            //         UserDetails = new ConnectUserDetailsRequest
+            //         {
+            //             Id = ((IAuthProvider)this).UserId,
+            //             //Image = null,
+            //             //Name = null
+            //         }
+            //     };
+            //
+            //     var serializedAuthMsg = _serializer.Serialize(wsAuthMsg);
+            //
+            //     _coordinatorWebSocketOld.Send(serializedAuthMsg);
+            // }, TaskScheduler.FromCurrentSynchronizationContext());
 
             //StreamTodo: extract to reusable method that will make few attempts + can be awaited by the JoinCallAsync + support reconnections
             // Hint location
@@ -291,8 +302,8 @@ namespace StreamVideo.Core.LowLevelClient
                 _reconnectScheduler.Stop();
             }
 
-            await _coordinatorWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
-            await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
+            await _coordinatorWebSocketOld.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
+            await _sfuWebSocketOld.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
         }
 
         public void Update(float deltaTime)
@@ -301,35 +312,8 @@ namespace StreamVideo.Core.LowLevelClient
             _updateCallReceived = true;
 #endif
 
-            TryHandleWebsocketsConnectionFailed();
-            TryToReconnect();
-
-            UpdateHealthCheck();
-
-            _coordinatorWebSocket.Update();
+            _coordinatorWS.Update();
             _sfuWebSocket.Update();
-
-            while (_coordinatorWebSocket.TryDequeueMessage(out var msg))
-            {
-                var decodedMessage = Encoding.UTF8.GetString(msg);
-
-#if STREAM_DEBUG_ENABLED
-                _logs.Info("Coordinator WS message: " + decodedMessage);
-#endif
-
-                HandleNewWebsocketMessage(decodedMessage);
-            }
-
-            //StreamTodo: 
-            while (_sfuWebSocket.TryDequeueMessage(out var msg))
-            {
-                var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
-
-#if STREAM_DEBUG_ENABLED
-                _logs.Info("SFU WS message: " + sfuEvent);
-#endif
-                //HandleNewSfuWebsocketMessage(msg);
-            }
         }
 
         //StreamTodo: if ring and notify can't be both true then perhaps enum NotifyMode.Ring, NotifyMode.Notify?
@@ -425,10 +409,10 @@ namespace StreamVideo.Core.LowLevelClient
             var sfuUri = _requestUriFactory.CreateSfuConnectionUri(sfuUrl);
 
             _logs.Info("SFU Connect URI: " + sfuUri);
-            await _sfuWebSocket.ConnectAsync(sfuUri);
+            await _sfuWebSocketOld.ConnectAsync(sfuUri);
             _logs.Info("SFU WS Connected");
 
-            _sfuWebSocket.Send(sfuRequestByteArray);
+            _sfuWebSocketOld.Send(sfuRequestByteArray);
         }
 
         //StreamTodo: move this to injected config object
@@ -443,17 +427,17 @@ namespace StreamVideo.Core.LowLevelClient
         {
             ConnectionState = ConnectionState.Closing;
 
-            _reconnectScheduler.Dispose();
+            // _reconnectScheduler.Dispose();
 
             TryCancelWaitingForUserConnection();
 
-            _coordinatorWebSocket.ConnectionFailed -= OnCoordinatorWebsocketsConnectionFailed;
-            _coordinatorWebSocket.Disconnected -= OnCoordinatorWebsocketDisconnected;
-            _coordinatorWebSocket.Dispose();
-
-            _sfuWebSocket.ConnectionFailed -= OnSfuWebsocketsConnectionFailed;
-            _sfuWebSocket.Disconnected -= OnCoordinatorWebsocketDisconnected;
-            _sfuWebSocket.Dispose();
+            // _coordinatorWebSocketOld.ConnectionFailed -= OnCoordinatorWebsocketsConnectionFailed;
+            // _coordinatorWebSocketOld.Disconnected -= OnCoordinatorWebsocketDisconnected;
+            // _coordinatorWebSocketOld.Dispose();
+            //
+            // _sfuWebSocketOld.ConnectionFailed -= OnSfuWebsocketsConnectionFailed;
+            // _sfuWebSocketOld.Disconnected -= OnCoordinatorWebsocketDisconnected;
+            // _sfuWebSocketOld.Dispose();
 
             _updateMonitorCts.Cancel();
         }
@@ -494,6 +478,8 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CustomVideoEvent> InternalCustomVideoEvent;
         
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
+        
+        //StreamTodo: 2 ConnectUserAsync overloads: with tokenProvider and with the token directly
 
         internal async Task<OwnUserResponse> ConnectUserAsync(string apiKey, string userId,
             ITokenProvider tokenProvider, CancellationToken cancellationToken = default)
@@ -523,10 +509,9 @@ namespace StreamVideo.Core.LowLevelClient
                 await RefreshAuthTokenFromProvider();
 
                 var connectionUri =
-                    _requestUriFactory.CreateCoordinatorConnectionUri(() =>
-                        BuildStreamClientHeader(new UnityApplicationInfo()));
+                    _requestUriFactory.CreateCoordinatorConnectionUri();
 
-                await _coordinatorWebSocket.ConnectAsync(connectionUri);
+                await _coordinatorWebSocketOld.ConnectAsync(connectionUri);
 
                 // StreamTODO: Do we receive a user here?
                 var ownUserDto = await _connectUserTaskSource.Task;
@@ -546,24 +531,24 @@ namespace StreamVideo.Core.LowLevelClient
         // For WebGL there is a slight delay when sending therefore we send HC event a bit sooner just in case
         private const int HealthCheckSendInterval = HealthCheckMaxWaitingTime - 1;
 
-        private readonly IWebsocketClient _coordinatorWebSocket;
-        private readonly IWebsocketClient _sfuWebSocket;
+        //private readonly IWebsocketClient _coordinatorWebSocketOld;
+        //private readonly IWebsocketClient _sfuWebSocketOld;
+
+        private readonly IPersistentWebSocket _coordinatorWS;
+        private readonly IPersistentWebSocket _sfuWebSocket;
+        
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
         private readonly ITimeService _timeService;
         private readonly INetworkMonitor _networkMonitor;
         private readonly IRequestUriFactory _requestUriFactory;
         private readonly IHttpClient _httpClient;
-        private readonly StringBuilder _errorSb = new StringBuilder();
         private readonly StringBuilder _logSb = new StringBuilder();
         private readonly IStreamClientConfig _config;
         private readonly ReconnectScheduler _reconnectScheduler;
 
-        private readonly Dictionary<string, Action<string>> _eventKeyToHandler =
-            new Dictionary<string, Action<string>>();
-
-        private readonly object _websocketConnectionFailedFlagLock = new object();
-        private readonly object _sfuWebsocketConnectionFailedFlagLock = new object();
+        // private readonly object _websocketConnectionFailedFlagLock = new object();
+        // private readonly object _sfuWebsocketConnectionFailedFlagLock = new object();
 
         private TaskCompletionSource<OwnUserResponse> _connectUserTaskSource;
         private CancellationToken _connectUserCancellationToken;
@@ -574,12 +559,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private ConnectionState _connectionState;
         private string _connectionId;
-        private float _lastHealthCheckReceivedTime;
-        private float _lastHealthCheckSendTime;
+
         private bool _updateCallReceived;
 
-        private bool _websocketConnectionFailed;
-        private bool _sfuWebsocketConnectionFailed;
+        // private bool _websocketConnectionFailed;
+        // private bool _sfuWebsocketConnectionFailed;
         private ITokenProvider _tokenProvider;
 
         private string _hintLocation;
@@ -656,48 +640,48 @@ namespace StreamVideo.Core.LowLevelClient
             //ConnectionState = ConnectionState.Disconnected;
         }
 
-        /// <summary>
-        /// This event can be called by a background thread and we must propagate it on the main thread
-        /// Otherwise any call to Unity API would result in Exception. Unity API can only be called from the main thread
-        /// </summary>
-        private void OnCoordinatorWebsocketsConnectionFailed()
-        {
-            lock (_websocketConnectionFailedFlagLock)
-            {
-                _websocketConnectionFailed = true;
-            }
-        }
+        // /// <summary>
+        // /// This event can be called by a background thread and we must propagate it on the main thread
+        // /// Otherwise any call to Unity API would result in Exception. Unity API can only be called from the main thread
+        // /// </summary>
+        // private void OnCoordinatorWebsocketsConnectionFailed()
+        // {
+        //     lock (_websocketConnectionFailedFlagLock)
+        //     {
+        //         _websocketConnectionFailed = true;
+        //     }
+        // }
 
-        /// <summary>
-        /// This event can be called by a background thread and we must propagate it on the main thread
-        /// Otherwise any call to Unity API would result in Exception. Unity API can only be called from the main thread
-        /// </summary>
-        private void OnSfuWebsocketsConnectionFailed()
-        {
-            lock (_sfuWebsocketConnectionFailedFlagLock)
-            {
-                _sfuWebsocketConnectionFailed = true;
-            }
-        }
+        // /// <summary>
+        // /// This event can be called by a background thread and we must propagate it on the main thread
+        // /// Otherwise any call to Unity API would result in Exception. Unity API can only be called from the main thread
+        // /// </summary>
+        // private void OnSfuWebsocketsConnectionFailed()
+        // {
+        //     lock (_sfuWebsocketConnectionFailedFlagLock)
+        //     {
+        //         _sfuWebsocketConnectionFailed = true;
+        //     }
+        // }
 
-        private void TryHandleWebsocketsConnectionFailed()
-        {
-            lock (_websocketConnectionFailedFlagLock)
-            {
-                if (!_websocketConnectionFailed)
-                {
-                    return;
-                }
-
-                _websocketConnectionFailed = false;
-            }
-
-#if STREAM_DEBUG_ENABLED
-            _logs.Warning("Websocket connection failed");
-#endif
-
-            ConnectionState = ConnectionState.Disconnected;
-        }
+//         private void TryHandleWebsocketsConnectionFailed()
+//         {
+//             lock (_websocketConnectionFailedFlagLock)
+//             {
+//                 if (!_websocketConnectionFailed)
+//                 {
+//                     return;
+//                 }
+//
+//                 _websocketConnectionFailed = false;
+//             }
+//
+// #if STREAM_DEBUG_ENABLED
+//             _logs.Warning("Websocket connection failed");
+// #endif
+//
+//             ConnectionState = ConnectionState.Disconnected;
+//         }
 
         /// <summary>
         /// Based on receiving initial health check event from the server
@@ -710,7 +694,6 @@ namespace StreamVideo.Core.LowLevelClient
 #pragma warning disable 0618
             //LocalUser = connectedEvent.Me;
 #pragma warning restore 0618
-            _lastHealthCheckReceivedTime = _timeService.Time;
 
             ConnectionState = ConnectionState.Connected;
 
@@ -745,289 +728,143 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void RegisterEventHandlers()
+        private void RegisterCoordinatorEventHandlers()
         {
-            RegisterEventType<HealthCheckEvent>(CoordinatorEventType.HealthCheck,
-                HandleHealthCheckEvent);
-
-            RegisterEventType<ConnectedEvent>(CoordinatorEventType.ConnectionOk,
-                HandleConnectionOkEvent);
-
-            RegisterEventType<CallCreatedEvent>(CoordinatorEventType.CallCreated,
+            _coordinatorWS.RegisterEventType<CallCreatedEvent>(CoordinatorEventType.CallCreated,
                 e => InternalCallCreatedEvent?.Invoke(e));
 
-            RegisterEventType<CallUpdatedEvent>(CoordinatorEventType.CallUpdated,
+            _coordinatorWS.RegisterEventType<CallUpdatedEvent>(CoordinatorEventType.CallUpdated,
                 e => InternalCallUpdatedEvent?.Invoke(e));
 
-            RegisterEventType<CallEndedEvent>(CoordinatorEventType.CallEnded,
+            _coordinatorWS.RegisterEventType<CallEndedEvent>(CoordinatorEventType.CallEnded,
                 e => InternalCallEndedEvent?.Invoke(e));
 
-            RegisterEventType<ParticipantJoined>(CoordinatorEventType.CallSessionParticipantJoined,
+            _coordinatorWS.RegisterEventType<ParticipantJoined>(CoordinatorEventType.CallSessionParticipantJoined,
                 e => InternalParticipantJoinedEvent?.Invoke(e));
 
-            RegisterEventType<ParticipantLeft>(CoordinatorEventType.CallSessionParticipantLeft,
+            _coordinatorWS.RegisterEventType<ParticipantLeft>(CoordinatorEventType.CallSessionParticipantLeft,
                 e => InternalParticipantLeftEvent?.Invoke(e));
 
-            RegisterEventType<CallAcceptedEvent>(CoordinatorEventType.CallAccepted,
+            _coordinatorWS.RegisterEventType<CallAcceptedEvent>(CoordinatorEventType.CallAccepted,
                 e => InternalCallAcceptedEvent?.Invoke(e));
 
-            RegisterEventType<CallRejectedEvent>(CoordinatorEventType.CallRejected,
+            _coordinatorWS.RegisterEventType<CallRejectedEvent>(CoordinatorEventType.CallRejected,
                 e => InternalCallRejectedEvent?.Invoke(e));
 
-            RegisterEventType<CallLiveStartedEvent>(CoordinatorEventType.CallLiveStarted,
+            _coordinatorWS.RegisterEventType<CallLiveStartedEvent>(CoordinatorEventType.CallLiveStarted,
                 e => InternalCallLiveStartedEvent?.Invoke(e));
 
-            RegisterEventType<CallMemberAddedEvent>(CoordinatorEventType.CallMemberAdded,
+            _coordinatorWS.RegisterEventType<CallMemberAddedEvent>(CoordinatorEventType.CallMemberAdded,
                 e => InternalCallMemberAddedEvent?.Invoke(e));
 
-            RegisterEventType<CallMemberRemovedEvent>(CoordinatorEventType.CallMemberRemoved,
+            _coordinatorWS.RegisterEventType<CallMemberRemovedEvent>(CoordinatorEventType.CallMemberRemoved,
                 e => InternalCallMemberRemovedEvent?.Invoke(e));
 
-            RegisterEventType<CallMemberUpdatedEvent>(CoordinatorEventType.CallMemberUpdated,
+            _coordinatorWS.RegisterEventType<CallMemberUpdatedEvent>(CoordinatorEventType.CallMemberUpdated,
                 e => InternalCallMemberUpdatedEvent?.Invoke(e));
 
-            RegisterEventType<CallMemberUpdatedPermissionEvent>(CoordinatorEventType.CallMemberUpdatedPermission,
+            _coordinatorWS.RegisterEventType<CallMemberUpdatedPermissionEvent>(CoordinatorEventType.CallMemberUpdatedPermission,
                 e => InternalCallMemberUpdatedPermissionEvent?.Invoke(e));
 
-            RegisterEventType<CallNotificationEvent>(CoordinatorEventType.CallNotification,
+            _coordinatorWS.RegisterEventType<CallNotificationEvent>(CoordinatorEventType.CallNotification,
                 e => InternalCallNotificationEvent?.Invoke(e));
 
-            RegisterEventType<PermissionRequestEvent>(CoordinatorEventType.CallPermissionRequest,
+            _coordinatorWS.RegisterEventType<PermissionRequestEvent>(CoordinatorEventType.CallPermissionRequest,
                 e => InternalPermissionRequestEvent?.Invoke(e));
 
-            RegisterEventType<UpdatedCallPermissionsEvent>(CoordinatorEventType.CallPermissionsUpdated,
+            _coordinatorWS.RegisterEventType<UpdatedCallPermissionsEvent>(CoordinatorEventType.CallPermissionsUpdated,
                 e => InternalUpdatedCallPermissionsEvent?.Invoke(e));
 
-            RegisterEventType<CallReactionEvent>(CoordinatorEventType.CallReactionNew,
+            _coordinatorWS.RegisterEventType<CallReactionEvent>(CoordinatorEventType.CallReactionNew,
                 e => InternalCallReactionEvent?.Invoke(e));
 
-            RegisterEventType<CallRecordingStartedEvent>(CoordinatorEventType.CallRecordingStarted,
+            _coordinatorWS.RegisterEventType<CallRecordingStartedEvent>(CoordinatorEventType.CallRecordingStarted,
                 e => InternalCallRecordingStartedEvent?.Invoke(e));
-
-            RegisterEventType<CallRecordingStoppedEvent>(CoordinatorEventType.CallRecordingStopped,
+            _coordinatorWS.RegisterEventType<CallRecordingStoppedEvent>(CoordinatorEventType.CallRecordingStopped,
                 e => InternalCallRecordingStoppedEvent?.Invoke(e));
 
-            RegisterEventType<BlockedUserEvent>(CoordinatorEventType.CallBlockedUser,
+            _coordinatorWS.RegisterEventType<BlockedUserEvent>(CoordinatorEventType.CallBlockedUser,
                 e => InternalBlockedUserEvent?.Invoke(e));
 
-            RegisterEventType<CallBroadcastingStartedEvent>(CoordinatorEventType.CallBroadcastingStarted,
+            _coordinatorWS.RegisterEventType<CallBroadcastingStartedEvent>(CoordinatorEventType.CallBroadcastingStarted,
                 e => InternalCallBroadcastingStartedEvent?.Invoke(e));
 
-            RegisterEventType<CallBroadcastingStoppedEvent>(CoordinatorEventType.CallBroadcastingStopped,
+            _coordinatorWS.RegisterEventType<CallBroadcastingStoppedEvent>(CoordinatorEventType.CallBroadcastingStopped,
                 e => InternalCallBroadcastingStoppedEvent?.Invoke(e));
 
-            RegisterEventType<CallRingEvent>(CoordinatorEventType.CallRing,
+            _coordinatorWS.RegisterEventType<CallRingEvent>(CoordinatorEventType.CallRing,
                 e => InternalCallRingEvent?.Invoke(e));
 
-            RegisterEventType<CallSessionEndedEvent>(CoordinatorEventType.CallSessionEnded,
+            _coordinatorWS.RegisterEventType<CallSessionEndedEvent>(CoordinatorEventType.CallSessionEnded,
                 e => InternalCallSessionEndedEvent?.Invoke(e));
 
-            RegisterEventType<CallSessionStartedEvent>(CoordinatorEventType.CallSessionStarted,
+            _coordinatorWS.RegisterEventType<CallSessionStartedEvent>(CoordinatorEventType.CallSessionStarted,
                 e => InternalCallSessionStartedEvent?.Invoke(e));
 
-            RegisterEventType<BlockedUserEvent>(CoordinatorEventType.CallUnblockedUser,
+            _coordinatorWS.RegisterEventType<BlockedUserEvent>(CoordinatorEventType.CallUnblockedUser,
                 e => InternalCallUnblockedUserEvent?.Invoke(e));
 
-            RegisterEventType<ConnectionErrorEvent>(CoordinatorEventType.ConnectionError,
+            _coordinatorWS.RegisterEventType<ConnectionErrorEvent>(CoordinatorEventType.ConnectionError,
                 e => InternalConnectionErrorEvent?.Invoke(e));
 
-            RegisterEventType<CustomVideoEvent>(CoordinatorEventType.Custom,
+            _coordinatorWS.RegisterEventType<CustomVideoEvent>(CoordinatorEventType.Custom,
                 e => InternalCustomVideoEvent?.Invoke(e));
+
         }
 
-        private void RegisterEventType<TDto, TEvent>(string key,
-            Action<TEvent, TDto> handler, Action<TDto> internalHandler = null)
-            where TEvent : ILoadableFrom<TDto, TEvent>, new()
-        {
-            if (_eventKeyToHandler.ContainsKey(key))
-            {
-                _logs.Warning($"Event handler with key `{key}` is already registered. Ignored");
-                return;
-            }
+//         private void UpdateHealthCheck()
+//         {
+//             if (ConnectionState != ConnectionState.Connected)
+//             {
+//                 return;
+//             }
+//
+//             var timeSinceLastHealthCheckSent = _timeService.Time - _lastHealthCheckSendTime;
+//             if (timeSinceLastHealthCheckSent > HealthCheckSendInterval)
+//             {
+//                 PingHealthCheck();
+//             }
+//
+//             var timeSinceLastHealthCheck = _timeService.Time - _lastHealthCheckReceivedTime;
+//             if (timeSinceLastHealthCheck > HealthCheckMaxWaitingTime)
+//             {
+//                 _logs.Warning($"Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
+//                 _coordinatorWebSocketOld
+//                     .DisconnectAsync(WebSocketCloseStatus.InternalServerError,
+//                         $"Health check was not received since: {timeSinceLastHealthCheck}")
+//                     .ContinueWith(_ => _logs.Exception(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
+//             }
+//         }
+//
+//         private void PingHealthCheck()
+//         {
+//             var healthCheck = new HealthCheckEvent();
+//
+//             _coordinatorWebSocketOld.Send(_serializer.Serialize(healthCheck));
+//             _lastHealthCheckSendTime = _timeService.Time;
+//
+// #if STREAM_DEBUG_ENABLED
+//             _logs.Info("Health check sent");
+// #endif
+//         }
 
-            _eventKeyToHandler.Add(key, serializedContent =>
-            {
-                try
-                {
-                    var eventObj = DeserializeEvent<TDto, TEvent>(serializedContent, out var dto);
-                    handler?.Invoke(eventObj, dto);
-                    internalHandler?.Invoke(dto);
-                }
-                catch (Exception e)
-                {
-                    _logs.Exception(e);
-                }
-            });
-        }
-
-        private void RegisterEventType<TDto>(string key,
-            Action<TDto> internalHandler = null)
-        {
-            if (_eventKeyToHandler.ContainsKey(key))
-            {
-                _logs.Warning($"Event handler with key `{key}` is already registered. Ignored");
-                return;
-            }
-
-            _eventKeyToHandler.Add(key, serializedContent =>
-            {
-                try
-                {
-                    var dto = _serializer.Deserialize<TDto>(serializedContent);
-                    internalHandler?.Invoke(dto);
-                }
-                catch (Exception e)
-                {
-                    _logs.Exception(e);
-                }
-            });
-        }
-
-        private TEvent DeserializeEvent<TDto, TEvent>(string content, out TDto dto)
-            where TEvent : ILoadableFrom<TDto, TEvent>, new()
-        {
-            try
-            {
-                dto = _serializer.Deserialize<TDto>(content);
-            }
-            catch (Exception e)
-            {
-                throw new StreamDeserializationException(content, typeof(TDto), e);
-            }
-
-            var response = new TEvent();
-            response.LoadFromDto(dto);
-
-            return response;
-        }
-
-        private void HandleNewSfuWebsocketMessage(string msg)
-        {
-            const string ErrorKey = "error";
-
-            if (_serializer.TryPeekValue<APIError>(msg, ErrorKey, out var apiError))
-            {
-                _errorSb.Length = 0;
-                apiError.AppendFullLog(_errorSb);
-
-                _logs.Error($"{nameof(APIError)} returned: {_errorSb}");
-                return;
-            }
-
-            const string TypeKey = "type";
-
-            if (!_serializer.TryPeekValue<string>(msg, TypeKey, out var type))
-            {
-                _logs.Error($"Failed to find `{TypeKey}` in msg: " + msg);
-                return;
-            }
-
-            var time = DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss");
-            EventReceived?.Invoke($"{time} - Event received: <b>{type}</b>");
-
-            if (!_eventKeyToHandler.TryGetValue(type, out var handler))
-            {
-                if (_config.LogLevel.IsDebugEnabled())
-                {
-                    _logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
-                }
-
-                return;
-            }
-
-            handler(msg);
-        }
-
-        private void HandleNewWebsocketMessage(string msg)
-        {
-            const string ErrorKey = "error";
-
-            if (_serializer.TryPeekValue<APIError>(msg, ErrorKey, out var apiError))
-            {
-                _errorSb.Length = 0;
-                apiError.AppendFullLog(_errorSb);
-
-                _logs.Error($"{nameof(APIError)} returned: {_errorSb}");
-                return;
-            }
-
-            const string TypeKey = "type";
-
-            if (!_serializer.TryPeekValue<string>(msg, TypeKey, out var type))
-            {
-                _logs.Error($"Failed to find `{TypeKey}` in msg: " + msg);
-                return;
-            }
-
-            var time = DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss");
-            EventReceived?.Invoke($"{time} - Event received: <b>{type}</b>");
-
-            if (!_eventKeyToHandler.TryGetValue(type, out var handler))
-            {
-                if (_config.LogLevel.IsDebugEnabled())
-                {
-                    _logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
-                }
-
-                return;
-            }
-
-            handler(msg);
-        }
-
-        private void UpdateHealthCheck()
-        {
-            if (ConnectionState != ConnectionState.Connected)
-            {
-                return;
-            }
-
-            var timeSinceLastHealthCheckSent = _timeService.Time - _lastHealthCheckSendTime;
-            if (timeSinceLastHealthCheckSent > HealthCheckSendInterval)
-            {
-                PingHealthCheck();
-            }
-
-            var timeSinceLastHealthCheck = _timeService.Time - _lastHealthCheckReceivedTime;
-            if (timeSinceLastHealthCheck > HealthCheckMaxWaitingTime)
-            {
-                _logs.Warning($"Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
-                _coordinatorWebSocket
-                    .DisconnectAsync(WebSocketCloseStatus.InternalServerError,
-                        $"Health check was not received since: {timeSinceLastHealthCheck}")
-                    .ContinueWith(_ => _logs.Exception(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
-            }
-        }
-
-        private void PingHealthCheck()
-        {
-            var healthCheck = new HealthCheckEvent();
-
-            _coordinatorWebSocket.Send(_serializer.Serialize(healthCheck));
-            _lastHealthCheckSendTime = _timeService.Time;
-
-#if STREAM_DEBUG_ENABLED
-            _logs.Info("Health check sent");
-#endif
-        }
-
-        private void HandleHealthCheckEvent(HealthCheckEvent healthCheckEvent)
-        {
-            _logs.Info("Health check received");
-            _lastHealthCheckReceivedTime = _timeService.Time;
-        }
-
-        private void HandleConnectionOkEvent(ConnectedEvent connectedEvent)
-        {
-            _connectionId = connectedEvent.ConnectionId;
-
-            ConnectionState = ConnectionState.Connected;
-
-            _connectUserTaskSource?.SetResult(connectedEvent.Me);
-
-            _logs.Info("Connection confirmed by server with connection id: " + _connectionId);
-            Connected?.Invoke();
-        }
+        // private void HandleHealthCheckEvent(HealthCheckEvent healthCheckEvent)
+        // {
+        //     _logs.Info("Health check received");
+        //     _lastHealthCheckReceivedTime = _timeService.Time;
+        // }
+        //
+        // private void HandleConnectionOkEvent(ConnectedEvent connectedEvent)
+        // {
+        //     _connectionId = connectedEvent.ConnectionId;
+        //
+        //     ConnectionState = ConnectionState.Connected;
+        //
+        //     _connectUserTaskSource?.SetResult(connectedEvent.Me);
+        //
+        //     _logs.Info("Connection confirmed by server with connection id: " + _connectionId);
+        //     Connected?.Invoke();
+        // }
 
         private static bool IsUserIdValid(string userId)
         {

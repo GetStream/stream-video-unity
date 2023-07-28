@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Exceptions;
-using StreamVideo.Core.InternalDTO.Events;
-using StreamVideo.Core.LowLevelClient.Models;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Logs;
@@ -38,6 +37,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
                 if (value == ConnectionState.Connected)
                 {
+                    OnConnected();
                     Connected?.Invoke();
                 }
                 else if (value == ConnectionState.Disconnected)
@@ -46,7 +46,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 }
             }
         }
-        
+
         public ITokenProvider AuthTokenProvider { get; set; }
         public AuthCredentials AuthCredentials { get; set; }
 
@@ -57,7 +57,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         // public float ReconnectExponentialMaxInterval => _reconnectScheduler.ReconnectExponentialMaxInterval;
         // public int ReconnectMaxInstantTrials => _reconnectScheduler.ReconnectMaxInstantTrials;
         public double? NextReconnectTime => _reconnectScheduler.NextReconnectTime;
-        
+
         public void Update()
         {
             TryHandleWebsocketsConnectionFailed();
@@ -65,18 +65,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             MonitorHealthCheck();
 
-            while (WebsocketClient.TryDequeueMessage(out var msg))
-            {
-                //StreamTodo: this is different per impl
-                var decodedMessage = Encoding.UTF8.GetString(msg);
-
-#if STREAM_DEBUG_ENABLED
-                Logs.Info("WS message: " + decodedMessage);
-#endif
-
-                HandleNewWebsocketMessage(decodedMessage);
-            }
+            ProcessMessages();
         }
+
+        protected abstract void ProcessMessages();
 
         private void TryToReconnect()
         {
@@ -89,7 +81,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             {
                 return;
             }
-            
+
             OnConnectAsync().LogIfFailed();
 
             //StreamTodo: is needed? 
@@ -105,9 +97,154 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             // }
         }
 
-        public Task ConnectAsync() => OnConnectAsync();
+        public Task ConnectAsync(CancellationToken cancellationToken = default)
+        {
+            //StreamTodo: TryCancelWaitingForUserConnection()
+            ConnectionState = ConnectionState.Connecting;
+            try
+            {
+                return OnConnectAsync(cancellationToken);
+            }
+            catch (Exception e)
+            {
+                ConnectionState = ConnectionState.Disconnected;
+                throw;
+            }
+        }
 
-        protected abstract Task OnConnectAsync();
+        public Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
+        {
+            //StreamTodo: TryCancelWaitingForUserConnection()
+            OnDisconnecting();
+
+            if (WebsocketClient == null)
+            {
+                return Task.CompletedTask;
+            }
+
+            return WebsocketClient.DisconnectAsync(closeStatus, closeMessage);
+        }
+
+        public void RegisterEventType<TDto, TEvent>(string key,
+            Action<TEvent, TDto> handler, Action<TDto> internalHandler = null)
+            where TEvent : ILoadableFrom<TDto, TEvent>, new()
+        {
+            if (_eventKeyToHandler.ContainsKey(key))
+            {
+                Logs.Warning($"Event handler with key `{key}` is already registered. Ignored");
+                return;
+            }
+
+            _eventKeyToHandler.Add(key, serializedContent =>
+            {
+                try
+                {
+                    var eventObj = DeserializeEvent<TDto, TEvent>(serializedContent, out var dto);
+                    handler?.Invoke(eventObj, dto);
+                    internalHandler?.Invoke(dto);
+                }
+                catch (Exception e)
+                {
+                    Logs.Exception(e);
+                }
+            });
+        }
+
+        public void RegisterEventType<TDto>(string key,
+            Action<TDto> internalHandler = null)
+        {
+            if (_eventKeyToHandler.ContainsKey(key))
+            {
+                Logs.Warning($"Event handler with key `{key}` is already registered. Ignored");
+                return;
+            }
+
+            _eventKeyToHandler.Add(key, serializedContent =>
+            {
+                try
+                {
+                    var dto = Serializer.Deserialize<TDto>(serializedContent);
+                    internalHandler?.Invoke(dto);
+                }
+                catch (Exception e)
+                {
+                    Logs.Exception(e);
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            //StreamTodo: Cancel waiting for connected task
+            ConnectionState = ConnectionState.Closing;
+            OnDisposing();
+
+            WebsocketClient.ConnectionFailed -= OnConnectionFailed;
+            WebsocketClient.Disconnected -= OnDisconnected;
+
+            //StreamTodo: we're disposing the WS but we're not the owner, would be better to accept a factory method so we own the obj
+            WebsocketClient.Dispose();
+        }
+
+        protected IWebsocketClient WebsocketClient { get; private set; }
+        protected abstract string LogsPrefix { get; set; }
+        protected ILogs Logs { get; }
+        protected ITimeService TimeService { get; }
+        protected ISerializer Serializer { get; }
+        protected IRequestUriFactory UriFactory { get; }
+        protected IReadOnlyDictionary<string, Action<string>> EventHandlers => _eventKeyToHandler;
+
+        protected BasePersistentWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
+            IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs)
+        {
+            //StreamTodo: assert
+            UriFactory = requestUriFactory;
+            _reconnectScheduler = reconnectScheduler;
+            Serializer = serializer;
+            TimeService = timeService;
+            Logs = logs;
+            WebsocketClient = websocketClient ?? throw new ArgumentNullException(nameof(websocketClient));
+
+            WebsocketClient.ConnectionFailed += OnConnectionFailed;
+            WebsocketClient.Disconnected += OnDisconnected;
+            
+            _reconnectScheduler.ReconnectionScheduled += OnReconnectionScheduled;
+        }
+
+        protected abstract void SendHealthCheck();
+
+        protected abstract Task OnConnectAsync(CancellationToken cancellationToken = default);
+
+        protected void OnHealthCheckReceived()
+        {
+            Logs.Info("Health check received");
+            _lastHealthCheckReceivedTime = TimeService.Time;
+        }
+
+        protected virtual void OnDisconnecting()
+        {
+        }
+
+        protected virtual void OnDisposing()
+        {
+        }
+
+
+        private const int HealthCheckMaxWaitingTime = 30;
+
+        // For WebGL there is a slight delay when sending therefore we send HC event a bit sooner just in case
+        private const int HealthCheckSendInterval = HealthCheckMaxWaitingTime - 1;
+
+        private readonly object _websocketConnectionFailedFlagLock = new object();
+        private readonly IReconnectScheduler _reconnectScheduler;
+        private readonly Dictionary<string, Action<string>> _eventKeyToHandler =
+            new Dictionary<string, Action<string>>();
+        private readonly StringBuilder _logSb = new StringBuilder();
+
+        private ConnectionState _connectionState;
+        private bool _websocketConnectionFailed;
+        private float _lastHealthCheckReceivedTime;
+        private float _lastHealthCheckSendTime;
         
         private void TryHandleWebsocketsConnectionFailed()
         {
@@ -138,7 +275,12 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             var timeSinceLastHealthCheckSent = TimeService.Time - _lastHealthCheckSendTime;
             if (timeSinceLastHealthCheckSent > HealthCheckSendInterval)
             {
-                PingHealthCheck();
+                SendHealthCheck();
+                _lastHealthCheckSendTime = TimeService.Time;
+
+#if STREAM_DEBUG_ENABLED
+                Logs.Info("Health check sent");
+#endif
             }
 
             var timeSinceLastHealthCheck = TimeService.Time - _lastHealthCheckReceivedTime;
@@ -151,126 +293,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                     .ContinueWith(_ => Logs.Exception(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
             }
         }
-
-        private void PingHealthCheck()
-        {
-            //StreamTodo: handle per implemention
-            var healthCheck = new HealthCheckEvent();
-
-            WebsocketClient.Send(Serializer.Serialize(healthCheck));
-            _lastHealthCheckSendTime = TimeService.Time;
-
-#if STREAM_DEBUG_ENABLED
-            Logs.Info("Health check sent");
-#endif
-        }
-        
-        public void RegisterEventType<TDto, TEvent>(string key,
-            Action<TEvent, TDto> handler, Action<TDto> internalHandler = null)
-            where TEvent : ILoadableFrom<TDto, TEvent>, new()
-        {
-            if (_eventKeyToHandler.ContainsKey(key))
-            {
-                Logs.Warning($"Event handler with key `{key}` is already registered. Ignored");
-                return;
-            }
-
-            _eventKeyToHandler.Add(key, serializedContent =>
-            {
-                try
-                {
-                    var eventObj = DeserializeEvent<TDto, TEvent>(serializedContent, out var dto);
-                    handler?.Invoke(eventObj, dto);
-                    internalHandler?.Invoke(dto);
-                }
-                catch (Exception e)
-                {
-                    Logs.Exception(e);
-                }
-            });
-        }
-        
-        public void RegisterEventType<TDto>(string key,
-            Action<TDto> internalHandler = null)
-        {
-            if (_eventKeyToHandler.ContainsKey(key))
-            {
-                Logs.Warning($"Event handler with key `{key}` is already registered. Ignored");
-                return;
-            }
-
-            _eventKeyToHandler.Add(key, serializedContent =>
-            {
-                try
-                {
-                    var dto = Serializer.Deserialize<TDto>(serializedContent);
-                    internalHandler?.Invoke(dto);
-                }
-                catch (Exception e)
-                {
-                    Logs.Exception(e);
-                }
-            });
-        }
-
-        public void Dispose()
-        {
-            WebsocketClient.ConnectionFailed -= OnConnectionFailed;
-            WebsocketClient.Disconnected -= OnDisconnected;
-
-            //StreamTodo: we're disposing the WS but we're not the owner, would be better to accept a factory method so we own the obj
-            WebsocketClient.Dispose();
-        }
-
-        protected IWebsocketClient WebsocketClient { get; private set; }
-        protected abstract string LogsPrefix { get; set; }
-        protected ILogs Logs { get; }
-        protected ITimeService TimeService { get; }
-        protected ISerializer Serializer { get; }
-        protected IRequestUriFactory UriFactory { get; }
-
-        //StreamTodo: we should track the persistent WS state like Connecting, Connected, Disconnected, WaitingToReconnect, etc.
-
-        protected BasePersistentWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
-            IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs)
-        {
-            UriFactory = requestUriFactory;
-            _reconnectScheduler = reconnectScheduler;
-            //StreamTodo: assert
-            Serializer = serializer;
-            TimeService = timeService;
-            Logs = logs;
-            WebsocketClient = websocketClient ?? throw new ArgumentNullException(nameof(websocketClient));
-
-            WebsocketClient.ConnectionFailed += OnConnectionFailed;
-            WebsocketClient.Disconnected += OnDisconnected;
-        }
-
-        protected void OnHealthCheckReceived()
-        {
-            Logs.Info("Health check received");
-            _lastHealthCheckReceivedTime = TimeService.Time;
-        }
-
-        private const int HealthCheckMaxWaitingTime = 30;
-
-        // For WebGL there is a slight delay when sending therefore we send HC event a bit sooner just in case
-        private const int HealthCheckSendInterval = HealthCheckMaxWaitingTime - 1;
-
-        private readonly object _websocketConnectionFailedFlagLock = new object();
-
-        private readonly IReconnectScheduler _reconnectScheduler;
-        private readonly StringBuilder _errorSb = new StringBuilder();
-
-        private readonly Dictionary<string, Action<string>> _eventKeyToHandler =
-            new Dictionary<string, Action<string>>();
-
-        private ConnectionState _connectionState;
-
-        private bool _websocketConnectionFailed;
-
-        private float _lastHealthCheckReceivedTime;
-        private float _lastHealthCheckSendTime;
 
         /// <summary>
         /// This event can be called by a background thread and we must propagate it on the main thread
@@ -289,7 +311,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 #if STREAM_DEBUG_ENABLED
             Logs.Warning($"{LogsPrefix} Websocket Disconnected");
 #endif
-            //ConnectionState = ConnectionState.Disconnected;
+            ConnectionState = ConnectionState.Disconnected;
         }
 
         private void OnConnected()
@@ -314,46 +336,22 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             return response;
         }
-        
-        private void HandleNewWebsocketMessage(string msg)
+
+        private void OnReconnectionScheduled()
         {
-            const string ErrorKey = "error";
+            ConnectionState = ConnectionState.WaitToReconnect;
+            var timeLeft = NextReconnectTime.Value - TimeService.Time;
 
-            if (Serializer.TryPeekValue<APIError>(msg, ErrorKey, out var apiError))
-            {
-                _errorSb.Length = 0;
-                apiError.AppendFullLog(_errorSb);
+            _logSb.Append("Reconnect scheduled to time: <b>");
+            _logSb.Append(Math.Round(NextReconnectTime.Value));
+            _logSb.Append(" seconds</b>, current time: <b>");
+            _logSb.Append(Math.Round(TimeService.Time));
+            _logSb.Append(" seconds</b>, time left: <b>");
+            _logSb.Append(Math.Round(timeLeft));
+            _logSb.Append(" seconds</b>");
 
-                Logs.Error($"{nameof(APIError)} returned: {_errorSb}");
-                return;
-            }
-
-            const string TypeKey = "type";
-
-            if (!Serializer.TryPeekValue<string>(msg, TypeKey, out var type))
-            {
-                Logs.Error($"Failed to find `{TypeKey}` in msg: " + msg);
-                return;
-            }
-
-            //StreamTodo: do we need debug Event log? 
-            var time = DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss");
-            //EventReceived?.Invoke($"{time} - Event received: <b>{type}</b>");
-
-            if (!_eventKeyToHandler.TryGetValue(type, out var handler))
-            {
-                //StreamTodo: LogLevel should be passed to 
-                //if (_config.LogLevel.IsDebugEnabled())
-                {
-                    Logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
-                }
-
-                return;
-            }
-
-            handler(msg);
+            Logs.Info(_logSb.ToString());
+            _logSb.Clear();
         }
-        
-        
     }
 }

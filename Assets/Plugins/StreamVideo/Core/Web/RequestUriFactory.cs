@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.LowLevelClient;
@@ -12,16 +11,13 @@ namespace StreamVideo.Core.Web
     /// </summary>
     internal class RequestUriFactory : IRequestUriFactory
     {
-        public RequestUriFactory(IAuthProvider authProvider, IStreamVideoLowLevelClient connectionProvider,
-            ISerializer serializer, Func<string> clientInfoFactory)
+        public RequestUriFactory(IAuthProvider authProvider, IStreamVideoLowLevelClient connectionProvider, Func<string> clientInfoFactory)
         {
             _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
             _connectionProvider = connectionProvider ?? throw new ArgumentNullException(nameof(connectionProvider));
-            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _clientInfoFactory = clientInfoFactory ?? throw new ArgumentNullException(nameof(clientInfoFactory));
         }
 
-        //StreamTodo: remove clientInfoFactory
         public Uri CreateCoordinatorConnectionUri()
         {
             var uriParams = new Dictionary<string, string>
@@ -39,10 +35,8 @@ namespace StreamVideo.Core.Web
 
         public Uri CreateSfuConnectionUri(string sfuUrl)
         {
-            var absolutePath = sfuUrl;
-            absolutePath = absolutePath.Replace("/twirp", "/ws");
-
-            return new UriBuilder(absolutePath) { Scheme = "wss" }.Uri;
+            sfuUrl = sfuUrl.Replace("/twirp", "/ws");
+            return new UriBuilder(sfuUrl) { Scheme = "wss" }.Uri;
         }
 
         public Uri CreateEndpointUri(string endpoint, Dictionary<string, string> parameters = null)
@@ -61,7 +55,6 @@ namespace StreamVideo.Core.Web
         }
 
         private readonly IAuthProvider _authProvider;
-        private readonly ISerializer _serializer;
         private readonly IStreamVideoLowLevelClient _connectionProvider;
         private readonly Func<string> _clientInfoFactory;
 

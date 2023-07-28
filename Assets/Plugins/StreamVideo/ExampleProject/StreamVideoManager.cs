@@ -3,6 +3,7 @@ using StreamVideo.Core;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Libs.Auth;
+using StreamVideo.Libs.Utils;
 using UnityEngine;
 
 namespace StreamVideo.ExampleProject
@@ -23,18 +24,15 @@ namespace StreamVideo.ExampleProject
 
             var credentials = new AuthCredentials(apiKey, userId, userToken);
 
-            _client = StreamVideoLowLevelClient.CreateDefaultClient(credentials, new StreamClientConfig
+            _client = StreamVideoLowLevelClient.CreateDefaultClient(new StreamClientConfig
             {
                 LogLevel = StreamLogLevel.Debug
             });
 
-            _client.ConnectUser(credentials);
+            _client.ConnectUserAsync(credentials).LogIfFailed();
         }
 
-        protected void Update()
-        {
-            _client?.Update(Time.deltaTime);
-        }
+        protected void Update() => _client?.Update();
 
         protected async void OnDestroy()
         {

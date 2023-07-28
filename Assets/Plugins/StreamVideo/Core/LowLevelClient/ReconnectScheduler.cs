@@ -7,6 +7,7 @@ namespace StreamVideo.Core.LowLevelClient
     internal interface IReconnectScheduler
     {
         double? NextReconnectTime { get; }
+        event Action ReconnectionScheduled;
     }
     /// <summary>
     /// Schedules next reconnection time based on the past attempts and network availability

@@ -1,4 +1,6 @@
 using System;
+using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Libs.Auth;
 
@@ -17,6 +19,12 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         ITokenProvider AuthTokenProvider { get; set; }
         AuthCredentials AuthCredentials { get; set; }
-        Task ConnectAsync();
+        ConnectionState ConnectionState { get; }
+
+        Task ConnectAsync(CancellationToken cancellationToken = default);
+
+        Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage);
+
+        event ConnectionStateChangeHandler ConnectionStateChanged;
     }
 }

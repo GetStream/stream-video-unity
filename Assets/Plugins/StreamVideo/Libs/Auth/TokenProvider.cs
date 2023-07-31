@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Libs.Http;
 
@@ -18,7 +19,8 @@ namespace StreamVideo.Libs.Auth
             _urlFactory = urlFactory ?? throw new ArgumentNullException(nameof(urlFactory));
         }
 
-        public async Task<string> GetTokenAsync(string userId)
+        //StreamTodo: pass CancellationToken token to _httpClient
+        public async Task<string> GetTokenAsync(string userId, CancellationToken cancellationToken = default)
         {
             var uri = _urlFactory(userId);
             var response = await _httpClient.GetAsync(uri);

@@ -4,9 +4,9 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.Web;
-using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
@@ -47,9 +47,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        public ITokenProvider AuthTokenProvider { get; set; }
-        public AuthCredentials AuthCredentials { get; set; }
-
         //StreamTodo: do we need this?
         // public ReconnectStrategy ReconnectStrategy => _reconnectScheduler.ReconnectStrategy;
         // public float ReconnectConstantInterval => _reconnectScheduler.ReconnectConstantInterval;
@@ -82,19 +79,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
-            OnConnectAsync().LogIfFailed();
-
-            //StreamTodo: is needed? 
-            //Reconnecting?.Invoke();
-
-            // if (_tokenProvider != null)
-            // {
-            //     ConnectUserAsync(_authCredentials.ApiKey, _authCredentials.UserId, _tokenProvider).LogIfFailed();
-            // }
-            // else
-            // {
-            //     Connect();
-            // }
+            ConnectAsync().LogIfFailed();
         }
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)
@@ -114,7 +99,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         public Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
         {
-            //StreamTodo: TryCancelWaitingForUserConnection()
+            //StreamTodo: ignore if already disconnected or disconnecting
             OnDisconnecting();
 
             if (WebsocketClient == null)
@@ -192,11 +177,15 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         protected ITimeService TimeService { get; }
         protected ISerializer Serializer { get; }
         protected IRequestUriFactory UriFactory { get; }
+        protected IAuthProvider AuthProvider { get; }
+
         protected IReadOnlyDictionary<string, Action<string>> EventHandlers => _eventKeyToHandler;
 
         protected BasePersistentWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
+            IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs)
         {
+            AuthProvider = authProvider;
             //StreamTodo: assert
             UriFactory = requestUriFactory;
             _reconnectScheduler = reconnectScheduler;
@@ -245,7 +234,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private bool _websocketConnectionFailed;
         private float _lastHealthCheckReceivedTime;
         private float _lastHealthCheckSendTime;
-        
+
         private void TryHandleWebsocketsConnectionFailed()
         {
             lock (_websocketConnectionFailedFlagLock)

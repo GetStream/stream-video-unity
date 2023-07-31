@@ -175,8 +175,6 @@ namespace StreamChat.Core.LowLevelClient.API.Internal
         {
 #if STREAM_DEBUG_ENABLED
             _sb.Clear();
-
-            _sb.Clear();
             _sb.Append("API Call: ");
             _sb.Append(httpMethod);
             _sb.Append(" ");

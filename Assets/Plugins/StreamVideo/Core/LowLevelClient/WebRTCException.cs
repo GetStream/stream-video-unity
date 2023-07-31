@@ -3,9 +3,9 @@ using Unity.WebRTC;
 
 namespace StreamVideo.Core.LowLevelClient
 {
-    internal class WebRTCException : Exception
+    internal class WebRtcException : Exception
     {
-        public WebRTCException(RTCError error) 
+        public WebRtcException(RTCError error) 
             : base($"Type: {error.errorType}, Message: {error.message}")
         {
         }

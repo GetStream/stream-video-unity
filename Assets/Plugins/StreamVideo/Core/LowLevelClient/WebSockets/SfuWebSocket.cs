@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Google.Protobuf;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
+using StreamVideo.Core.Auth;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Logs;
@@ -15,10 +16,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
     internal class SfuWebSocket : BasePersistentWebSocket
     {
-        public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
+        public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler, IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs,
             IApplicationInfo applicationInfo, Version sdkVersion)
-            : base(websocketClient, reconnectScheduler, requestUriFactory, serializer, timeService, logs)
+            : base(websocketClient, reconnectScheduler, authProvider, requestUriFactory, serializer, timeService, logs)
         {
             _applicationInfo = applicationInfo;
             _sdkVersion = sdkVersion;

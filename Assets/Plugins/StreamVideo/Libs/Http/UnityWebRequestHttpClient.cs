@@ -57,6 +57,7 @@ namespace StreamVideo.Libs.Http
             }
         }
 
+        //StreamTodo: add cancellationToken support that will trigger https://docs.unity3d.com/ScriptReference/Networking.UnityWebRequest.Abort.html
         //StreamTodo: refactor to remove duplication
         private async Task<HttpResponse> SendWebRequest(Uri uri, string httpMethod,
             object optionalContent = null, ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null)

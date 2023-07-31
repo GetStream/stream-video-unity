@@ -2,10 +2,12 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using StreamVideo.Core.Auth;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient.Models;
 using StreamVideo.Core.Web;
+using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
@@ -17,9 +19,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
     {
         public string ConnectionId { get; private set; }
 
-        public CoordinatorWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
+        public CoordinatorWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler, IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs)
-            : base(websocketClient, reconnectScheduler, requestUriFactory, serializer, timeService, logs)
+            : base(websocketClient, reconnectScheduler, authProvider, requestUriFactory, serializer, timeService, logs)
         {
             RegisterEventType<HealthCheckEvent>(CoordinatorEventType.HealthCheck,
                 HandleHealthCheckEvent);
@@ -62,11 +64,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             //StreamTodo: handle TokenProvider
             var authMessage = new WSAuthMessageRequest
             {
-                Token = AuthCredentials.UserToken,
+                Token = AuthProvider.UserToken,
                 UserDetails = new ConnectUserDetailsRequest
                 {
                     //StreamTodo: handle Image & Name
-                    Id = AuthCredentials.UserId,
+                    Id = AuthProvider.UserId,
                     //Image = null,
                     //Name = null
                 }
@@ -83,14 +85,14 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             base.OnDisconnecting();
 
-            _connectUserTaskSource?.SetCanceled();
+            _connectUserTaskSource?.TrySetCanceled();
         }
 
         protected override void OnDisposing()
         {
             base.OnDisposing();
 
-            _connectUserTaskSource?.SetCanceled();
+            _connectUserTaskSource?.TrySetCanceled();
         }
 
         protected override void SendHealthCheck()

@@ -12,7 +12,6 @@ using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Requests;
-using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Web;
@@ -26,7 +25,6 @@ using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
 using StreamVideo.Libs.Websockets;
-using Unity.VisualScripting.Antlr3.Runtime;
 #if STREAM_TESTS_ENABLED
 using System.Runtime.CompilerServices;
 #endif
@@ -56,26 +54,7 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
 
-        // public IChannelApi ChannelApi { get; }
-        // public IMessageApi MessageApi { get; }
-        // public IModerationApi ModerationApi { get; }
-        // public IUserApi UserApi { get; }
-        // public IDeviceApi DeviceApi { get; }
-
-        // [Obsolete(
-        //     "This property presents only initial state of the LocalUser when connection is made and is not ever updated. " +
-        //     "Please use the OwnUser object returned from StreamChatClient.Connected event. This property will  be removed in the future.")]
-        // public OwnUser LocalUser { get; private set; }
-
         public ConnectionState ConnectionState => _coordinatorWS.ConnectionState;
-
-        //StreamTodo: wrap all params in a ReconnectPolicy object
-        // public ReconnectStrategy ReconnectStrategy => _reconnectScheduler.ReconnectStrategy;
-        // public float ReconnectConstantInterval => _reconnectScheduler.ReconnectConstantInterval;
-        // public float ReconnectExponentialMinInterval => _reconnectScheduler.ReconnectExponentialMinInterval;
-        // public float ReconnectExponentialMaxInterval => _reconnectScheduler.ReconnectExponentialMaxInterval;
-        // public int ReconnectMaxInstantTrials => _reconnectScheduler.ReconnectMaxInstantTrials;
-        // public double? NextReconnectTime => _reconnectScheduler.NextReconnectTime;
 
         /// <summary>
         /// SDK Version number
@@ -167,21 +146,16 @@ namespace StreamVideo.Core.LowLevelClient
             var sfuReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor);
 
             //StreamTodo: move to factory
-            _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, _requestUriFactory, _serializer, _timeService, _logs);
-            var sfuWebSocketWrapper = new SfuWebSocket(sfuWebSocket, sfuReconnect, _requestUriFactory, _serializer, _timeService, _logs, _applicationInfo, SDKVersion);
-            
-            _coordinatorWS.ConnectionStateChanged += OnCoordinatorConnectionStateChanged;
+            _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, authProvider: this, _requestUriFactory,
+                _serializer, _timeService, _logs);
+            var sfuWebSocketWrapper = new SfuWebSocket(sfuWebSocket, sfuReconnect, authProvider: this, _requestUriFactory, _serializer,
+                _timeService, _logs, _applicationInfo, SDKVersion);
 
-            // StreamTODO: setup a wrapper around WS that handles health checks, error handling and reconnections
-            // _coordinatorWebSocketOld.ConnectionFailed += OnCoordinatorWebsocketsConnectionFailed;
-            // _coordinatorWebSocketOld.Disconnected += OnCoordinatorWebsocketDisconnected;
-            //
-            // _sfuWebSocketOld.ConnectionFailed += OnSfuWebsocketsConnectionFailed;
-            // _sfuWebSocketOld.Disconnected += OnSfuWebsocketDisconnected;
+            _coordinatorWS.ConnectionStateChanged += OnCoordinatorConnectionStateChanged;
 
             InternalVideoClientApi
                 = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
-   
+
             _rtcSession = new RtcSession(sfuWebSocketWrapper, _logs);
 
             RegisterCoordinatorEventHandlers();
@@ -199,57 +173,20 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        // [Obsolete("Delete this")]
-        // public void ConnectUser(AuthCredentials userAuthCredentials)
-        // {
-        //     SetConnectionCredentials(userAuthCredentials);
-        //     Connect();
-        // }
-        //
-        // [Obsolete("Delete this")]
-        // //StreamTodo: we should leave Async option only, this was left for backward compatibility
-        // public void Connect()
-        // {
-        //     SetConnectionCredentials(_authCredentials);
-        //
-        //     if (!ConnectionState.IsValidToConnect())
-        //     {
-        //         throw new InvalidOperationException("Attempted to connect, but client is in state: " + ConnectionState);
-        //     }
-        //
-        //     TryCancelWaitingForUserConnection();
-        //
-        //     //StreamTodo: hidden dependency on SetUser being called
-        //     //StreamTodo: remove injected Func
-        //     var coordinatorConnectUri =
-        //         _requestUriFactory.CreateCoordinatorConnectionUri();
-        //
-        //     _logs.Info($"Attempt to connect to: {coordinatorConnectUri}");
-        //
-        //     ConnectionState = ConnectionState.Connecting;
-        //
-        //     //StreamTodo: this is async
-        //     _coordinatorWS.ConnectAsync();
-        //
-        //     UpdateLocationHintAsync().LogIfFailed();
-        // }
+        //StreamTodo: perhaps remove this overload, more != better
+        public Task ConnectUserAsync(AuthCredentials authCredentials, CancellationToken cancellationToken = default)
+            => ConnectUserAsync(authCredentials.ApiKey, authCredentials.UserId, authCredentials.UserToken,
+                cancellationToken);
 
-        public Task ConnectUserAsync(AuthCredentials authCredentials, CancellationToken cancellationToken = default) 
-            => ConnectUserAsync(authCredentials.ApiKey, authCredentials.UserId, authCredentials.UserToken, cancellationToken);
-        
         public async Task ConnectUserAsync(string apiKey, string userId, string userToken,
             CancellationToken cancellationToken = default)
         {
-            //StreamTodo: validate input
-            
             SetConnectionCredentials(new AuthCredentials(apiKey, userId, userToken));
 
             if (!ConnectionState.IsValidToConnect())
             {
                 throw new InvalidOperationException("Attempted to connect, but client is in state: " + ConnectionState);
             }
-
-            //TryCancelWaitingForUserConnection();
 
             var connectUri = _requestUriFactory.CreateCoordinatorConnectionUri();
 
@@ -259,23 +196,24 @@ namespace StreamVideo.Core.LowLevelClient
             await UpdateLocationHintAsync();
         }
 
-        public async Task ConnectUserAsync(string apiKey, string userId, ITokenProvider tokenProvider)
+        public async Task ConnectUserAsync(string apiKey, string userId, ITokenProvider tokenProvider,
+            CancellationToken cancellationToken = default)
         {
-            //StreamTodo: validate input
-            _tokenProvider = tokenProvider;
-            
+            _tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
+
             SetPartialConnectionCredentials(apiKey, userId);
 
-            await RefreshAuthTokenFromProviderAsync();
-            await ConnectUserAsync(_authCredentials.ApiKey, _authCredentials.UserId, _authCredentials.UserToken);
+            await RefreshAuthTokenFromProviderAsync(cancellationToken);
+            await ConnectUserAsync(_authCredentials.ApiKey, _authCredentials.UserId, _authCredentials.UserToken, cancellationToken);
         }
 
+        //StreamTodo: cancellation token
         //StreamTodo: make few attempts + can be awaited by the JoinCallAsync + support reconnections
         private async Task UpdateLocationHintAsync()
         {
             var headers = new List<KeyValuePair<string, IEnumerable<string>>>();
             await _httpClient.HeadAsync(LocationHintWebUri, headers);
-            
+
             var locationHeader = headers.FirstOrDefault(_ => _.Key.ToLower() == LocationHintHeaderKey);
             if (locationHeader.Key.IsNullOrEmpty() || !locationHeader.Value.Any())
             {
@@ -335,31 +273,10 @@ namespace StreamVideo.Core.LowLevelClient
             await _rtcSession.StartAsync(joinCallResponse);
         }
 
-        // //StreamTodo: move this to injected config object
-        // public void SetReconnectStrategySettings(ReconnectStrategy reconnectStrategy, float? exponentialMinInterval,
-        //     float? exponentialMaxInterval, float? constantInterval)
-        // {
-        //     _reconnectScheduler.SetReconnectStrategySettings(reconnectStrategy, exponentialMinInterval,
-        //         exponentialMaxInterval, constantInterval);
-        // }
-
         public void Dispose()
         {
-
-            // _reconnectScheduler.Dispose();
-
-            //TryCancelWaitingForUserConnection();
-            
             _coordinatorWS.ConnectionStateChanged -= OnCoordinatorConnectionStateChanged;
             _coordinatorWS.Dispose();
-
-            // _coordinatorWebSocketOld.ConnectionFailed -= OnCoordinatorWebsocketsConnectionFailed;
-            // _coordinatorWebSocketOld.Disconnected -= OnCoordinatorWebsocketDisconnected;
-            // _coordinatorWebSocketOld.Dispose();
-            //
-            // _sfuWebSocketOld.ConnectionFailed -= OnSfuWebsocketsConnectionFailed;
-            // _sfuWebSocketOld.Disconnected -= OnCoordinatorWebsocketDisconnected;
-            // _sfuWebSocketOld.Dispose();
 
             _updateMonitorCts.Cancel();
             _rtcSession?.Dispose();
@@ -371,7 +288,7 @@ namespace StreamVideo.Core.LowLevelClient
         string IAuthProvider.StreamAuthType => DefaultStreamAuthType;
         string IConnectionProvider.ConnectionId => _connectionId;
         Uri IConnectionProvider.ServerUri => ServerBaseUrl;
-        
+
         internal event Action<CallCreatedEvent> InternalCallCreatedEvent;
         internal event Action<CallUpdatedEvent> InternalCallUpdatedEvent;
         internal event Action<CallEndedEvent> InternalCallEndedEvent;
@@ -399,54 +316,13 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<BlockedUserEvent> InternalCallUnblockedUserEvent;
         internal event Action<ConnectionErrorEvent> InternalConnectionErrorEvent;
         internal event Action<CustomVideoEvent> InternalCustomVideoEvent;
-        
-        internal IInternalVideoClientApi InternalVideoClientApi { get; }
-        
-        //StreamTodo: 2 ConnectUserAsync overloads: with tokenProvider and with the token directly
 
-        //StreamTodo: check if still needed or unify with other ConnectUserAsync
-        // internal async Task<OwnUserResponse> ConnectUserAsync(string apiKey, string userId,
-        //     ITokenProvider tokenProvider, CancellationToken cancellationToken = default)
-        // {
-        //     if (!ConnectionState.IsValidToConnect())
-        //     {
-        //         throw new InvalidOperationException("Attempted to connect, but client is in state: " + ConnectionState);
-        //     }
-        //
-        //     _tokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
-        //     SetPartialConnectionCredentials(apiKey, userId);
-        //
-        //     TryCancelWaitingForUserConnection();
-        //
-        //     _connectUserCancellationToken = cancellationToken;
-        //
-        //     _connectUserCancellationTokenSource
-        //         = CancellationTokenSource.CreateLinkedTokenSource(_connectUserCancellationToken);
-        //     _connectUserCancellationTokenSource.Token.Register(TryCancelWaitingForUserConnection);
-        //
-        //     _connectUserTaskSource = new TaskCompletionSource<OwnUserResponse>();
-        //
-        //     try
-        //     {
-        //         await RefreshAuthTokenFromProviderAsync();
-        //
-        //         await _coordinatorWS.ConnectAsync();
-        //
-        //         // StreamTODO: Do we receive a user here?
-        //         var ownUserDto = await _connectUserTaskSource.Task;
-        //         return ownUserDto;
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         _logs.Exception(e);
-        //         throw;
-        //     }
-        // }
+        internal IInternalVideoClientApi InternalVideoClientApi { get; }
 
         private const string DefaultStreamAuthType = "jwt";
 
         private readonly IPersistentWebSocket _coordinatorWS;
-        
+
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
         private readonly ITimeService _timeService;
@@ -455,38 +331,27 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IHttpClient _httpClient;
         private readonly IStreamClientConfig _config;
 
-        // private readonly object _websocketConnectionFailedFlagLock = new object();
-        // private readonly object _sfuWebsocketConnectionFailedFlagLock = new object();
-
-        //private TaskCompletionSource<OwnUserResponse> _connectUserTaskSource;
-        private CancellationToken _connectUserCancellationToken;
-        private CancellationTokenSource _connectUserCancellationTokenSource;
         private CancellationTokenSource _updateMonitorCts;
 
         private AuthCredentials _authCredentials;
-
         private string _connectionId;
-
         private bool _updateCallReceived;
-
-        // private bool _websocketConnectionFailed;
-        // private bool _sfuWebsocketConnectionFailed;
         private ITokenProvider _tokenProvider;
 
         private string _locationHint;
         private readonly IApplicationInfo _applicationInfo;
         private readonly RtcSession _rtcSession;
 
-        private async Task RefreshAuthTokenFromProviderAsync()
+        private async Task RefreshAuthTokenFromProviderAsync(CancellationToken cancellationToken = default)
         {
 #if STREAM_DEBUG_ENABLED
             _logs.Info($"Request new auth token for user `{_authCredentials.UserId}`");
 #endif
             try
             {
-                var token = await _tokenProvider.GetTokenAsync(_authCredentials.UserId);
-                _authCredentials = _authCredentials.CreateWithNewUserToken(token);
-                SetConnectionCredentials(_authCredentials);
+                var token = await _tokenProvider.GetTokenAsync(_authCredentials.UserId, cancellationToken);
+                var authCredentials = _authCredentials.CreateWithNewUserToken(token);
+                SetConnectionCredentials(authCredentials);
 
 #if STREAM_DEBUG_ENABLED
                 _logs.Info($"auth token received for user `{_authCredentials.UserId}`: " + token);
@@ -499,7 +364,7 @@ namespace StreamVideo.Core.LowLevelClient
                     e);
             }
         }
-        
+
         private async Task<string> GetLocationHintAsync()
         {
             // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
@@ -511,131 +376,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             return _locationHint;
         }
-
-//         private void TryCancelWaitingForUserConnection()
-//         {
-//             if (_connectUserTaskSource == null)
-//             {
-//                 return;
-//             }
-//
-//             var isConnectTaskRunning = _connectUserTaskSource.Task != null && !_connectUserTaskSource.Task.IsCompleted;
-//             var isCancellationRequested = _connectUserCancellationTokenSource.IsCancellationRequested;
-//
-//             if (isConnectTaskRunning && !isCancellationRequested)
-//             {
-// #if STREAM_DEBUG_ENABLED
-//                 _logs.Info($"Try Cancel {_connectUserTaskSource}");
-// #endif
-//                 _connectUserTaskSource.TrySetCanceled();
-//             }
-//         }
-
-//         // StreamTodo: refactor how connected state is determined
-//         private void OnCoordinatorWebsocketDisconnected()
-//         {
-// #if STREAM_DEBUG_ENABLED
-//             _logs.Warning("Coordinator Websocket Disconnected");
-// #endif
-//             //ConnectionState = ConnectionState.Disconnected;
-//         }
-//
-//         private void OnSfuWebsocketDisconnected()
-//         {
-// #if STREAM_DEBUG_ENABLED
-//             _logs.Warning("Coordinator Websocket Disconnected");
-// #endif
-//             //ConnectionState = ConnectionState.Disconnected;
-//         }
-
-        // /// <summary>
-        // /// This event can be called by a background thread and we must propagate it on the main thread
-        // /// Otherwise any call to Unity API would result in Exception. Unity API can only be called from the main thread
-        // /// </summary>
-        // private void OnCoordinatorWebsocketsConnectionFailed()
-        // {
-        //     lock (_websocketConnectionFailedFlagLock)
-        //     {
-        //         _websocketConnectionFailed = true;
-        //     }
-        // }
-
-        // /// <summary>
-        // /// This event can be called by a background thread and we must propagate it on the main thread
-        // /// Otherwise any call to Unity API would result in Exception. Unity API can only be called from the main thread
-        // /// </summary>
-        // private void OnSfuWebsocketsConnectionFailed()
-        // {
-        //     lock (_sfuWebsocketConnectionFailedFlagLock)
-        //     {
-        //         _sfuWebsocketConnectionFailed = true;
-        //     }
-        // }
-
-//         private void TryHandleWebsocketsConnectionFailed()
-//         {
-//             lock (_websocketConnectionFailedFlagLock)
-//             {
-//                 if (!_websocketConnectionFailed)
-//                 {
-//                     return;
-//                 }
-//
-//                 _websocketConnectionFailed = false;
-//             }
-//
-// #if STREAM_DEBUG_ENABLED
-//             _logs.Warning("Websocket connection failed");
-// #endif
-//
-//             ConnectionState = ConnectionState.Disconnected;
-//         }
-
-//         /// <summary>
-//         /// Based on receiving initial health check event from the server
-//         /// </summary>
-//         private void OnConnectionConfirmed(ConnectedEvent connectedEvent)
-//         {
-//             //StreamTodo: resolve issue that expired token also triggers connection confirmed that gets immediately disconnected
-//
-//             _connectionId = connectedEvent.ConnectionId;
-// #pragma warning disable 0618
-//             //LocalUser = connectedEvent.Me;
-// #pragma warning restore 0618
-//
-//             ConnectionState = ConnectionState.Connected;
-//
-//             _connectUserTaskSource?.SetResult(connectedEvent.Me);
-//
-//             _logs.Info("Connection confirmed by server with connection id: " + _connectionId);
-//             //Connected?.Invoke(connectedEvent.Me);
-//             //InternalConnected?.Invoke(eventHealthCheckInternalDto);
-//         }
-
-        // private void TryToReconnect()
-        // {
-        //     if (!ConnectionState.IsValidToConnect() || !NextReconnectTime.HasValue)
-        //     {
-        //         return;
-        //     }
-        //
-        //     if (NextReconnectTime.Value > _timeService.Time)
-        //     {
-        //         return;
-        //     }
-        //
-        //     Reconnecting?.Invoke();
-        //
-        //     if (_tokenProvider != null)
-        //     {
-        //         ConnectUserAsync(_authCredentials.ApiKey, _authCredentials.UserId, _tokenProvider).LogIfFailed();
-        //     }
-        //     else
-        //     {
-        //         ConnectUserAsync(_authCredentials).LogIfFailed();
-        //         //Connect();
-        //     }
-        // }
 
         private void RegisterCoordinatorEventHandlers()
         {
@@ -672,7 +412,8 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.RegisterEventType<CallMemberUpdatedEvent>(CoordinatorEventType.CallMemberUpdated,
                 e => InternalCallMemberUpdatedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallMemberUpdatedPermissionEvent>(CoordinatorEventType.CallMemberUpdatedPermission,
+            _coordinatorWS.RegisterEventType<CallMemberUpdatedPermissionEvent>(
+                CoordinatorEventType.CallMemberUpdatedPermission,
                 e => InternalCallMemberUpdatedPermissionEvent?.Invoke(e));
 
             _coordinatorWS.RegisterEventType<CallNotificationEvent>(CoordinatorEventType.CallNotification,
@@ -718,62 +459,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             _coordinatorWS.RegisterEventType<CustomVideoEvent>(CoordinatorEventType.Custom,
                 e => InternalCustomVideoEvent?.Invoke(e));
-
         }
-
-//         private void UpdateHealthCheck()
-//         {
-//             if (ConnectionState != ConnectionState.Connected)
-//             {
-//                 return;
-//             }
-//
-//             var timeSinceLastHealthCheckSent = _timeService.Time - _lastHealthCheckSendTime;
-//             if (timeSinceLastHealthCheckSent > HealthCheckSendInterval)
-//             {
-//                 PingHealthCheck();
-//             }
-//
-//             var timeSinceLastHealthCheck = _timeService.Time - _lastHealthCheckReceivedTime;
-//             if (timeSinceLastHealthCheck > HealthCheckMaxWaitingTime)
-//             {
-//                 _logs.Warning($"Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
-//                 _coordinatorWebSocketOld
-//                     .DisconnectAsync(WebSocketCloseStatus.InternalServerError,
-//                         $"Health check was not received since: {timeSinceLastHealthCheck}")
-//                     .ContinueWith(_ => _logs.Exception(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
-//             }
-//         }
-//
-//         private void PingHealthCheck()
-//         {
-//             var healthCheck = new HealthCheckEvent();
-//
-//             _coordinatorWebSocketOld.Send(_serializer.Serialize(healthCheck));
-//             _lastHealthCheckSendTime = _timeService.Time;
-//
-// #if STREAM_DEBUG_ENABLED
-//             _logs.Info("Health check sent");
-// #endif
-//         }
-
-        // private void HandleHealthCheckEvent(HealthCheckEvent healthCheckEvent)
-        // {
-        //     _logs.Info("Health check received");
-        //     _lastHealthCheckReceivedTime = _timeService.Time;
-        // }
-        //
-        // private void HandleConnectionOkEvent(ConnectedEvent connectedEvent)
-        // {
-        //     _connectionId = connectedEvent.ConnectionId;
-        //
-        //     ConnectionState = ConnectionState.Connected;
-        //
-        //     _connectUserTaskSource?.SetResult(connectedEvent.Me);
-        //
-        //     _logs.Info("Connection confirmed by server with connection id: " + _connectionId);
-        //     Connected?.Invoke();
-        // }
 
         private static bool IsUserIdValid(string userId)
         {
@@ -802,6 +488,16 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: make it more clear that we either receive full set of credentials or apiKey, userId and the token provider
         private void SetPartialConnectionCredentials(string apiKey, string userId)
         {
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                throw new StreamMissingAuthCredentialsException($"Please provide a valid {nameof(apiKey)}");
+            }
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new StreamMissingAuthCredentialsException($"Please provide a valid {nameof(userId)}");
+            }
+
             _authCredentials = new AuthCredentials(apiKey, userId, string.Empty);
         }
 
@@ -829,6 +525,7 @@ namespace StreamVideo.Core.LowLevelClient
             var sb = new StringBuilder();
             sb.Append($"stream-video-unity-client-");
             sb.Append(SDKVersion);
+            //StreamTodo: re-add
             // sb.Append("|");
             //
             // sb.Append("os=");
@@ -860,7 +557,5 @@ namespace StreamVideo.Core.LowLevelClient
 
             return sb.ToString();
         }
-
-
     }
 }

@@ -25,7 +25,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (asyncOperation.IsError)
             {
-                throw new WebRTCException(asyncOperation.Error);
+                throw new WebRtcException(asyncOperation.Error);
             }
 
             return response(asyncOperation);

@@ -38,38 +38,12 @@ namespace StreamVideo.Core.LowLevelClient
         event ConnectionStateChangeHandler ConnectionStateChanged;
 
         ConnectionState ConnectionState { get; }
-        // ReconnectStrategy ReconnectStrategy { get; }
-        // float ReconnectConstantInterval { get; }
-        // float ReconnectExponentialMinInterval { get; }
-        // float ReconnectExponentialMaxInterval { get; }
-        // double? NextReconnectTime { get; }
 
         //StreamTodo: spawn a hidden runner that will call this automatically
         /// <summary>
         /// Per frame update of the StreamChatClient. This method triggers sending and receiving data between the client and the server. Make sure to call it every frame.
         /// </summary>
         void Update();
-
-        // [Obsolete("Delete this")]
-        // /// <summary>
-        // /// Initiate WebSocket connection with Stream Server.
-        // /// Use <see cref="IConnectionProvider.Connected"/> to be notified when connection is established
-        // /// </summary>
-        // void Connect();
-
-        // /// <summary>
-        // /// Set parameters for StreamChatClient reconnect strategy
-        // /// </summary>
-        // /// <param name="reconnectStrategy">Defines how Client will react to Disconnected state</param>
-        // /// <param name="exponentialMinInterval">Defines min reconnect interval for <see cref="Core.ReconnectStrategy.Exponential"/></param>
-        // /// <param name="exponentialMaxInterval">Defines max reconnect interval for <see cref="Core.ReconnectStrategy.Exponential"/></param>
-        // /// <param name="constantInterval">Defines reconnect interval for <see cref="Core.ReconnectStrategy.Constant"/></param>
-        // /// <exception cref="ArgumentException">throws exception if intervals are less than or equal to zero</exception>
-        // void SetReconnectStrategySettings(ReconnectStrategy reconnectStrategy, float? exponentialMinInterval,
-        //     float? exponentialMaxInterval, float? constantInterval);
-
-        // [Obsolete("Delete this")]
-        // void ConnectUser(AuthCredentials userAuthCredentials);
 
         Task DisconnectAsync();
         Task JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring, bool notify);
@@ -79,6 +53,7 @@ namespace StreamVideo.Core.LowLevelClient
         Task ConnectUserAsync(string apiKey, string userId, string userToken,
             CancellationToken cancellationToken = default);
 
-        Task ConnectUserAsync(string apiKey, string userId, ITokenProvider tokenProvider);
+        Task ConnectUserAsync(string apiKey, string userId, ITokenProvider tokenProvider,
+            CancellationToken cancellationToken = default);
     }
 }

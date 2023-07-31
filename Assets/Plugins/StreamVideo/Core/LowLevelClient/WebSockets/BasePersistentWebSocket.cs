@@ -47,12 +47,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        //StreamTodo: do we need this?
-        // public ReconnectStrategy ReconnectStrategy => _reconnectScheduler.ReconnectStrategy;
-        // public float ReconnectConstantInterval => _reconnectScheduler.ReconnectConstantInterval;
-        // public float ReconnectExponentialMinInterval => _reconnectScheduler.ReconnectExponentialMinInterval;
-        // public float ReconnectExponentialMaxInterval => _reconnectScheduler.ReconnectExponentialMaxInterval;
-        // public int ReconnectMaxInstantTrials => _reconnectScheduler.ReconnectMaxInstantTrials;
         public double? NextReconnectTime => _reconnectScheduler.NextReconnectTime;
 
         public void Update()
@@ -206,7 +200,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected void OnHealthCheckReceived()
         {
-            Logs.Info("Health check received");
+#if STREAM_DEBUG_ENABLED
+            Logs.Info($"{LogsPrefix} Health check received");
+#endif
             _lastHealthCheckReceivedTime = TimeService.Time;
         }
 
@@ -248,7 +244,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning("Websocket connection failed");
+            Logs.Warning($"{LogsPrefix} Websocket connection failed");
 #endif
 
             ConnectionState = ConnectionState.Disconnected;
@@ -268,17 +264,17 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 _lastHealthCheckSendTime = TimeService.Time;
 
 #if STREAM_DEBUG_ENABLED
-                Logs.Info("Health check sent");
+                Logs.Info($"{LogsPrefix} Health check sent");
 #endif
             }
 
             var timeSinceLastHealthCheck = TimeService.Time - _lastHealthCheckReceivedTime;
             if (timeSinceLastHealthCheck > HealthCheckMaxWaitingTime)
             {
-                Logs.Warning($"Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
+                Logs.Warning($"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
                 WebsocketClient
                     .DisconnectAsync(WebSocketCloseStatus.InternalServerError,
-                        $"Health check was not received since: {timeSinceLastHealthCheck}")
+                        $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}")
                     .ContinueWith(_ => Logs.Exception(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
             }
         }

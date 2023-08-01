@@ -7,7 +7,6 @@ using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient.Models;
 using StreamVideo.Core.Web;
-using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;

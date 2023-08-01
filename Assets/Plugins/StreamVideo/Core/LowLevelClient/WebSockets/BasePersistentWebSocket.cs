@@ -104,6 +104,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             return WebsocketClient.DisconnectAsync(closeStatus, closeMessage);
         }
 
+        //StreamTodo: either move to coordinator or make generic and pass TMessageType and abstract deserializer
         public void RegisterEventType<TDto, TEvent>(string key,
             Action<TEvent, TDto> handler, Action<TDto> internalHandler = null)
             where TEvent : ILoadableFrom<TDto, TEvent>, new()

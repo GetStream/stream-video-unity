@@ -11,12 +11,32 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Websockets;
+using Error = Stream.Video.v1.Sfu.Events.Error;
+using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
     internal class SfuWebSocket : BasePersistentWebSocket
     {
-        public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler, IAuthProvider authProvider,
+        public event Action<SubscriberOffer> SubscriberOffer;
+        public event Action<PublisherAnswer> PublisherAnswer;
+        public event Action<ConnectionQualityChanged> ConnectionQualityChanged;
+        public event Action<AudioLevelChanged> AudioLevelChanged;
+        public event Action<ICETrickle> IceTrickle;
+        public event Action<ChangePublishQuality> ChangePublishQuality;
+        public event Action<ParticipantJoined> ParticipantJoined;
+        public event Action<ParticipantLeft> ParticipantLeft;
+        public event Action<DominantSpeakerChanged> DominantSpeakerChanged;
+        public event Action<JoinResponse> JoinResponse;
+        public event Action<HealthCheckResponse> HealthCheckResponse;
+        public event Action<TrackPublished> TrackPublished;
+        public event Action<TrackUnpublished> TrackUnpublished;
+        public event Action<Error> Error;
+        public event Action<CallGrantsUpdated> CallGrantsUpdated;
+        public event Action<GoAway> GoAway;
+        
+        public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
+            IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs,
             IApplicationInfo applicationInfo, Version sdkVersion)
             : base(websocketClient, reconnectScheduler, authProvider, requestUriFactory, serializer, timeService, logs)
@@ -91,9 +111,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             var sfuUri = UriFactory.CreateSfuConnectionUri(_sfuUrl);
 
-            Logs.Info("SFU Connect URI: " + sfuUri);
+            Logs.Info($"{LogsPrefix} Connect URI: " + sfuUri);
             await WebsocketClient.ConnectAsync(sfuUri);
-            Logs.Info("SFU WS Connected");
+            Logs.Info($"{LogsPrefix} WS Connected");
 
             WebsocketClient.Send(sfuRequestByteArray);
         }
@@ -102,13 +122,69 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             while (WebsocketClient.TryDequeueMessage(out var msg))
             {
-                var decodedMessage = SfuEvent.Parser.ParseFrom(msg);
+                var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
 
 #if STREAM_DEBUG_ENABLED
-                Logs.Info("WS message: " + decodedMessage);
+                Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
 #endif
 
-                //StreamTodo: handle new message
+                switch (sfuEvent.EventPayloadCase)
+                {
+                    case SfuEvent.EventPayloadOneofCase.None:
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.SubscriberOffer:
+                        SubscriberOffer?.Invoke(sfuEvent.SubscriberOffer);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.PublisherAnswer:
+                        PublisherAnswer?.Invoke(sfuEvent.PublisherAnswer);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.ConnectionQualityChanged:
+                        ConnectionQualityChanged?.Invoke(sfuEvent.ConnectionQualityChanged);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.AudioLevelChanged:
+                        AudioLevelChanged?.Invoke(sfuEvent.AudioLevelChanged);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.IceTrickle:
+                        IceTrickle?.Invoke(sfuEvent.IceTrickle);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.ChangePublishQuality:
+                        ChangePublishQuality?.Invoke(sfuEvent.ChangePublishQuality);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.ParticipantJoined:
+                        ParticipantJoined?.Invoke(sfuEvent.ParticipantJoined);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.ParticipantLeft:
+                        ParticipantLeft?.Invoke(sfuEvent.ParticipantLeft);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.DominantSpeakerChanged:
+                        DominantSpeakerChanged?.Invoke(sfuEvent.DominantSpeakerChanged);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.JoinResponse:
+                        JoinResponse?.Invoke(sfuEvent.JoinResponse);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.HealthCheckResponse:
+                        HealthCheckResponse?.Invoke(sfuEvent.HealthCheckResponse);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.TrackPublished:
+                        TrackPublished?.Invoke(sfuEvent.TrackPublished);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.TrackUnpublished:
+                        TrackUnpublished?.Invoke(sfuEvent.TrackUnpublished);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.Error:
+                        Error?.Invoke(sfuEvent.Error);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.CallGrantsUpdated:
+                        CallGrantsUpdated?.Invoke(sfuEvent.CallGrantsUpdated);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.GoAway:
+                        GoAway?.Invoke(sfuEvent.GoAway);
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(sfuEvent.EventPayloadCase),
+                            sfuEvent.EventPayloadCase, null);
+                }
             }
         }
 

@@ -18,8 +18,9 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         {
         }
 
-        public Task<GetCallResponse> GetCallAsync(GetOrCreateCallRequest getCallRequest)
-            => Get<GetOrCreateCallRequest, GetCallResponse>("/users", getCallRequest);
+        public Task<GetCallResponse> GetCallAsync(StreamCallType callType, string callId,
+            GetOrCreateCallRequest getCallRequest)
+            => Get<GetOrCreateCallRequest, GetCallResponse>($"/call/{callType}/{callId}", getCallRequest);
 
         public Task<UpdateCallResponse> UpdateCallAsync(StreamCallType callType, string callId,
             UpdateCallRequest updateCallRequest)

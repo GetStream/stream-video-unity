@@ -6,7 +6,8 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
 {
     internal interface IInternalVideoClientApi
     {
-        Task<GetCallResponse> GetCallAsync(GetOrCreateCallRequest getCallRequest);
+        Task<GetCallResponse> GetCallAsync(StreamCallType callType, string callId,
+            GetOrCreateCallRequest getCallRequest);
 
         Task<UpdateCallResponse> UpdateCallAsync(StreamCallType callType, string callId,
             UpdateCallRequest updateCallRequest);

@@ -12,6 +12,7 @@ using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Requests;
+using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Web;
@@ -25,29 +26,21 @@ using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
 using StreamVideo.Libs.Websockets;
-#if STREAM_TESTS_ENABLED
-using System.Runtime.CompilerServices;
-#endif
 
 #if STREAM_TESTS_ENABLED
-[assembly: InternalsVisibleTo("StreamChat.Tests")] //StreamTodo: verify which Unity version introduced this
+[assembly: InternalsVisibleTo("StreamVideo.Tests")] //StreamTodo: verify which Unity version introduced this
 #endif
 
 namespace StreamVideo.Core.LowLevelClient
 {
+    //StreamTodo: consider making internal, perhaps use should create only through factory
     /// <summary>
     /// Stream Chat Client - maintains WebSockets connection, executes API calls and exposes Stream events to which you can subscribe.
     /// There should be only one instance of this client in your application.
     /// </summary>
-    public class StreamVideoLowLevelClient : IStreamVideoLowLevelClient
+    public sealed class StreamVideoLowLevelClient : IStreamVideoLowLevelClient
     {
         public const string MenuPrefix = "Stream/";
-
-        //StreamTodo: make these all private 
-        private static readonly Uri ServerBaseUrl = new Uri("wss://video.stream-io-api.com/video/connect");
-        private static readonly Uri LocationHintWebUri = new Uri("https://hint.stream-io-video.com/");
-
-        private const string LocationHintHeaderKey = "x-amz-cf-pop";
 
         public event ConnectionHandler Connected;
         public event Action Reconnecting;
@@ -82,8 +75,7 @@ namespace StreamVideo.Core.LowLevelClient
             var networkMonitor = factory.CreateNetworkMonitor();
 
             return new StreamVideoLowLevelClient(coordinatorWebSocket, sfuWebSocket, httpClient,
-                serializer,
-                timeService, networkMonitor, applicationInfo, logs, config);
+                serializer, timeService, networkMonitor, applicationInfo, logs, config);
         }
 
         /// <summary>
@@ -119,8 +111,7 @@ namespace StreamVideo.Core.LowLevelClient
             return Regex.Replace(userId, @"[^\w\.@_-]", "", RegexOptions.None, TimeSpan.FromSeconds(1));
         }
 
-        public StreamVideoLowLevelClient(IWebsocketClient coordinatorWebSocket,
-            IWebsocketClient sfuWebSocket,
+        public StreamVideoLowLevelClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
         {
@@ -163,16 +154,6 @@ namespace StreamVideo.Core.LowLevelClient
             LogErrorIfUpdateIsNotBeingCalled();
         }
 
-        private void OnCoordinatorConnectionStateChanged(ConnectionState previous, ConnectionState current)
-        {
-            ConnectionStateChanged?.Invoke(previous, current);
-
-            if (current == ConnectionState.Disconnected)
-            {
-                Disconnected?.Invoke();
-            }
-        }
-
         //StreamTodo: perhaps remove this overload, more != better
         public Task ConnectUserAsync(AuthCredentials authCredentials, CancellationToken cancellationToken = default)
             => ConnectUserAsync(authCredentials.ApiKey, authCredentials.UserId, authCredentials.UserToken,
@@ -207,24 +188,6 @@ namespace StreamVideo.Core.LowLevelClient
             await ConnectUserAsync(_authCredentials.ApiKey, _authCredentials.UserId, _authCredentials.UserToken, cancellationToken);
         }
 
-        //StreamTodo: cancellation token
-        //StreamTodo: make few attempts + can be awaited by the JoinCallAsync + support reconnections
-        private async Task UpdateLocationHintAsync()
-        {
-            var headers = new List<KeyValuePair<string, IEnumerable<string>>>();
-            await _httpClient.HeadAsync(LocationHintWebUri, headers);
-
-            var locationHeader = headers.FirstOrDefault(_ => _.Key.ToLower() == LocationHintHeaderKey);
-            if (locationHeader.Key.IsNullOrEmpty() || !locationHeader.Value.Any())
-            {
-                _logs.Error($"Failed to get `{LocationHintHeaderKey}` header from `{LocationHintWebUri}` request");
-                return;
-            }
-
-            _locationHint = locationHeader.Value.First();
-            _logs.Info("Location Hint: " + _locationHint);
-        }
-
         public async Task DisconnectAsync()
         {
             await _coordinatorWS.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
@@ -243,34 +206,69 @@ namespace StreamVideo.Core.LowLevelClient
 
         //StreamTodo: if ring and notify can't be both true then perhaps enum NotifyMode.Ring, NotifyMode.Notify?
         //StreamTodo: add CreateCallOptions
-        public async Task JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring, bool notify)
+        // public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
+        //     bool notify)
+        // {
+        //     var call = new StreamCall(callType, callId, this);
+        //     if (!create)
+        //     {
+        //         var callData = await InternalVideoClientApi.GetCallAsync(callType, callId, new GetOrCreateCallRequest());
+        //
+        //         if (callData == null)
+        //         {
+        //             //StreamTodo: error call not found
+        //         }
+        //         
+        //         
+        //         //StreamTodo: load data from response to call
+        //     }
+        //
+        //     // StreamTodo: check state if we don't have an active session already
+        //     var locationHint = await GetLocationHintAsync();
+        //     
+        //     //StreamTodo: move this logic to call.Join, this way user can create call object and join later on 
+        //
+        //     // StreamTodo: expose params
+        //     var joinCallRequest = new JoinCallRequest
+        //     {
+        //         Create = create,
+        //         Data = new CallRequest
+        //         {
+        //             CreatedBy = null,
+        //             CreatedById = null,
+        //             Custom = null,
+        //             Members = null,
+        //             SettingsOverride = null,
+        //             StartsAt = DateTimeOffset.Now,
+        //             Team = null
+        //         },
+        //         Location = locationHint,
+        //         MembersLimit = 10,
+        //         MigratingFrom = null,
+        //         Notify = notify,
+        //         Ring = ring
+        //     };
+        //
+        //     var joinCallResponse = await InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
+        //     await _rtcSession.StartAsync(joinCallResponse);
+        //
+        //     return call;
+        // }
+
+        internal Task StartCallSessionAsync(JoinCallResponse joinCallResponse) => _rtcSession.StartAsync(joinCallResponse);
+
+        internal Task StopCallSessionAsync() => _rtcSession.StopAsync();
+        
+        public async Task<string> GetLocationHintAsync()
         {
-            // StreamTodo: check state if we don't have an active session already
-            var locationHint = await GetLocationHintAsync();
-
-            // StreamTodo: expose params
-            var joinCallRequest = new JoinCallRequest
+            // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
+            if (_locationHint.IsNullOrEmpty())
             {
-                Create = create,
-                Data = new CallRequest
-                {
-                    CreatedBy = null,
-                    CreatedById = null,
-                    Custom = null,
-                    Members = null,
-                    SettingsOverride = null,
-                    StartsAt = DateTimeOffset.Now,
-                    Team = null
-                },
-                Location = locationHint,
-                MembersLimit = 10,
-                MigratingFrom = null,
-                Notify = notify,
-                Ring = ring
-            };
+                _logs.Error("No location hint");
+                throw new InvalidOperationException("No location hint");
+            }
 
-            var joinCallResponse = await InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
-            await _rtcSession.StartAsync(joinCallResponse);
+            return _locationHint;
         }
 
         public void Dispose()
@@ -320,6 +318,10 @@ namespace StreamVideo.Core.LowLevelClient
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
 
         private const string DefaultStreamAuthType = "jwt";
+        private const string LocationHintHeaderKey = "x-amz-cf-pop";
+        
+        private static readonly Uri ServerBaseUrl = new Uri("wss://video.stream-io-api.com/video/connect");
+        private static readonly Uri LocationHintWebUri = new Uri("https://hint.stream-io-video.com/");
 
         private readonly IPersistentWebSocket _coordinatorWS;
 
@@ -330,6 +332,8 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IRequestUriFactory _requestUriFactory;
         private readonly IHttpClient _httpClient;
         private readonly IStreamClientConfig _config;
+        private readonly IApplicationInfo _applicationInfo;
+        private readonly RtcSession _rtcSession;
 
         private CancellationTokenSource _updateMonitorCts;
 
@@ -339,8 +343,34 @@ namespace StreamVideo.Core.LowLevelClient
         private ITokenProvider _tokenProvider;
 
         private string _locationHint;
-        private readonly IApplicationInfo _applicationInfo;
-        private readonly RtcSession _rtcSession;
+
+        private void OnCoordinatorConnectionStateChanged(ConnectionState previous, ConnectionState current)
+        {
+            ConnectionStateChanged?.Invoke(previous, current);
+
+            if (current == ConnectionState.Disconnected)
+            {
+                Disconnected?.Invoke();
+            }
+        }
+        
+        //StreamTodo: cancellation token
+        //StreamTodo: make few attempts + can be awaited by the JoinCallAsync + support reconnections
+        private async Task UpdateLocationHintAsync()
+        {
+            var headers = new List<KeyValuePair<string, IEnumerable<string>>>();
+            await _httpClient.HeadAsync(LocationHintWebUri, headers);
+
+            var locationHeader = headers.FirstOrDefault(_ => _.Key.ToLower() == LocationHintHeaderKey);
+            if (locationHeader.Key.IsNullOrEmpty() || !locationHeader.Value.Any())
+            {
+                _logs.Error($"Failed to get `{LocationHintHeaderKey}` header from `{LocationHintWebUri}` request");
+                return;
+            }
+
+            _locationHint = locationHeader.Value.First();
+            _logs.Info("Location Hint: " + _locationHint);
+        }
 
         private async Task RefreshAuthTokenFromProviderAsync(CancellationToken cancellationToken = default)
         {
@@ -363,18 +393,6 @@ namespace StreamVideo.Core.LowLevelClient
                     $"Failed to get token from the {nameof(ITokenProvider)}. Inspect {nameof(e.InnerException)} for more information. ",
                     e);
             }
-        }
-
-        private async Task<string> GetLocationHintAsync()
-        {
-            // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
-            if (_locationHint.IsNullOrEmpty())
-            {
-                _logs.Error("No location hint");
-                throw new InvalidOperationException("No location hint");
-            }
-
-            return _locationHint;
         }
 
         private void RegisterCoordinatorEventHandlers()

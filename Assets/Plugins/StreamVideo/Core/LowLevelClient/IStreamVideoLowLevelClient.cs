@@ -11,6 +11,7 @@ namespace StreamVideo.Core.LowLevelClient
     /// </summary>
     public delegate void ConnectionStateChangeHandler(ConnectionState previous, ConnectionState current);
     
+    //StreamTodo: should probably be internal as well
     /// <summary>
     /// Stream Chat Client
     /// </summary>
@@ -46,7 +47,7 @@ namespace StreamVideo.Core.LowLevelClient
         void Update();
 
         Task DisconnectAsync();
-        Task JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring, bool notify);
+        // Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring, bool notify);
 
         Task ConnectUserAsync(AuthCredentials authCredentials, CancellationToken cancellationToken = default);
 
@@ -55,5 +56,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         Task ConnectUserAsync(string apiKey, string userId, ITokenProvider tokenProvider,
             CancellationToken cancellationToken = default);
+
+        Task<string> GetLocationHintAsync();
     }
 }

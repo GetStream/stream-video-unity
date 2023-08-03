@@ -1,4 +1,6 @@
-﻿namespace StreamVideo.Core.State.Caches
+﻿using StreamVideo.Core.StatefulModels;
+
+namespace StreamVideo.Core.State.Caches
 {
     internal interface ICache
     {
@@ -8,5 +10,6 @@
         // ICacheRepository<StreamLocalUserData> LocalUser { get; }
         // ICacheRepository<StreamChannelMember> ChannelMembers { get; }
         ICacheRepository<StreamCall> Calls { get; }
+        ICacheRepository<StreamVideoUser> Users { get; }
     }
 }

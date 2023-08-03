@@ -23,6 +23,9 @@ namespace StreamVideo.Core.StatefulModels
         
         public StreamCall CreateStreamCall(string uniqueId) 
             => new StreamCall(uniqueId, _cache.Calls, _context);
+        
+        public StreamVideoUser CreateStreamVideoUser(string uniqueId) 
+            => new StreamVideoUser(uniqueId, _cache.Users, _context);
 
         // public StreamChannel CreateStreamChannel(string uniqueId)
         //     => new StreamChannel(uniqueId, _cache.Channels, _context);

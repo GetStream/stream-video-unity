@@ -8,6 +8,7 @@ using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.State.Caches;
+using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
@@ -58,6 +59,28 @@ namespace StreamVideo.Core
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
         }
         
+        /// <summary>
+        /// Will return null if the call doesn't exist
+        /// </summary>
+        public async Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId)
+        {
+            //StreamTodo: validate input
+            
+            var callData = await InternalLowLevelClient.InternalVideoClientApi.GetCallAsync(callType, callId, new GetOrCreateCallRequestInternalDTO());
+            //StreamTodo: what if null? should we fail?
+            return _cache.TryCreateOrUpdate(callData);
+        }
+
+        //StreamTodo: add more params (same as in JoinCallAsync) + add to interface
+        public async Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId)
+        {
+            //StreamTodo: validate input
+            
+            var callData = await InternalLowLevelClient.InternalVideoClientApi.GetOrCreateCallAsync(callType, callId, new GetOrCreateCallRequestInternalDTO());
+            //StreamTodo: what if null?
+            return _cache.TryCreateOrUpdate(callData);
+        }
+
         //StreamTodo: if ring and notify can't be both true then perhaps enum NotifyMode.Ring, NotifyMode.Notify?
         //StreamTodo: add CreateCallOptions
         public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
@@ -86,18 +109,18 @@ namespace StreamVideo.Core
                 UpdatedAt = default
             };
 
-            var call = _cache.Calls.CreateOrUpdate<StreamCall, CallResponseInternalDTO>(dto, out _);
+            IStreamCall call = null;
             if (!create)
             {
-                var callData = await InternalLowLevelClient.InternalVideoClientApi.GetCallAsync(callType, callId, new GetOrCreateCallRequestInternalDTO());
-
-                if (callData == null)
+                call = await GetCallAsync(callType, callId);
+                if (call == null)
                 {
-                    //StreamTodo: error call not found
+                    throw new InvalidOperationException($"Call with id `{callId}` was not found");
                 }
-                
-                
-                //StreamTodo: load data from response to call
+            }
+            else
+            {
+                call = await GetOrCreateCallAsync(callType, callId);
             }
 
             // StreamTodo: check state if we don't have an active session already

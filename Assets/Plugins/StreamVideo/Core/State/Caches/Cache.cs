@@ -12,8 +12,16 @@ namespace StreamVideo.Core.State.Caches
             var trackedObjectsFactory = new StatefulModelsFactory(stateClient, serializer, logs, this);
             
             Calls = new CacheRepository<StreamCall>(trackedObjectsFactory.CreateStreamCall, cache: this);
+            Users = new CacheRepository<StreamVideoUser>(trackedObjectsFactory.CreateStreamVideoUser, cache: this);
+            
+            //StreamTodo: validate that all mappings are registered:
+            //grab IUpdateableFrom interface from each model and check if every DTO is registered
             
             Calls.RegisterDtoIdMapping<StreamCall, CallResponseInternalDTO>(dto => dto.Cid);
+            Calls.RegisterDtoIdMapping<StreamCall, GetCallResponseInternalDTO>(dto => dto.Call.Cid);
+            Calls.RegisterDtoIdMapping<StreamCall, GetOrCreateCallResponseInternalDTO>(dto => dto.Call.Cid);
+            
+            Users.RegisterDtoIdMapping<StreamVideoUser, UserResponseInternalDTO>(dto => dto.Id);
 
             // Channels = new CacheRepository<StreamChannel>(trackedObjectsFactory.CreateStreamChannel, cache: this);
             // Messages = new CacheRepository<StreamMessage>(trackedObjectsFactory.CreateStreamMessage, cache: this);
@@ -39,6 +47,7 @@ namespace StreamVideo.Core.State.Caches
         }
 
          public ICacheRepository<StreamCall> Calls { get; }
+         public ICacheRepository<StreamVideoUser> Users { get; }
         
         // public ICacheRepository<StreamChannel> Channels { get; }
         //

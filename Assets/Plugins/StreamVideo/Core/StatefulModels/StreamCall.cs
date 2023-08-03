@@ -1,44 +1,93 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.Utils;
 
 namespace StreamVideo.Core
 {
-    public interface IStreamCall : IStreamStatefulModel
-    {
-        
-    }
     /// <summary>
     /// Represents a call during which participants can share: audio, video, screen
     /// </summary>
-    internal sealed class StreamCall : StreamStatefulModelBase<StreamCall>, IUpdateableFrom<CallResponseInternalDTO, StreamCall>, IStreamCall
+    internal sealed class StreamCall : StreamStatefulModelBase<StreamCall>,
+        IUpdateableFrom<CallResponseInternalDTO, StreamCall>,
+        IUpdateableFrom<GetCallResponseInternalDTO, StreamCall>,
+        IUpdateableFrom<GetOrCreateCallResponseInternalDTO, StreamCall>,
+        IStreamCall
     {
-        public string UniqueId { get; }
-        protected override string InternalUniqueId
-        {
-            get => Cid;
-            set => Cid = value;
-        }
-        protected override StreamCall Self => this;
-        
-        public IStreamCallState State { get; } = new StreamCallState();
+        #region State
 
+        public bool Backstage { get; private set; }
+
+        public IReadOnlyList<string> BlockedUserIds => _blockedUserIds;
+
+        /// <summary>
+        /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)
+        /// </summary>
         public string Cid { get; private set; }
-        
-        internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
-            IStatefulModelContext context)
-            : base(uniqueId, repository, context)
-        {
 
-        }
+        /// <summary>
+        /// Date/time of creation
+        /// </summary>
+        public DateTimeOffset CreatedAt { get; private set; }
 
-        internal void LoadFrom(GetCallResponseInternalDTO dto)
-        {
-            
-        }
+        /// <summary>
+        /// The user that created the call
+        /// </summary>
+        public UserResponseInternalDTO CreatedBy { get; private set; } = new UserResponseInternalDTO();
+
+        public string CurrentSessionId { get; private set; }
+
+        /// <summary>
+        /// Custom data for this object
+        /// </summary>
+        //public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
+        //StreamTodo: ensure custom data is implemented by base type
+
+        public EgressResponseInternalDTO Egress { get; private set; } = new EgressResponseInternalDTO();
+
+        /// <summary>
+        /// Date/time when the call ended
+        /// </summary>
+        public DateTimeOffset EndedAt { get; private set; }
+
+        /// <summary>
+        /// Call ID
+        /// </summary>
+        public string Id { get; private set; }
+
+        public CallIngressResponseInternalDTO Ingress { get; private set; } = new CallIngressResponseInternalDTO();
+
+        public bool Recording { get; private set; }
+
+        public CallSessionResponseInternalDTO Session { get; private set; }
+
+        public CallSettingsResponseInternalDTO Settings { get; private set; } = new CallSettingsResponseInternalDTO();
+
+        /// <summary>
+        /// Date/time when the call will start
+        /// </summary>
+        public DateTimeOffset StartsAt { get; private set; }
+
+        public string Team { get; private set; }
+
+        public bool Transcribing { get; private set; }
+
+        /// <summary>
+        /// The type of call
+        /// </summary>
+        public string Type { get; private set; }
+
+        /// <summary>
+        /// Date/time of the last update
+        /// </summary>
+        public DateTimeOffset UpdatedAt { get; private set; }
+
+        #endregion
 
         public Task GetOrCreateAsync()
         {
@@ -83,35 +132,69 @@ namespace StreamVideo.Core
         {
             return Task.CompletedTask;
         }
-        
+
+        string IStreamStatefulModel.UniqueId => Cid;
+
+        void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
+            ICache cache)
+        {
+            Backstage = dto.Backstage;
+            _blockedUserIds.TryReplaceValuesFromDto(dto.BlockedUserIds); //StreamTodo: turn into User objects??
+            Cid = dto.Cid;
+            CreatedAt = dto.CreatedAt;
+            CreatedBy = dto.CreatedBy;
+            CurrentSessionId = dto.CurrentSessionId;
+            LoadCustomData(dto.Custom);
+            Egress = dto.Egress;
+            EndedAt = dto.EndedAt;
+            Id = dto.Id;
+            Ingress = dto.Ingress;
+            Recording = dto.Recording;
+            Session = dto.Session;
+            Settings = dto.Settings;
+            StartsAt = dto.StartsAt;
+            Team = dto.Team;
+            Transcribing = dto.Transcribing;
+            Type = dto.Type;
+            UpdatedAt = dto.UpdatedAt;
+        }
+
+        void IUpdateableFrom<GetCallResponseInternalDTO, StreamCall>.UpdateFromDto(GetCallResponseInternalDTO dto,
+            ICache cache)
+        {
+            //StreamTodo: GetCall contains fields that are related to "active session" only and are not part of the generic call object
+
+            //StreamTodo: implement
+        }
+
+        void IUpdateableFrom<GetOrCreateCallResponseInternalDTO, StreamCall>.UpdateFromDto(
+            GetOrCreateCallResponseInternalDTO dto, ICache cache)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
+            IStatefulModelContext context)
+            : base(uniqueId, repository, context)
+        {
+        }
+
+        protected override string InternalUniqueId
+        {
+            get => Cid;
+            set => Cid = value;
+        }
+
+        protected override StreamCall Self => this;
+
+        #region State
+
+        private readonly List<string> _blockedUserIds = new List<string>();
+
+        #endregion
+
         private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
         private string _id;
-
-        public void UpdateFromDto(CallResponseInternalDTO dto, ICache cache)
-        {
-            var aa = new CallResponseInternalDTO
-            {
-                Backstage = false,
-                BlockedUserIds = null,
-                Cid = null,
-                CreatedAt = default,
-                CreatedBy = null,
-                CurrentSessionId = null,
-                Custom = null,
-                Egress = null,
-                EndedAt = default,
-                Id = null,
-                Ingress = null,
-                Recording = false,
-                Session = null,
-                Settings = null,
-                StartsAt = default,
-                Team = null,
-                Transcribing = false,
-                Type = null,
-                UpdatedAt = default
-            };
-        }
     }
 }

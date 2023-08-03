@@ -1,5 +1,7 @@
 ﻿namespace StreamVideo.Core.State
 {
+    //StreamTodo: review summary
+    
     /// <summary>
     /// Model with its state being automatically updated by the <see cref="StreamChatClient"/>
     ///

@@ -49,13 +49,14 @@ namespace StreamVideo.Core.StatefulModels
         protected ICache Cache { get; }
         protected ICacheRepository<TStatefulModel> Repository { get; }
 
-        protected void LoadAdditionalProperties(Dictionary<string, object> additionalProperties)
+        protected void LoadCustomData(Dictionary<string, object> additionalProperties)
         {
             //StreamTodo: investigate if there's a case we don't want to clear here
             //Without clear channel full update or partial update unset won't work because we'll ignore that WS sent channel without custom data
             
             //StreamTodo: 2, wrap into _customData.Sync(additionalProperties); instead of having a collection here
 
+            //StreamTodo: rename to customData
             _additionalProperties.Clear();
             foreach (var keyValuePair in additionalProperties)
             {
@@ -67,17 +68,6 @@ namespace StreamVideo.Core.StatefulModels
 
                 _additionalProperties.Add(keyValuePair.Key, keyValuePair.Value);
             }
-        }
-
-        protected static bool TrySet<T>(ref T storage, T value)
-        {
-            if (EqualityComparer<T>.Default.Equals(storage, value))
-            {
-                return false;
-            }
-
-            storage = value;
-            return true;
         }
 
         protected static T GetOrDefault<T>(T? source, T defaultValue)

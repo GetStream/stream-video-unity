@@ -12,5 +12,7 @@
         //
         // StreamUser CreateStreamUser(string uniqueId);
         StreamCall CreateStreamCall(string uniqueId);
+
+        StreamVideoUser CreateStreamVideoUser(string uniqueId);
     }
 }

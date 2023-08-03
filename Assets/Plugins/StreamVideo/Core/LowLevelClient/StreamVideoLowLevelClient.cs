@@ -11,7 +11,6 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
-using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
@@ -31,6 +30,11 @@ using StreamVideo.Libs.Websockets;
 [assembly: InternalsVisibleTo("StreamVideo.Tests")] //StreamTodo: verify which Unity version introduced this
 #endif
 
+#if UNITY_EDITOR
+using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo("StreamVideo.EditorTools")]
+#endif
+
 namespace StreamVideo.Core.LowLevelClient
 {
     //StreamTodo: consider making internal, perhaps use should create only through factory
@@ -38,7 +42,7 @@ namespace StreamVideo.Core.LowLevelClient
     /// Stream Chat Client - maintains WebSockets connection, executes API calls and exposes Stream events to which you can subscribe.
     /// There should be only one instance of this client in your application.
     /// </summary>
-    public sealed class StreamVideoLowLevelClient : IStreamVideoLowLevelClient
+    internal sealed class StreamVideoLowLevelClient : IStreamVideoLowLevelClient
     {
         public const string MenuPrefix = "Stream/";
 

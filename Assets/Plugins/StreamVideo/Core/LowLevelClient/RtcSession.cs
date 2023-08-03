@@ -88,7 +88,7 @@ namespace StreamVideo.Core.LowLevelClient
             WebRTC.Update().MoveNext();
         }
 
-        public async Task StartAsync(JoinCallResponse joinCallResponse)
+        public async Task StartAsync(JoinCallResponseInternalDTO joinCallResponse)
         {
             //StreamTodo: check if not started already
             

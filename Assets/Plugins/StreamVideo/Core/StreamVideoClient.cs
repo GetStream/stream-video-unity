@@ -63,7 +63,7 @@ namespace StreamVideo.Core
         public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify)
         {
-            var dto = new CallResponse
+            var dto = new CallResponseInternalDTO
             {
                 Backstage = false,
                 BlockedUserIds = null,
@@ -86,10 +86,10 @@ namespace StreamVideo.Core
                 UpdatedAt = default
             };
 
-            var call = _cache.Calls.CreateOrUpdate<StreamCall, CallResponse>(dto, out _);
+            var call = _cache.Calls.CreateOrUpdate<StreamCall, CallResponseInternalDTO>(dto, out _);
             if (!create)
             {
-                var callData = await InternalLowLevelClient.InternalVideoClientApi.GetCallAsync(callType, callId, new GetOrCreateCallRequest());
+                var callData = await InternalLowLevelClient.InternalVideoClientApi.GetCallAsync(callType, callId, new GetOrCreateCallRequestInternalDTO());
 
                 if (callData == null)
                 {
@@ -106,10 +106,10 @@ namespace StreamVideo.Core
             //StreamTodo: move this logic to call.Join, this way user can create call object and join later on 
 
             // StreamTodo: expose params
-            var joinCallRequest = new JoinCallRequest
+            var joinCallRequest = new JoinCallRequestInternalDTO
             {
                 Create = create,
-                Data = new CallRequest
+                Data = new CallRequestInternalDTO
                 {
                     CreatedBy = null,
                     CreatedById = null,
@@ -229,19 +229,19 @@ namespace StreamVideo.Core
         private readonly ITimeService _timeService;
         private readonly ICache _cache;
 
-        private void OnInternalCallCreatedEvent(CallCreatedEvent eventData)
+        private void OnInternalCallCreatedEvent(CallCreatedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallCreatedEvent here
+            // Implement handling logic for CallCreatedEventInternalDTO here
         }
 
-        private void OnInternalCallUpdatedEvent(CallUpdatedEvent eventData)
+        private void OnInternalCallUpdatedEvent(CallUpdatedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallUpdatedEvent here
+            // Implement handling logic for CallUpdatedEventInternalDTO here
         }
 
-        private void OnInternalCallEndedEvent(CallEndedEvent eventData)
+        private void OnInternalCallEndedEvent(CallEndedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallEndedEvent here
+            // Implement handling logic for CallEndedEventInternalDTO here
         }
 
         private void OnInternalParticipantJoinedEvent(ParticipantJoined eventData)
@@ -254,114 +254,114 @@ namespace StreamVideo.Core
             // Implement handling logic for ParticipantLeft here
         }
 
-        private void OnInternalCallAcceptedEvent(CallAcceptedEvent eventData)
+        private void OnInternalCallAcceptedEvent(CallAcceptedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallAcceptedEvent here
+            // Implement handling logic for CallAcceptedEventInternalDTO here
         }
 
-        private void OnInternalCallRejectedEvent(CallRejectedEvent eventData)
+        private void OnInternalCallRejectedEvent(CallRejectedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallRejectedEvent here
+            // Implement handling logic for CallRejectedEventInternalDTO here
         }
 
-        private void OnInternalCallLiveStartedEvent(CallLiveStartedEvent eventData)
+        private void OnInternalCallLiveStartedEvent(CallLiveStartedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallLiveStartedEvent here
+            // Implement handling logic for CallLiveStartedEventInternalDTO here
         }
 
-        private void OnInternalCallMemberAddedEvent(CallMemberAddedEvent eventData)
+        private void OnInternalCallMemberAddedEvent(CallMemberAddedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallMemberAddedEvent here
+            // Implement handling logic for CallMemberAddedEventInternalDTO here
         }
 
-        private void OnInternalCallMemberRemovedEvent(CallMemberRemovedEvent eventData)
+        private void OnInternalCallMemberRemovedEvent(CallMemberRemovedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallMemberRemovedEvent here
+            // Implement handling logic for CallMemberRemovedEventInternalDTO here
         }
 
-        private void OnInternalCallMemberUpdatedEvent(CallMemberUpdatedEvent eventData)
+        private void OnInternalCallMemberUpdatedEvent(CallMemberUpdatedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallMemberUpdatedEvent here
+            // Implement handling logic for CallMemberUpdatedEventInternalDTO here
         }
 
-        private void OnInternalCallMemberUpdatedPermissionEvent(CallMemberUpdatedPermissionEvent eventData)
+        private void OnInternalCallMemberUpdatedPermissionEvent(CallMemberUpdatedPermissionEventInternalDTO eventData)
         {
-            // Implement handling logic for CallMemberUpdatedPermissionEvent here
+            // Implement handling logic for CallMemberUpdatedPermissionEventInternalDTO here
         }
 
-        private void OnInternalCallNotificationEvent(CallNotificationEvent eventData)
+        private void OnInternalCallNotificationEvent(CallNotificationEventInternalDTO eventData)
         {
-            // Implement handling logic for CallNotificationEvent here
+            // Implement handling logic for CallNotificationEventInternalDTO here
         }
 
-        private void OnInternalPermissionRequestEvent(PermissionRequestEvent eventData)
+        private void OnInternalPermissionRequestEvent(PermissionRequestEventInternalDTO eventData)
         {
-            // Implement handling logic for PermissionRequestEvent here
+            // Implement handling logic for PermissionRequestEventInternalDTO here
         }
 
-        private void OnInternalUpdatedCallPermissionsEvent(UpdatedCallPermissionsEvent eventData)
+        private void OnInternalUpdatedCallPermissionsEvent(UpdatedCallPermissionsEventInternalDTO eventData)
         {
-            // Implement handling logic for UpdatedCallPermissionsEvent here
+            // Implement handling logic for UpdatedCallPermissionsEventInternalDTO here
         }
 
-        private void OnInternalCallReactionEvent(CallReactionEvent eventData)
+        private void OnInternalCallReactionEvent(CallReactionEventInternalDTO eventData)
         {
-            // Implement handling logic for CallReactionEvent here
+            // Implement handling logic for CallReactionEventInternalDTO here
         }
 
-        private void OnInternalCallRecordingStartedEvent(CallRecordingStartedEvent eventData)
+        private void OnInternalCallRecordingStartedEvent(CallRecordingStartedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallRecordingStartedEvent here
+            // Implement handling logic for CallRecordingStartedEventInternalDTO here
         }
 
-        private void OnInternalCallRecordingStoppedEvent(CallRecordingStoppedEvent eventData)
+        private void OnInternalCallRecordingStoppedEvent(CallRecordingStoppedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallRecordingStoppedEvent here
+            // Implement handling logic for CallRecordingStoppedEventInternalDTO here
         }
 
-        private void OnInternalBlockedUserEvent(BlockedUserEvent eventData)
+        private void OnInternalBlockedUserEvent(BlockedUserEventInternalDTO eventData)
         {
-            // Implement handling logic for BlockedUserEvent here
+            // Implement handling logic for BlockedUserEventInternalDTO here
         }
 
-        private void OnInternalCallBroadcastingStartedEvent(CallBroadcastingStartedEvent eventData)
+        private void OnInternalCallBroadcastingStartedEvent(CallBroadcastingStartedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallBroadcastingStartedEvent here
+            // Implement handling logic for CallBroadcastingStartedEventInternalDTO here
         }
 
-        private void OnInternalCallBroadcastingStoppedEvent(CallBroadcastingStoppedEvent eventData)
+        private void OnInternalCallBroadcastingStoppedEvent(CallBroadcastingStoppedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallBroadcastingStoppedEvent here
+            // Implement handling logic for CallBroadcastingStoppedEventInternalDTO here
         }
 
-        private void OnInternalCallRingEvent(CallRingEvent eventData)
+        private void OnInternalCallRingEvent(CallRingEventInternalDTO eventData)
         {
-            // Implement handling logic for CallRingEvent here
+            // Implement handling logic for CallRingEventInternalDTO here
         }
 
-        private void OnInternalCallSessionEndedEvent(CallSessionEndedEvent eventData)
+        private void OnInternalCallSessionEndedEvent(CallSessionEndedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallSessionEndedEvent here
+            // Implement handling logic for CallSessionEndedEventInternalDTO here
         }
 
-        private void OnInternalCallSessionStartedEvent(CallSessionStartedEvent eventData)
+        private void OnInternalCallSessionStartedEvent(CallSessionStartedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallSessionStartedEvent here
+            // Implement handling logic for CallSessionStartedEventInternalDTO here
         }
 
-        private void OnInternalCallUnblockedUserEvent(BlockedUserEvent eventData)
+        private void OnInternalCallUnblockedUserEvent(BlockedUserEventInternalDTO eventData)
         {
-            // Implement handling logic for CallUnblockedUserEvent here
+            // Implement handling logic for CallUnblockedUserEventInternalDTO here
         }
 
-        private void OnInternalConnectionErrorEvent(ConnectionErrorEvent eventData)
+        private void OnInternalConnectionErrorEvent(ConnectionErrorEventInternalDTO eventData)
         {
-            // Implement handling logic for ConnectionErrorEvent here
+            // Implement handling logic for ConnectionErrorEventInternalDTO here
         }
 
-        private void OnInternalCustomVideoEvent(CustomVideoEvent eventData)
+        private void OnInternalCustomVideoEvent(CustomVideoEventInternalDTO eventData)
         {
-            // Implement handling logic for CustomVideoEvent here
+            // Implement handling logic for CustomVideoEventInternalDTO here
         }
 
 

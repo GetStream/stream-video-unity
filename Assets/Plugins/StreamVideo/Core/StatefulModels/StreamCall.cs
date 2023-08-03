@@ -14,7 +14,7 @@ namespace StreamVideo.Core
     /// <summary>
     /// Represents a call during which participants can share: audio, video, screen
     /// </summary>
-    internal sealed class StreamCall : StreamStatefulModelBase<StreamCall>, IUpdateableFrom<CallResponse, StreamCall>, IStreamCall
+    internal sealed class StreamCall : StreamStatefulModelBase<StreamCall>, IUpdateableFrom<CallResponseInternalDTO, StreamCall>, IStreamCall
     {
         public string UniqueId { get; }
         protected override string InternalUniqueId
@@ -35,7 +35,7 @@ namespace StreamVideo.Core
 
         }
 
-        internal void LoadFrom(GetCallResponse dto)
+        internal void LoadFrom(GetCallResponseInternalDTO dto)
         {
             
         }
@@ -88,9 +88,9 @@ namespace StreamVideo.Core
         private readonly StreamCallType _type;
         private string _id;
 
-        public void UpdateFromDto(CallResponse dto, ICache cache)
+        public void UpdateFromDto(CallResponseInternalDTO dto, ICache cache)
         {
-            var aa = new CallResponse
+            var aa = new CallResponseInternalDTO
             {
                 Backstage = false,
                 BlockedUserIds = null,

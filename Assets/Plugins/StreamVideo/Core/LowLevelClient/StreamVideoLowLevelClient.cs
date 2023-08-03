@@ -259,7 +259,7 @@ namespace StreamVideo.Core.LowLevelClient
         //     return call;
         // }
 
-        internal Task StartCallSessionAsync(JoinCallResponse joinCallResponse) => _rtcSession.StartAsync(joinCallResponse);
+        internal Task StartCallSessionAsync(JoinCallResponseInternalDTO joinCallResponse) => _rtcSession.StartAsync(joinCallResponse);
 
         internal Task StopCallSessionAsync() => _rtcSession.StopAsync();
         
@@ -291,33 +291,33 @@ namespace StreamVideo.Core.LowLevelClient
         string IConnectionProvider.ConnectionId => _connectionId;
         Uri IConnectionProvider.ServerUri => ServerBaseUrl;
 
-        internal event Action<CallCreatedEvent> InternalCallCreatedEvent;
-        internal event Action<CallUpdatedEvent> InternalCallUpdatedEvent;
-        internal event Action<CallEndedEvent> InternalCallEndedEvent;
+        internal event Action<CallCreatedEventInternalDTO> InternalCallCreatedEvent;
+        internal event Action<CallUpdatedEventInternalDTO> InternalCallUpdatedEvent;
+        internal event Action<CallEndedEventInternalDTO> InternalCallEndedEvent;
         internal event Action<ParticipantJoined> InternalParticipantJoinedEvent;
         internal event Action<ParticipantLeft> InternalParticipantLeftEvent;
-        internal event Action<CallAcceptedEvent> InternalCallAcceptedEvent;
-        internal event Action<CallRejectedEvent> InternalCallRejectedEvent;
-        internal event Action<CallLiveStartedEvent> InternalCallLiveStartedEvent;
-        internal event Action<CallMemberAddedEvent> InternalCallMemberAddedEvent;
-        internal event Action<CallMemberRemovedEvent> InternalCallMemberRemovedEvent;
-        internal event Action<CallMemberUpdatedEvent> InternalCallMemberUpdatedEvent;
-        internal event Action<CallMemberUpdatedPermissionEvent> InternalCallMemberUpdatedPermissionEvent;
-        internal event Action<CallNotificationEvent> InternalCallNotificationEvent;
-        internal event Action<PermissionRequestEvent> InternalPermissionRequestEvent;
-        internal event Action<UpdatedCallPermissionsEvent> InternalUpdatedCallPermissionsEvent;
-        internal event Action<CallReactionEvent> InternalCallReactionEvent;
-        internal event Action<CallRecordingStartedEvent> InternalCallRecordingStartedEvent;
-        internal event Action<CallRecordingStoppedEvent> InternalCallRecordingStoppedEvent;
-        internal event Action<BlockedUserEvent> InternalBlockedUserEvent;
-        internal event Action<CallBroadcastingStartedEvent> InternalCallBroadcastingStartedEvent;
-        internal event Action<CallBroadcastingStoppedEvent> InternalCallBroadcastingStoppedEvent;
-        internal event Action<CallRingEvent> InternalCallRingEvent;
-        internal event Action<CallSessionEndedEvent> InternalCallSessionEndedEvent;
-        internal event Action<CallSessionStartedEvent> InternalCallSessionStartedEvent;
-        internal event Action<BlockedUserEvent> InternalCallUnblockedUserEvent;
-        internal event Action<ConnectionErrorEvent> InternalConnectionErrorEvent;
-        internal event Action<CustomVideoEvent> InternalCustomVideoEvent;
+        internal event Action<CallAcceptedEventInternalDTO> InternalCallAcceptedEvent;
+        internal event Action<CallRejectedEventInternalDTO> InternalCallRejectedEvent;
+        internal event Action<CallLiveStartedEventInternalDTO> InternalCallLiveStartedEvent;
+        internal event Action<CallMemberAddedEventInternalDTO> InternalCallMemberAddedEvent;
+        internal event Action<CallMemberRemovedEventInternalDTO> InternalCallMemberRemovedEvent;
+        internal event Action<CallMemberUpdatedEventInternalDTO> InternalCallMemberUpdatedEvent;
+        internal event Action<CallMemberUpdatedPermissionEventInternalDTO> InternalCallMemberUpdatedPermissionEvent;
+        internal event Action<CallNotificationEventInternalDTO> InternalCallNotificationEvent;
+        internal event Action<PermissionRequestEventInternalDTO> InternalPermissionRequestEvent;
+        internal event Action<UpdatedCallPermissionsEventInternalDTO> InternalUpdatedCallPermissionsEvent;
+        internal event Action<CallReactionEventInternalDTO> InternalCallReactionEvent;
+        internal event Action<CallRecordingStartedEventInternalDTO> InternalCallRecordingStartedEvent;
+        internal event Action<CallRecordingStoppedEventInternalDTO> InternalCallRecordingStoppedEvent;
+        internal event Action<BlockedUserEventInternalDTO> InternalBlockedUserEvent;
+        internal event Action<CallBroadcastingStartedEventInternalDTO> InternalCallBroadcastingStartedEvent;
+        internal event Action<CallBroadcastingStoppedEventInternalDTO> InternalCallBroadcastingStoppedEvent;
+        internal event Action<CallRingEventInternalDTO> InternalCallRingEvent;
+        internal event Action<CallSessionEndedEventInternalDTO> InternalCallSessionEndedEvent;
+        internal event Action<CallSessionStartedEventInternalDTO> InternalCallSessionStartedEvent;
+        internal event Action<BlockedUserEventInternalDTO> InternalCallUnblockedUserEvent;
+        internal event Action<ConnectionErrorEventInternalDTO> InternalConnectionErrorEvent;
+        internal event Action<CustomVideoEventInternalDTO> InternalCustomVideoEvent;
 
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
 
@@ -401,13 +401,13 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void RegisterCoordinatorEventHandlers()
         {
-            _coordinatorWS.RegisterEventType<CallCreatedEvent>(CoordinatorEventType.CallCreated,
+            _coordinatorWS.RegisterEventType<CallCreatedEventInternalDTO>(CoordinatorEventType.CallCreated,
                 e => InternalCallCreatedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallUpdatedEvent>(CoordinatorEventType.CallUpdated,
+            _coordinatorWS.RegisterEventType<CallUpdatedEventInternalDTO>(CoordinatorEventType.CallUpdated,
                 e => InternalCallUpdatedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallEndedEvent>(CoordinatorEventType.CallEnded,
+            _coordinatorWS.RegisterEventType<CallEndedEventInternalDTO>(CoordinatorEventType.CallEnded,
                 e => InternalCallEndedEvent?.Invoke(e));
 
             _coordinatorWS.RegisterEventType<ParticipantJoined>(CoordinatorEventType.CallSessionParticipantJoined,
@@ -416,70 +416,70 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.RegisterEventType<ParticipantLeft>(CoordinatorEventType.CallSessionParticipantLeft,
                 e => InternalParticipantLeftEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallAcceptedEvent>(CoordinatorEventType.CallAccepted,
+            _coordinatorWS.RegisterEventType<CallAcceptedEventInternalDTO>(CoordinatorEventType.CallAccepted,
                 e => InternalCallAcceptedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallRejectedEvent>(CoordinatorEventType.CallRejected,
+            _coordinatorWS.RegisterEventType<CallRejectedEventInternalDTO>(CoordinatorEventType.CallRejected,
                 e => InternalCallRejectedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallLiveStartedEvent>(CoordinatorEventType.CallLiveStarted,
+            _coordinatorWS.RegisterEventType<CallLiveStartedEventInternalDTO>(CoordinatorEventType.CallLiveStarted,
                 e => InternalCallLiveStartedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallMemberAddedEvent>(CoordinatorEventType.CallMemberAdded,
+            _coordinatorWS.RegisterEventType<CallMemberAddedEventInternalDTO>(CoordinatorEventType.CallMemberAdded,
                 e => InternalCallMemberAddedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallMemberRemovedEvent>(CoordinatorEventType.CallMemberRemoved,
+            _coordinatorWS.RegisterEventType<CallMemberRemovedEventInternalDTO>(CoordinatorEventType.CallMemberRemoved,
                 e => InternalCallMemberRemovedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallMemberUpdatedEvent>(CoordinatorEventType.CallMemberUpdated,
+            _coordinatorWS.RegisterEventType<CallMemberUpdatedEventInternalDTO>(CoordinatorEventType.CallMemberUpdated,
                 e => InternalCallMemberUpdatedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallMemberUpdatedPermissionEvent>(
+            _coordinatorWS.RegisterEventType<CallMemberUpdatedPermissionEventInternalDTO>(
                 CoordinatorEventType.CallMemberUpdatedPermission,
                 e => InternalCallMemberUpdatedPermissionEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallNotificationEvent>(CoordinatorEventType.CallNotification,
+            _coordinatorWS.RegisterEventType<CallNotificationEventInternalDTO>(CoordinatorEventType.CallNotification,
                 e => InternalCallNotificationEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<PermissionRequestEvent>(CoordinatorEventType.CallPermissionRequest,
+            _coordinatorWS.RegisterEventType<PermissionRequestEventInternalDTO>(CoordinatorEventType.CallPermissionRequest,
                 e => InternalPermissionRequestEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<UpdatedCallPermissionsEvent>(CoordinatorEventType.CallPermissionsUpdated,
+            _coordinatorWS.RegisterEventType<UpdatedCallPermissionsEventInternalDTO>(CoordinatorEventType.CallPermissionsUpdated,
                 e => InternalUpdatedCallPermissionsEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallReactionEvent>(CoordinatorEventType.CallReactionNew,
+            _coordinatorWS.RegisterEventType<CallReactionEventInternalDTO>(CoordinatorEventType.CallReactionNew,
                 e => InternalCallReactionEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallRecordingStartedEvent>(CoordinatorEventType.CallRecordingStarted,
+            _coordinatorWS.RegisterEventType<CallRecordingStartedEventInternalDTO>(CoordinatorEventType.CallRecordingStarted,
                 e => InternalCallRecordingStartedEvent?.Invoke(e));
-            _coordinatorWS.RegisterEventType<CallRecordingStoppedEvent>(CoordinatorEventType.CallRecordingStopped,
+            _coordinatorWS.RegisterEventType<CallRecordingStoppedEventInternalDTO>(CoordinatorEventType.CallRecordingStopped,
                 e => InternalCallRecordingStoppedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<BlockedUserEvent>(CoordinatorEventType.CallBlockedUser,
+            _coordinatorWS.RegisterEventType<BlockedUserEventInternalDTO>(CoordinatorEventType.CallBlockedUser,
                 e => InternalBlockedUserEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallBroadcastingStartedEvent>(CoordinatorEventType.CallBroadcastingStarted,
+            _coordinatorWS.RegisterEventType<CallBroadcastingStartedEventInternalDTO>(CoordinatorEventType.CallBroadcastingStarted,
                 e => InternalCallBroadcastingStartedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallBroadcastingStoppedEvent>(CoordinatorEventType.CallBroadcastingStopped,
+            _coordinatorWS.RegisterEventType<CallBroadcastingStoppedEventInternalDTO>(CoordinatorEventType.CallBroadcastingStopped,
                 e => InternalCallBroadcastingStoppedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallRingEvent>(CoordinatorEventType.CallRing,
+            _coordinatorWS.RegisterEventType<CallRingEventInternalDTO>(CoordinatorEventType.CallRing,
                 e => InternalCallRingEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallSessionEndedEvent>(CoordinatorEventType.CallSessionEnded,
+            _coordinatorWS.RegisterEventType<CallSessionEndedEventInternalDTO>(CoordinatorEventType.CallSessionEnded,
                 e => InternalCallSessionEndedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallSessionStartedEvent>(CoordinatorEventType.CallSessionStarted,
+            _coordinatorWS.RegisterEventType<CallSessionStartedEventInternalDTO>(CoordinatorEventType.CallSessionStarted,
                 e => InternalCallSessionStartedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<BlockedUserEvent>(CoordinatorEventType.CallUnblockedUser,
+            _coordinatorWS.RegisterEventType<BlockedUserEventInternalDTO>(CoordinatorEventType.CallUnblockedUser,
                 e => InternalCallUnblockedUserEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<ConnectionErrorEvent>(CoordinatorEventType.ConnectionError,
+            _coordinatorWS.RegisterEventType<ConnectionErrorEventInternalDTO>(CoordinatorEventType.ConnectionError,
                 e => InternalConnectionErrorEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CustomVideoEvent>(CoordinatorEventType.Custom,
+            _coordinatorWS.RegisterEventType<CustomVideoEventInternalDTO>(CoordinatorEventType.Custom,
                 e => InternalCustomVideoEvent?.Invoke(e));
         }
 

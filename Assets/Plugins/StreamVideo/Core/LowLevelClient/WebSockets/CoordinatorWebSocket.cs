@@ -22,10 +22,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs)
             : base(websocketClient, reconnectScheduler, authProvider, requestUriFactory, serializer, timeService, logs)
         {
-            RegisterEventType<HealthCheckEvent>(CoordinatorEventType.HealthCheck,
+            RegisterEventType<HealthCheckEventInternalDTO>(CoordinatorEventType.HealthCheck,
                 HandleHealthCheckEvent);
 
-            RegisterEventType<ConnectedEvent>(CoordinatorEventType.ConnectionOk,
+            RegisterEventType<ConnectedEventInternalDTO>(CoordinatorEventType.ConnectionOk,
                 HandleConnectionOkEvent);
         }
 
@@ -61,10 +61,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             Logs.Info("WS connected! Let's send the connect message");
 
             //StreamTodo: handle TokenProvider
-            var authMessage = new WSAuthMessageRequest
+            var authMessage = new WSAuthMessageRequestInternalDTO()
             {
                 Token = AuthProvider.UserToken,
-                UserDetails = new ConnectUserDetailsRequest
+                UserDetails = new ConnectUserDetailsRequestInternalDTO
                 {
                     //StreamTodo: handle Image & Name
                     Id = AuthProvider.UserId,
@@ -96,15 +96,15 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void SendHealthCheck()
         {
-            WebsocketClient.Send(Serializer.Serialize(new HealthCheckEvent()));
+            WebsocketClient.Send(Serializer.Serialize(new HealthCheckEventInternalDTO()));
         }
 
         private readonly StringBuilder _errorSb = new StringBuilder();
         private TaskCompletionSource<bool> _connectUserTaskSource;
 
-        private void HandleHealthCheckEvent(HealthCheckEvent healthCheckEvent) => OnHealthCheckReceived();
+        private void HandleHealthCheckEvent(HealthCheckEventInternalDTO healthCheckEvent) => OnHealthCheckReceived();
 
-        private void HandleConnectionOkEvent(ConnectedEvent connectedEvent)
+        private void HandleConnectionOkEvent(ConnectedEventInternalDTO connectedEvent)
         {
             ConnectionId = connectedEvent.ConnectionId;
 

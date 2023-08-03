@@ -13,7 +13,7 @@ namespace StreamVideo.Core.State.Caches
             
             Calls = new CacheRepository<StreamCall>(trackedObjectsFactory.CreateStreamCall, cache: this);
             
-            Calls.RegisterDtoIdMapping<StreamCall, CallResponse>(dto => dto.Cid);
+            Calls.RegisterDtoIdMapping<StreamCall, CallResponseInternalDTO>(dto => dto.Cid);
 
             // Channels = new CacheRepository<StreamChannel>(trackedObjectsFactory.CreateStreamChannel, cache: this);
             // Messages = new CacheRepository<StreamMessage>(trackedObjectsFactory.CreateStreamMessage, cache: this);

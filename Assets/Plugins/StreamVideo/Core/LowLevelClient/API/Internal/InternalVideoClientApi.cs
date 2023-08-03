@@ -18,121 +18,121 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         {
         }
 
-        public Task<GetCallResponse> GetCallAsync(StreamCallType callType, string callId,
-            GetOrCreateCallRequest getCallRequest)
-            => Get<GetOrCreateCallRequest, GetCallResponse>($"/call/{callType}/{callId}", getCallRequest);
+        public Task<GetCallResponseInternalDTO> GetCallAsync(StreamCallType callType, string callId,
+            GetOrCreateCallRequestInternalDTO getCallRequest)
+            => Get<GetOrCreateCallRequestInternalDTO, GetCallResponseInternalDTO>($"/call/{callType}/{callId}", getCallRequest);
 
-        public Task<UpdateCallResponse> UpdateCallAsync(StreamCallType callType, string callId,
-            UpdateCallRequest updateCallRequest)
-            => Patch<UpdateCallRequest, UpdateCallResponse>($"/call/{callType}/{callId}", updateCallRequest);
+        public Task<UpdateCallResponseInternalDTO> UpdateCallAsync(StreamCallType callType, string callId,
+            UpdateCallRequestInternalDTO updateCallRequest)
+            => Patch<UpdateCallRequestInternalDTO, UpdateCallResponseInternalDTO>($"/call/{callType}/{callId}", updateCallRequest);
 
-        public Task<GetOrCreateCallResponse> GetOrCreateCallAsync(StreamCallType callType, string callId,
-            GetOrCreateCallRequest getOrCreateCallRequest)
-            => Post<GetOrCreateCallRequest, GetOrCreateCallResponse>($"/call/{callType}/{callId}",
+        public Task<GetOrCreateCallResponseInternalDTO> GetOrCreateCallAsync(StreamCallType callType, string callId,
+            GetOrCreateCallRequestInternalDTO getOrCreateCallRequest)
+            => Post<GetOrCreateCallRequestInternalDTO, GetOrCreateCallResponseInternalDTO>($"/call/{callType}/{callId}",
                 getOrCreateCallRequest);
 
-        public Task<AcceptCallResponse> AcceptCallAsync(StreamCallType callType, string callId)
-            => Post<AcceptCallResponse>($"/call/{callType}/{callId}/accept");
+        public Task<AcceptCallResponseInternalDTO> AcceptCallAsync(StreamCallType callType, string callId)
+            => Post<AcceptCallResponseInternalDTO>($"/call/{callType}/{callId}/accept");
 
-        public Task<BlockUserResponse> BlockUserAsync(StreamCallType callType, string callId,
-            BlockUserRequest blockUserRequest)
-            => Post<BlockUserRequest, BlockUserResponse>($"/call/{callType}/{callId}/block", blockUserRequest);
+        public Task<BlockUserResponseInternalDTO> BlockUserAsync(StreamCallType callType, string callId,
+            BlockUserRequestInternalDTO blockUserRequest)
+            => Post<BlockUserRequestInternalDTO, BlockUserResponseInternalDTO>($"/call/{callType}/{callId}/block", blockUserRequest);
 
-        public Task<UnblockUserResponse> UnblockUserAsync(StreamCallType callType, string callId,
-            UnblockUserRequest unblockUserRequest)
-            => Post<UnblockUserRequest, UnblockUserResponse>($"/call/{callType}/{callId}/unblock", unblockUserRequest);
+        public Task<UnblockUserResponseInternalDTO> UnblockUserAsync(StreamCallType callType, string callId,
+            UnblockUserRequestInternalDTO unblockUserRequest)
+            => Post<UnblockUserRequestInternalDTO, UnblockUserResponseInternalDTO>($"/call/{callType}/{callId}/unblock", unblockUserRequest);
 
-        public Task<SendEventResponse> SendEventAsync(StreamCallType callType, string callId,
-            SendEventRequest sendEventRequest)
-            => Post<SendEventRequest, SendEventResponse>($"/call/{callType}/{callId}/event", sendEventRequest);
+        public Task<SendEventResponseInternalDTO> SendEventAsync(StreamCallType callType, string callId,
+            SendEventRequestInternalDTO sendEventRequest)
+            => Post<SendEventRequestInternalDTO, SendEventResponseInternalDTO>($"/call/{callType}/{callId}/event", sendEventRequest);
 
-        public Task<GoLiveResponse> GoLiveAsync(StreamCallType callType, string callId)
-            => Post<GoLiveResponse>($"/call/{callType}/{callId}/go_live");
+        public Task<GoLiveResponseInternalDTO> GoLiveAsync(StreamCallType callType, string callId)
+            => Post<GoLiveResponseInternalDTO>($"/call/{callType}/{callId}/go_live");
 
-        public Task<StopLiveResponse> StopLiveAsync(StreamCallType callType, string callId)
-            => Post<StopLiveResponse>($"/call/{callType}/{callId}/stop_live");
+        public Task<StopLiveResponseInternalDTO> StopLiveAsync(StreamCallType callType, string callId)
+            => Post<StopLiveResponseInternalDTO>($"/call/{callType}/{callId}/stop_live");
 
-        public Task<JoinCallResponse> JoinCallAsync(StreamCallType callType, string callId,
-            JoinCallRequest joinCallRequest)
-            => Post<JoinCallRequest, JoinCallResponse>($"/call/{callType}/{callId}/join", joinCallRequest);
+        public Task<JoinCallResponseInternalDTO> JoinCallAsync(StreamCallType callType, string callId,
+            JoinCallRequestInternalDTO joinCallRequest)
+            => Post<JoinCallRequestInternalDTO, JoinCallResponseInternalDTO>($"/call/{callType}/{callId}/join", joinCallRequest);
 
-        public Task<EndCallResponse> EndCallAsync(StreamCallType callType, string callId)
-            => Post<EndCallResponse>($"/call/{callType}/{callId}/mark_ended");
+        public Task<EndCallResponseInternalDTO> EndCallAsync(StreamCallType callType, string callId)
+            => Post<EndCallResponseInternalDTO>($"/call/{callType}/{callId}/mark_ended");
 
-        public Task<UpdateCallMembersResponse> UpdateCallMembersAsync(StreamCallType callType, string callId,
-            UpdateCallMembersRequest updateCallMembersRequest)
-            => Post<UpdateCallMembersRequest, UpdateCallMembersResponse>($"/call/{callType}/{callId}/members",
+        public Task<UpdateCallMembersResponseInternalDTO> UpdateCallMembersAsync(StreamCallType callType, string callId,
+            UpdateCallMembersRequestInternalDTO updateCallMembersRequest)
+            => Post<UpdateCallMembersRequestInternalDTO, UpdateCallMembersResponseInternalDTO>($"/call/{callType}/{callId}/members",
                 updateCallMembersRequest);
 
-        public Task<MuteUsersResponse> MuteUsersAsync(StreamCallType callType, string callId,
-            MuteUsersRequest muteUsersRequest)
-            => Post<MuteUsersRequest, MuteUsersResponse>($"/call/{callType}/{callId}/mute_users", muteUsersRequest);
+        public Task<MuteUsersResponseInternalDTO> MuteUsersAsync(StreamCallType callType, string callId,
+            MuteUsersRequestInternalDTO muteUsersRequest)
+            => Post<MuteUsersRequestInternalDTO, MuteUsersResponseInternalDTO>($"/call/{callType}/{callId}/mute_users", muteUsersRequest);
 
-        public Task<SendReactionResponse> SendVideoReactionAsync(StreamCallType callType, string callId,
-            SendReactionRequest sendReactionRequest)
-            => Post<SendReactionRequest, SendReactionResponse>($"/call/{callType}/{callId}/reaction",
+        public Task<SendReactionResponseInternalDTO> SendVideoReactionAsync(StreamCallType callType, string callId,
+            SendReactionRequestInternalDTO sendReactionRequest)
+            => Post<SendReactionRequestInternalDTO, SendReactionResponseInternalDTO>($"/call/{callType}/{callId}/reaction",
                 sendReactionRequest);
 
-        public Task<RejectCallResponse> RejectCallAsync(StreamCallType callType, string callId)
-            => Post<RejectCallResponse>($"/call/{callType}/{callId}/reject");
+        public Task<RejectCallResponseInternalDTO> RejectCallAsync(StreamCallType callType, string callId)
+            => Post<RejectCallResponseInternalDTO>($"/call/{callType}/{callId}/reject");
 
-        public Task<RequestPermissionResponse> RequestPermissionAsync(StreamCallType callType, string callId,
-            RequestPermissionRequest requestPermissionRequest)
-            => Post<RequestPermissionRequest, RequestPermissionResponse>(
+        public Task<RequestPermissionResponseInternalDTO> RequestPermissionAsync(StreamCallType callType, string callId,
+            RequestPermissionRequestInternalDTO requestPermissionRequest)
+            => Post<RequestPermissionRequestInternalDTO, RequestPermissionResponseInternalDTO>(
                 $"/call/{callType}/{callId}/request_permission", requestPermissionRequest);
 
-        public Task<UpdateUserPermissionsResponse> UpdateUserPermissionsAsync(StreamCallType callType, string callId,
-            UpdateUserPermissionsRequest updateUserPermissionsRequest)
-            => Post<UpdateUserPermissionsRequest, UpdateUserPermissionsResponse>(
+        public Task<UpdateUserPermissionsResponseInternalDTO> UpdateUserPermissionsAsync(StreamCallType callType, string callId,
+            UpdateUserPermissionsRequestInternalDTO updateUserPermissionsRequest)
+            => Post<UpdateUserPermissionsRequestInternalDTO, UpdateUserPermissionsResponseInternalDTO>(
                 $"/call/{callType}/{callId}/user_permissions", updateUserPermissionsRequest);
 
-        public Task<StartBroadcastingResponse> StartBroadcastingAsync(StreamCallType callType, string callId)
-            => Post<StartBroadcastingResponse>($"/call/{callType}/{callId}/start_broadcasting");
+        public Task<StartBroadcastingResponseInternalDTO> StartBroadcastingAsync(StreamCallType callType, string callId)
+            => Post<StartBroadcastingResponseInternalDTO>($"/call/{callType}/{callId}/start_broadcasting");
 
-        public Task<StopBroadcastingResponse> StopBroadcastingAsync(StreamCallType callType, string callId)
-            => Post<StopBroadcastingResponse>($"/call/{callType}/{callId}/stop_broadcasting");
+        public Task<StopBroadcastingResponseInternalDTO> StopBroadcastingAsync(StreamCallType callType, string callId)
+            => Post<StopBroadcastingResponseInternalDTO>($"/call/{callType}/{callId}/stop_broadcasting");
 
-        public Task<StartRecordingResponse> StartRecordingAsync(StreamCallType callType, string callId)
-            => Post<StartRecordingResponse>($"/call/{callType}/{callId}/start_recording");
+        public Task<StartRecordingResponseInternalDTO> StartRecordingAsync(StreamCallType callType, string callId)
+            => Post<StartRecordingResponseInternalDTO>($"/call/{callType}/{callId}/start_recording");
 
-        public Task<StopRecordingResponse> StopRecordingAsync(StreamCallType callType, string callId)
-            => Post<StopRecordingResponse>($"/call/{callType}/{callId}/stop_recording");
+        public Task<StopRecordingResponseInternalDTO> StopRecordingAsync(StreamCallType callType, string callId)
+            => Post<StopRecordingResponseInternalDTO>($"/call/{callType}/{callId}/stop_recording");
 
-        public Task<StartTranscriptionResponse> StartTranscriptionAsync(StreamCallType callType, string callId)
-            => Post<StartTranscriptionResponse>($"/call/{callType}/{callId}/start_transcription");
+        public Task<StartTranscriptionResponseInternalDTO> StartTranscriptionAsync(StreamCallType callType, string callId)
+            => Post<StartTranscriptionResponseInternalDTO>($"/call/{callType}/{callId}/start_transcription");
 
-        public Task<StopTranscriptionResponse> StopTranscriptionAsync(StreamCallType callType, string callId)
-            => Post<StopTranscriptionResponse>($"/call/{callType}/{callId}/stop_transcription");
+        public Task<StopTranscriptionResponseInternalDTO> StopTranscriptionAsync(StreamCallType callType, string callId)
+            => Post<StopTranscriptionResponseInternalDTO>($"/call/{callType}/{callId}/stop_transcription");
 
-        public Task<QueryMembersResponse> QueryMembersAsync(QueryMembersRequest queryMembersRequest)
-            => Post<QueryMembersRequest, QueryMembersResponse>($"/call/members", queryMembersRequest);
+        public Task<QueryMembersResponseInternalDTO> QueryMembersAsync(QueryMembersRequestInternalDTO queryMembersRequest)
+            => Post<QueryMembersRequestInternalDTO, QueryMembersResponseInternalDTO>($"/call/members", queryMembersRequest);
 
-        public Task<QueryCallsResponse> QueryCallsAsync(StreamCallType callType, string callId,
-            QueryCallsRequest queryCallsRequest)
-            => Post<QueryCallsRequest, QueryCallsResponse>($"/calls", queryCallsRequest);
+        public Task<QueryCallsResponseInternalDTO> QueryCallsAsync(StreamCallType callType, string callId,
+            QueryCallsRequestInternalDTO queryCallsRequest)
+            => Post<QueryCallsRequestInternalDTO, QueryCallsResponseInternalDTO>($"/calls", queryCallsRequest);
 
-        public Task<Response> DeleteDeviceAsync(string deviceId, string userId)
+        public Task<ResponseInternalDTO> DeleteDeviceAsync(string deviceId, string userId)
         {
             var queryParams = QueryParameters.Default.Set(IdParamKey, deviceId).Set(UserIdParamKey, userId);
-            return Delete<Response>($"/devices", queryParams);
+            return Delete<ResponseInternalDTO>($"/devices", queryParams);
         }
 
-        public Task<ListDevicesResponse> ListDevicesAsync(string userId)
+        public Task<ListDevicesResponseInternalDTO> ListDevicesAsync(string userId)
         {
             var queryParams = QueryParameters.Default.Set(UserIdParamKey, userId);
-            return Get<ListDevicesResponse>($"/devices", queryParams);
+            return Get<ListDevicesResponseInternalDTO>($"/devices", queryParams);
         }
 
-        public Task<Response> CreateDeviceAsync(CreateDeviceRequest createDeviceRequest)
-            => Post<CreateDeviceRequest, Response>($"/devices", createDeviceRequest);
+        public Task<ResponseInternalDTO> CreateDeviceAsync(CreateDeviceRequestInternalDTO createDeviceRequest)
+            => Post<CreateDeviceRequestInternalDTO, ResponseInternalDTO>($"/devices", createDeviceRequest);
         
-        public Task<GetEdgesResponse> GetEdgesAsync() => Get<GetEdgesResponse>($"/edges");
+        public Task<GetEdgesResponseInternalDTO> GetEdgesAsync() => Get<GetEdgesResponseInternalDTO>($"/edges");
         
-        public Task<CreateGuestResponse> CreateGuestAsync(CreateGuestRequest createGuestRequest)
-            => Post<CreateGuestRequest, CreateGuestResponse>($"/guest", createGuestRequest);
+        public Task<CreateGuestResponseInternalDTO> CreateGuestAsync(CreateGuestRequestInternalDTO createGuestRequest)
+            => Post<CreateGuestRequestInternalDTO, CreateGuestResponseInternalDTO>($"/guest", createGuestRequest);
         
-        public Task<Response> VideoConnectAsync(WSAuthMessageRequest authMessageRequest)
-            => Post<WSAuthMessageRequest, Response>($"/video/connect", authMessageRequest);
+        public Task<ResponseInternalDTO> VideoConnectAsync(WSAuthMessageRequestInternalDTO authMessageRequest)
+            => Post<WSAuthMessageRequestInternalDTO, ResponseInternalDTO>($"/video/connect", authMessageRequest);
 
         private const string UserIdParamKey = "user_id";
         private const string IdParamKey = "id";

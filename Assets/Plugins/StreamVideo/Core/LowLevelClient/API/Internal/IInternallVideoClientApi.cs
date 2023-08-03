@@ -6,79 +6,79 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
 {
     internal interface IInternalVideoClientApi
     {
-        Task<GetCallResponse> GetCallAsync(StreamCallType callType, string callId,
-            GetOrCreateCallRequest getCallRequest);
+        Task<GetCallResponseInternalDTO> GetCallAsync(StreamCallType callType, string callId,
+            GetOrCreateCallRequestInternalDTO getCallRequest);
 
-        Task<UpdateCallResponse> UpdateCallAsync(StreamCallType callType, string callId,
-            UpdateCallRequest updateCallRequest);
+        Task<UpdateCallResponseInternalDTO> UpdateCallAsync(StreamCallType callType, string callId,
+            UpdateCallRequestInternalDTO updateCallRequest);
 
-        Task<GetOrCreateCallResponse> GetOrCreateCallAsync(StreamCallType callType, string callId,
-            GetOrCreateCallRequest getOrCreateCallRequest);
+        Task<GetOrCreateCallResponseInternalDTO> GetOrCreateCallAsync(StreamCallType callType, string callId,
+            GetOrCreateCallRequestInternalDTO getOrCreateCallRequest);
 
-        Task<AcceptCallResponse> AcceptCallAsync(StreamCallType callType, string callId);
+        Task<AcceptCallResponseInternalDTO> AcceptCallAsync(StreamCallType callType, string callId);
 
-        Task<BlockUserResponse> BlockUserAsync(StreamCallType callType, string callId,
-            BlockUserRequest blockUserRequest);
+        Task<BlockUserResponseInternalDTO> BlockUserAsync(StreamCallType callType, string callId,
+            BlockUserRequestInternalDTO blockUserRequest);
 
-        Task<UnblockUserResponse> UnblockUserAsync(StreamCallType callType, string callId,
-            UnblockUserRequest unblockUserRequest);
+        Task<UnblockUserResponseInternalDTO> UnblockUserAsync(StreamCallType callType, string callId,
+            UnblockUserRequestInternalDTO unblockUserRequest);
 
-        Task<SendEventResponse> SendEventAsync(StreamCallType callType, string callId,
-            SendEventRequest sendEventRequest);
+        Task<SendEventResponseInternalDTO> SendEventAsync(StreamCallType callType, string callId,
+            SendEventRequestInternalDTO sendEventRequest);
 
-        Task<GoLiveResponse> GoLiveAsync(StreamCallType callType, string callId);
+        Task<GoLiveResponseInternalDTO> GoLiveAsync(StreamCallType callType, string callId);
 
-        Task<StopLiveResponse> StopLiveAsync(StreamCallType callType, string callId);
+        Task<StopLiveResponseInternalDTO> StopLiveAsync(StreamCallType callType, string callId);
 
-        Task<JoinCallResponse> JoinCallAsync(StreamCallType callType, string callId,
-            JoinCallRequest joinCallRequest);
+        Task<JoinCallResponseInternalDTO> JoinCallAsync(StreamCallType callType, string callId,
+            JoinCallRequestInternalDTO joinCallRequest);
 
-        Task<EndCallResponse> EndCallAsync(StreamCallType callType, string callId);
+        Task<EndCallResponseInternalDTO> EndCallAsync(StreamCallType callType, string callId);
 
-        Task<UpdateCallMembersResponse> UpdateCallMembersAsync(StreamCallType callType, string callId,
-            UpdateCallMembersRequest updateCallMembersRequest);
+        Task<UpdateCallMembersResponseInternalDTO> UpdateCallMembersAsync(StreamCallType callType, string callId,
+            UpdateCallMembersRequestInternalDTO updateCallMembersRequest);
 
-        Task<MuteUsersResponse> MuteUsersAsync(StreamCallType callType, string callId,
-            MuteUsersRequest muteUsersRequest);
+        Task<MuteUsersResponseInternalDTO> MuteUsersAsync(StreamCallType callType, string callId,
+            MuteUsersRequestInternalDTO muteUsersRequest);
 
-        Task<SendReactionResponse> SendVideoReactionAsync(StreamCallType callType, string callId,
-            SendReactionRequest sendReactionRequest);
+        Task<SendReactionResponseInternalDTO> SendVideoReactionAsync(StreamCallType callType, string callId,
+            SendReactionRequestInternalDTO sendReactionRequest);
 
-        Task<RejectCallResponse> RejectCallAsync(StreamCallType callType, string callId);
+        Task<RejectCallResponseInternalDTO> RejectCallAsync(StreamCallType callType, string callId);
 
-        Task<RequestPermissionResponse> RequestPermissionAsync(StreamCallType callType, string callId,
-            RequestPermissionRequest requestPermissionRequest);
+        Task<RequestPermissionResponseInternalDTO> RequestPermissionAsync(StreamCallType callType, string callId,
+            RequestPermissionRequestInternalDTO requestPermissionRequest);
 
-        Task<UpdateUserPermissionsResponse> UpdateUserPermissionsAsync(StreamCallType callType, string callId,
-            UpdateUserPermissionsRequest updateUserPermissionsRequest);
+        Task<UpdateUserPermissionsResponseInternalDTO> UpdateUserPermissionsAsync(StreamCallType callType, string callId,
+            UpdateUserPermissionsRequestInternalDTO updateUserPermissionsRequest);
 
-        Task<StartBroadcastingResponse> StartBroadcastingAsync(StreamCallType callType, string callId);
+        Task<StartBroadcastingResponseInternalDTO> StartBroadcastingAsync(StreamCallType callType, string callId);
 
-        Task<StopBroadcastingResponse> StopBroadcastingAsync(StreamCallType callType, string callId);
+        Task<StopBroadcastingResponseInternalDTO> StopBroadcastingAsync(StreamCallType callType, string callId);
 
-        Task<StartRecordingResponse> StartRecordingAsync(StreamCallType callType, string callId);
+        Task<StartRecordingResponseInternalDTO> StartRecordingAsync(StreamCallType callType, string callId);
 
-        Task<StopRecordingResponse> StopRecordingAsync(StreamCallType callType, string callId);
+        Task<StopRecordingResponseInternalDTO> StopRecordingAsync(StreamCallType callType, string callId);
 
-        Task<StartTranscriptionResponse> StartTranscriptionAsync(StreamCallType callType, string callId);
+        Task<StartTranscriptionResponseInternalDTO> StartTranscriptionAsync(StreamCallType callType, string callId);
 
-        Task<StopTranscriptionResponse> StopTranscriptionAsync(StreamCallType callType, string callId);
+        Task<StopTranscriptionResponseInternalDTO> StopTranscriptionAsync(StreamCallType callType, string callId);
 
-        Task<QueryMembersResponse> QueryMembersAsync(QueryMembersRequest queryMembersRequest);
+        Task<QueryMembersResponseInternalDTO> QueryMembersAsync(QueryMembersRequestInternalDTO queryMembersRequest);
 
-        Task<QueryCallsResponse> QueryCallsAsync(StreamCallType callType, string callId,
-            QueryCallsRequest queryCallsRequest);
+        Task<QueryCallsResponseInternalDTO> QueryCallsAsync(StreamCallType callType, string callId,
+            QueryCallsRequestInternalDTO queryCallsRequest);
 
-        Task<Response> DeleteDeviceAsync(string deviceId, string userId);
+        Task<ResponseInternalDTO> DeleteDeviceAsync(string deviceId, string userId);
 
-        Task<ListDevicesResponse> ListDevicesAsync(string userId);
+        Task<ListDevicesResponseInternalDTO> ListDevicesAsync(string userId);
 
-        Task<Response> CreateDeviceAsync(CreateDeviceRequest createDeviceRequest);
+        Task<ResponseInternalDTO> CreateDeviceAsync(CreateDeviceRequestInternalDTO createDeviceRequest);
 
-        Task<GetEdgesResponse> GetEdgesAsync();
+        Task<GetEdgesResponseInternalDTO> GetEdgesAsync();
 
-        Task<CreateGuestResponse> CreateGuestAsync(CreateGuestRequest createGuestRequest);
+        Task<CreateGuestResponseInternalDTO> CreateGuestAsync(CreateGuestRequestInternalDTO createGuestRequest);
 
-        Task<Response> VideoConnectAsync(WSAuthMessageRequest authMessageRequest);
+        Task<ResponseInternalDTO> VideoConnectAsync(WSAuthMessageRequestInternalDTO authMessageRequest);
     }
 }

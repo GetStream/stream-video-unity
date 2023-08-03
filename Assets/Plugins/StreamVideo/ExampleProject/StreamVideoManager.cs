@@ -1,7 +1,6 @@
 using System;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
-using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
@@ -17,14 +16,14 @@ namespace StreamVideo.ExampleProject
 
         protected void Start()
         {
-            var apiKey = "r94gjesrb59f";
-            var userId = "yoda-admin";
+            var apiKey = "hd8szvscpxvd";
+            var userId = "daniel_sierpinski";
             var userToken
-                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoieW9kYS1hZG1pbiJ9.2wVvXVatKCl2J8QACpDdUvGW48e7qYL9nlYgOXF-2L4";
+                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkwODkzMjQyLCJleHAiOjE2OTA5MDc2NDd9.wW2te_0MkxmzdOYd4a6KyOUbxMrdgeP7K79msMINonQ";
 
             var credentials = new AuthCredentials(apiKey, userId, userToken);
 
-            _client = StreamVideoLowLevelClient.CreateDefaultClient(new StreamClientConfig
+            _client = StreamVideoClient.CreateDefaultClient(new StreamClientConfig
             {
                 LogLevel = StreamLogLevel.Debug
             });
@@ -59,7 +58,10 @@ namespace StreamVideo.ExampleProject
         [SerializeField] 
         private UIManager _uiManager;
 
-        private IStreamVideoLowLevelClient _client;
+        [SerializeField]
+        private string _joinCallId = "3TK1d0wL2we0";
+
+        private IStreamVideoClient _client;
         
         private async void OnJoinClicked()
         {
@@ -67,8 +69,16 @@ namespace StreamVideo.ExampleProject
             {
                 Debug.Log("Join clicked");
 
-                await _client.JoinCallAsync(StreamCallType.Development, Guid.NewGuid().ToString(), create: true, ring: true,
-                    notify: false);
+                if (!string.IsNullOrEmpty(_joinCallId))
+                {
+                    await _client.JoinCallAsync(StreamCallType.Default, _joinCallId, create: false, ring: true,
+                        notify: false);
+                }
+                else
+                {
+                    await _client.JoinCallAsync(StreamCallType.Development, Guid.NewGuid().ToString(), create: true, ring: true,
+                        notify: false);
+                }
             }
             catch (Exception e)
             {

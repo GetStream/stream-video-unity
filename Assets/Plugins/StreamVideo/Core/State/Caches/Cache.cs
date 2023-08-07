@@ -1,5 +1,4 @@
-﻿using StreamVideo.Core.InternalDTO.Events;
-using StreamVideo.Core.InternalDTO.Responses;
+﻿using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
@@ -18,10 +17,10 @@ namespace StreamVideo.Core.State.Caches
             
             //StreamTodo: validate that all mappings are registered:
             //grab IUpdateableFrom interface from each model and check if every DTO is registered
-            
             Calls.RegisterDtoIdMapping<StreamCall, CallResponseInternalDTO>(dto => dto.Cid);
             Calls.RegisterDtoIdMapping<StreamCall, GetCallResponseInternalDTO>(dto => dto.Call.Cid);
             Calls.RegisterDtoIdMapping<StreamCall, GetOrCreateCallResponseInternalDTO>(dto => dto.Call.Cid);
+            Calls.RegisterDtoIdMapping<StreamCall, JoinCallResponseInternalDTO>(dto => dto.Call.Cid);
             
             Users.RegisterDtoIdMapping<StreamVideoUser, UserResponseInternalDTO>(dto => dto.Id);
             

@@ -52,8 +52,8 @@ namespace StreamVideo.Core.StatefulModels
         {
         }
 
-        protected override string InternalUniqueId { get; set; }
-        protected override StreamVideoUser Self { get; }
+        protected override string InternalUniqueId { get => Id; set => Id = value; }
+        protected override StreamVideoUser Self => this;
 
         #region State
 

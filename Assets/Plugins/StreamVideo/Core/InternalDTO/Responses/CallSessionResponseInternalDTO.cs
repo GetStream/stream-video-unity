@@ -21,7 +21,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("accepted_by", Required = Newtonsoft.Json.Required.Always)]
         public System.Collections.Generic.Dictionary<string, System.DateTimeOffset> AcceptedBy { get; set; } = new System.Collections.Generic.Dictionary<string, System.DateTimeOffset>();
 
-        [Newtonsoft.Json.JsonProperty("ended_at", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("ended_at", Required = Newtonsoft.Json.Required.AllowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset EndedAt { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
@@ -36,7 +36,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("rejected_by", Required = Newtonsoft.Json.Required.Always)]
         public System.Collections.Generic.Dictionary<string, System.DateTimeOffset> RejectedBy { get; set; } = new System.Collections.Generic.Dictionary<string, System.DateTimeOffset>();
 
-        [Newtonsoft.Json.JsonProperty("started_at", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("started_at", Required = Newtonsoft.Json.Required.AllowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset StartedAt { get; set; } = default!;
 
     }

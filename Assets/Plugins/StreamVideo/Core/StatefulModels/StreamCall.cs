@@ -94,6 +94,8 @@ namespace StreamVideo.Core
         // Below don't belong to CallResponse
         
         public bool Created { get; private set; }
+        
+        //StreamTodo: should credentials be internal? 
         public Credentials Credentials { get; private set; }
         public string Duration { get; private set; }
         public CallMember Membership { get; private set; }
@@ -204,7 +206,6 @@ namespace StreamVideo.Core
             _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum, cache);
         }
 
-
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
             : base(uniqueId, repository, context)
@@ -221,6 +222,7 @@ namespace StreamVideo.Core
 
         #region State
 
+        //StreamTodo: is this always in sync with _blockedUsers? 
         private readonly List<string> _blockedUserIds = new List<string>();
         
         // Below is not part of call response
@@ -229,7 +231,6 @@ namespace StreamVideo.Core
         private readonly List<OwnCapability> _ownCapabilities = new List<OwnCapability>();
         private readonly List<StreamVideoUser> _blockedUsers = new List<StreamVideoUser>();
 
-        
         #endregion
         
         private readonly StreamVideoLowLevelClient _client;

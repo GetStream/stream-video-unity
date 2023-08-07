@@ -19,7 +19,7 @@ namespace StreamVideo.ExampleProject
             var apiKey = "hd8szvscpxvd";
             var userId = "daniel_sierpinski";
             var userToken
-                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkwODkzMjQyLCJleHAiOjE2OTA5MDc2NDd9.wW2te_0MkxmzdOYd4a6KyOUbxMrdgeP7K79msMINonQ";
+                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkxNDM4Mzg3LCJleHAiOjE2OTIwNDMxOTJ9.0pGgBpH0S-eWlMMf_N8WPwOvn4bezz7MhiaR1vDxZTs";
 
             var credentials = new AuthCredentials(apiKey, userId, userToken);
 

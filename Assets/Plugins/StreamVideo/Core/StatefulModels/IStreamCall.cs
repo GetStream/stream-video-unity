@@ -1,4 +1,4 @@
-﻿using StreamVideo.Core.State;
+using StreamVideo.Core.State;
 
 namespace StreamVideo.Core.StatefulModels
 {

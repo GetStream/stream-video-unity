@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Models;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
@@ -38,7 +39,7 @@ namespace StreamVideo.Core
         /// <summary>
         /// The user that created the call
         /// </summary>
-        public UserResponseInternalDTO CreatedBy { get; private set; } = new UserResponseInternalDTO();
+        public StreamVideoUser CreatedBy { get; private set; }
 
         public string CurrentSessionId { get; private set; }
 
@@ -48,7 +49,7 @@ namespace StreamVideo.Core
         //public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
         //StreamTodo: ensure custom data is implemented by base type
 
-        public EgressResponseInternalDTO Egress { get; private set; } = new EgressResponseInternalDTO();
+        public CallEgress Egress { get; private set; }
 
         /// <summary>
         /// Date/time when the call ended
@@ -60,13 +61,13 @@ namespace StreamVideo.Core
         /// </summary>
         public string Id { get; private set; }
 
-        public CallIngressResponseInternalDTO Ingress { get; private set; } = new CallIngressResponseInternalDTO();
+        public CallIngress Ingress { get; private set; }
 
         public bool Recording { get; private set; }
 
-        public CallSessionResponseInternalDTO Session { get; private set; }
+        public CallSession Session { get; private set; }
 
-        public CallSettingsResponseInternalDTO Settings { get; private set; } = new CallSettingsResponseInternalDTO();
+        public CallSettings Settings { get; private set; }
 
         /// <summary>
         /// Date/time when the call will start
@@ -139,20 +140,20 @@ namespace StreamVideo.Core
             ICache cache)
         {
             Backstage = dto.Backstage;
-            _blockedUserIds.TryReplaceValuesFromDto(dto.BlockedUserIds); //StreamTodo: turn into User objects??
+            _blockedUserIds.TryReplaceValuesFromDto(dto.BlockedUserIds);
             Cid = dto.Cid;
             CreatedAt = dto.CreatedAt;
-            CreatedBy = dto.CreatedBy;
+            CreatedBy = cache.TryCreateOrUpdate(dto.CreatedBy);
             CurrentSessionId = dto.CurrentSessionId;
             LoadCustomData(dto.Custom);
-            Egress = dto.Egress;
-            EndedAt = dto.EndedAt;
+            Egress = cache.TryUpdateOrCreateFromDto(Egress, dto.Egress);
+            EndedAt = dto.EndedAt; //StreamTodo: should probably be nullable, no date should be null not 0000-00-00
             Id = dto.Id;
-            Ingress = dto.Ingress;
+            Ingress = cache.TryUpdateOrCreateFromDto(Ingress, dto.Ingress);
             Recording = dto.Recording;
-            Session = dto.Session;
-            Settings = dto.Settings;
-            StartsAt = dto.StartsAt;
+            Session = cache.TryUpdateOrCreateFromDto(Session, dto.Session);
+            Settings = cache.TryUpdateOrCreateFromDto(Settings, dto.Settings);
+            StartsAt = dto.StartsAt; //StreamTodo: should probably be nullable, no date should be null not 0000-00-00
             Team = dto.Team;
             Transcribing = dto.Transcribing;
             Type = dto.Type;

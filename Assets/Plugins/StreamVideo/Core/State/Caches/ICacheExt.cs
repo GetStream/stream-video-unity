@@ -1,4 +1,5 @@
 ﻿using StreamVideo.Core.InternalDTO.Responses;
+using StreamVideo.Core.StatefulModels;
 
 namespace StreamVideo.Core.State.Caches
 {
@@ -12,5 +13,8 @@ namespace StreamVideo.Core.State.Caches
         
         public static StreamCall TryCreateOrUpdate(this ICache cache, GetOrCreateCallResponseInternalDTO dto)
             => dto == null ? null : cache.Calls.CreateOrUpdate<StreamCall, GetOrCreateCallResponseInternalDTO>(dto, out _);
+        
+        public static StreamVideoUser TryCreateOrUpdate(this ICache cache, UserResponseInternalDTO dto)
+            => dto == null ? null : cache.Users.CreateOrUpdate<StreamVideoUser, UserResponseInternalDTO>(dto, out _);
     }
 }

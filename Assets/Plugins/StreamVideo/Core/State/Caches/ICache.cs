@@ -11,5 +11,6 @@ namespace StreamVideo.Core.State.Caches
         // ICacheRepository<StreamChannelMember> ChannelMembers { get; }
         ICacheRepository<StreamCall> Calls { get; }
         ICacheRepository<StreamVideoUser> Users { get; }
+        ICacheRepository<StreamVideoCallParticipant> CallParticipants { get; }
     }
 }

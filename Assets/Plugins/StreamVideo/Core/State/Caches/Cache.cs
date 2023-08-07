@@ -22,6 +22,8 @@ namespace StreamVideo.Core.State.Caches
             Calls.RegisterDtoIdMapping<StreamCall, GetOrCreateCallResponseInternalDTO>(dto => dto.Call.Cid);
             
             Users.RegisterDtoIdMapping<StreamVideoUser, UserResponseInternalDTO>(dto => dto.Id);
+            
+            CallParticipants.RegisterDtoIdMapping<StreamVideoCallParticipant, CallParticipantResponseInternalDTO>(dto => dto.User.Id);
 
             // Channels = new CacheRepository<StreamChannel>(trackedObjectsFactory.CreateStreamChannel, cache: this);
             // Messages = new CacheRepository<StreamMessage>(trackedObjectsFactory.CreateStreamMessage, cache: this);
@@ -48,6 +50,7 @@ namespace StreamVideo.Core.State.Caches
 
          public ICacheRepository<StreamCall> Calls { get; }
          public ICacheRepository<StreamVideoUser> Users { get; }
+         public ICacheRepository<StreamVideoCallParticipant> CallParticipants { get; }
         
         // public ICacheRepository<StreamChannel> Channels { get; }
         //

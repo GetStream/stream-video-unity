@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
-using StreamVideo.Core.LowLevelClient.Models;
+using StreamVideo.Core.Models;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;

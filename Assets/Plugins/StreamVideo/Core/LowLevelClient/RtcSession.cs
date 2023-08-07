@@ -11,6 +11,8 @@ using Unity.WebRTC;
 
 namespace StreamVideo.Core.LowLevelClient
 {
+    //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
+    
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IDisposable
     {

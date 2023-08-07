@@ -6,13 +6,11 @@ namespace StreamVideo.Core.Models
 {
     public sealed class CallIngress : IStateLoadableFrom<CallIngressResponseInternalDTO, CallIngress>
     {
-        public RTMPIngress Rtmp { get; private set; }
+        public CallIngressRTMP Rtmp { get; private set; }
 
-        CallIngress IStateLoadableFrom<CallIngressResponseInternalDTO, CallIngress>.LoadFromDto(CallIngressResponseInternalDTO dto, ICache cache)
+        void IStateLoadableFrom<CallIngressResponseInternalDTO, CallIngress>.LoadFromDto(CallIngressResponseInternalDTO dto, ICache cache)
         {
-            Rtmp = Rtmp.TryLoadFromDto(dto.Rtmp, cache);
-
-            return this;
+            Rtmp = cache.TryUpdateOrCreateFromDto(Rtmp, dto.Rtmp);
         }
     }
 }

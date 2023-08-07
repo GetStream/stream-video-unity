@@ -65,7 +65,7 @@ namespace StreamVideo.Core.Models
             }
         }
 
-        public static OwnCapability ToInternalEnum(this OwnCapabilityInternalEnum ownCapability)
+        public static OwnCapability ToPublicEnum(this OwnCapabilityInternalEnum ownCapability)
         {
             switch (ownCapability)
             {

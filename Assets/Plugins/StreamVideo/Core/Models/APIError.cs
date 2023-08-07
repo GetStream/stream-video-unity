@@ -2,9 +2,9 @@
 using System.Text;
 using StreamVideo.Core.InternalDTO.Models;
 
-namespace StreamVideo.Core.LowLevelClient.Models
+namespace StreamVideo.Core.Models
 {
-    public partial class APIError : ILoadableFrom<APIErrorInternalDTO, APIError>
+    public sealed class APIError : ILoadableFrom<APIErrorInternalDTO, APIError>
     {
         /// <summary>
         /// Response HTTP status code

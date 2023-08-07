@@ -10,6 +10,7 @@ using StreamVideo.Libs.Serialization;
 namespace StreamVideo.Core.LowLevelClient.API.Internal
 {
     //StreamTodo: add support for cancellation token
+    //StreamTodo: add retry strategy logic, e.g. would should probably retry every request 3x by default
     internal class InternalVideoClientApi : InternalApiClientBase, IInternalVideoClientApi
     {
         public InternalVideoClientApi(IHttpClient httpClient, ISerializer serializer, ILogs logs,

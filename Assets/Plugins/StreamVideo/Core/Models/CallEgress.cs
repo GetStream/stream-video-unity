@@ -13,11 +13,12 @@ namespace StreamVideo.Core.Models
 
         public IReadOnlyList<CallEgressRTMP> Rtmps => rtmps;
 
-        void IStateLoadableFrom<EgressResponseInternalDTO, CallEgress>.LoadFromDto(EgressResponseInternalDTO dto, ICache cache)
+        void IStateLoadableFrom<EgressResponseInternalDTO, CallEgress>.LoadFromDto(EgressResponseInternalDTO dto,
+            ICache cache)
         {
             Broadcasting = dto.Broadcasting;
             Hls = cache.TryUpdateOrCreateFromDto(Hls, dto.Hls);
-            rtmps.ReplaceFromDtoCollection(dto.Rtmps, cache);
+            rtmps.TryReplaceFromDtoCollection(dto.Rtmps, cache);
         }
 
         private readonly List<CallEgressRTMP> rtmps = new List<CallEgressRTMP>();

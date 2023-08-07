@@ -5,8 +5,13 @@ using StreamVideo.Core.State.Caches;
 
 namespace StreamVideo.Core.Utils
 {
+   
     internal static class UpdateExtensions
     {
+        //StreamTodo: we could turn this into smart sync:
+        //1. remove from target what is not present in dtos
+        //2. add to target what is present in dtos but missing in target
+        //3. update the overlapping items
         /// <summary>
         /// Clear target list and replace with items created or updated from DTO collection
         /// </summary>

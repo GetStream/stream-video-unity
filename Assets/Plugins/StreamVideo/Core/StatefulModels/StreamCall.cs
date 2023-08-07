@@ -18,6 +18,7 @@ namespace StreamVideo.Core
         IUpdateableFrom<CallResponseInternalDTO, StreamCall>,
         IUpdateableFrom<GetCallResponseInternalDTO, StreamCall>,
         IUpdateableFrom<GetOrCreateCallResponseInternalDTO, StreamCall>,
+        IUpdateableFrom<JoinCallResponseInternalDTO, StreamCall>,
         IStreamCall
     {
         #region State
@@ -51,6 +52,7 @@ namespace StreamVideo.Core
 
         public CallEgress Egress { get; private set; }
 
+        //StreamTodo: nullable? no date in DTO should resolve to null not 0000-00-00
         /// <summary>
         /// Date/time when the call ended
         /// </summary>
@@ -69,6 +71,7 @@ namespace StreamVideo.Core
 
         public CallSettings Settings { get; private set; }
 
+        //StreamTodo: nullable? no date in DTO should resolve to null not 0000-00-00
         /// <summary>
         /// Date/time when the call will start
         /// </summary>
@@ -87,6 +90,13 @@ namespace StreamVideo.Core
         /// Date/time of the last update
         /// </summary>
         public DateTimeOffset UpdatedAt { get; private set; }
+        
+        // Below don't belong to CallResponse
+        
+        public bool Created { get; private set; }
+        public Credentials Credentials { get; private set; }
+        public string Duration { get; private set; }
+        public CallMember Membership { get; private set; }
 
         #endregion
 
@@ -134,8 +144,6 @@ namespace StreamVideo.Core
             return Task.CompletedTask;
         }
 
-        string IStreamStatefulModel.UniqueId => Cid;
-
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
         {
@@ -147,13 +155,13 @@ namespace StreamVideo.Core
             CurrentSessionId = dto.CurrentSessionId;
             LoadCustomData(dto.Custom);
             Egress = cache.TryUpdateOrCreateFromDto(Egress, dto.Egress);
-            EndedAt = dto.EndedAt; //StreamTodo: should probably be nullable, no date should be null not 0000-00-00
+            EndedAt = dto.EndedAt;
             Id = dto.Id;
             Ingress = cache.TryUpdateOrCreateFromDto(Ingress, dto.Ingress);
             Recording = dto.Recording;
             Session = cache.TryUpdateOrCreateFromDto(Session, dto.Session);
             Settings = cache.TryUpdateOrCreateFromDto(Settings, dto.Settings);
-            StartsAt = dto.StartsAt; //StreamTodo: should probably be nullable, no date should be null not 0000-00-00
+            StartsAt = dto.StartsAt;
             Team = dto.Team;
             Transcribing = dto.Transcribing;
             Type = dto.Type;
@@ -163,16 +171,39 @@ namespace StreamVideo.Core
         void IUpdateableFrom<GetCallResponseInternalDTO, StreamCall>.UpdateFromDto(GetCallResponseInternalDTO dto,
             ICache cache)
         {
-            //StreamTodo: GetCall contains fields that are related to "active session" only and are not part of the generic call object
+            ((IUpdateableFrom<CallResponseInternalDTO, StreamCall>)this).UpdateFromDto(dto.Call, cache);
 
-            //StreamTodo: implement
+            _blockedUsers.TryReplaceTrackedObjects(dto.BlockedUsers, cache.Users);
+            _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
+            Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
+            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum, cache);
         }
 
         void IUpdateableFrom<GetOrCreateCallResponseInternalDTO, StreamCall>.UpdateFromDto(
             GetOrCreateCallResponseInternalDTO dto, ICache cache)
         {
-            throw new NotImplementedException();
+            ((IUpdateableFrom<CallResponseInternalDTO, StreamCall>)this).UpdateFromDto(dto.Call, cache);
+
+            _blockedUsers.TryReplaceTrackedObjects(dto.BlockedUsers, cache.Users);
+            Created = dto.Created;
+            _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
+            Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
+            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum, cache);
         }
+
+        void IUpdateableFrom<JoinCallResponseInternalDTO, StreamCall>.UpdateFromDto(JoinCallResponseInternalDTO dto,
+            ICache cache)
+        {
+            ((IUpdateableFrom<CallResponseInternalDTO, StreamCall>)this).UpdateFromDto(dto.Call, cache);
+
+            _blockedUsers.TryReplaceTrackedObjects(dto.BlockedUsers, cache.Users);
+            Created = dto.Created;
+            Credentials = cache.TryUpdateOrCreateFromDto(Credentials, dto.Credentials);
+            _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
+            Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
+            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum, cache);
+        }
+
 
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
@@ -191,9 +222,16 @@ namespace StreamVideo.Core
         #region State
 
         private readonly List<string> _blockedUserIds = new List<string>();
+        
+        // Below is not part of call response
+        
+        private readonly Dictionary<string, CallMember> _members = new Dictionary<string, CallMember>();
+        private readonly List<OwnCapability> _ownCapabilities = new List<OwnCapability>();
+        private readonly List<StreamVideoUser> _blockedUsers = new List<StreamVideoUser>();
 
+        
         #endregion
-
+        
         private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
         private string _id;

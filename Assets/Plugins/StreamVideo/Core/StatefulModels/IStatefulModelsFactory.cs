@@ -14,5 +14,7 @@
         StreamCall CreateStreamCall(string uniqueId);
 
         StreamVideoUser CreateStreamVideoUser(string uniqueId);
+
+        StreamVideoCallParticipant CreateStreamVideoCallParticipant(string uniqueId);
     }
 }

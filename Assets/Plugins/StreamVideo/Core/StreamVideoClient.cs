@@ -143,13 +143,17 @@ namespace StreamVideo.Core
                     Team = null
                 },
                 Location = locationHint,
-                MembersLimit = 10,
+                MembersLimit = 0,
                 MigratingFrom = null,
                 Notify = notify,
                 Ring = ring
             };
 
             var joinCallResponse = await InternalLowLevelClient.InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
+            
+            //StreamTodo: process joinCallResponse
+            _cache.TryCreateOrUpdate(joinCallResponse);
+            
             await InternalLowLevelClient.StartCallSessionAsync(joinCallResponse);
 
             return call;

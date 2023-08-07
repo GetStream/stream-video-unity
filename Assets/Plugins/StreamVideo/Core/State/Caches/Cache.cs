@@ -1,4 +1,5 @@
-﻿using StreamVideo.Core.InternalDTO.Responses;
+﻿using StreamVideo.Core.InternalDTO.Events;
+using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
@@ -13,6 +14,7 @@ namespace StreamVideo.Core.State.Caches
             
             Calls = new CacheRepository<StreamCall>(trackedObjectsFactory.CreateStreamCall, cache: this);
             Users = new CacheRepository<StreamVideoUser>(trackedObjectsFactory.CreateStreamVideoUser, cache: this);
+            CallParticipants = new CacheRepository<StreamVideoCallParticipant>(trackedObjectsFactory.CreateStreamVideoCallParticipant, cache: this);
             
             //StreamTodo: validate that all mappings are registered:
             //grab IUpdateableFrom interface from each model and check if every DTO is registered
@@ -23,7 +25,7 @@ namespace StreamVideo.Core.State.Caches
             
             Users.RegisterDtoIdMapping<StreamVideoUser, UserResponseInternalDTO>(dto => dto.Id);
             
-            CallParticipants.RegisterDtoIdMapping<StreamVideoCallParticipant, CallParticipantResponseInternalDTO>(dto => dto.User.Id);
+            CallParticipants.RegisterDtoIdMapping<StreamVideoCallParticipant, CallParticipantResponseInternalDTO>(dto => dto.UserSessionId);
 
             // Channels = new CacheRepository<StreamChannel>(trackedObjectsFactory.CreateStreamChannel, cache: this);
             // Messages = new CacheRepository<StreamMessage>(trackedObjectsFactory.CreateStreamMessage, cache: this);
@@ -51,8 +53,8 @@ namespace StreamVideo.Core.State.Caches
          public ICacheRepository<StreamCall> Calls { get; }
          public ICacheRepository<StreamVideoUser> Users { get; }
          public ICacheRepository<StreamVideoCallParticipant> CallParticipants { get; }
-        
-        // public ICacheRepository<StreamChannel> Channels { get; }
+
+         // public ICacheRepository<StreamChannel> Channels { get; }
         //
         // public ICacheRepository<StreamMessage> Messages { get; }
         //

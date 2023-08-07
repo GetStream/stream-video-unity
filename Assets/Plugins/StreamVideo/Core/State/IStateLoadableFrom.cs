@@ -21,9 +21,29 @@ namespace StreamVideo.Core.State
     /// </summary>
     internal static class StateLoadableFromExt
     {
-        public static void TryReplaceValuesFromDto<TKey, TValue>(this Dictionary<TKey, TValue> target, Dictionary<TKey, TValue> values)
+        public static void TryUpdateOrCreateFromDto<TKey, TDomain, TDto>(this Dictionary<TKey, TDomain> target, IEnumerable<TDto> source, Func<TDto, TKey> keySelector, ICache cache)
+            where TDomain : IStateLoadableFrom<TDto, TDomain>, new()
         {
-            if (values == null)
+            if (source == null)
+            {
+                return;
+            }
+
+            if (target == null)
+            {
+                throw new ArgumentNullException(nameof(target));
+            }
+
+            foreach (var dto in source)
+            {
+                var key = keySelector(dto);
+                var item = !target.ContainsKey(key) ? new TDomain() : target[key];
+                item.LoadFromDto(dto, cache);
+            }
+        }
+        public static void TryReplaceValuesFromDto<TKey, TValue>(this Dictionary<TKey, TValue> target, Dictionary<TKey, TValue> dtos)
+        {
+            if (dtos == null)
             {
                 return;
             }
@@ -35,31 +55,38 @@ namespace StreamVideo.Core.State
 
             target.Clear();
 
-            foreach (var keyValuePair in values)
+            foreach (var keyValuePair in dtos)
             {
                 target.Add(keyValuePair.Key, keyValuePair.Value);
             }
         }
         
-        public static void TryLoadFromDtoCollection<TDto, TDomain>(this ICache cache, List<TDomain> target, List<TDto> dtos)
-            where TDomain : IStateLoadableFrom<TDto, TDomain>, new()
+        /// <summary>
+        /// If DTOs is null -> do nothing
+        /// Otherwise, clear list and populate from DTO collection
+        /// </summary>
+        public static void TryReplaceEnumsFromDtoCollection<TEnum, TDomain>(this List<TDomain> target, List<TEnum> enums, 
+            Func<TEnum, TDomain> converter, ICache cache)
         {
-            if (dtos == null)
+            if (enums == null)
             {
                 return;
             }
 
-            var items = new List<TDomain>(dtos.Count);
+            target.Clear();
 
-            foreach (var dto in dtos)
+            foreach (var dto in enums)
             {
-                var obj = new TDomain();
-                obj.LoadFromDto(dto, cache);
-                items.Add(obj);
+                var obj = converter(dto);
+                target.Add(obj);
             }
         }
         
-        public static void ReplaceFromDtoCollection<TDto, TDomain>(this List<TDomain> target, List<TDto> dtos, ICache cache)
+        /// <summary>
+        /// If DTOs is null -> do nothing
+        /// Otherwise, clear list and populate from DTO collection
+        /// </summary>
+        public static void TryReplaceFromDtoCollection<TDto, TDomain>(this List<TDomain> target, List<TDto> dtos, ICache cache)
             where TDomain : IStateLoadableFrom<TDto, TDomain>, new()
         {
             if (dtos == null)
@@ -67,13 +94,13 @@ namespace StreamVideo.Core.State
                 return;
             }
 
-            var items = new List<TDomain>(dtos.Count);
+            target.Clear();
 
             foreach (var dto in dtos)
             {
                 var obj = new TDomain();
                 obj.LoadFromDto(dto, cache);
-                items.Add(obj);
+                target.Add(obj);
             }
         }
         

@@ -28,4 +28,6 @@ namespace StreamVideo.Core.Models
             SpeakerDefaultOn = dto.SpeakerDefaultOn;
         }
     }
+    
+    
 }

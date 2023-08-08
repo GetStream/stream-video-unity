@@ -21,18 +21,6 @@ using StreamVideo.Libs.Websockets;
 
 namespace StreamVideo.Core
 {
-    public interface IStreamVideoClient : IDisposable
-    {
-        Task ConnectUserAsync(AuthCredentials credentials);
-
-        void Update();
-
-        Task DisconnectAsync();
-
-        Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
-            bool notify);
-    }
-
     public class StreamVideoClient : IStreamVideoClient
     {
         /// <summary>
@@ -150,11 +138,9 @@ namespace StreamVideo.Core
             };
 
             var joinCallResponse = await InternalLowLevelClient.InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
-            
-            //StreamTodo: process joinCallResponse
             _cache.TryCreateOrUpdate(joinCallResponse);
             
-            await InternalLowLevelClient.StartCallSessionAsync(joinCallResponse);
+            await InternalLowLevelClient.StartCallSessionAsync(call);
 
             return call;
         }

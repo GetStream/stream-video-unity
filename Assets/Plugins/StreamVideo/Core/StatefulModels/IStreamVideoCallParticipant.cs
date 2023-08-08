@@ -7,5 +7,7 @@ namespace StreamVideo.Core.StatefulModels
     /// </summary>
     public interface IStreamVideoCallParticipant : IStreamStatefulModel
     {
+        string UserId { get; }
+        string SessionId { get; }
     }
 }

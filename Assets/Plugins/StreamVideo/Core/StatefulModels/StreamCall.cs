@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Stream.Video.v1.Sfu.Events;
+using Stream.Video.v1.Sfu.Models;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models;
@@ -21,6 +23,8 @@ namespace StreamVideo.Core
         IUpdateableFrom<JoinCallResponseInternalDTO, StreamCall>,
         IStreamCall
     {
+        public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
+
         #region State
 
         public bool Backstage { get; private set; }
@@ -67,6 +71,7 @@ namespace StreamVideo.Core
 
         public bool Recording { get; private set; }
 
+        //StreamTodo: perhaps this should be part of IStreamCall state
         public CallSession Session { get; private set; }
 
         public CallSettings Settings { get; private set; }
@@ -100,6 +105,12 @@ namespace StreamVideo.Core
         public string Duration { get; private set; }
         public CallMember Membership { get; private set; }
 
+        #endregion
+        
+        #region State from SFU
+        
+        
+        
         #endregion
 
         public Task GetOrCreateAsync()
@@ -205,6 +216,12 @@ namespace StreamVideo.Core
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
             _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum, cache);
         }
+        
+        //StreamTodo: solve with a generic interface and best to be handled by cache layer
+        internal void UpdateFromSfu(JoinResponse joinResponse)
+        {
+            ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
+        }
 
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
@@ -236,5 +253,7 @@ namespace StreamVideo.Core
         private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
         private string _id;
+
+
     }
 }

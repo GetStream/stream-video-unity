@@ -14,6 +14,7 @@ using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
+using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
@@ -259,7 +260,7 @@ namespace StreamVideo.Core.LowLevelClient
         //     return call;
         // }
 
-        internal Task StartCallSessionAsync(JoinCallResponseInternalDTO joinCallResponse) => _rtcSession.StartAsync(joinCallResponse);
+        internal Task StartCallSessionAsync(IStreamCall call) => _rtcSession.StartAsync(call);
 
         internal Task StopCallSessionAsync() => _rtcSession.StopAsync();
         

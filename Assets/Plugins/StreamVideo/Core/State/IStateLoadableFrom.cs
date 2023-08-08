@@ -65,8 +65,8 @@ namespace StreamVideo.Core.State
         /// If DTOs is null -> do nothing
         /// Otherwise, clear list and populate from DTO collection
         /// </summary>
-        public static void TryReplaceEnumsFromDtoCollection<TEnum, TDomain>(this List<TDomain> target, List<TEnum> enums, 
-            Func<TEnum, TDomain> converter, ICache cache)
+        public static void TryReplaceEnumsFromDtoCollection<TDto, TDomain>(this List<TDomain> target, IEnumerable<TDto> enums, 
+            Func<TDto, TDomain> converter, ICache cache)
         {
             if (enums == null)
             {

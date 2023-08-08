@@ -1,4 +1,5 @@
-﻿using StreamVideo.Core.InternalDTO.Responses;
+﻿using Stream.Video.v1.Sfu.Models;
+using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
@@ -25,6 +26,7 @@ namespace StreamVideo.Core.State.Caches
             Users.RegisterDtoIdMapping<StreamVideoUser, UserResponseInternalDTO>(dto => dto.Id);
             
             CallParticipants.RegisterDtoIdMapping<StreamVideoCallParticipant, CallParticipantResponseInternalDTO>(dto => dto.UserSessionId);
+            CallParticipants.RegisterDtoIdMapping<StreamVideoCallParticipant, Participant>(dto => dto.SessionId);
 
             // Channels = new CacheRepository<StreamChannel>(trackedObjectsFactory.CreateStreamChannel, cache: this);
             // Messages = new CacheRepository<StreamMessage>(trackedObjectsFactory.CreateStreamMessage, cache: this);

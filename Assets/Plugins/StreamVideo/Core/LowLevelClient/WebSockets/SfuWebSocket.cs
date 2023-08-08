@@ -53,6 +53,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _sessionId = sessionId;
         }
 
+        public void Send(IMessage sfuMessage)
+        {
+            WebsocketClient.Send(sfuMessage.ToByteArray());
+        }
+
         protected override void SendHealthCheck()
         {
             var sfuRequest = new SfuRequest
@@ -114,6 +119,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             Logs.Info($"{LogsPrefix} Connect URI: " + sfuUri);
             await WebsocketClient.ConnectAsync(sfuUri);
             Logs.Info($"{LogsPrefix} WS Connected");
+            
+            //StreamTodo: review when is the actual "connected state" - perhaps not the WS connection itself but receiving an appropriate event should set the flag
+            //e.g. are we able to send any data as soon as the connection is established?
 
             WebsocketClient.Send(sfuRequestByteArray);
         }

@@ -5,6 +5,44 @@ using StreamVideo.Core.State.Caches;
 
 namespace StreamVideo.Core.Utils
 {
+    internal static class UpdateExtensions<TTracked, TDto>
+        where TTracked : class, IStreamStatefulModel, IUpdateableFrom<TDto, TTracked>
+    {
+        public static void TryAddUniqueTrackedObjects(IList<TTracked> target, IEnumerable<TDto> dtos,
+            ICacheRepository<TTracked> repository)
+
+        {
+            if (target == null)
+            {
+                throw new ArgumentException(nameof(target));
+            }
+
+            if (dtos == null)
+            {
+                return;
+            }
+            
+            UniqueItems.Clear();
+            foreach (var item in target)
+            {
+                UniqueItems.Add(item);
+            }
+
+            foreach (var dto in dtos)
+            {
+                var trackedItem = repository.CreateOrUpdate<TTracked, TDto>(dto, out _);
+
+                if (!UniqueItems.Contains(trackedItem))
+                {
+                    target.Add(trackedItem);
+                }
+            }
+            
+            UniqueItems.Clear();
+        }
+
+        private static readonly HashSet<TTracked> UniqueItems = new HashSet<TTracked>();
+    }
    
     internal static class UpdateExtensions
     {
@@ -38,13 +76,15 @@ namespace StreamVideo.Core.Utils
             }
         }
         
-        public static void TryReplaceValuesFromDto(this List<string> target, List<string> values)
+
+        
+        public static void TryReplaceValuesFromDto(this List<string> target, IEnumerable<string> values)
             => TryReplaceValuesFromDto<string>(target, values);
 
-        public static void TryReplaceValuesFromDto(this List<int> target, List<int> values)
+        public static void TryReplaceValuesFromDto(this List<int> target, IEnumerable<int> values)
             => TryReplaceValuesFromDto<int>(target, values);
 
-        private static void TryReplaceValuesFromDto<TValue>(this List<TValue> target, List<TValue> values)
+        private static void TryReplaceValuesFromDto<TValue>(this List<TValue> target, IEnumerable<TValue> values)
         {
             if (values == null)
             {

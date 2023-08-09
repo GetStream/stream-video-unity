@@ -26,52 +26,59 @@ namespace Stream.Video.v1.Sfu.Signal {
           string.Concat(
             "CiF2aWRlby9zZnUvc2lnbmFsX3JwYy9zaWduYWwucHJvdG8SF3N0cmVhbS52",
             "aWRlby5zZnUuc2lnbmFsGh12aWRlby9zZnUvbW9kZWxzL21vZGVscy5wcm90",
-            "byJrChdVcGRhdGVNdXRlU3RhdGVzUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEg",
-            "ASgJEjwKC211dGVfc3RhdGVzGAMgAygLMicuc3RyZWFtLnZpZGVvLnNmdS5z",
-            "aWduYWwuVHJhY2tNdXRlU3RhdGUiSQoYVXBkYXRlTXV0ZVN0YXRlc1Jlc3Bv",
-            "bnNlEi0KBWVycm9yGAQgASgLMh4uc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMu",
-            "RXJyb3IiVwoOVHJhY2tNdXRlU3RhdGUSNgoKdHJhY2tfdHlwZRgBIAEoDjIi",
-            "LnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlRyYWNrVHlwZRINCgVtdXRlZBgC",
-            "IAEoCCIhChBBdWRpb011dGVDaGFuZ2VkEg0KBW11dGVkGAEgASgIIiEKEFZp",
-            "ZGVvTXV0ZUNoYW5nZWQSDQoFbXV0ZWQYAiABKAgicwoaVXBkYXRlU3Vic2Ny",
-            "aXB0aW9uc1JlcXVlc3QSEgoKc2Vzc2lvbl9pZBgCIAEoCRJBCgZ0cmFja3MY",
-            "AyADKAsyMS5zdHJlYW0udmlkZW8uc2Z1LnNpZ25hbC5UcmFja1N1YnNjcmlw",
-            "dGlvbkRldGFpbHMiTAobVXBkYXRlU3Vic2NyaXB0aW9uc1Jlc3BvbnNlEi0K",
-            "BWVycm9yGAQgASgLMh4uc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuRXJyb3Ii",
-            "swEKGFRyYWNrU3Vic2NyaXB0aW9uRGV0YWlscxIPCgd1c2VyX2lkGAEgASgJ",
-            "EhIKCnNlc3Npb25faWQYAiABKAkSNgoKdHJhY2tfdHlwZRgDIAEoDjIiLnN0",
-            "cmVhbS52aWRlby5zZnUubW9kZWxzLlRyYWNrVHlwZRI6CglkaW1lbnNpb24Y",
-            "BCABKAsyJy5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5WaWRlb0RpbWVuc2lv",
-            "biJqChFTZW5kQW5zd2VyUmVxdWVzdBI0CglwZWVyX3R5cGUYASABKA4yIS5z",
-            "dHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5QZWVyVHlwZRILCgNzZHAYAiABKAkS",
-            "EgoKc2Vzc2lvbl9pZBgDIAEoCSJDChJTZW5kQW5zd2VyUmVzcG9uc2USLQoF",
-            "ZXJyb3IYBCABKAsyHi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5FcnJvciJD",
-            "ChJJQ0VUcmlja2xlUmVzcG9uc2USLQoFZXJyb3IYBCABKAsyHi5zdHJlYW0u",
-            "dmlkZW8uc2Z1Lm1vZGVscy5FcnJvciJqChNTZXRQdWJsaXNoZXJSZXF1ZXN0",
-            "EgsKA3NkcBgBIAEoCRISCgpzZXNzaW9uX2lkGAIgASgJEjIKBnRyYWNrcxgD",
-            "IAMoCzIiLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlRyYWNrSW5mbyJ7ChRT",
-            "ZXRQdWJsaXNoZXJSZXNwb25zZRILCgNzZHAYASABKAkSEgoKc2Vzc2lvbl9p",
-            "ZBgCIAEoCRITCgtpY2VfcmVzdGFydBgDIAEoCBItCgVlcnJvchgEIAEoCzIe",
-            "LnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkVycm9yMr4ECgxTaWduYWxTZXJ2",
-            "ZXISawoMU2V0UHVibGlzaGVyEiwuc3RyZWFtLnZpZGVvLnNmdS5zaWduYWwu",
-            "U2V0UHVibGlzaGVyUmVxdWVzdBotLnN0cmVhbS52aWRlby5zZnUuc2lnbmFs",
-            "LlNldFB1Ymxpc2hlclJlc3BvbnNlEmUKClNlbmRBbnN3ZXISKi5zdHJlYW0u",
-            "dmlkZW8uc2Z1LnNpZ25hbC5TZW5kQW5zd2VyUmVxdWVzdBorLnN0cmVhbS52",
-            "aWRlby5zZnUuc2lnbmFsLlNlbmRBbnN3ZXJSZXNwb25zZRJeCgpJY2VUcmlj",
-            "a2xlEiMuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuSUNFVHJpY2tsZRorLnN0",
-            "cmVhbS52aWRlby5zZnUuc2lnbmFsLklDRVRyaWNrbGVSZXNwb25zZRKAAQoT",
-            "VXBkYXRlU3Vic2NyaXB0aW9ucxIzLnN0cmVhbS52aWRlby5zZnUuc2lnbmFs",
-            "LlVwZGF0ZVN1YnNjcmlwdGlvbnNSZXF1ZXN0GjQuc3RyZWFtLnZpZGVvLnNm",
-            "dS5zaWduYWwuVXBkYXRlU3Vic2NyaXB0aW9uc1Jlc3BvbnNlEncKEFVwZGF0",
-            "ZU11dGVTdGF0ZXMSMC5zdHJlYW0udmlkZW8uc2Z1LnNpZ25hbC5VcGRhdGVN",
-            "dXRlU3RhdGVzUmVxdWVzdBoxLnN0cmVhbS52aWRlby5zZnUuc2lnbmFsLlVw",
-            "ZGF0ZU11dGVTdGF0ZXNSZXNwb25zZUJpQgtTZnVTaWduYWxWMVABWjtnaXRo",
-            "dWIuY29tL0dldFN0cmVhbS9wcm90b2NvbC9wcm90b2J1Zi92aWRlby9zZnUv",
-            "c2lnbmFsX3JwY6oCGlN0cmVhbS5WaWRlby52MS5TZnUuU2lnbmFsYgZwcm90",
-            "bzM="));
+            "byJdChFJQ0VSZXN0YXJ0UmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEjQK",
+            "CXBlZXJfdHlwZRgCIAEoDjIhLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlBl",
+            "ZXJUeXBlIkMKEklDRVJlc3RhcnRSZXNwb25zZRItCgVlcnJvchgBIAEoCzIe",
+            "LnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkVycm9yImsKF1VwZGF0ZU11dGVT",
+            "dGF0ZXNSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSPAoLbXV0ZV9zdGF0",
+            "ZXMYAyADKAsyJy5zdHJlYW0udmlkZW8uc2Z1LnNpZ25hbC5UcmFja011dGVT",
+            "dGF0ZSJJChhVcGRhdGVNdXRlU3RhdGVzUmVzcG9uc2USLQoFZXJyb3IYBCAB",
+            "KAsyHi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5FcnJvciJXCg5UcmFja011",
+            "dGVTdGF0ZRI2Cgp0cmFja190eXBlGAEgASgOMiIuc3RyZWFtLnZpZGVvLnNm",
+            "dS5tb2RlbHMuVHJhY2tUeXBlEg0KBW11dGVkGAIgASgIIiEKEEF1ZGlvTXV0",
+            "ZUNoYW5nZWQSDQoFbXV0ZWQYASABKAgiIQoQVmlkZW9NdXRlQ2hhbmdlZBIN",
+            "CgVtdXRlZBgCIAEoCCJzChpVcGRhdGVTdWJzY3JpcHRpb25zUmVxdWVzdBIS",
+            "CgpzZXNzaW9uX2lkGAIgASgJEkEKBnRyYWNrcxgDIAMoCzIxLnN0cmVhbS52",
+            "aWRlby5zZnUuc2lnbmFsLlRyYWNrU3Vic2NyaXB0aW9uRGV0YWlscyJMChtV",
+            "cGRhdGVTdWJzY3JpcHRpb25zUmVzcG9uc2USLQoFZXJyb3IYBCABKAsyHi5z",
+            "dHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5FcnJvciKzAQoYVHJhY2tTdWJzY3Jp",
+            "cHRpb25EZXRhaWxzEg8KB3VzZXJfaWQYASABKAkSEgoKc2Vzc2lvbl9pZBgC",
+            "IAEoCRI2Cgp0cmFja190eXBlGAMgASgOMiIuc3RyZWFtLnZpZGVvLnNmdS5t",
+            "b2RlbHMuVHJhY2tUeXBlEjoKCWRpbWVuc2lvbhgEIAEoCzInLnN0cmVhbS52",
+            "aWRlby5zZnUubW9kZWxzLlZpZGVvRGltZW5zaW9uImoKEVNlbmRBbnN3ZXJS",
+            "ZXF1ZXN0EjQKCXBlZXJfdHlwZRgBIAEoDjIhLnN0cmVhbS52aWRlby5zZnUu",
+            "bW9kZWxzLlBlZXJUeXBlEgsKA3NkcBgCIAEoCRISCgpzZXNzaW9uX2lkGAMg",
+            "ASgJIkMKElNlbmRBbnN3ZXJSZXNwb25zZRItCgVlcnJvchgEIAEoCzIeLnN0",
+            "cmVhbS52aWRlby5zZnUubW9kZWxzLkVycm9yIkMKEklDRVRyaWNrbGVSZXNw",
+            "b25zZRItCgVlcnJvchgEIAEoCzIeLnN0cmVhbS52aWRlby5zZnUubW9kZWxz",
+            "LkVycm9yImoKE1NldFB1Ymxpc2hlclJlcXVlc3QSCwoDc2RwGAEgASgJEhIK",
+            "CnNlc3Npb25faWQYAiABKAkSMgoGdHJhY2tzGAMgAygLMiIuc3RyZWFtLnZp",
+            "ZGVvLnNmdS5tb2RlbHMuVHJhY2tJbmZvInsKFFNldFB1Ymxpc2hlclJlc3Bv",
+            "bnNlEgsKA3NkcBgBIAEoCRISCgpzZXNzaW9uX2lkGAIgASgJEhMKC2ljZV9y",
+            "ZXN0YXJ0GAMgASgIEi0KBWVycm9yGAQgASgLMh4uc3RyZWFtLnZpZGVvLnNm",
+            "dS5tb2RlbHMuRXJyb3IypQUKDFNpZ25hbFNlcnZlchJrCgxTZXRQdWJsaXNo",
+            "ZXISLC5zdHJlYW0udmlkZW8uc2Z1LnNpZ25hbC5TZXRQdWJsaXNoZXJSZXF1",
+            "ZXN0Gi0uc3RyZWFtLnZpZGVvLnNmdS5zaWduYWwuU2V0UHVibGlzaGVyUmVz",
+            "cG9uc2USZQoKU2VuZEFuc3dlchIqLnN0cmVhbS52aWRlby5zZnUuc2lnbmFs",
+            "LlNlbmRBbnN3ZXJSZXF1ZXN0Gisuc3RyZWFtLnZpZGVvLnNmdS5zaWduYWwu",
+            "U2VuZEFuc3dlclJlc3BvbnNlEl4KCkljZVRyaWNrbGUSIy5zdHJlYW0udmlk",
+            "ZW8uc2Z1Lm1vZGVscy5JQ0VUcmlja2xlGisuc3RyZWFtLnZpZGVvLnNmdS5z",
+            "aWduYWwuSUNFVHJpY2tsZVJlc3BvbnNlEoABChNVcGRhdGVTdWJzY3JpcHRp",
+            "b25zEjMuc3RyZWFtLnZpZGVvLnNmdS5zaWduYWwuVXBkYXRlU3Vic2NyaXB0",
+            "aW9uc1JlcXVlc3QaNC5zdHJlYW0udmlkZW8uc2Z1LnNpZ25hbC5VcGRhdGVT",
+            "dWJzY3JpcHRpb25zUmVzcG9uc2USdwoQVXBkYXRlTXV0ZVN0YXRlcxIwLnN0",
+            "cmVhbS52aWRlby5zZnUuc2lnbmFsLlVwZGF0ZU11dGVTdGF0ZXNSZXF1ZXN0",
+            "GjEuc3RyZWFtLnZpZGVvLnNmdS5zaWduYWwuVXBkYXRlTXV0ZVN0YXRlc1Jl",
+            "c3BvbnNlEmUKCkljZVJlc3RhcnQSKi5zdHJlYW0udmlkZW8uc2Z1LnNpZ25h",
+            "bC5JQ0VSZXN0YXJ0UmVxdWVzdBorLnN0cmVhbS52aWRlby5zZnUuc2lnbmFs",
+            "LklDRVJlc3RhcnRSZXNwb25zZUJpQgtTZnVTaWduYWxWMVABWjtnaXRodWIu",
+            "Y29tL0dldFN0cmVhbS9wcm90b2NvbC9wcm90b2J1Zi92aWRlby9zZnUvc2ln",
+            "bmFsX3JwY6oCGlN0cmVhbS5WaWRlby52MS5TZnUuU2lnbmFsYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Stream.Video.v1.Sfu.Models.ModelsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.ICERestartRequest), global::Stream.Video.v1.Sfu.Signal.ICERestartRequest.Parser, new[]{ "SessionId", "PeerType" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.ICERestartResponse), global::Stream.Video.v1.Sfu.Signal.ICERestartResponse.Parser, new[]{ "Error" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.UpdateMuteStatesRequest), global::Stream.Video.v1.Sfu.Signal.UpdateMuteStatesRequest.Parser, new[]{ "SessionId", "MuteStates" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.UpdateMuteStatesResponse), global::Stream.Video.v1.Sfu.Signal.UpdateMuteStatesResponse.Parser, new[]{ "Error" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.TrackMuteState), global::Stream.Video.v1.Sfu.Signal.TrackMuteState.Parser, new[]{ "TrackType", "Muted" }, null, null, null, null),
@@ -91,6 +98,430 @@ namespace Stream.Video.v1.Sfu.Signal {
 
   }
   #region Messages
+  internal sealed partial class ICERestartRequest : pb::IMessage<ICERestartRequest>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ICERestartRequest> _parser = new pb::MessageParser<ICERestartRequest>(() => new ICERestartRequest());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ICERestartRequest> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[0]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ICERestartRequest() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ICERestartRequest(ICERestartRequest other) : this() {
+      sessionId_ = other.sessionId_;
+      peerType_ = other.peerType_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ICERestartRequest Clone() {
+      return new ICERestartRequest(this);
+    }
+
+    /// <summary>Field number for the "session_id" field.</summary>
+    public const int SessionIdFieldNumber = 1;
+    private string sessionId_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string SessionId {
+      get { return sessionId_; }
+      set {
+        sessionId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "peer_type" field.</summary>
+    public const int PeerTypeFieldNumber = 2;
+    private global::Stream.Video.v1.Sfu.Models.PeerType peerType_ = global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Stream.Video.v1.Sfu.Models.PeerType PeerType {
+      get { return peerType_; }
+      set {
+        peerType_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ICERestartRequest);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ICERestartRequest other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (SessionId != other.SessionId) return false;
+      if (PeerType != other.PeerType) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
+      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (SessionId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(SessionId);
+      }
+      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+        output.WriteRawTag(16);
+        output.WriteEnum((int) PeerType);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (SessionId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(SessionId);
+      }
+      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+        output.WriteRawTag(16);
+        output.WriteEnum((int) PeerType);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (SessionId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionId);
+      }
+      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) PeerType);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ICERestartRequest other) {
+      if (other == null) {
+        return;
+      }
+      if (other.SessionId.Length != 0) {
+        SessionId = other.SessionId;
+      }
+      if (other.PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+        PeerType = other.PeerType;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            SessionId = input.ReadString();
+            break;
+          }
+          case 16: {
+            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            SessionId = input.ReadString();
+            break;
+          }
+          case 16: {
+            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  internal sealed partial class ICERestartResponse : pb::IMessage<ICERestartResponse>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ICERestartResponse> _parser = new pb::MessageParser<ICERestartResponse>(() => new ICERestartResponse());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ICERestartResponse> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[1]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ICERestartResponse() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ICERestartResponse(ICERestartResponse other) : this() {
+      error_ = other.error_ != null ? other.error_.Clone() : null;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ICERestartResponse Clone() {
+      return new ICERestartResponse(this);
+    }
+
+    /// <summary>Field number for the "error" field.</summary>
+    public const int ErrorFieldNumber = 1;
+    private global::Stream.Video.v1.Sfu.Models.Error error_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::Stream.Video.v1.Sfu.Models.Error Error {
+      get { return error_; }
+      set {
+        error_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ICERestartResponse);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ICERestartResponse other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(Error, other.Error)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (error_ != null) hash ^= Error.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (error_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Error);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (error_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Error);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (error_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Error);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ICERestartResponse other) {
+      if (other == null) {
+        return;
+      }
+      if (other.error_ != null) {
+        if (error_ == null) {
+          Error = new global::Stream.Video.v1.Sfu.Models.Error();
+        }
+        Error.MergeFrom(other.Error);
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            if (error_ == null) {
+              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+            }
+            input.ReadMessage(Error);
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            if (error_ == null) {
+              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+            }
+            input.ReadMessage(Error);
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
   internal sealed partial class UpdateMuteStatesRequest : pb::IMessage<UpdateMuteStatesRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -105,7 +536,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[0]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[2]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -320,7 +751,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[1]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -518,7 +949,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[2]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -744,7 +1175,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[3]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -933,7 +1364,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[4]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1122,7 +1553,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[5]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1337,7 +1768,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[6]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1535,7 +1966,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[7]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[9]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1844,7 +2275,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[8]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2107,7 +2538,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[9]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[11]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2305,7 +2736,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[10]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[12]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2503,7 +2934,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[11]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2758,7 +3189,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[12]; }
+      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[14]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

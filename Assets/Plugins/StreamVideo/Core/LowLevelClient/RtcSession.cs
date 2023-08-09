@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
+using Cysharp.Net.Http;
+using Grpc.Net.Client;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
 using Stream.Video.v1.Sfu.Signal;
@@ -170,7 +172,11 @@ namespace StreamVideo.Core.LowLevelClient
             
             request.Tracks.AddRange(tracks);
             
-            _sfuWebSocket.Send(request);
+            using var httpHandler = new YetAnotherHttpHandler();
+            using var channel = GrpcChannel.ForAddress(_activeCall.Credentials.Server.Url, new GrpcChannelOptions() { HttpHandler = httpHandler });
+            var signalServer = new SignalServer.SignalServerClient(channel);
+
+            var response = await signalServer.UpdateSubscriptionsAsync(request);
         }
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()

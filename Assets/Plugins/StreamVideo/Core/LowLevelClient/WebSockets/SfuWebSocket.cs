@@ -53,6 +53,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _sessionId = sessionId;
         }
 
+        //StreamTodo: delete for now, this is not how we communicate with SFU
         public void Send(IMessage sfuMessage)
         {
             WebsocketClient.Send(sfuMessage.ToByteArray());

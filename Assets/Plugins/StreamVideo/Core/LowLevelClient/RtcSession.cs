@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Cysharp.Net.Http;
@@ -10,9 +11,11 @@ using Stream.Video.v1.Sfu.Signal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Utils;
+using StreamVideo.Libs.Http;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
+using UnityEngine;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -21,8 +24,9 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IDisposable
     {
-        public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs)
+        public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, IHttpClient httpClient)
         {
+            _httpClient = httpClient;
             _logs = logs;
 
             //StreamTodo: SFU WS should be created here so that RTC session owns it
@@ -69,7 +73,6 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
 
-
         public void Dispose()
         {
             StopAsync().LogIfFailed();
@@ -103,7 +106,8 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (_activeCall != null)
             {
-                throw new InvalidOperationException($"Cannot start new session until previous call is active. Active call: {_activeCall}");
+                throw new InvalidOperationException(
+                    $"Cannot start new session until previous call is active. Active call: {_activeCall}");
             }
 
             _activeCall = call ?? throw new ArgumentNullException(nameof(call));
@@ -135,7 +139,7 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTodo: implement cancellation token
                 await Task.Delay(1);
             }
-            
+
             await SubscribeToTracksAsync();
 
             //StreamTodo: validate when this state should set
@@ -155,11 +159,12 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly RTCRtpTransceiver _audioTransceiver;
         private readonly SfuWebSocket _sfuWebSocket;
         private readonly ILogs _logs;
-        
+
         private string _sessionId;
         private IStreamCall _activeCall;
         private CallingState _callingState;
-        
+        private IHttpClient _httpClient;
+
         private async Task SubscribeToTracksAsync()
         {
             _logs.Info("Request SFU - UpdateSubscriptionsRequest");
@@ -169,11 +174,30 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 SessionId = _sessionId,
             };
-            
+
             request.Tracks.AddRange(tracks);
-            
-            using var httpHandler = new YetAnotherHttpHandler();
-            using var channel = GrpcChannel.ForAddress(_activeCall.Credentials.Server.Url, new GrpcChannelOptions() { HttpHandler = httpHandler });
+
+
+            var connectUrl = _activeCall.Credentials.Server.Url.Replace("/twirp", "");
+            Debug.LogWarning($"$$$$$$$$$$$$$$$$$$$$$$$$$ SFU URL {connectUrl}");
+
+            using var httpHandler = new YetAnotherHttpHandler()
+            {
+                //SkipCertificateVerification = true,
+            };
+
+            var httpClient = new HttpClient(httpHandler)
+            {
+                DefaultRequestHeaders =
+                {
+                    { "Authentication", "Bearer " + _activeCall.Credentials.Token },
+                    { "stream-auth-type", "jwt" },
+                    { "X-Stream-Client", "stream-video-unity-client-0.1.0" }
+                }
+            };
+
+            using var channel
+                = GrpcChannel.ForAddress(connectUrl, new GrpcChannelOptions() { HttpClient = httpClient });
             var signalServer = new SignalServer.SignalServerClient(channel);
 
             var response = await signalServer.UpdateSubscriptionsAsync(request);
@@ -183,7 +207,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             //StreamTodo: inject info on what tracks we want and what dimensions
             var trackTypes = new[] { TrackType.Video, TrackType.Audio };
-            
+
             foreach (var participant in _activeCall.Participants)
             {
                 foreach (var trackType in trackTypes)

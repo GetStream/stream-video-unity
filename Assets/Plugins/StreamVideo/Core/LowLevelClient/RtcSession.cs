@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
-using Cysharp.Net.Http;
-using Grpc.Net.Client;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
 using Stream.Video.v1.Sfu.Signal;
@@ -13,6 +12,7 @@ using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Http;
 using StreamVideo.Libs.Logs;
+using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using UnityEngine;
@@ -24,8 +24,9 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IDisposable
     {
-        public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, IHttpClient httpClient)
+        public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, ISerializer serializer, IHttpClient httpClient)
         {
+            _serializer = serializer;
             _httpClient = httpClient;
             _logs = logs;
 
@@ -164,6 +165,7 @@ namespace StreamVideo.Core.LowLevelClient
         private IStreamCall _activeCall;
         private CallingState _callingState;
         private IHttpClient _httpClient;
+        private ISerializer _serializer;
 
         private async Task SubscribeToTracksAsync()
         {
@@ -177,30 +179,12 @@ namespace StreamVideo.Core.LowLevelClient
 
             request.Tracks.AddRange(tracks);
 
+            var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions);
 
-            var connectUrl = _activeCall.Credentials.Server.Url.Replace("/twirp", "");
-            Debug.LogWarning($"$$$$$$$$$$$$$$$$$$$$$$$$$ SFU URL {connectUrl}");
-
-            using var httpHandler = new YetAnotherHttpHandler()
+            if (response.Error != null)
             {
-                //SkipCertificateVerification = true,
-            };
-
-            var httpClient = new HttpClient(httpHandler)
-            {
-                DefaultRequestHeaders =
-                {
-                    { "Authentication", "Bearer " + _activeCall.Credentials.Token },
-                    { "stream-auth-type", "jwt" },
-                    { "X-Stream-Client", "stream-video-unity-client-0.1.0" }
-                }
-            };
-
-            using var channel
-                = GrpcChannel.ForAddress(connectUrl, new GrpcChannelOptions() { HttpClient = httpClient });
-            var signalServer = new SignalServer.SignalServerClient(channel);
-
-            var response = await signalServer.UpdateSubscriptionsAsync(request);
+                _logs.Error(response.Error.Message);
+            }
         }
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()
@@ -276,6 +260,33 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.InfoIfDebug($"Handle Sfu {nameof(JoinResponse)}");
             ((StreamCall)_activeCall).UpdateFromSfu(joinResponse);
             _callingState = CallingState.Joined;
+        }
+        
+        private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request, Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync)
+        {
+            var serializedRequest = _serializer.Serialize(request);
+            _logs.Warning($"[RPC Request] " + serializedRequest);
+            
+            //StreamTodo: use injected client or cache this one
+            var connectUrl = _activeCall.Credentials.Server.Url.Replace("/twirp", "");
+            
+            var httpClient = new HttpClient()
+            {
+                DefaultRequestHeaders =
+                {
+                    { "stream-auth-type", "jwt" },
+                    { "X-Stream-Client", "stream-video-unity-client-0.1.0" }
+                }
+            };
+            
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_activeCall.Credentials.Token);
+            httpClient.BaseAddress = new Uri(connectUrl);
+            
+            var response = await rpcCallAsync(httpClient, request);
+            var serializedResponse = _serializer.Serialize(response);
+            _logs.Warning($"[RPC Response] " + serializedResponse);
+
+            return response;
         }
     }
 }

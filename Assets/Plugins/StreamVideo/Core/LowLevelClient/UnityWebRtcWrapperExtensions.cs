@@ -11,10 +11,17 @@ namespace StreamVideo.Core.LowLevelClient
         public static Task<RTCSessionDescription> CreateOfferAsync(this RTCPeerConnection peerConnection) =>
             WaitForOperationAsync(peerConnection.CreateOffer(), r => r.Desc);
         
-        public static Task<RTCSessionDescription> CreateOfferAsync(this RTCPeerConnection peerConnection, RTCOfferAnswerOptions options) =>
+        public static Task<RTCSessionDescription> CreateOfferAsync(this RTCPeerConnection peerConnection, ref RTCOfferAnswerOptions options) =>
             WaitForOperationAsync(peerConnection.CreateOffer(ref options), r => r.Desc);
+        
+        public static Task SetLocalDescriptionAsync(this RTCPeerConnection peerConnection, ref RTCSessionDescription desc) =>
+            WaitForOperationAsync(peerConnection.SetLocalDescription(ref desc));
 
-        private static async Task<TResponse> WaitForOperationAsync<TOperation, TResponse>(this TOperation asyncOperation, Func<TOperation, TResponse> response) 
+        public static Task SetRemoteDescriptionAsync(this RTCPeerConnection peerConnection, ref RTCSessionDescription desc) =>
+            WaitForOperationAsync(peerConnection.SetRemoteDescription(ref desc));
+        
+        private static async Task<TResponse> WaitForOperationAsync<TOperation, TResponse>(
+            this TOperation asyncOperation, Func<TOperation, TResponse> response) 
             where TOperation : AsyncOperationBase
         {
             // StreamTodo: refactor to use coroutine runner to reduce runtime allocations
@@ -29,6 +36,22 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             return response(asyncOperation);
+        }
+        
+        private static async Task WaitForOperationAsync<TOperation>(
+            this TOperation asyncOperation) 
+            where TOperation : AsyncOperationBase
+        {
+            // StreamTodo: refactor to use coroutine runner to reduce runtime allocations
+            while (!asyncOperation.IsDone)
+            {
+                await Task.Delay(1);
+            }
+
+            if (asyncOperation.IsError)
+            {
+                throw new WebRtcException(asyncOperation.Error);
+            }
         }
     }
 }

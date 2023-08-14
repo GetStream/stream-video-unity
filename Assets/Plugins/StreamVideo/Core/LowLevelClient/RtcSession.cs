@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
@@ -15,7 +16,7 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
-using UnityEngine;
+using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -24,6 +25,22 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IDisposable
     {
+        public CallingState CallState
+        {
+            get => _callState;
+            private set
+            {
+                if (_callState == value)
+                {
+                    return;
+                }
+
+                var prevState = _callState;
+                _callState = value;
+                _logs.Warning($"Call state changed from {prevState} to {value}");
+            }
+        }
+
         public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, ISerializer serializer, IHttpClient httpClient)
         {
             _serializer = serializer;
@@ -33,67 +50,27 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: SFU WS should be created here so that RTC session owns it
             _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
             _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
+            _sfuWebSocket.IceTrickle += OnSfuIceTrickle;
+            _sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
 
-            var conf = new RTCConfiguration
+            CreateSubscriber();
+
+            if (CanPublish())
             {
-                iceServers = new RTCIceServer[]
-                {
-                    new RTCIceServer
-                    {
-                        credential = null,
-                        credentialType = RTCIceCredentialType.Password,
-                        urls = new string[]
-                        {
-                            // Google Stun server
-                            "stun:stun.l.google.com:19302"
-                        },
-                        username = null
-                    }
-                },
-                iceTransportPolicy = null,
-                bundlePolicy = null,
-                iceCandidatePoolSize = null
-            };
-
-            _peerConnection = new RTCPeerConnection(ref conf);
-            _peerConnection.OnIceCandidate += OnIceCandidate;
-            _peerConnection.OnIceConnectionChange += OnIceConnectionChange;
-            _peerConnection.OnNegotiationNeeded += OnNegotiationNeeded;
-            _peerConnection.OnConnectionStateChange += OnConnectionStateChange;
-            _peerConnection.OnTrack += OnTrack;
-            _peerConnection.OnDataChannel += OnDataChannel;
-
-            _sendChannel = _peerConnection.CreateDataChannel("sendChannel");
-
-            _sendChannel.OnOpen += OnSendChannelStatusChanged;
-            _sendChannel.OnClose += OnSendChannelStatusChanged;
-            _sendChannel.OnMessage += OnSendChannelMessage;
-
-            _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video);
-            _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio);
+                CreatePublisher();
+            }
         }
-
 
         public void Dispose()
         {
             StopAsync().LogIfFailed();
             _sfuWebSocket.Dispose();
             _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
+            _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
+            _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
 
-            _peerConnection.OnIceCandidate -= OnIceCandidate;
-            _peerConnection.OnIceConnectionChange -= OnIceConnectionChange;
-            _peerConnection.OnNegotiationNeeded -= OnNegotiationNeeded;
-            _peerConnection.OnConnectionStateChange -= OnConnectionStateChange;
-            _peerConnection.OnTrack -= OnTrack;
-            _peerConnection.OnDataChannel -= OnDataChannel;
-
-            _peerConnection.Close();
-
-            _sendChannel.OnOpen -= OnSendChannelStatusChanged;
-            _sendChannel.OnClose -= OnSendChannelStatusChanged;
-            _sendChannel.OnMessage -= OnSendChannelMessage;
-
-            _sendChannel.Close();
+            DisposeSubscriber();
+            DisposePublisher();
         }
 
         public void Update()
@@ -112,29 +89,26 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _activeCall = call ?? throw new ArgumentNullException(nameof(call));
-            //StreamTodo: check if not started already
 
-            _callingState = CallingState.Joining;
+            CleanUpSession();
+
+            CallState = CallingState.Joining;
 
             var sfuUrl = call.Credentials.Server.Url;
             var sfuToken = call.Credentials.Token;
             var iceServers = call.Credentials.IceServers;
             //StreamTodo: what to do with iceServers?
 
-#if STREAM_DEBUG_ENABLED
-            _logs.Warning(sfuUrl);
-            _logs.Warning(sfuToken);
-#endif
-
             _sessionId = Guid.NewGuid().ToString();
+            _logs.Warning($"START Session: " + _sessionId);
 
-            var offer = await _peerConnection.CreateOfferAsync();
-            _peerConnection.SetLocalDescription(ref offer);
+            var offer = await _subscriber.CreateOfferAsync();
+            await _subscriber.SetLocalDescriptionAsync(ref offer);
 
             _sfuWebSocket.SetSessionData(_sessionId, offer.sdp, sfuUrl, sfuToken);
             await _sfuWebSocket.ConnectAsync();
 
-            while (_callingState != CallingState.Joined)
+            while (CallState != CallingState.Joined)
             {
                 //StreamTodo: implement a timeout if something goes wrong
                 //StreamTodo: implement cancellation token
@@ -144,28 +118,42 @@ namespace StreamVideo.Core.LowLevelClient
             await SubscribeToTracksAsync();
 
             //StreamTodo: validate when this state should set
-            _callingState = CallingState.Joined;
+            CallState = CallingState.Joined;
         }
 
         public async Task StopAsync()
         {
+            CleanUpSession();
             //StreamTodo: check with js definition of "offline" 
-            _callingState = CallingState.Offline;
+            CallState = CallingState.Offline;
             await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Video session stopped");
         }
 
-        private readonly RTCPeerConnection _peerConnection;
-        private readonly RTCDataChannel _sendChannel;
-        private readonly RTCRtpTransceiver _videoTransceiver;
-        private readonly RTCRtpTransceiver _audioTransceiver;
+        //StreamTodo: call by call.reconnectOrSwitchSfu()
+        public void Reconnect()
+        {
+            _subscriber?.RestartIce();
+            _publisher?.RestartIce();
+        }
+
         private readonly SfuWebSocket _sfuWebSocket;
+        private readonly ISerializer _serializer;
         private readonly ILogs _logs;
+
+        private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
 
         private string _sessionId;
         private IStreamCall _activeCall;
-        private CallingState _callingState;
         private IHttpClient _httpClient;
-        private ISerializer _serializer;
+        private CallingState _callState;
+
+        private StreamPeerConnection _subscriber;
+        private StreamPeerConnection _publisher;
+
+        private void CleanUpSession()
+        {
+            _pendingIceTrickleRequests.Clear();;
+        }
 
         private async Task SubscribeToTracksAsync()
         {
@@ -179,7 +167,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             request.Tracks.AddRange(tracks);
 
-            var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions);
+            var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions,
+                nameof(GeneratedAPI.UpdateSubscriptions));
 
             if (response.Error != null)
             {
@@ -212,64 +201,87 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void OnIceCandidate(RTCIceCandidate candidate)
-        {
-            _logs.Warning("$$$$$$$ OnIceCandidate");
-        }
 
-        private void OnIceConnectionChange(RTCIceConnectionState state)
+        private async Task SendIceCandidateAsync(RTCIceCandidate candidate, StreamPeerType streamPeerType)
         {
-            _logs.Warning("$$$$$$$ OnIceConnectionChange");
-        }
+            try
+            {
+                var iceTrickle = new ICETrickle
+                {
+                    PeerType = streamPeerType.ToPeerType(),
+                    IceCandidate = _serializer.Serialize(candidate),
+                    SessionId = _sessionId,
+                };
 
-        private void OnNegotiationNeeded()
-        {
-            _logs.Warning("$$$$$$$ OnNegotiationNeeded");
-
-            //StreamTodo: take into account race conditions https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
-            //We want to set the local description if signalingState is stable - we need to check it because state could change during async operations
-        }
-
-        private void OnConnectionStateChange(RTCPeerConnectionState state)
-        {
-            _logs.Warning("$$$$$$$ OnConnectionStateChange");
-        }
-
-        private void OnTrack(RTCTrackEvent e)
-        {
-            _logs.Warning("$$$$$$$ OnTrack");
-        }
-
-        private void OnDataChannel(RTCDataChannel channel)
-        {
-            _logs.Warning("$$$$$$$ OnDataChannel");
-        }
-
-        private void OnSendChannelStatusChanged()
-        {
-            _logs.Warning("$$$$$$$ OnSendChannelStatusChanged");
-        }
-
-        private void OnSendChannelMessage(byte[] bytes)
-        {
-            _logs.Warning("$$$$$$$ OnSendChannelMessage");
+                if (_callState == CallingState.Joined)
+                {
+                    await RpcCallAsync(iceTrickle, GeneratedAPI.IceTrickle, nameof(GeneratedAPI.IceTrickle));
+                }
+                else
+                {
+                    _pendingIceTrickleRequests.Add(iceTrickle);
+                }
+            }
+            catch (Exception e)
+            {
+                _logs.Exception(e);
+            }
         }
 
         private void OnSfuJoinResponse(JoinResponse joinResponse)
         {
             _logs.InfoIfDebug($"Handle Sfu {nameof(JoinResponse)}");
             ((StreamCall)_activeCall).UpdateFromSfu(joinResponse);
-            _callingState = CallingState.Joined;
+            OnSfuJoinedCall();
         }
-        
-        private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request, Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync)
+
+        private void OnSfuJoinedCall()
         {
-            var serializedRequest = _serializer.Serialize(request);
-            _logs.Warning($"[RPC Request] " + serializedRequest);
-            
+            CallState = CallingState.Joined;
+
+            foreach (var iceTrickle in _pendingIceTrickleRequests)
+            {
+                RpcCallAsync(iceTrickle, GeneratedAPI.IceTrickle, nameof(GeneratedAPI.IceTrickle)).LogIfFailed();
+            }
+        }
+
+        private void OnSfuIceTrickle(ICETrickle iceTrickle)
+        {
+            _logs.Warning($"ICE TRICKLE FOR {iceTrickle.PeerType.ToStreamPeerType()}");
+            //StreamTodo: better to wrap in separate structure and not depend on a specific WebRTC implementation
+            var iceCandidateInit = _serializer.Deserialize<RTCIceCandidateInit>(iceTrickle.IceCandidate);
+
+            switch (iceTrickle.PeerType.ToStreamPeerType())
+            {
+                case StreamPeerType.Publisher:
+                    _publisher.AddIceCandidate(iceCandidateInit);
+                    break;
+                case StreamPeerType.Subscriber:
+                    _subscriber.AddIceCandidate(iceCandidateInit);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void OnSfuSubscriberOffer(SubscriberOffer obj)
+        {
+            var ss = new RTCSessionDescription
+            {
+                type = RTCSdpType.Offer,
+                sdp = obj.Sdp
+            };
+
+            _subscriber.SetRemoteDescriptionAsync(ss).LogIfFailed();
+        }
+
+        private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
+            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName)
+        {
             //StreamTodo: use injected client or cache this one
             var connectUrl = _activeCall.Credentials.Server.Url.Replace("/twirp", "");
-            
+
+            //StreamTodo: move headers population logic elsewhere + remove duplication with main client
             var httpClient = new HttpClient()
             {
                 DefaultRequestHeaders =
@@ -278,15 +290,113 @@ namespace StreamVideo.Core.LowLevelClient
                     { "X-Stream-Client", "stream-video-unity-client-0.1.0" }
                 }
             };
-            
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_activeCall.Credentials.Token);
+
+            httpClient.DefaultRequestHeaders.Authorization
+                = new AuthenticationHeaderValue(_activeCall.Credentials.Token);
             httpClient.BaseAddress = new Uri(connectUrl);
-            
+
             var response = await rpcCallAsync(httpClient, request);
             var serializedResponse = _serializer.Serialize(response);
-            _logs.Warning($"[RPC Response] " + serializedResponse);
+
+#if STREAM_DEBUG_ENABLED
+            //StreamTodo: move to debug helper class
+            var sb = new StringBuilder();
+            var serializedRequest = _serializer.Serialize(request);
+            var errorProperty = typeof(TResponse).GetProperty("Error");
+            var error = (Stream.Video.v1.Sfu.Models.Error)errorProperty.GetValue(response);
+            var errorLog = error != null ? $"<color=red>{error.Message}</color>" : "";
+            var errorStatus = error != null ? "<color=red>FAILED</color>" : "<color=green>SUCCESS</color>";
+            sb.AppendLine($"[RPC Request] {errorStatus} {debugRequestName} | {errorLog}");
+            sb.AppendLine(serializedRequest);
+            sb.AppendLine();
+            sb.AppendLine("Response:");
+            sb.AppendLine(serializedResponse);
+
+            _logs.Warning(sb.ToString());
+#endif
 
             return response;
+        }
+
+        private bool CanPublish()
+        {
+            return true;
+            //StreamTodo: check if can publish audio/video + observce if we can't and create publisher once it changes
+            // val canPublish =
+            //     call.state.ownCapabilities.value.any {
+            //     it == OwnCapability.SendAudio || it == OwnCapability.SendVideo
+            // }
+        }
+
+        /**
+     * https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/negotiationneeded_event
+     *
+     * Is called whenever a negotiation is needed. Common examples include
+     * - Adding a new media stream
+     * - Adding an audio Stream
+     * - A screenshare track is started
+     *
+     * Creates a new SDP
+     * - And sets it on the localDescription
+     * - Enables video simulcast
+     * - calls setPublisher
+     * - sets setRemoteDescription
+     *
+     * Retry behaviour is to retry 3 times quickly as long as
+     * - the sfu didn't change
+     * - the sdp didn't change
+     * If that fails ask the call monitor to do an ice restart
+     */
+        private void OnNegotiationNeeded()
+        {
+            //This is called for publisher only
+
+            //create local offer
+            //SetLocalDescription
+            //SetPublisherRequest <- only when JoinEventResponse was received -> State == Joined
+
+            // getPublisherTracks()
+            //SetPublisherRequest
+            //setRemoteDescription (from SetPublisherResponse)
+        }
+
+        private void OnIceTrickled(RTCIceCandidate iceCandidate, StreamPeerType peerType)
+        {
+            SendIceCandidateAsync(iceCandidate, peerType).LogIfFailed();
+        }
+
+        private void CreateSubscriber()
+        {
+            _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber);
+            _subscriber.IceTrickled += OnIceTrickled;
+        }
+
+        private void DisposeSubscriber()
+        {
+            if (_subscriber != null)
+            {
+                _subscriber.IceTrickled -= OnIceTrickled;
+                _subscriber.Dispose();
+                _subscriber = null;
+            }
+        }
+
+        private void CreatePublisher()
+        {
+            _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher);
+            _publisher.IceTrickled += OnIceTrickled;
+            _publisher.NegotiationNeeded += OnNegotiationNeeded;
+        }
+
+        private void DisposePublisher()
+        {
+            if (_publisher != null)
+            {
+                _publisher.IceTrickled -= OnIceTrickled;
+                _publisher.NegotiationNeeded -= OnNegotiationNeeded;
+                _publisher.Dispose();
+                _publisher = null;
+            }
         }
     }
 }

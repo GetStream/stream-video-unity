@@ -34,7 +34,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action<Error> Error;
         public event Action<CallGrantsUpdated> CallGrantsUpdated;
         public event Action<GoAway> GoAway;
-        
+
         public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs,
@@ -120,7 +120,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             Logs.Info($"{LogsPrefix} Connect URI: " + sfuUri);
             await WebsocketClient.ConnectAsync(sfuUri);
             Logs.Info($"{LogsPrefix} WS Connected");
-            
+
             //StreamTodo: review when is the actual "connected state" - perhaps not the WS connection itself but receiving an appropriate event should set the flag
             //e.g. are we able to send any data as soon as the connection is established?
 
@@ -134,7 +134,16 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
 
 #if STREAM_DEBUG_ENABLED
-                Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
+
+
+                if (!IsEventSubscribedTo(sfuEvent.EventPayloadCase))
+                {
+                    Logs.Warning($"-----------------------{LogsPrefix} WS message: " + sfuEvent);
+                }
+                else
+                {
+                    Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
+                }
 #endif
 
                 switch (sfuEvent.EventPayloadCase)
@@ -196,6 +205,68 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 }
             }
         }
+
+#if STREAM_DEBUG_ENABLED
+        public bool IsEventSubscribedTo(SfuEvent.EventPayloadOneofCase tag)
+        {
+            switch (tag)
+            {
+                case SfuEvent.EventPayloadOneofCase.None:
+                    return false;
+                case SfuEvent.EventPayloadOneofCase.SubscriberOffer:
+                    return SubscriberOffer != null;
+
+                case SfuEvent.EventPayloadOneofCase.PublisherAnswer:
+                    return PublisherAnswer != null;
+
+                case SfuEvent.EventPayloadOneofCase.ConnectionQualityChanged:
+                    return ConnectionQualityChanged != null;
+
+                case SfuEvent.EventPayloadOneofCase.AudioLevelChanged:
+                    return AudioLevelChanged != null;
+
+                case SfuEvent.EventPayloadOneofCase.IceTrickle:
+                    return IceTrickle != null;
+
+                case SfuEvent.EventPayloadOneofCase.ChangePublishQuality:
+                    return ChangePublishQuality != null;
+
+                case SfuEvent.EventPayloadOneofCase.ParticipantJoined:
+                    return ParticipantJoined != null;
+
+                case SfuEvent.EventPayloadOneofCase.ParticipantLeft:
+                    return ParticipantLeft != null;
+
+                case SfuEvent.EventPayloadOneofCase.DominantSpeakerChanged:
+                    return DominantSpeakerChanged != null;
+
+                case SfuEvent.EventPayloadOneofCase.JoinResponse:
+                    return JoinResponse != null;
+
+                case SfuEvent.EventPayloadOneofCase.HealthCheckResponse:
+                    return HealthCheckResponse != null;
+
+                case SfuEvent.EventPayloadOneofCase.TrackPublished:
+                    return TrackPublished != null;
+
+                case SfuEvent.EventPayloadOneofCase.TrackUnpublished:
+                    return TrackUnpublished != null;
+
+                case SfuEvent.EventPayloadOneofCase.Error:
+                    return Error != null;
+
+                case SfuEvent.EventPayloadOneofCase.CallGrantsUpdated:
+                    return CallGrantsUpdated != null;
+
+                case SfuEvent.EventPayloadOneofCase.GoAway:
+                    return GoAway != null;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(tag),
+                        tag, null);
+            }
+        }
+#endif
 
         protected override string LogsPrefix { get; set; } = "SFU ";
 

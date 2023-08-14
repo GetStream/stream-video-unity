@@ -31,6 +31,7 @@
 #endregion
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace Google.Protobuf
 {
@@ -48,11 +49,11 @@ namespace Google.Protobuf
         /// Throws an ArgumentNullException if the given value is null, otherwise
         /// return the value to the caller.
         /// </summary>
-        public static T CheckNotNull<T>(T value, string name) where T : class
+        public static T CheckNotNull<T>(T value, string name, [CallerMemberName] string callerName = "") where T : class
         {
             if (value == null)
             {
-                throw new ArgumentNullException(name);
+                throw new ArgumentNullException($"{name} in {callerName}");
             }
             return value;
         }

@@ -16,12 +16,7 @@ namespace StreamVideo.ExampleProject
 
         protected void Start()
         {
-            var apiKey = "hd8szvscpxvd";
-            var userId = "daniel_sierpinski";
-            var userToken
-                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkxNDM4Mzg3LCJleHAiOjE2OTIwNDMxOTJ9.0pGgBpH0S-eWlMMf_N8WPwOvn4bezz7MhiaR1vDxZTs";
-
-            var credentials = new AuthCredentials(apiKey, userId, userToken);
+            var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
 
             _client = StreamVideoClient.CreateDefaultClient(new StreamClientConfig
             {
@@ -60,6 +55,15 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private string _joinCallId = "3TK1d0wL2we0";
+        
+        [SerializeField]
+        private string _apiKey = "";
+        
+        [SerializeField]
+        private string _userId = "";
+        
+        [SerializeField]
+        private string _userToken = "";
 
         private IStreamVideoClient _client;
         

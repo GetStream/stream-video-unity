@@ -71,7 +71,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         protected override async Task OnConnectAsync(CancellationToken cancellationToken = default)
         {
             //StreamTodo: validate session data
-            
+
             _connectUserTaskSource = new TaskCompletionSource<bool>(cancellationToken);
 
             var joinRequest = new JoinRequest
@@ -137,14 +137,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
 #if STREAM_DEBUG_ENABLED
 
-                if (!IsEventSubscribedTo(sfuEvent.EventPayloadCase))
-                {
-                    Logs.Warning($"-----------------------{LogsPrefix} UNHANDLED WS message: " + sfuEvent);
-                }
-                else
-                {
-                    Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
-                }
+                DebugLogEvent(sfuEvent);
 #endif
 
                 switch (sfuEvent.EventPayloadCase)
@@ -207,18 +200,18 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 }
             }
         }
-        
+
         protected override void OnDisconnecting()
         {
             _connectUserTaskSource?.TrySetCanceled();
-            
+
             base.OnDisconnecting();
         }
 
         protected override void OnDisposing()
         {
             _connectUserTaskSource?.TrySetCanceled();
-            
+
             base.OnDisposing();
         }
 
@@ -229,16 +222,16 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private string _sdpOffer;
         private string _sfuUrl;
         private string _sfuToken;
-        
+
         private TaskCompletionSource<bool> _connectUserTaskSource;
 
         private void OnHandleJoinResponse(JoinResponse joinResponse)
         {
             ConnectionState = ConnectionState.Connected;
-            
+
             _connectUserTaskSource.SetResult(true);
             _connectUserTaskSource = null;
-            
+
             JoinResponse?.Invoke(joinResponse);
         }
 
@@ -301,6 +294,22 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                     throw new ArgumentOutOfRangeException(nameof(tag),
                         tag, null);
             }
+        }
+
+        private void DebugLogEvent(SfuEvent sfuEvent)
+        {
+            if (sfuEvent.EventPayloadCase == SfuEvent.EventPayloadOneofCase.HealthCheckResponse)
+            {
+                return;
+            }
+
+            if (!IsEventSubscribedTo(sfuEvent.EventPayloadCase))
+            {
+                Logs.Warning($"-----------------------{LogsPrefix} UNHANDLED WS message: " + sfuEvent);
+                return;
+            }
+
+            Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
         }
 #endif
     }

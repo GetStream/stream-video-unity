@@ -41,7 +41,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var decodedMessage = Encoding.UTF8.GetString(msg);
 
 #if STREAM_DEBUG_ENABLED
-                Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
+                if (!decodedMessage.Contains("health.check"))
+                {
+                    Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
+                }
 #endif
 
                 HandleNewWebsocketMessage(decodedMessage);

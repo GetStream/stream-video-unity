@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using StreamVideo.Core.Models;
 using StreamVideo.Libs.Logs;
 using Unity.WebRTC;
 using UnityEngine;
@@ -31,28 +33,27 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public StreamPeerConnection(ILogs logs, StreamPeerType peerType)
+        public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers)
         {
             _peerType = peerType;
             _logs = logs;
 
+            var rtcIceServers = new List<RTCIceServer>();
+
+            foreach (var ice in iceServers)
+            {
+                rtcIceServers.Add(new RTCIceServer
+                {
+                    credential = ice.Password,
+                    credentialType = RTCIceCredentialType.Password,
+                    urls = ice.Urls.ToArray(),
+                    username = ice.Username
+                });
+            }
+
             var conf = new RTCConfiguration
             {
-                iceServers = new RTCIceServer[]
-                {
-                    new RTCIceServer
-                    {
-                        credential = null,
-                        credentialType = RTCIceCredentialType.Password,
-                        urls = new string[]
-                        {
-                            //StreamTodo: move to config
-                            // Google Stun server
-                            "stun:stun.l.google.com:19302"
-                        },
-                        username = null
-                    }
-                },
+                iceServers = rtcIceServers.ToArray(),
                 iceTransportPolicy = null,
                 bundlePolicy = null,
                 iceCandidatePoolSize = null
@@ -73,22 +74,27 @@ namespace StreamVideo.Core.LowLevelClient
             _sendChannel.OnClose += OnSendChannelStatusChanged;
             _sendChannel.OnMessage += OnSendChannelMessage;
 
-            _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video);
-            _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio);
-        }
+            _receiveStream = new MediaStream();
 
+            // _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video);
+            // _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio);
+        }
 
         public void RestartIce() => _peerConnection.RestartIce();
 
         public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer)
-            => _peerConnection.SetLocalDescriptionAsync(ref offer);
-        
+        {
+            _logs.Warning($"------------------- [{_peerType}] Set LocalDesc: " + offer.sdp);
+            return _peerConnection.SetLocalDescriptionAsync(ref offer);
+        }
+
         public async Task SetRemoteDescriptionAsync(RTCSessionDescription offer)
         {
             await _peerConnection.SetRemoteDescriptionAsync(ref offer);
 
-            _logs.Warning($"------------------- [{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}");
-            
+            _logs.Warning(
+                $"------------------- [{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer: {offer.sdp}");
+
             foreach (var iceCandidate in _pendingIceCandidates)
             {
                 _peerConnection.AddIceCandidate(iceCandidate);
@@ -97,7 +103,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void AddIceCandidate(RTCIceCandidateInit iceCandidateInit)
         {
-            _logs.Warning($"---------------------[{_peerType}] Tried to add ICE Candidate, remote available: " + IsRemoteDescriptionAvailable);
+            _logs.Warning($"---------------------[{_peerType}] Sdd ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
             {
@@ -109,6 +115,8 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public Task<RTCSessionDescription> CreateOfferAsync() => _peerConnection.CreateOfferAsync();
+        
+        public Task<RTCSessionDescription> CreateAnswerAsync() => _peerConnection.CreateAnswerAsync();
 
         public void Dispose()
         {
@@ -134,16 +142,17 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly RTCRtpTransceiver _audioTransceiver;
         private readonly ILogs _logs;
         private readonly StreamPeerType _peerType;
-        
+
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
 
+        private MediaStream _receiveStream;
         private VideoStreamTrack _videoStreamTrack;
 
         private void OnIceCandidate(RTCIceCandidate candidate) => IceTrickled?.Invoke(candidate, _peerType);
 
         private void OnIceConnectionChange(RTCIceConnectionState state)
         {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnIceConnectionChange");
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnIceConnectionChange to: " + state);
         }
 
         private void OnNegotiationNeeded()
@@ -158,7 +167,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnConnectionStateChange(RTCPeerConnectionState state)
         {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnConnectionStateChange");
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnConnectionStateChange to: {state}");
         }
 
         private void OnTrack(RTCTrackEvent trackEvent)
@@ -174,6 +183,8 @@ namespace StreamVideo.Core.LowLevelClient
                     //StreamTodo: handle receiving it again + cleanup (unsubscribe)
                     _videoStreamTrack = videoStreamTrack;
                     _videoStreamTrack.OnVideoReceived += OnVideoReceived;
+
+                    _receiveStream.AddTrack(trackEvent.Track);
 
                     break;
                 default:

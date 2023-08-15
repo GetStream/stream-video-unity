@@ -9,6 +9,7 @@ using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
 using Stream.Video.v1.Sfu.Signal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
+using StreamVideo.Core.Models;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Http;
@@ -52,19 +53,12 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
             _sfuWebSocket.IceTrickle += OnSfuIceTrickle;
             _sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
-
-            CreateSubscriber();
-
-            if (CanPublish())
-            {
-                CreatePublisher();
-            }
         }
 
         public void Dispose()
         {
             StopAsync().LogIfFailed();
-            
+
             _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
             _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
             _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
@@ -99,6 +93,13 @@ namespace StreamVideo.Core.LowLevelClient
             var sfuToken = call.Credentials.Token;
             var iceServers = call.Credentials.IceServers;
             //StreamTodo: what to do with iceServers?
+            
+            CreateSubscriber(iceServers);
+
+            if (CanPublish())
+            {
+                CreatePublisher(iceServers);
+            }
 
             _sessionId = Guid.NewGuid().ToString();
             _logs.Warning($"START Session: " + _sessionId);
@@ -153,7 +154,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CleanUpSession()
         {
-            _pendingIceTrickleRequests.Clear();;
+            _pendingIceTrickleRequests.Clear();
+            ;
         }
 
         private async Task SubscribeToTracksAsync()
@@ -265,20 +267,59 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void OnSfuSubscriberOffer(SubscriberOffer obj)
+        /**
+     * This is called when the SFU sends us an offer
+     * - Sets the remote description
+     * - Creates an answer
+     * - Sets the local description
+     * - Sends the answer back to the SFU
+     */
+        private async void OnSfuSubscriberOffer(SubscriberOffer subscriberOffer)
         {
-            var ss = new RTCSessionDescription
+            //StreamTodo: check RtcSession.kt handleSubscriberOffer for the retry logic
+            
+            try
             {
-                type = RTCSdpType.Offer,
-                sdp = obj.Sdp
-            };
+                var rtcSessionDescription = new RTCSessionDescription
+                {
+                    type = RTCSdpType.Offer,
+                    sdp = subscriberOffer.Sdp
+                };
 
-            _subscriber.SetRemoteDescriptionAsync(ss).LogIfFailed();
+                await _subscriber.SetRemoteDescriptionAsync(rtcSessionDescription);
+
+                var answer = await _subscriber.CreateAnswerAsync();
+                
+                //StreamTodo: mangle SDP
+                
+                await _subscriber.SetLocalDescriptionAsync(ref answer);
+
+                var sendAnswerRequest = new SendAnswerRequest
+                {
+                    PeerType = PeerType.Subscriber,
+                    Sdp = answer.sdp,
+                    SessionId = _sessionId
+                };
+
+                await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer), preLog: true);
+
+            }
+            catch (Exception e)
+            {
+                _logs.Exception(e);
+            }
         }
 
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
-            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName)
+            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
         {
+            var serializedRequest = _serializer.Serialize(request);
+
+            if (preLog)
+            {
+                _logs.Warning($"[RPC REQUEST START] {debugRequestName} {serializedRequest}");
+            }
+
             //StreamTodo: use injected client or cache this one
             var connectUrl = _activeCall.Credentials.Server.Url.Replace("/twirp", "");
 
@@ -302,7 +343,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             //StreamTodo: move to debug helper class
             var sb = new StringBuilder();
-            var serializedRequest = _serializer.Serialize(request);
+
             var errorProperty = typeof(TResponse).GetProperty("Error");
             var error = (Stream.Video.v1.Sfu.Models.Error)errorProperty.GetValue(response);
             var errorLog = error != null ? $"<color=red>{error.Message}</color>" : "";
@@ -366,9 +407,9 @@ namespace StreamVideo.Core.LowLevelClient
             SendIceCandidateAsync(iceCandidate, peerType).LogIfFailed();
         }
 
-        private void CreateSubscriber()
+        private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
-            _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber);
+            _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers);
             _subscriber.IceTrickled += OnIceTrickled;
         }
 
@@ -382,9 +423,9 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void CreatePublisher()
+        private void CreatePublisher(IEnumerable<ICEServer> iceServers)
         {
-            _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher);
+            _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers);
             _publisher.IceTrickled += OnIceTrickled;
             _publisher.NegotiationNeeded += OnNegotiationNeeded;
         }

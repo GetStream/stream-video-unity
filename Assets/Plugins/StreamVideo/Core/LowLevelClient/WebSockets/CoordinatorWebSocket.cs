@@ -18,7 +18,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
     {
         public string ConnectionId { get; private set; }
 
-        public CoordinatorWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler, IAuthProvider authProvider,
+        public CoordinatorWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
+            IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs)
             : base(websocketClient, reconnectScheduler, authProvider, requestUriFactory, serializer, timeService, logs)
         {
@@ -30,6 +31,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         }
 
         protected override string LogsPrefix { get; set; } = "Coordinator";
+        protected override int HealthCheckMaxWaitingTime => 30;
+        protected override int HealthCheckSendInterval => 10;
 
         protected override void ProcessMessages()
         {
@@ -38,7 +41,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var decodedMessage = Encoding.UTF8.GetString(msg);
 
 #if STREAM_DEBUG_ENABLED
-                Logs.Info("WS message: " + decodedMessage);
+                Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
 #endif
 
                 HandleNewWebsocketMessage(decodedMessage);
@@ -82,16 +85,16 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void OnDisconnecting()
         {
-            base.OnDisconnecting();
-
             _connectUserTaskSource?.TrySetCanceled();
+            
+            base.OnDisconnecting();
         }
 
         protected override void OnDisposing()
         {
-            base.OnDisposing();
-
             _connectUserTaskSource?.TrySetCanceled();
+            
+            base.OnDisposing();
         }
 
         protected override void SendHealthCheck()
@@ -137,18 +140,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
-            //StreamTodo: do we need debug Event log? 
-            var time = DateTime.Now.TimeOfDay.ToString(@"hh\:mm\:ss");
-            //EventReceived?.Invoke($"{time} - Event received: <b>{type}</b>");
-
             if (!EventHandlers.TryGetValue(type, out var handler))
             {
-                //StreamTodo: LogLevel should be passed to 
-                //if (_config.LogLevel.IsDebugEnabled())
-                {
-                    Logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
-                }
-
+#if STREAM_DEBUG_ENABLED
+                Logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
+#endif
                 return;
             }
 

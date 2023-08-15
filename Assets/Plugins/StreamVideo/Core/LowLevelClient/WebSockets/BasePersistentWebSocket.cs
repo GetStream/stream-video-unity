@@ -12,6 +12,7 @@ using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
 using StreamVideo.Libs.Websockets;
+using UnityEngine;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
@@ -173,8 +174,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         protected ISerializer Serializer { get; }
         protected IRequestUriFactory UriFactory { get; }
         protected IAuthProvider AuthProvider { get; }
-
         protected IReadOnlyDictionary<string, Action<string>> EventHandlers => _eventKeyToHandler;
+        
+        protected abstract int HealthCheckMaxWaitingTime { get; }
+        protected abstract int HealthCheckSendInterval { get; }
 
         protected BasePersistentWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,
@@ -202,7 +205,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         protected void OnHealthCheckReceived()
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"{LogsPrefix} Health check received");
+            var timeSinceLast = Mathf.Round(TimeService.Time - _lastHealthCheckReceivedTime);
+            Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds");
 #endif
             _lastHealthCheckReceivedTime = TimeService.Time;
         }
@@ -214,12 +218,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         protected virtual void OnDisposing()
         {
         }
-
-
-        private const int HealthCheckMaxWaitingTime = 30;
-
-        // For WebGL there is a slight delay when sending therefore we send HC event a bit sooner just in case
-        private const int HealthCheckSendInterval = HealthCheckMaxWaitingTime - 1;
 
         private readonly object _websocketConnectionFailedFlagLock = new object();
         private readonly IReconnectScheduler _reconnectScheduler;
@@ -265,7 +263,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 _lastHealthCheckSendTime = TimeService.Time;
 
 #if STREAM_DEBUG_ENABLED
-                Logs.Info($"{LogsPrefix} Health check sent");
+                Logs.Info($"{LogsPrefix} Health check SENT. Time since last: {Mathf.Round(timeSinceLastHealthCheckSent)} seconds");
 #endif
             }
 

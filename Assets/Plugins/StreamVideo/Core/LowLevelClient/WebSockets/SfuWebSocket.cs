@@ -28,7 +28,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action<ParticipantLeft> ParticipantLeft;
         public event Action<DominantSpeakerChanged> DominantSpeakerChanged;
         public event Action<JoinResponse> JoinResponse;
-        public event Action<HealthCheckResponse> HealthCheckResponse;
         public event Action<TrackPublished> TrackPublished;
         public event Action<TrackUnpublished> TrackUnpublished;
         public event Action<Error> Error;
@@ -53,11 +52,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _sessionId = sessionId;
         }
 
-        //StreamTodo: delete for now, this is not how we communicate with SFU
-        public void Send(IMessage sfuMessage)
-        {
-            WebsocketClient.Send(sfuMessage.ToByteArray());
-        }
+        protected override string LogsPrefix { get; set; } = "SFU ";
+
+        protected override int HealthCheckMaxWaitingTime => 30;
+        protected override int HealthCheckSendInterval => 10;
 
         protected override void SendHealthCheck()
         {
@@ -73,6 +71,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         protected override async Task OnConnectAsync(CancellationToken cancellationToken = default)
         {
             //StreamTodo: validate session data
+            
+            _connectUserTaskSource = new TaskCompletionSource<bool>(cancellationToken);
 
             var joinRequest = new JoinRequest
             {
@@ -103,17 +103,17 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 },
             };
 
-            var sfuRequest = new SfuRequest
+            var sfuJoinRequest = new SfuRequest
             {
                 JoinRequest = joinRequest,
             };
 
 #if STREAM_DEBUG_ENABLED
-            var debugJson = Serializer.Serialize(sfuRequest);
+            var debugJson = Serializer.Serialize(sfuJoinRequest);
             Logs.Warning(debugJson);
 #endif
 
-            var sfuRequestByteArray = sfuRequest.ToByteArray();
+            var sfuJoinRequestEncoded = sfuJoinRequest.ToByteArray();
 
             var sfuUri = UriFactory.CreateSfuConnectionUri(_sfuUrl);
 
@@ -124,7 +124,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             //StreamTodo: review when is the actual "connected state" - perhaps not the WS connection itself but receiving an appropriate event should set the flag
             //e.g. are we able to send any data as soon as the connection is established?
 
-            WebsocketClient.Send(sfuRequestByteArray);
+            WebsocketClient.Send(sfuJoinRequestEncoded);
+
+            await _connectUserTaskSource.Task;
         }
 
         protected override void ProcessMessages()
@@ -135,10 +137,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
 #if STREAM_DEBUG_ENABLED
 
-
                 if (!IsEventSubscribedTo(sfuEvent.EventPayloadCase))
                 {
-                    Logs.Warning($"-----------------------{LogsPrefix} WS message: " + sfuEvent);
+                    Logs.Warning($"-----------------------{LogsPrefix} UNHANDLED WS message: " + sfuEvent);
                 }
                 else
                 {
@@ -178,10 +179,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                         DominantSpeakerChanged?.Invoke(sfuEvent.DominantSpeakerChanged);
                         break;
                     case SfuEvent.EventPayloadOneofCase.JoinResponse:
-                        JoinResponse?.Invoke(sfuEvent.JoinResponse);
+                        OnHandleJoinResponse(sfuEvent.JoinResponse);
                         break;
                     case SfuEvent.EventPayloadOneofCase.HealthCheckResponse:
-                        HealthCheckResponse?.Invoke(sfuEvent.HealthCheckResponse);
+                        OnHealthCheckReceived();
                         break;
                     case SfuEvent.EventPayloadOneofCase.TrackPublished:
                         TrackPublished?.Invoke(sfuEvent.TrackPublished);
@@ -205,9 +206,43 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 }
             }
         }
+        
+        protected override void OnDisconnecting()
+        {
+            _connectUserTaskSource?.TrySetCanceled();
+            
+            base.OnDisconnecting();
+        }
+
+        protected override void OnDisposing()
+        {
+            _connectUserTaskSource?.TrySetCanceled();
+            
+            base.OnDisposing();
+        }
+
+        private readonly Version _sdkVersion;
+        private readonly IApplicationInfo _applicationInfo;
+
+        private string _sessionId;
+        private string _sdpOffer;
+        private string _sfuUrl;
+        private string _sfuToken;
+        
+        private TaskCompletionSource<bool> _connectUserTaskSource;
+
+        private void OnHandleJoinResponse(JoinResponse joinResponse)
+        {
+            ConnectionState = ConnectionState.Connected;
+            
+            _connectUserTaskSource.SetResult(true);
+            _connectUserTaskSource = null;
+            
+            JoinResponse?.Invoke(joinResponse);
+        }
 
 #if STREAM_DEBUG_ENABLED
-        public bool IsEventSubscribedTo(SfuEvent.EventPayloadOneofCase tag)
+        private bool IsEventSubscribedTo(SfuEvent.EventPayloadOneofCase tag)
         {
             switch (tag)
             {
@@ -244,7 +279,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                     return JoinResponse != null;
 
                 case SfuEvent.EventPayloadOneofCase.HealthCheckResponse:
-                    return HealthCheckResponse != null;
+                    return true; // Handled internally
 
                 case SfuEvent.EventPayloadOneofCase.TrackPublished:
                     return TrackPublished != null;
@@ -267,15 +302,5 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 #endif
-
-        protected override string LogsPrefix { get; set; } = "SFU ";
-
-        private readonly Version _sdkVersion;
-        private readonly IApplicationInfo _applicationInfo;
-
-        private string _sessionId;
-        private string _sdpOffer;
-        private string _sfuUrl;
-        private string _sfuToken;
     }
 }

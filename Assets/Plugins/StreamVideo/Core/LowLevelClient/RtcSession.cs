@@ -64,10 +64,11 @@ namespace StreamVideo.Core.LowLevelClient
         public void Dispose()
         {
             StopAsync().LogIfFailed();
-            _sfuWebSocket.Dispose();
+            
             _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
             _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
             _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
+            _sfuWebSocket.Dispose();
 
             DisposeSubscriber();
             DisposePublisher();

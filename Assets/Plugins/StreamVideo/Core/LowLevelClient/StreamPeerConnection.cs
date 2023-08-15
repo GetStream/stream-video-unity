@@ -22,7 +22,7 @@ namespace StreamVideo.Core.LowLevelClient
                 try
                 {
                     // Throws exception if not set
-                    return !string.IsNullOrEmpty(_peerConnection.CurrentRemoteDescription.sdp);
+                    return !string.IsNullOrEmpty(_peerConnection.RemoteDescription.sdp);
                 }
                 catch
                 {
@@ -77,7 +77,6 @@ namespace StreamVideo.Core.LowLevelClient
             _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio);
         }
 
-        private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
 
         public void RestartIce() => _peerConnection.RestartIce();
 
@@ -88,7 +87,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             await _peerConnection.SetRemoteDescriptionAsync(ref offer);
 
-            _logs.Warning("-------------------Add pending ICE Candidates: " + _pendingIceCandidates.Count);
+            _logs.Warning($"------------------- [{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}");
             
             foreach (var iceCandidate in _pendingIceCandidates)
             {
@@ -98,7 +97,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void AddIceCandidate(RTCIceCandidateInit iceCandidateInit)
         {
-            _logs.Warning("---------------------Tried to add ICE Candidate, remote available: " + IsRemoteDescriptionAvailable);
+            _logs.Warning($"---------------------[{_peerType}] Tried to add ICE Candidate, remote available: " + IsRemoteDescriptionAvailable);
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
             {
@@ -135,18 +134,21 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly RTCRtpTransceiver _audioTransceiver;
         private readonly ILogs _logs;
         private readonly StreamPeerType _peerType;
+        
+        private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
+
         private VideoStreamTrack _videoStreamTrack;
 
         private void OnIceCandidate(RTCIceCandidate candidate) => IceTrickled?.Invoke(candidate, _peerType);
 
         private void OnIceConnectionChange(RTCIceConnectionState state)
         {
-            _logs.Warning("$$$$$$$ OnIceConnectionChange" + _peerType);
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnIceConnectionChange");
         }
 
         private void OnNegotiationNeeded()
         {
-            _logs.Warning("$$$$$$$ OnNegotiationNeeded" + _peerType);
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnNegotiationNeeded");
 
             //StreamTodo: take into account race conditions https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
             //We want to set the local description if signalingState is stable - we need to check it because state could change during async operations
@@ -156,12 +158,12 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnConnectionStateChange(RTCPeerConnectionState state)
         {
-            _logs.Warning("$$$$$$$ OnConnectionStateChange" + _peerType);
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnConnectionStateChange");
         }
 
         private void OnTrack(RTCTrackEvent trackEvent)
         {
-            _logs.Warning($"$$$$$$$ OnTrack {_peerType} {trackEvent.Track.GetType()}");
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnTrack {trackEvent.Track.GetType()}");
 
             switch (trackEvent.Track)
             {
@@ -181,22 +183,22 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnVideoReceived(Texture renderer)
         {
-            _logs.Warning("--------------------------------------------------VIDEO RECEIVED");
+            _logs.Warning($"[{_peerType}] --------------------------------------------------VIDEO RECEIVED");
         }
 
         private void OnDataChannel(RTCDataChannel channel)
         {
-            _logs.Warning("$$$$$$$ OnDataChannel" + _peerType);
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnDataChannel");
         }
 
         private void OnSendChannelStatusChanged()
         {
-            _logs.Warning("$$$$$$$ OnSendChannelStatusChanged" + _peerType);
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnSendChannelStatusChanged");
         }
 
         private void OnSendChannelMessage(byte[] bytes)
         {
-            _logs.Warning("$$$$$$$ OnSendChannelMessage" + _peerType);
+            _logs.Warning($"$$$$$$$ [{_peerType}] OnSendChannelMessage");
         }
     }
 }

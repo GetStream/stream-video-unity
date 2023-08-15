@@ -182,6 +182,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                         OnHandleJoinResponse(sfuEvent.JoinResponse);
                         break;
                     case SfuEvent.EventPayloadOneofCase.HealthCheckResponse:
+                        //StreamTodo: healthCheck contains participantsCount, we should probably sync our state with this info
                         OnHealthCheckReceived();
                         break;
                     case SfuEvent.EventPayloadOneofCase.TrackPublished:

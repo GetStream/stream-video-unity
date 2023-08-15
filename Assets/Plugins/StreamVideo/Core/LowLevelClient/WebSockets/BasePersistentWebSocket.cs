@@ -204,6 +204,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected void OnHealthCheckReceived()
         {
+            
 #if STREAM_DEBUG_ENABLED
             var timeSinceLast = Mathf.Round(TimeService.Time - _lastHealthCheckReceivedTime);
             Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds");

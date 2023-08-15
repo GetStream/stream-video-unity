@@ -18,11 +18,16 @@ using StreamVideo.Libs.NetworkMonitors;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Websockets;
+using UnityEngine;
+using Cache = StreamVideo.Core.State.Caches.Cache;
 
 namespace StreamVideo.Core
 {
     public class StreamVideoClient : IStreamVideoClient
     {
+        //StreamTodo: remove Unity dependency
+        public event Action<Texture> VideoReceived;
+        
         /// <summary>
         /// Use this method to create the main client instance
         /// </summary>
@@ -172,8 +177,15 @@ namespace StreamVideo.Core
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
 
             _cache = new Cache(this, serializer, _logs);
+            
+            InternalLowLevelClient.RtcSession.VideoReceived += OnVideoReceived;
 
             SubscribeTo(InternalLowLevelClient);
+        }
+
+        private void OnVideoReceived(Texture obj)
+        {
+            VideoReceived?.Invoke(obj);
         }
 
         private void SubscribeTo(StreamVideoLowLevelClient lowLevelClient)

@@ -4,6 +4,7 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject
 {
@@ -24,7 +25,10 @@ namespace StreamVideo.ExampleProject
             });
 
             _client.ConnectUserAsync(credentials).LogIfFailed();
+            _client.VideoReceived += ClientOnVideoReceived;
         }
+
+
 
         protected void Update() => _client?.Update();
 
@@ -64,6 +68,9 @@ namespace StreamVideo.ExampleProject
         
         [SerializeField]
         private string _userToken = "";
+        
+        [SerializeField]
+        private RawImage _remoteImage;
 
         private IStreamVideoClient _client;
         
@@ -88,6 +95,17 @@ namespace StreamVideo.ExampleProject
             {
                 Debug.LogException(e);
             }
+        }
+        
+        private void ClientOnVideoReceived(Texture obj)
+        {
+            if (_remoteImage == null)
+            {
+                Debug.LogError("Remote texture is not set");
+                return;
+            }
+
+            _remoteImage.texture = obj;
         }
     }
 }

@@ -17,6 +17,7 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
+using UnityEngine;
 using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
 
 namespace StreamVideo.Core.LowLevelClient
@@ -26,6 +27,8 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IDisposable
     {
+        public Action<Texture> VideoReceived;
+        
         public CallingState CallState
         {
             get => _callState;
@@ -105,7 +108,9 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning($"START Session: " + _sessionId);
 
             var offer = await _subscriber.CreateOfferAsync();
-            await _subscriber.SetLocalDescriptionAsync(ref offer);
+            
+            //Kotlin is not doing this
+            //await _subscriber.SetLocalDescriptionAsync(ref offer);
 
             _sfuWebSocket.SetSessionData(_sessionId, offer.sdp, sfuUrl, sfuToken);
             await _sfuWebSocket.ConnectAsync();
@@ -280,6 +285,8 @@ namespace StreamVideo.Core.LowLevelClient
             
             try
             {
+                
+                //StreamTodo: handle subscriberOffer.iceRestart
                 var rtcSessionDescription = new RTCSessionDescription
                 {
                     type = RTCSdpType.Offer,
@@ -291,7 +298,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var answer = await _subscriber.CreateAnswerAsync();
                 
                 //StreamTodo: mangle SDP
-                
+
                 await _subscriber.SetLocalDescriptionAsync(ref answer);
 
                 var sendAnswerRequest = new SendAnswerRequest
@@ -411,6 +418,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers);
             _subscriber.IceTrickled += OnIceTrickled;
+            _subscriber.VideoReceived += OnVideoReceived;
         }
 
         private void DisposeSubscriber()
@@ -418,9 +426,15 @@ namespace StreamVideo.Core.LowLevelClient
             if (_subscriber != null)
             {
                 _subscriber.IceTrickled -= OnIceTrickled;
+                _subscriber.VideoReceived -= OnVideoReceived;
                 _subscriber.Dispose();
                 _subscriber = null;
             }
+        }
+
+        private void OnVideoReceived(Texture obj)
+        {
+            VideoReceived?.Invoke(obj);
         }
 
         private void CreatePublisher(IEnumerable<ICEServer> iceServers)

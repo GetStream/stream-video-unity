@@ -207,7 +207,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             
 #if STREAM_DEBUG_ENABLED
             var timeSinceLast = Mathf.Round(TimeService.Time - _lastHealthCheckReceivedTime);
-            Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds");
+            //Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds");
 #endif
             _lastHealthCheckReceivedTime = TimeService.Time;
         }
@@ -264,7 +264,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 _lastHealthCheckSendTime = TimeService.Time;
 
 #if STREAM_DEBUG_ENABLED
-                Logs.Info($"{LogsPrefix} Health check SENT. Time since last: {Mathf.Round(timeSinceLastHealthCheckSent)} seconds");
+                //Logs.Info($"{LogsPrefix} Health check SENT. Time since last: {Mathf.Round(timeSinceLastHealthCheckSent)} seconds");
 #endif
             }
 

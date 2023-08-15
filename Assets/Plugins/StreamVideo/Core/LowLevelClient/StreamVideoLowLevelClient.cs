@@ -340,6 +340,9 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IApplicationInfo _applicationInfo;
         private readonly RtcSession _rtcSession;
 
+        //StreamTodo: remove
+        internal RtcSession RtcSession => _rtcSession;
+
         private CancellationTokenSource _updateMonitorCts;
 
         private AuthCredentials _authCredentials;

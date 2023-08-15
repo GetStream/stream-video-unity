@@ -14,6 +14,9 @@ namespace StreamVideo.Core.LowLevelClient
     /// </summary>
     internal class StreamPeerConnection : IDisposable
     {
+        //StreamTodo: for debug only, figure this out better
+        public Action<Texture> VideoReceived;
+
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
 
@@ -54,7 +57,7 @@ namespace StreamVideo.Core.LowLevelClient
             var conf = new RTCConfiguration
             {
                 iceServers = rtcIceServers.ToArray(),
-                iceTransportPolicy = null,
+                iceTransportPolicy = RTCIceTransportPolicy.Relay,
                 bundlePolicy = null,
                 iceCandidatePoolSize = null
             };
@@ -84,7 +87,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer)
         {
-            _logs.Warning($"------------------- [{_peerType}] Set LocalDesc: " + offer.sdp);
+            _logs.Warning($"------------------- [{_peerType}] Set LocalDesc:\n" + offer.sdp);
             return _peerConnection.SetLocalDescriptionAsync(ref offer);
         }
 
@@ -93,7 +96,7 @@ namespace StreamVideo.Core.LowLevelClient
             await _peerConnection.SetRemoteDescriptionAsync(ref offer);
 
             _logs.Warning(
-                $"------------------- [{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer: {offer.sdp}");
+                $"------------------- [{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer:\n{offer.sdp}");
 
             foreach (var iceCandidate in _pendingIceCandidates)
             {
@@ -195,6 +198,8 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnVideoReceived(Texture renderer)
         {
             _logs.Warning($"[{_peerType}] --------------------------------------------------VIDEO RECEIVED");
+            
+            VideoReceived?.Invoke(renderer);
         }
 
         private void OnDataChannel(RTCDataChannel channel)

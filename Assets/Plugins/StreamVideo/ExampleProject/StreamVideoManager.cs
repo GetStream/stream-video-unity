@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
 using StreamVideo.Libs.Auth;
@@ -75,7 +76,8 @@ namespace StreamVideo.ExampleProject
         private RawImage _remoteImage;
 
         private IStreamVideoClient _client;
-        
+        private RenderTexture _renderTexture;
+
         private async void OnJoinClicked()
         {
             try
@@ -107,8 +109,23 @@ namespace StreamVideo.ExampleProject
                 return;
             }
 
-            _remoteImage.texture = obj;
-            CanvasUpdateRegistry.TryRegisterCanvasElementForGraphicRebuild(_remoteImage);
+            if (_renderTexture == null || _renderTexture.width != obj.width || _renderTexture.height != obj.height)
+            {
+                if (_renderTexture != null)
+                {
+                    Destroy(_renderTexture);
+                    _renderTexture = null;
+                }
+                _renderTexture = new RenderTexture(obj.width, obj.height, 0, RenderTextureFormat.Default);
+            }
+
+            if (_remoteImage.texture == null)
+            {
+                _remoteImage.texture = _renderTexture;
+            }
+            
+            Graphics.Blit(obj, _renderTexture);
+            _renderTexture.IncrementUpdateCount();
         }
     }
 }

@@ -3,6 +3,7 @@ using StreamVideo.Core;
 using StreamVideo.Core.Configs;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Utils;
+using Unity.WebRTC;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,9 +27,10 @@ namespace StreamVideo.ExampleProject
 
             _client.ConnectUserAsync(credentials).LogIfFailed();
             _client.VideoReceived += ClientOnVideoReceived;
+
+            //StreamTodo: handle by SDK
+            StartCoroutine(WebRTC.Update());
         }
-
-
 
         protected void Update() => _client?.Update();
 
@@ -106,6 +108,7 @@ namespace StreamVideo.ExampleProject
             }
 
             _remoteImage.texture = obj;
+            CanvasUpdateRegistry.TryRegisterCanvasElementForGraphicRebuild(_remoteImage);
         }
     }
 }

@@ -74,8 +74,9 @@ namespace StreamVideo.Core.LowLevelClient
         public void Update()
         {
             _sfuWebSocket.Update();
-
-            WebRTC.Update().MoveNext();
+            
+            //StreamTodo: remove
+            _subscriber?.Update();
         }
 
         public async Task StartAsync(IStreamCall call)
@@ -255,7 +256,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuIceTrickle(ICETrickle iceTrickle)
         {
-            _logs.Warning($"ICE TRICKLE FOR {iceTrickle.PeerType.ToStreamPeerType()}");
             //StreamTodo: better to wrap in separate structure and not depend on a specific WebRTC implementation
             var iceCandidateInit = _serializer.Deserialize<RTCIceCandidateInit>(iceTrickle.IceCandidate);
 

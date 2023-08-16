@@ -19,6 +19,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
+        
+        public MediaStream ReceiveStream { get; private set; }
 
         public bool IsRemoteDescriptionAvailable
         {
@@ -77,10 +79,24 @@ namespace StreamVideo.Core.LowLevelClient
             _sendChannel.OnClose += OnSendChannelStatusChanged;
             _sendChannel.OnMessage += OnSendChannelMessage;
 
-            _receiveStream = new MediaStream();
+            ReceiveStream = new MediaStream();
 
-            // _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video);
-            // _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio);
+            var direction = _peerType == StreamPeerType.Publisher
+                ? RTCRtpTransceiverDirection.SendOnly
+                : RTCRtpTransceiverDirection.RecvOnly;
+            //StreamTodo: review adding transceivers (probably needed to disable/enable tracks during session)
+            // _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, new RTCRtpTransceiverInit
+            // {
+            //     direction = direction,
+            //     // sendEncodings = new RTCRtpEncodingParameters[]
+            //     // {
+            //     // },
+            //     streams = new MediaStream[]
+            //     {
+            //         ReceiveStream
+            //     }
+            // });
+            //_audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio);
         }
 
         public void RestartIce() => _peerConnection.RestartIce();
@@ -106,7 +122,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void AddIceCandidate(RTCIceCandidateInit iceCandidateInit)
         {
-            _logs.Warning($"---------------------[{_peerType}] Sdd ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
+            _logs.Warning($"---------------------[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
             {
@@ -139,6 +155,33 @@ namespace StreamVideo.Core.LowLevelClient
             _sendChannel.Close();
         }
 
+        public void Update()
+        {
+            if (ReceiveStream == null)
+            {
+                return;
+            }
+            Texture prevTexture = null;
+            IntPtr prevPointer = default;
+            var count = ReceiveStream.GetVideoTracks().Count();
+            foreach (var track in ReceiveStream.GetVideoTracks())
+            {
+                if (prevTexture != track.Texture)
+                {
+                    var hasCodeChanged = prevTexture?.GetHashCode() != track.Texture.GetHashCode();
+                    _logs.Warning($"%%%%%%%%%%%%%%%%%%%%%%%%%%% Texture Changed; {count}, hashCodeChanged: {hasCodeChanged}");
+                    prevTexture = track.Texture;
+                    
+                    VideoReceived?.Invoke(track.Texture);
+                }
+                if (prevPointer != track.TexturePtr)
+                {
+                    _logs.Warning($"%%%%%%%%%%%%%%%%%%%%%%%%%%% TexturePtr Changed; {count}");
+                    prevPointer = track.TexturePtr;
+                }
+            }
+        }
+
         private readonly RTCPeerConnection _peerConnection;
         private readonly RTCDataChannel _sendChannel;
         private readonly RTCRtpTransceiver _videoTransceiver;
@@ -148,7 +191,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
 
-        private MediaStream _receiveStream;
         private VideoStreamTrack _videoStreamTrack;
 
         private void OnIceCandidate(RTCIceCandidate candidate) => IceTrickled?.Invoke(candidate, _peerType);
@@ -183,11 +225,11 @@ namespace StreamVideo.Core.LowLevelClient
                     break;
                 case VideoStreamTrack videoStreamTrack:
 
+                    ReceiveStream = trackEvent.Streams.First();
+
                     //StreamTodo: handle receiving it again + cleanup (unsubscribe)
                     _videoStreamTrack = videoStreamTrack;
                     _videoStreamTrack.OnVideoReceived += OnVideoReceived;
-
-                    _receiveStream.AddTrack(trackEvent.Track);
 
                     break;
                 default:

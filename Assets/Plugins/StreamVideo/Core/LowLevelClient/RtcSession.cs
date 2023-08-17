@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
@@ -10,25 +11,29 @@ using Stream.Video.v1.Sfu.Models;
 using Stream.Video.v1.Sfu.Signal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Http;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
-using UnityEngine;
 using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
+using TrackType = Stream.Video.v1.Sfu.Models.TrackType;
 
 namespace StreamVideo.Core.LowLevelClient
 {
+    public delegate void ParticipantTrackChangedHandler(IStreamVideoCallParticipant participant, IStreamTrack track);
+    
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
 
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IDisposable
     {
-        public Action<Texture> VideoReceived;
-        
+        public event ParticipantTrackChangedHandler TrackAdded;
+
         public CallingState CallState
         {
             get => _callState;
@@ -74,9 +79,6 @@ namespace StreamVideo.Core.LowLevelClient
         public void Update()
         {
             _sfuWebSocket.Update();
-            
-            //StreamTodo: remove
-            _subscriber?.Update();
         }
 
         public async Task StartAsync(IStreamCall call)
@@ -161,7 +163,6 @@ namespace StreamVideo.Core.LowLevelClient
         private void CleanUpSession()
         {
             _pendingIceTrickleRequests.Clear();
-            ;
         }
 
         private async Task SubscribeToTracksAsync()
@@ -209,7 +210,6 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
         }
-
 
         private async Task SendIceCandidateAsync(RTCIceCandidate candidate, StreamPeerType streamPeerType)
         {
@@ -414,11 +414,60 @@ namespace StreamVideo.Core.LowLevelClient
             SendIceCandidateAsync(iceCandidate, peerType).LogIfFailed();
         }
 
+        private void OnSubscriberStreamAdded(MediaStream mediaStream)
+        {
+            var idParts = mediaStream.Id.Split(":");
+            var trackPrefix = idParts[0];
+            var trackTypeKey = idParts[1];
+            
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"Subscriber stream received, trackPrefix: {trackPrefix}, trackTypeKey: {trackTypeKey}");
+#endif
+
+            var participant = _activeCall.Participants.SingleOrDefault(p => p.TrackLookupPrefix == trackPrefix);
+            if (participant == null)
+            {
+                //StreamTodo: figure out severity of this case. Perhaps it's not an error, maybe we haven't received coordinator event yet like ParticipantJoined
+                _logs.Warning($"Failed to find participant with trackPrefix: {trackPrefix} for media stream with ID: {mediaStream.Id}");
+                return;
+            }
+
+
+            if (!TrackTypeExt.TryGetTrackType(trackTypeKey, out var trackType))
+            {
+                _logs.Error($"Failed to get {typeof(TrackType)} for value: {trackTypeKey} on media stream with ID: {mediaStream.Id}");
+                return;
+            }
+
+            if (trackType == Models.Sfu.TrackType.Unspecified)
+            {
+                _logs.Error($"Unexpected {nameof(trackType)} of value: {trackType} on media stream with ID: {mediaStream.Id}");
+                return;
+            }
+            
+            //StreamTodo: assert that we expect exactly one track per type.
+            //In theory stream can contain multiple tracks but we're extracting track type from stream ID so I assume it always has to be exactly one track
+
+            foreach (var track in mediaStream.GetAudioTracks())
+            {
+                //StreamTodo: verify why this is needed. Taken from Android SDK
+                track.Enabled = true;
+            }
+            
+            var internalParticipant = ((StreamVideoCallParticipant)participant);
+
+            foreach (var track in mediaStream.GetTracks())
+            {
+                internalParticipant.SetTrack(trackType, track, out var streamTrack);
+                TrackAdded?.Invoke(internalParticipant, streamTrack);
+            }
+        }
+
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
             _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers);
             _subscriber.IceTrickled += OnIceTrickled;
-            _subscriber.VideoReceived += OnVideoReceived;
+            _subscriber.StreamAdded += OnSubscriberStreamAdded;
         }
 
         private void DisposeSubscriber()
@@ -426,15 +475,10 @@ namespace StreamVideo.Core.LowLevelClient
             if (_subscriber != null)
             {
                 _subscriber.IceTrickled -= OnIceTrickled;
-                _subscriber.VideoReceived -= OnVideoReceived;
+                _subscriber.StreamAdded -= OnSubscriberStreamAdded;
                 _subscriber.Dispose();
                 _subscriber = null;
             }
-        }
-
-        private void OnVideoReceived(Texture obj)
-        {
-            VideoReceived?.Invoke(obj);
         }
 
         private void CreatePublisher(IEnumerable<ICEServer> iceServers)

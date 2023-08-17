@@ -23,6 +23,19 @@ namespace StreamVideo.Core
         IUpdateableFrom<JoinCallResponseInternalDTO, StreamCall>,
         IStreamCall
     {
+        //StreamTodo: add sorted participants
+        /**
+     * Sorted participants gives you the list of participants sorted by
+     * * anyone who is pinned
+     * * dominant speaker
+     * * if you are screensharing
+     * * last speaking at
+     * * all other video participants by when they joined
+     * * audio only participants by when they joined
+     *
+     */
+
+
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
 
         #region State

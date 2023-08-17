@@ -15,6 +15,7 @@ using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
@@ -51,6 +52,8 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action Reconnecting;
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
+        
+        public event ParticipantTrackChangedHandler TrackAdded;
 
         public ConnectionState ConnectionState => _coordinatorWS.ConnectionState;
 
@@ -153,11 +156,13 @@ namespace StreamVideo.Core.LowLevelClient
                 = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
 
             _rtcSession = new RtcSession(sfuWebSocketWrapper, _logs, _serializer, _httpClient);
+            _rtcSession.TrackAdded += OnTrackAdded;
 
             RegisterCoordinatorEventHandlers();
 
             LogErrorIfUpdateIsNotBeingCalled();
         }
+
 
         //StreamTodo: perhaps remove this overload, more != better
         public Task ConnectUserAsync(AuthCredentials authCredentials, CancellationToken cancellationToken = default)
@@ -259,11 +264,8 @@ namespace StreamVideo.Core.LowLevelClient
         //
         //     return call;
         // }
-
-        internal Task StartCallSessionAsync(IStreamCall call) => _rtcSession.StartAsync(call);
-
-        internal Task StopCallSessionAsync() => _rtcSession.StopAsync();
         
+
         public async Task<string> GetLocationHintAsync()
         {
             // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
@@ -282,7 +284,12 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.Dispose();
 
             _updateMonitorCts.Cancel();
-            _rtcSession?.Dispose();
+            
+            if (_rtcSession != null)
+            {
+                _rtcSession.TrackAdded -= OnTrackAdded;
+                _rtcSession.Dispose();
+            }
         }
 
         string IAuthProvider.ApiKey => _authCredentials.ApiKey;
@@ -321,6 +328,11 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CustomVideoEventInternalDTO> InternalCustomVideoEvent;
 
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
+        internal RtcSession RtcSession => _rtcSession;
+        
+        internal Task StartCallSessionAsync(IStreamCall call) => _rtcSession.StartAsync(call);
+
+        internal Task StopCallSessionAsync() => _rtcSession.StopAsync();
 
         private const string DefaultStreamAuthType = "jwt";
         private const string LocationHintHeaderKey = "x-amz-cf-pop";
@@ -339,9 +351,6 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IStreamClientConfig _config;
         private readonly IApplicationInfo _applicationInfo;
         private readonly RtcSession _rtcSession;
-
-        //StreamTodo: remove
-        internal RtcSession RtcSession => _rtcSession;
 
         private CancellationTokenSource _updateMonitorCts;
 
@@ -583,5 +592,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             return sb.ToString();
         }
+        
+        private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track) => TrackAdded?.Invoke(participant, track);
+
     }
 }

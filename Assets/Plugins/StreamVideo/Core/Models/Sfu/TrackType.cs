@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using TrackTypeInternalEnum = Stream.Video.v1.Sfu.Models.TrackType;
+using OriginalNameAttr = Google.Protobuf.Reflection.OriginalNameAttribute;
 
 namespace StreamVideo.Core.Models.Sfu
 {
-    public enum TrackType
+    internal enum TrackType
     {
         Unspecified = 0,
         Audio = 1,
@@ -41,5 +44,24 @@ namespace StreamVideo.Core.Models.Sfu
                     throw new ArgumentOutOfRangeException(nameof(trackType), trackType, null);
             }
         }
+
+        public static bool TryGetTrackType(string trackTypeStr, out TrackType trackType)
+            => TrackTypeMapping.TryGetValue(trackTypeStr.ToLower(), out trackType);
+
+        static TrackTypeExt()
+        {
+            var type = typeof(TrackTypeInternalEnum);
+
+            foreach (TrackTypeInternalEnum value in Enum.GetValues(typeof(TrackTypeInternalEnum)))
+            {
+                var memberInfos = type.GetMember(value.ToString());
+                var valueMemberInfo = memberInfos.First(m => m.DeclaringType == type);
+                var valueAttributes = valueMemberInfo.GetCustomAttributes(typeof(OriginalNameAttr), false);
+                var name = ((OriginalNameAttr)valueAttributes[0]).Name;
+                TrackTypeMapping.Add(name.ToLower(), value.ToPublicEnum());
+            }
+        }
+
+        private static readonly Dictionary<string, TrackType> TrackTypeMapping = new Dictionary<string, TrackType>();
     }
 }

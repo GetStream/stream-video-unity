@@ -9,5 +9,6 @@ namespace StreamVideo.Core.StatefulModels
     {
         string UserId { get; }
         string SessionId { get; }
+        string TrackLookupPrefix { get; }
     }
 }

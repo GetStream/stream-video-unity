@@ -15,7 +15,7 @@ namespace StreamVideo.Core.LowLevelClient
     internal class StreamPeerConnection : IDisposable
     {
         //StreamTodo: for debug only, figure this out better
-        public Action<Texture> VideoReceived;
+        //public Action<Texture> VideoReceived;
 
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
@@ -155,32 +155,23 @@ namespace StreamVideo.Core.LowLevelClient
             _sendChannel.Close();
         }
 
-        public void Update()
-        {
-            if (ReceiveStream == null)
-            {
-                return;
-            }
-            Texture prevTexture = null;
-            IntPtr prevPointer = default;
-            var count = ReceiveStream.GetVideoTracks().Count();
-            foreach (var track in ReceiveStream.GetVideoTracks())
-            {
-                if (prevTexture != track.Texture)
-                {
-                    var hasCodeChanged = prevTexture?.GetHashCode() != track.Texture.GetHashCode();
-                    _logs.Warning($"%%%%%%%%%%%%%%%%%%%%%%%%%%% Texture Changed; {count}, hashCodeChanged: {hasCodeChanged}");
-                    prevTexture = track.Texture;
-                    
-                    VideoReceived?.Invoke(track.Texture);
-                }
-                if (prevPointer != track.TexturePtr)
-                {
-                    _logs.Warning($"%%%%%%%%%%%%%%%%%%%%%%%%%%% TexturePtr Changed; {count}");
-                    prevPointer = track.TexturePtr;
-                }
-            }
-        }
+        // public void Update()
+        // {
+        //     if (ReceiveStream == null)
+        //     {
+        //         return;
+        //     }
+        //     Texture prevTexture = null;
+        //     foreach (var track in ReceiveStream.GetVideoTracks())
+        //     {
+        //         if (prevTexture != track.Texture)
+        //         {
+        //             prevTexture = track.Texture;
+        //             
+        //             VideoReceived?.Invoke(track.Texture);
+        //         }
+        //     }
+        // }
 
         private readonly RTCPeerConnection _peerConnection;
         private readonly RTCDataChannel _sendChannel;
@@ -219,30 +210,46 @@ namespace StreamVideo.Core.LowLevelClient
         {
             _logs.Warning($"$$$$$$$ [{_peerType}] OnTrack {trackEvent.Track.GetType()}");
 
-            switch (trackEvent.Track)
+            foreach (var stream in trackEvent.Streams)
             {
-                case AudioStreamTrack audioStreamTrack:
-                    break;
-                case VideoStreamTrack videoStreamTrack:
+                StreamAdded?.Invoke(stream);
 
-                    ReceiveStream = trackEvent.Streams.First();
-
-                    //StreamTodo: handle receiving it again + cleanup (unsubscribe)
-                    _videoStreamTrack = videoStreamTrack;
-                    _videoStreamTrack.OnVideoReceived += OnVideoReceived;
-
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                //StreamTodo: taken from android sdk, check why this is needed
+                foreach (var audioTrack in stream.GetAudioTracks())
+                {
+                    audioTrack.Enabled = true;
+                }
             }
+
+            // switch (trackEvent.Track)
+            // {
+            //     case AudioStreamTrack audioStreamTrack:
+            //         
+            //
+            //         audioStreamTrack.Enabled = true;
+            //         break;
+            //     case VideoStreamTrack videoStreamTrack:
+            //
+            //         ReceiveStream = trackEvent.Streams.First();
+            //
+            //         //StreamTodo: handle receiving it again + cleanup (unsubscribe)
+            //         _videoStreamTrack = videoStreamTrack;
+            //         _videoStreamTrack.OnVideoReceived += OnVideoReceived;
+            //
+            //         break;
+            //     default:
+            //         throw new ArgumentOutOfRangeException();
+            // }
         }
 
-        private void OnVideoReceived(Texture renderer)
-        {
-            _logs.Warning($"[{_peerType}] --------------------------------------------------VIDEO RECEIVED");
-            
-            VideoReceived?.Invoke(renderer);
-        }
+        public event Action<MediaStream> StreamAdded; 
+
+        // private void OnVideoReceived(Texture renderer)
+        // {
+        //     _logs.Warning($"[{_peerType}] --------------------------------------------------VIDEO RECEIVED");
+        //     
+        //     VideoReceived?.Invoke(renderer);
+        // }
 
         private void OnDataChannel(RTCDataChannel channel)
         {

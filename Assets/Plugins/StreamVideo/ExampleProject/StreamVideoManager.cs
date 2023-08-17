@@ -1,7 +1,8 @@
 using System;
-using System.IO;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
+using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
@@ -27,7 +28,7 @@ namespace StreamVideo.ExampleProject
             });
 
             _client.ConnectUserAsync(credentials).LogIfFailed();
-            _client.VideoReceived += ClientOnVideoReceived;
+            _client.TrackAdded += OnTrackAdded;
 
             //StreamTodo: handle by SDK
             StartCoroutine(WebRTC.Update());
@@ -53,6 +54,7 @@ namespace StreamVideo.ExampleProject
                 Debug.LogException(e);
             }
 
+            _client.TrackAdded -= OnTrackAdded;
             _client.Dispose();
             _client = null;
         }
@@ -98,6 +100,18 @@ namespace StreamVideo.ExampleProject
             catch (Exception e)
             {
                 Debug.LogException(e);
+            }
+        }
+        
+        private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+        {
+            if (track is StreamVideoTrack streamVideoTrack)
+            {
+                
+            }
+            else
+            {
+                Debug.LogError("Not supported track type: " + track.GetType());
             }
         }
         

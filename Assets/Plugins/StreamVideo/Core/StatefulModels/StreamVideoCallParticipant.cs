@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using StreamVideo.Core.InternalDTO.Responses;
+using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
@@ -16,6 +17,10 @@ namespace StreamVideo.Core.StatefulModels
         IUpdateableFrom<Participant, StreamVideoCallParticipant>,
         IStreamVideoCallParticipant
     {
+        public event ParticipantTrackChangedHandler TrackAdded;
+
+        public bool IsLocalParticipant => UserSessionId == Client.InternalLowLevelClient.RtcSession.SessionId;
+        
         #region Tracks
 
         public IStreamTrack AudioTrack => _audioTrack;
@@ -119,7 +124,7 @@ namespace StreamVideo.Core.StatefulModels
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
             
-            //StreamTodo: perhaps add TrackAdded?.Invoke(internalParticipant, streamTrack); here as well so that integrator can subscribe to call or to participants
+            TrackAdded?.Invoke(this, streamTrack);
         }
 
         protected override string InternalUniqueId

@@ -32,7 +32,6 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IDisposable
     {
-        public event ParticipantTrackChangedHandler TrackAdded;
 
         public CallingState CallState
         {
@@ -49,6 +48,8 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Warning($"Call state changed from {prevState} to {value}");
             }
         }
+        
+        public string SessionId { get; private set; }
 
         public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, ISerializer serializer, IHttpClient httpClient)
         {
@@ -90,7 +91,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public async Task StartAsync(IStreamCall call)
+        public async Task StartAsync(StreamCall call)
         {
             if (_activeCall != null)
             {
@@ -116,15 +117,15 @@ namespace StreamVideo.Core.LowLevelClient
                 CreatePublisher(iceServers);
             }
 
-            _sessionId = Guid.NewGuid().ToString();
-            _logs.Warning($"START Session: " + _sessionId);
+            SessionId = Guid.NewGuid().ToString();
+            _logs.Warning($"START Session: " + SessionId);
 
             var offer = await _subscriber.CreateOfferAsync();
             
             //Kotlin is not doing this
             //await _subscriber.SetLocalDescriptionAsync(ref offer);
 
-            _sfuWebSocket.SetSessionData(_sessionId, offer.sdp, sfuUrl, sfuToken);
+            _sfuWebSocket.SetSessionData(SessionId, offer.sdp, sfuUrl, sfuToken);
             await _sfuWebSocket.ConnectAsync();
 
             while (CallState != CallingState.Joined)
@@ -161,8 +162,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
 
-        private string _sessionId;
-        private IStreamCall _activeCall;
+        private StreamCall _activeCall;
         private IHttpClient _httpClient;
         private CallingState _callState;
 
@@ -181,7 +181,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             var request = new UpdateSubscriptionsRequest
             {
-                SessionId = _sessionId,
+                SessionId = SessionId,
             };
 
             request.Tracks.AddRange(tracks);
@@ -212,8 +212,8 @@ namespace StreamVideo.Core.LowLevelClient
                         TrackType = trackType,
                         Dimension = new VideoDimension
                         {
-                            Width = 600,
-                            Height = 600
+                            Width = 1200,
+                            Height = 1200
                         }
                     };
                 }
@@ -228,7 +228,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     PeerType = streamPeerType.ToPeerType(),
                     IceCandidate = _serializer.Serialize(candidate),
-                    SessionId = _sessionId,
+                    SessionId = SessionId,
                 };
 
                 if (_callState == CallingState.Joined)
@@ -314,7 +314,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     PeerType = PeerType.Subscriber,
                     Sdp = answer.sdp,
-                    SessionId = _sessionId
+                    SessionId = SessionId
                 };
 
                 await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer), preLog: true);
@@ -468,7 +468,7 @@ namespace StreamVideo.Core.LowLevelClient
             foreach (var track in mediaStream.GetTracks())
             {
                 internalParticipant.SetTrack(trackType, track, out var streamTrack);
-                TrackAdded?.Invoke(internalParticipant, streamTrack);
+                _activeCall.NotifyTrackAdded(internalParticipant, streamTrack);
             }
         }
 

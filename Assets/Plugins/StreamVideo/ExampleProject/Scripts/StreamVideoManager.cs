@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.StatefulModels;
@@ -28,7 +29,7 @@ namespace StreamVideo.ExampleProject
             });
 
             _client.ConnectUserAsync(credentials).LogIfFailed();
-            _client.TrackAdded += OnTrackAdded;
+
 
             //StreamTodo: handle by SDK
             StartCoroutine(WebRTC.Update());
@@ -54,7 +55,6 @@ namespace StreamVideo.ExampleProject
                 Debug.LogException(e);
             }
 
-            _client.TrackAdded -= OnTrackAdded;
             _client.Dispose();
             _client = null;
         }
@@ -85,33 +85,20 @@ namespace StreamVideo.ExampleProject
             {
                 Debug.Log("Join clicked");
 
-                if (!string.IsNullOrEmpty(_joinCallId))
+                var create = string.IsNullOrEmpty(_joinCallId);
+                var callId = create ? Guid.NewGuid().ToString() : _joinCallId;
+
+                var streamCall
+                    = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
+
+                foreach (var participant in streamCall.Participants)
                 {
-                    await _client.JoinCallAsync(StreamCallType.Default, _joinCallId, create: false, ring: true,
-                        notify: false);
-                }
-                else
-                {
-                    await _client.JoinCallAsync(StreamCallType.Development, Guid.NewGuid().ToString(), create: true,
-                        ring: true,
-                        notify: false);
+                    _uiManager.AddParticipant(participant);
                 }
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
-            }
-        }
-
-        private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
-        {
-            if (track is StreamVideoTrack streamVideoTrack)
-            {
-                streamVideoTrack.SetRenderTarget(_remoteImage);
-            }
-            else
-            {
-                Debug.LogError("Not supported track type: " + track.GetType());
             }
         }
     }

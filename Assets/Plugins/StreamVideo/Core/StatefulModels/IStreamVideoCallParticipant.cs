@@ -1,3 +1,4 @@
+using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.State;
 
 namespace StreamVideo.Core.StatefulModels
@@ -7,8 +8,12 @@ namespace StreamVideo.Core.StatefulModels
     /// </summary>
     public interface IStreamVideoCallParticipant : IStreamStatefulModel
     {
+        event ParticipantTrackChangedHandler TrackAdded;
+
         string UserId { get; }
         string SessionId { get; }
         string TrackLookupPrefix { get; }
+        string Name { get; }
+        bool IsLocalParticipant { get; }
     }
 }

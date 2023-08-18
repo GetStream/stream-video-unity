@@ -4,7 +4,8 @@
     "references": [
         "Stream.Core",
         "StreamVideo.Libs",
-        "Unity.WebRTC"
+        "Unity.WebRTC",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

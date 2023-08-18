@@ -15,7 +15,6 @@ using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.StatefulModels;
-using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
@@ -52,8 +51,6 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action Reconnecting;
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
-        
-        public event ParticipantTrackChangedHandler TrackAdded;
 
         public ConnectionState ConnectionState => _coordinatorWS.ConnectionState;
 
@@ -156,7 +153,6 @@ namespace StreamVideo.Core.LowLevelClient
                 = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
 
             _rtcSession = new RtcSession(sfuWebSocketWrapper, _logs, _serializer, _httpClient);
-            _rtcSession.TrackAdded += OnTrackAdded;
 
             RegisterCoordinatorEventHandlers();
 
@@ -287,7 +283,6 @@ namespace StreamVideo.Core.LowLevelClient
             
             if (_rtcSession != null)
             {
-                _rtcSession.TrackAdded -= OnTrackAdded;
                 _rtcSession.Dispose();
             }
         }
@@ -330,7 +325,7 @@ namespace StreamVideo.Core.LowLevelClient
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
         internal RtcSession RtcSession => _rtcSession;
         
-        internal Task StartCallSessionAsync(IStreamCall call) => _rtcSession.StartAsync(call);
+        internal Task StartCallSessionAsync(StreamCall call) => _rtcSession.StartAsync(call);
 
         internal Task StopCallSessionAsync() => _rtcSession.StopAsync();
 
@@ -592,8 +587,5 @@ namespace StreamVideo.Core.LowLevelClient
 
             return sb.ToString();
         }
-        
-        private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track) => TrackAdded?.Invoke(participant, track);
-
     }
 }

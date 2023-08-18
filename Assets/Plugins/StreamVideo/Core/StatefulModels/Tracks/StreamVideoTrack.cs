@@ -34,6 +34,8 @@ namespace StreamVideo.Core.StatefulModels.Tracks
                 _targetTexture = new RenderTexture(source.width, source.height, 0, RenderTextureFormat.Default);
                 _targetImage.texture = _targetTexture;
             }
+            
+            var sizeRatio = (float)source.width / source.height;
 
             var sizeChanged = source.width != _targetTexture.width || source.height != _targetTexture.height;
             if (sizeChanged)
@@ -48,6 +50,10 @@ namespace StreamVideo.Core.StatefulModels.Tracks
                 _targetTexture.height = source.height;
                 _targetTexture.Create();
             }
+            
+            var rect = _targetImage.GetComponent<RectTransform>();
+            var current = rect.sizeDelta;
+            rect.sizeDelta = new Vector2(current.x, current.x * (1/sizeRatio));
 
             Graphics.Blit(source, _targetTexture);
             _targetTexture.IncrementUpdateCount();

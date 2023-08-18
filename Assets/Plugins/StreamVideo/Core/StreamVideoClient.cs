@@ -8,7 +8,6 @@ using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
-using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
@@ -24,8 +23,6 @@ namespace StreamVideo.Core
 {
     public class StreamVideoClient : IStreamVideoClient
     {
-        public event ParticipantTrackChangedHandler TrackAdded;
-        
         /// <summary>
         /// Use this method to create the main client instance
         /// </summary>
@@ -143,7 +140,7 @@ namespace StreamVideo.Core
             var joinCallResponse = await InternalLowLevelClient.InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
             _cache.TryCreateOrUpdate(joinCallResponse);
             
-            await InternalLowLevelClient.StartCallSessionAsync(call);
+            await InternalLowLevelClient.StartCallSessionAsync((StreamCall)call);
 
             return call;
         }
@@ -208,8 +205,6 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallUnblockedUserEvent += OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalConnectionErrorEvent += OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent += OnInternalCustomVideoEvent;
-            
-            InternalLowLevelClient.TrackAdded += InternalLowLevelClientOnTrackAdded;
         }
 
         private void UnsubscribeFrom(StreamVideoLowLevelClient lowLevelClient)
@@ -241,8 +236,6 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallUnblockedUserEvent -= OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalConnectionErrorEvent -= OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent -= OnInternalCustomVideoEvent;
-            
-            lowLevelClient.TrackAdded -= InternalLowLevelClientOnTrackAdded;
         }
 
         private readonly ILogs _logs;
@@ -383,8 +376,5 @@ namespace StreamVideo.Core
         {
             // Implement handling logic for CustomVideoEventInternalDTO here
         }
-
-        private void InternalLowLevelClientOnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track) => TrackAdded?.Invoke(participant, track);
-
     }
 }

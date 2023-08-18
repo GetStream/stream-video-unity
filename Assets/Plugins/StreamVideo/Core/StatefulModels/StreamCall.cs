@@ -9,6 +9,7 @@ using StreamVideo.Core.Models;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
 
 namespace StreamVideo.Core
@@ -34,6 +35,8 @@ namespace StreamVideo.Core
      * * audio only participants by when they joined
      *
      */
+
+        public event ParticipantTrackChangedHandler TrackAdded;
 
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
@@ -235,6 +238,8 @@ namespace StreamVideo.Core
         {
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
         }
+        
+        internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track) => TrackAdded?.Invoke(participant, track);
 
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
@@ -266,7 +271,5 @@ namespace StreamVideo.Core
         private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
         private string _id;
-
-
     }
 }

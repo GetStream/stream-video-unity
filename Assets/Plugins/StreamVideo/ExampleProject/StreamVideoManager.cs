@@ -39,7 +39,7 @@ namespace StreamVideo.ExampleProject
         protected async void OnDestroy()
         {
             _uiManager.JoinClicked -= OnJoinClicked;
-            
+
             if (_client == null)
             {
                 return;
@@ -59,26 +59,25 @@ namespace StreamVideo.ExampleProject
             _client = null;
         }
 
-        [SerializeField] 
+        [SerializeField]
         private UIManager _uiManager;
 
         [SerializeField]
         private string _joinCallId = "3TK1d0wL2we0";
-        
+
         [SerializeField]
         private string _apiKey = "";
-        
+
         [SerializeField]
         private string _userId = "";
-        
+
         [SerializeField]
         private string _userToken = "";
-        
+
         [SerializeField]
         private RawImage _remoteImage;
 
         private IStreamVideoClient _client;
-        private RenderTexture _renderTexture;
 
         private async void OnJoinClicked()
         {
@@ -93,7 +92,8 @@ namespace StreamVideo.ExampleProject
                 }
                 else
                 {
-                    await _client.JoinCallAsync(StreamCallType.Development, Guid.NewGuid().ToString(), create: true, ring: true,
+                    await _client.JoinCallAsync(StreamCallType.Development, Guid.NewGuid().ToString(), create: true,
+                        ring: true,
                         notify: false);
                 }
             }
@@ -102,44 +102,17 @@ namespace StreamVideo.ExampleProject
                 Debug.LogException(e);
             }
         }
-        
+
         private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {
             if (track is StreamVideoTrack streamVideoTrack)
             {
-                
+                streamVideoTrack.SetRenderTarget(_remoteImage);
             }
             else
             {
                 Debug.LogError("Not supported track type: " + track.GetType());
             }
-        }
-        
-        private void ClientOnVideoReceived(Texture obj)
-        {
-            if (_remoteImage == null)
-            {
-                Debug.LogError("Remote texture is not set");
-                return;
-            }
-
-            if (_renderTexture == null || _renderTexture.width != obj.width || _renderTexture.height != obj.height)
-            {
-                if (_renderTexture != null)
-                {
-                    Destroy(_renderTexture);
-                    _renderTexture = null;
-                }
-                _renderTexture = new RenderTexture(obj.width, obj.height, 0, RenderTextureFormat.Default);
-            }
-
-            if (_remoteImage.texture == null)
-            {
-                _remoteImage.texture = _renderTexture;
-            }
-            
-            Graphics.Blit(obj, _renderTexture);
-            _renderTexture.IncrementUpdateCount();
         }
     }
 }

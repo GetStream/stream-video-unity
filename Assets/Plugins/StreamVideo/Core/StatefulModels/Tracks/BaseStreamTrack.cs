@@ -15,5 +15,10 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         {
             Track = track ?? throw new ArgumentNullException(nameof(track));
         }
+
+        internal virtual void Update()
+        {
+            
+        }
     }
 }

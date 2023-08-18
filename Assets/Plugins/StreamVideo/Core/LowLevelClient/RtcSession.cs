@@ -79,6 +79,15 @@ namespace StreamVideo.Core.LowLevelClient
         public void Update()
         {
             _sfuWebSocket.Update();
+
+            //StreamTodo: we could remove this if we'd maintain a collection of tracks and update them directly
+            if (_activeCall != null)
+            {
+                foreach (StreamVideoCallParticipant p in _activeCall.Participants)
+                {
+                    p.Update();
+                }
+            }
         }
 
         public async Task StartAsync(IStreamCall call)

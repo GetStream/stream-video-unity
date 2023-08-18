@@ -84,25 +84,11 @@ namespace StreamVideo.Core.StatefulModels
             UserSessionId = dto.UserSessionId;
         }
 
-        internal IStreamTrack GetAssociatedTrack(TrackType type)
+        internal void Update()
         {
-            switch (type)
-            {
-                case TrackType.Unspecified:
-                    throw new NotSupportedException();
-                    break;
-                case TrackType.Audio: return _audioTrack;
-                case TrackType.Video: return _videoTrack;
-                case TrackType.ScreenShare: return _screenShareTrack;
-                case TrackType.ScreenShareAudio:
-
-                    //StreamTodo: how to handle this?
-                    throw new NotImplementedException();
-                    
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
+            _audioTrack.Update();
+            _videoTrack.Update();
+            _screenShareTrack.Update();
         }
 
         internal void SetTrack(TrackType type, MediaStreamTrack mediaStreamTrack, out IStreamTrack streamTrack)

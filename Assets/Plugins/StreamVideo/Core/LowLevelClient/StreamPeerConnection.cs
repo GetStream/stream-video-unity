@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using StreamVideo.Core.Models;
 using StreamVideo.Libs.Logs;
 using Unity.WebRTC;
-using UnityEngine;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -14,13 +13,10 @@ namespace StreamVideo.Core.LowLevelClient
     /// </summary>
     internal class StreamPeerConnection : IDisposable
     {
-        //StreamTodo: for debug only, figure this out better
-        //public Action<Texture> VideoReceived;
+        public event Action<MediaStream> StreamAdded;
 
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
-        
-        public MediaStream ReceiveStream { get; private set; }
 
         public bool IsRemoteDescriptionAvailable
         {
@@ -70,16 +66,6 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnNegotiationNeeded += OnNegotiationNeeded;
             _peerConnection.OnConnectionStateChange += OnConnectionStateChange;
             _peerConnection.OnTrack += OnTrack;
-            _peerConnection.OnDataChannel += OnDataChannel;
-
-            //StreamTodo: is data channel needed? 
-            _sendChannel = _peerConnection.CreateDataChannel("sendChannel");
-
-            _sendChannel.OnOpen += OnSendChannelStatusChanged;
-            _sendChannel.OnClose += OnSendChannelStatusChanged;
-            _sendChannel.OnMessage += OnSendChannelMessage;
-
-            ReceiveStream = new MediaStream();
 
             var direction = _peerType == StreamPeerType.Publisher
                 ? RTCRtpTransceiverDirection.SendOnly
@@ -144,37 +130,11 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnNegotiationNeeded -= OnNegotiationNeeded;
             _peerConnection.OnConnectionStateChange -= OnConnectionStateChange;
             _peerConnection.OnTrack -= OnTrack;
-            _peerConnection.OnDataChannel -= OnDataChannel;
 
             _peerConnection.Close();
-
-            _sendChannel.OnOpen -= OnSendChannelStatusChanged;
-            _sendChannel.OnClose -= OnSendChannelStatusChanged;
-            _sendChannel.OnMessage -= OnSendChannelMessage;
-
-            _sendChannel.Close();
         }
 
-        // public void Update()
-        // {
-        //     if (ReceiveStream == null)
-        //     {
-        //         return;
-        //     }
-        //     Texture prevTexture = null;
-        //     foreach (var track in ReceiveStream.GetVideoTracks())
-        //     {
-        //         if (prevTexture != track.Texture)
-        //         {
-        //             prevTexture = track.Texture;
-        //             
-        //             VideoReceived?.Invoke(track.Texture);
-        //         }
-        //     }
-        // }
-
         private readonly RTCPeerConnection _peerConnection;
-        private readonly RTCDataChannel _sendChannel;
         private readonly RTCRtpTransceiver _videoTransceiver;
         private readonly RTCRtpTransceiver _audioTransceiver;
         private readonly ILogs _logs;
@@ -220,50 +180,6 @@ namespace StreamVideo.Core.LowLevelClient
                     audioTrack.Enabled = true;
                 }
             }
-
-            // switch (trackEvent.Track)
-            // {
-            //     case AudioStreamTrack audioStreamTrack:
-            //         
-            //
-            //         audioStreamTrack.Enabled = true;
-            //         break;
-            //     case VideoStreamTrack videoStreamTrack:
-            //
-            //         ReceiveStream = trackEvent.Streams.First();
-            //
-            //         //StreamTodo: handle receiving it again + cleanup (unsubscribe)
-            //         _videoStreamTrack = videoStreamTrack;
-            //         _videoStreamTrack.OnVideoReceived += OnVideoReceived;
-            //
-            //         break;
-            //     default:
-            //         throw new ArgumentOutOfRangeException();
-            // }
-        }
-
-        public event Action<MediaStream> StreamAdded; 
-
-        // private void OnVideoReceived(Texture renderer)
-        // {
-        //     _logs.Warning($"[{_peerType}] --------------------------------------------------VIDEO RECEIVED");
-        //     
-        //     VideoReceived?.Invoke(renderer);
-        // }
-
-        private void OnDataChannel(RTCDataChannel channel)
-        {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnDataChannel");
-        }
-
-        private void OnSendChannelStatusChanged()
-        {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnSendChannelStatusChanged");
-        }
-
-        private void OnSendChannelMessage(byte[] bytes)
-        {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnSendChannelMessage");
         }
     }
 }

@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Stream.Core",
-        "StreamVideo.Libs"
+        "StreamVideo.Libs",
+        "Unity.WebRTC"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

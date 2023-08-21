@@ -2,6 +2,7 @@
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using TMPro;
+using Unity.WebRTC;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,7 +35,7 @@ namespace StreamVideo.ExampleProject
                 _participant.TrackAdded -= OnParticipantTrackAdded;
             }
         }
-        
+
         [SerializeField]
         private TMP_Text _name;
 
@@ -42,16 +43,28 @@ namespace StreamVideo.ExampleProject
         private RawImage _video;
 
         private IStreamVideoCallParticipant _participant;
+        private AudioSource _audioSource;
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {
             switch (track)
             {
                 case StreamAudioTrack streamAudioTrack:
+                    Debug.LogWarning("Audio source received");
+                    if (_audioSource != null)
+                    {
+                        Debug.LogError("Multiple audio track!");
+                        return;
+                    }
+
+                    _audioSource = gameObject.AddComponent<AudioSource>();
+                    streamAudioTrack.SetAudioSourceTarget(_audioSource);
                     break;
+
                 case StreamVideoTrack streamVideoTrack:
                     streamVideoTrack.SetRenderTarget(_video);
                     break;
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(track));
             }

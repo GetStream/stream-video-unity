@@ -441,7 +441,6 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-
             if (!TrackTypeExt.TryGetTrackType(trackTypeKey, out var trackType))
             {
                 _logs.Error($"Failed to get {typeof(TrackType)} for value: {trackTypeKey} on media stream with ID: {mediaStream.Id}");

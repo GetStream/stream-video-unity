@@ -83,6 +83,9 @@ namespace StreamVideo.Core.StatefulModels
             }
         }
 
+        public override string ToString()
+            => $"{nameof(StreamVideoCallParticipant)} with User ID: {UserId} & Session ID: {SessionId}";
+
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(Participant dto)
         {
@@ -150,6 +153,13 @@ namespace StreamVideo.Core.StatefulModels
         internal void SetTrackEnabled(TrackType type, bool enabled)
         {
             var streamTrack = GetStreamTrack(type);
+
+            if (streamTrack == null)
+            {
+                Logs.Error($"Failed to get track of type `{type}` for: {this}");
+                return;
+            }
+            
             streamTrack.SetEnabled(enabled);
 
             //StreamTodo: we should trigger some event that track status changed

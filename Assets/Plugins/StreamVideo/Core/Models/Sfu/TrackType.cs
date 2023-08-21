@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.WebRTC;
 using TrackTypeInternalEnum = Stream.Video.v1.Sfu.Models.TrackType;
 using OriginalNameAttr = Google.Protobuf.Reflection.OriginalNameAttribute;
 
@@ -17,6 +18,17 @@ namespace StreamVideo.Core.Models.Sfu
 
     internal static class TrackTypeExt
     {
+        public static TrackTypeInternalEnum ToInternalEnum(this TrackKind trackType)
+        {
+            switch (trackType)
+            {
+                case TrackKind.Audio: return TrackTypeInternalEnum.Audio;
+                case TrackKind.Video: return TrackTypeInternalEnum.Video;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(trackType), trackType, null);
+            }
+        }
+        
         public static TrackTypeInternalEnum ToInternalEnum(this TrackType trackType)
         {
             switch (trackType)

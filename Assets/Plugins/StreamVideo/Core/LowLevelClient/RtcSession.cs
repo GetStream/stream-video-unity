@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
+using Google.Protobuf.Collections;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
 using Stream.Video.v1.Sfu.Signal;
@@ -21,6 +22,7 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
+using UnityEngine;
 using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using TrackTypeInternal = Stream.Video.v1.Sfu.Models.TrackType;
@@ -28,7 +30,7 @@ using TrackTypeInternal = Stream.Video.v1.Sfu.Models.TrackType;
 namespace StreamVideo.Core.LowLevelClient
 {
     public delegate void ParticipantTrackChangedHandler(IStreamVideoCallParticipant participant, IStreamTrack track);
-    
+
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
 
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
@@ -49,7 +51,7 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Warning($"Call state changed from {prevState} to {value}");
             }
         }
-        
+
         public string SessionId { get; private set; }
 
         public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, ISerializer serializer, IHttpClient httpClient)
@@ -114,7 +116,7 @@ namespace StreamVideo.Core.LowLevelClient
             var sfuToken = call.Credentials.Token;
             var iceServers = call.Credentials.IceServers;
             //StreamTodo: what to do with iceServers?
-            
+
             CreateSubscriber(iceServers);
 
             if (CanPublish())
@@ -126,7 +128,7 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning($"START Session: " + SessionId);
 
             var offer = await _subscriber.CreateOfferAsync();
-            
+
             //Kotlin is not doing this
             //await _subscriber.SetLocalDescriptionAsync(ref offer);
 
@@ -296,10 +298,9 @@ namespace StreamVideo.Core.LowLevelClient
         private async void OnSfuSubscriberOffer(SubscriberOffer subscriberOffer)
         {
             //StreamTodo: check RtcSession.kt handleSubscriberOffer for the retry logic
-            
+
             try
             {
-                
                 //StreamTodo: handle subscriberOffer.iceRestart
                 var rtcSessionDescription = new RTCSessionDescription
                 {
@@ -310,7 +311,7 @@ namespace StreamVideo.Core.LowLevelClient
                 await _subscriber.SetRemoteDescriptionAsync(rtcSessionDescription);
 
                 var answer = await _subscriber.CreateAnswerAsync();
-                
+
                 //StreamTodo: mangle SDP
 
                 await _subscriber.SetLocalDescriptionAsync(ref answer);
@@ -322,27 +323,27 @@ namespace StreamVideo.Core.LowLevelClient
                     SessionId = SessionId
                 };
 
-                await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer), preLog: true);
-
+                await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
+                    preLog: true);
             }
             catch (Exception e)
             {
                 _logs.Exception(e);
             }
         }
-        
+
         private void OnSfuTrackUnpublished(TrackUnpublished trackUnpublished)
         {
             var userId = trackUnpublished.UserId;
             var sessionId = trackUnpublished.SessionId;
             var type = trackUnpublished.Type.ToPublicEnum();
             var cause = trackUnpublished.Cause;
-            
+
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
             var participant = trackUnpublished.Participant;
 
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, out var streamParticipant);
-            
+
             if (participant != null && streamParticipant != null)
             {
                 streamParticipant.UpdateFromSfu(participant);
@@ -354,30 +355,33 @@ namespace StreamVideo.Core.LowLevelClient
             var userId = trackPublished.UserId;
             var sessionId = trackPublished.SessionId;
             var type = trackPublished.Type.ToPublicEnum();
-            
+
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
             var participant = trackPublished.Participant;
 
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, out var streamParticipant);
-            
+
             if (participant != null && streamParticipant != null)
             {
                 streamParticipant.UpdateFromSfu(participant);
             }
         }
 
-        private void UpdateParticipantTracksState(string userId, string sessionId, TrackType trackType, bool isEnabled, out StreamVideoCallParticipant participant)
+        private void UpdateParticipantTracksState(string userId, string sessionId, TrackType trackType, bool isEnabled,
+            out StreamVideoCallParticipant participant)
         {
-            participant = (StreamVideoCallParticipant)_activeCall.Participants.FirstOrDefault(p => p.SessionId == sessionId);
+            participant = (StreamVideoCallParticipant)_activeCall.Participants.FirstOrDefault(p
+                => p.SessionId == sessionId);
             if (participant == null)
             {
                 _logs.Error($"Failed to find participant with session ID: `{sessionId}` and user ID: `{userId}`");
                 return;
             }
-            
+
             participant.SetTrackEnabled(trackType, isEnabled);
         }
 
+        //StreamTodo: implement retry strategy like in Android SDK
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
         {
@@ -457,17 +461,103 @@ namespace StreamVideo.Core.LowLevelClient
      * - the sdp didn't change
      * If that fails ask the call monitor to do an ice restart
      */
-        private void OnNegotiationNeeded()
+        private async void OnPublisherNegotiationNeeded()
         {
-            //This is called for publisher only
+            try
+            {
+                var offer = await _publisher.CreateOfferAsync();
+                await _publisher.SetLocalDescriptionAsync(ref offer);
 
-            //create local offer
-            //SetLocalDescription
-            //SetPublisherRequest <- only when JoinEventResponse was received -> State == Joined
+                //StreamTodo: timeout + break if we're disconnecting/reconnecting
+                while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
+                {
+                    await Task.Delay(1);
+                }
 
-            // getPublisherTracks()
-            //SetPublisherRequest
-            //setRemoteDescription (from SetPublisherResponse)
+                var tracks = GetPublisherTracks();
+
+                //StreamTodo: mangle SDP
+                var request = new SetPublisherRequest
+                {
+                    Sdp = offer.sdp,
+                    SessionId = SessionId,
+                };
+                request.Tracks.AddRange(tracks);
+
+                var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher));
+
+                await _publisher.SetRemoteDescriptionAsync(new RTCSessionDescription()
+                {
+                    type = RTCSdpType.Answer,
+                    sdp = result.Sdp
+                });
+            }
+            catch (Exception e)
+            {
+                _logs.Exception(e);
+            }
+        }
+
+        private IEnumerable<TrackInfo> GetPublisherTracks()
+        {
+            //StreamTodo: get resolution from some IMediaDeviceProvider / IMediaSourceProvider
+            var captureResolution = (Width: 1920, Height: 1080);
+
+            var senderTracks = _publisher.GetTransceivers().Where(t
+                => t.Direction == RTCRtpTransceiverDirection.SendOnly && t.Sender?.Track != null);
+            
+            _logs.Warning($"GetPublisherTracks - transceivers: {senderTracks?.Count()} ");
+            
+            //StreamTodo: figure out TrackType, because we rely on transceiver track type mapping we don't support atm screen video/audio share tracks
+            //This implementation is based on the Android SDK, perhaps we shouldn't rely on GetTransceivers() but maintain our own TrackType => Transceiver mapping
+
+            foreach (var transceiver in senderTracks)
+            {
+                var videoLayers = GetVideoLayers(transceiver, captureResolution);
+                _logs.Warning($"Video layers: {videoLayers.Count()} for transceiver: {transceiver.Sender.Track.Kind}");
+                var trackInfo = new TrackInfo
+                {
+                    TrackId = transceiver.Sender.Track.Id,
+                    TrackType = transceiver.Sender.Track.Kind.ToInternalEnum(),
+                };
+                trackInfo.Layers.AddRange(videoLayers);
+                yield return trackInfo;
+            }
+        }
+
+        private IEnumerable<VideoLayer> GetVideoLayers(RTCRtpTransceiver transceiver, (int Width, int Height) captureResolution)
+        {
+            foreach (var encoding in transceiver.Sender.GetParameters().encodings)
+            {
+                var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
+                var width = (uint)(captureResolution.Width / scaleBy);
+                var height = (uint)(captureResolution.Height / scaleBy);
+
+                var quality = EncodingsToVideoQuality(encoding);
+
+                yield return new VideoLayer
+                {
+                    Rid = encoding.rid,
+                    VideoDimension = new VideoDimension
+                    {
+                        Width = width,
+                        Height = height
+                    },
+                    Bitrate = (uint)(encoding.maxBitrate ?? 0),
+                    Fps = 0, //StreamTodo: get max FPS
+                    Quality = quality,
+                };
+            }
+        }
+
+        private static VideoQuality EncodingsToVideoQuality(RTCRtpEncodingParameters encodings)
+        {
+            switch (encodings.rid)
+            {
+                case "f": return VideoQuality.High;
+                case "h": return VideoQuality.Mid;
+                default: return VideoQuality.LowUnspecified;
+            }
         }
 
         private void OnIceTrickled(RTCIceCandidate iceCandidate, StreamPeerType peerType)
@@ -480,7 +570,7 @@ namespace StreamVideo.Core.LowLevelClient
             var idParts = mediaStream.Id.Split(":");
             var trackPrefix = idParts[0];
             var trackTypeKey = idParts[1];
-            
+
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"Subscriber stream received, trackPrefix: {trackPrefix}, trackTypeKey: {trackTypeKey}");
 #endif
@@ -489,22 +579,25 @@ namespace StreamVideo.Core.LowLevelClient
             if (participant == null)
             {
                 //StreamTodo: figure out severity of this case. Perhaps it's not an error, maybe we haven't received coordinator event yet like ParticipantJoined
-                _logs.Warning($"Failed to find participant with trackPrefix: {trackPrefix} for media stream with ID: {mediaStream.Id}");
+                _logs.Warning(
+                    $"Failed to find participant with trackPrefix: {trackPrefix} for media stream with ID: {mediaStream.Id}");
                 return;
             }
 
             if (!TrackTypeExt.TryGetTrackType(trackTypeKey, out var trackType))
             {
-                _logs.Error($"Failed to get {typeof(TrackType)} for value: {trackTypeKey} on media stream with ID: {mediaStream.Id}");
+                _logs.Error(
+                    $"Failed to get {typeof(TrackType)} for value: {trackTypeKey} on media stream with ID: {mediaStream.Id}");
                 return;
             }
 
             if (trackType == TrackType.Unspecified)
             {
-                _logs.Error($"Unexpected {nameof(trackType)} of value: {trackType} on media stream with ID: {mediaStream.Id}");
+                _logs.Error(
+                    $"Unexpected {nameof(trackType)} of value: {trackType} on media stream with ID: {mediaStream.Id}");
                 return;
             }
-            
+
             //StreamTodo: assert that we expect exactly one track per type.
             //In theory stream can contain multiple tracks but we're extracting track type from stream ID so I assume it always has to be exactly one track
 
@@ -513,7 +606,7 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTodo: verify why this is needed. Taken from Android SDK
                 track.Enabled = true;
             }
-            
+
             var internalParticipant = ((StreamVideoCallParticipant)participant);
 
             foreach (var track in mediaStream.GetTracks())
@@ -545,7 +638,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers);
             _publisher.IceTrickled += OnIceTrickled;
-            _publisher.NegotiationNeeded += OnNegotiationNeeded;
+            _publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
         }
 
         private void DisposePublisher()
@@ -553,7 +646,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (_publisher != null)
             {
                 _publisher.IceTrickled -= OnIceTrickled;
-                _publisher.NegotiationNeeded -= OnNegotiationNeeded;
+                _publisher.NegotiationNeeded -= OnPublisherNegotiationNeeded;
                 _publisher.Dispose();
                 _publisher = null;
             }

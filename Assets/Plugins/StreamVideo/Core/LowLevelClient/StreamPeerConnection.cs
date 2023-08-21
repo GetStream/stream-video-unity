@@ -67,22 +67,99 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnConnectionStateChange += OnConnectionStateChange;
             _peerConnection.OnTrack += OnTrack;
 
-            var direction = _peerType == StreamPeerType.Publisher
-                ? RTCRtpTransceiverDirection.SendOnly
-                : RTCRtpTransceiverDirection.RecvOnly;
-            //StreamTodo: review adding transceivers (probably needed to disable/enable tracks during session)
-            // _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, new RTCRtpTransceiverInit
-            // {
-            //     direction = direction,
-            //     // sendEncodings = new RTCRtpEncodingParameters[]
-            //     // {
-            //     // },
-            //     streams = new MediaStream[]
-            //     {
-            //         ReceiveStream
-            //     }
-            // });
-            //_audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio);
+            //StreamTodo: for Publisher we need to wait for SFU connected in order to buildTrackId with state.trackLookupPrefix
+            var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video);
+            var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio);
+
+            _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
+            _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
+        }
+
+        private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind)
+        {
+            if (type == StreamPeerType.Subscriber)
+            {
+                switch (kind)
+                {
+                    case TrackKind.Audio:
+                    case TrackKind.Video:
+                        return new RTCRtpTransceiverInit
+                        {
+                            direction = RTCRtpTransceiverDirection.RecvOnly,
+                        };
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+                }
+            }
+
+            if (type == StreamPeerType.Publisher)
+            {
+                switch (kind)
+                {
+                    case TrackKind.Audio:
+
+                        var audioEncoding = new RTCRtpEncodingParameters
+                        {
+                            active = true,
+                            maxBitrate = 500_000,
+                            //minBitrate = null,
+                            //maxFramerate = null,
+                            scaleResolutionDownBy = 1.0,
+                            rid = "a"
+                        };
+
+                        return new RTCRtpTransceiverInit
+                        {
+                            direction = RTCRtpTransceiverDirection.SendOnly,
+                            sendEncodings = new RTCRtpEncodingParameters[]
+                            {
+                                audioEncoding
+                            }
+                        };
+
+                    case TrackKind.Video:
+
+                        //StreamTodo: move to some config + perhaps allow user to set this
+                        var maxPublishingBitrate = (ulong)1_200_000;
+
+                        var fullQuality = new RTCRtpEncodingParameters
+                        {
+                            active = true,
+                            maxBitrate = maxPublishingBitrate,
+                            scaleResolutionDownBy = 1.0,
+                            rid = "f"
+                        };
+
+                        var halfQuality = new RTCRtpEncodingParameters
+                        {
+                            active = true,
+                            maxBitrate = maxPublishingBitrate / 2,
+                            scaleResolutionDownBy = 2.0,
+                            rid = "f"
+                        };
+
+                        var quarterQuality = new RTCRtpEncodingParameters
+                        {
+                            active = true,
+                            maxBitrate = maxPublishingBitrate / 4,
+                            scaleResolutionDownBy = 4.0,
+                            rid = "f"
+                        };
+
+                        return new RTCRtpTransceiverInit
+                        {
+                            direction = RTCRtpTransceiverDirection.SendOnly,
+                            sendEncodings = new RTCRtpEncodingParameters[]
+                            {
+                                fullQuality, halfQuality, quarterQuality
+                            }
+                        };
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+                }
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
 
         public void RestartIce() => _peerConnection.RestartIce();
@@ -108,7 +185,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void AddIceCandidate(RTCIceCandidateInit iceCandidateInit)
         {
-            _logs.Warning($"---------------------[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
+            _logs.Warning(
+                $"---------------------[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
             {
@@ -120,8 +198,10 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public Task<RTCSessionDescription> CreateOfferAsync() => _peerConnection.CreateOfferAsync();
-        
+
         public Task<RTCSessionDescription> CreateAnswerAsync() => _peerConnection.CreateAnswerAsync();
+
+        public IEnumerable<RTCRtpTransceiver> GetTransceivers() => _peerConnection.GetTransceivers();
 
         public void Dispose()
         {

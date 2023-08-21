@@ -2,6 +2,6 @@
 {
     public interface IStreamTrack
     {
-        bool IsActive { get; }
+        bool Enabled { get; }
     }
 }

@@ -18,6 +18,12 @@ namespace StreamVideo.ExampleProject
             }
 
             _participant = participant ?? throw new ArgumentNullException(nameof(participant));
+
+            foreach (var track in _participant.GetTracks())
+            {
+                OnParticipantTrackAdded(_participant, track);
+            }
+            
             _participant.TrackAdded += OnParticipantTrackAdded;
 
             _name.text = _participant.Name;

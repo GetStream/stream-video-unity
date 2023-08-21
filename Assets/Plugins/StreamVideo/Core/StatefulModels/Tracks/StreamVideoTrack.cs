@@ -7,6 +7,11 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 {
     public class StreamVideoTrack : BaseStreamTrack<VideoStreamTrack>
     {
+        public StreamVideoTrack(MediaStreamTrack track) 
+            : base(track)
+        {
+        }
+        
         //StreamTodo: can we remove Unity dependency? 
         public void SetRenderTarget(RawImage targetImage)
         {

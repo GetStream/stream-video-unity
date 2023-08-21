@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.State;
+using StreamVideo.Core.StatefulModels.Tracks;
 
 namespace StreamVideo.Core.StatefulModels
 {
@@ -15,5 +17,7 @@ namespace StreamVideo.Core.StatefulModels
         string TrackLookupPrefix { get; }
         string Name { get; }
         bool IsLocalParticipant { get; }
+
+        IEnumerable<IStreamTrack> GetTracks();
     }
 }

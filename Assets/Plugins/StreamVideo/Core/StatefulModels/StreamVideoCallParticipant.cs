@@ -8,6 +8,7 @@ using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
 using Unity.WebRTC;
+using UnityEngine;
 using Participant = Stream.Video.v1.Sfu.Models.Participant;
 
 namespace StreamVideo.Core.StatefulModels
@@ -20,7 +21,7 @@ namespace StreamVideo.Core.StatefulModels
         public event ParticipantTrackChangedHandler TrackAdded;
 
         public bool IsLocalParticipant => UserSessionId == Client.InternalLowLevelClient.RtcSession.SessionId;
-        
+
         #region Tracks
 
         public IStreamTrack AudioTrack => _audioTrack;
@@ -64,6 +65,30 @@ namespace StreamVideo.Core.StatefulModels
         {
         }
 
+        public IEnumerable<IStreamTrack> GetTracks()
+        {
+            if (_audioTrack != null)
+            {
+                yield return _audioTrack;
+            }
+
+            if (_videoTrack != null)
+            {
+                yield return _videoTrack;
+            }
+
+            if (_screenShareTrack != null)
+            {
+                yield return _screenShareTrack;
+            }
+        }
+
+        //StreamTodo: solve with a generic interface and best to be handled by cache layer
+        internal void UpdateFromSfu(Participant dto)
+        {
+            ((IUpdateableFrom<Participant, StreamVideoCallParticipant>)this).UpdateFromDto(dto, Cache);
+        }
+
         //StreamTodo: perhaps distinguish to UpdateFromSfu interface
         void IUpdateableFrom<Participant, StreamVideoCallParticipant>.UpdateFromDto(Participant dto, ICache cache)
         {
@@ -91,40 +116,43 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void Update()
         {
-            _audioTrack.Update();
-            _videoTrack.Update();
-            _screenShareTrack.Update();
+            _audioTrack?.Update();
+            _videoTrack?.Update();
+            _screenShareTrack?.Update();
         }
 
         internal void SetTrack(TrackType type, MediaStreamTrack mediaStreamTrack, out IStreamTrack streamTrack)
         {
+            Debug.LogWarning($"{GetType()} set track of type {type}");
             switch (type)
             {
                 case TrackType.Unspecified:
                     throw new NotSupportedException();
                 case TrackType.Audio:
-                    _audioTrack.SetTrack((AudioStreamTrack)mediaStreamTrack);
-                    streamTrack = _audioTrack;
+                    streamTrack = _audioTrack = new StreamAudioTrack((AudioStreamTrack)mediaStreamTrack);
                     break;
                 case TrackType.Video:
-                    _videoTrack.SetTrack((VideoStreamTrack)mediaStreamTrack);
-                    streamTrack = _videoTrack;
+                    streamTrack = _videoTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
                     break;
                 case TrackType.ScreenShare:
-                    _screenShareTrack.SetTrack((VideoStreamTrack)mediaStreamTrack);
-                    streamTrack = _screenShareTrack;
+                    streamTrack = _screenShareTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
                     break;
                 case TrackType.ScreenShareAudio:
-
-                    //StreamTodo: how to handle this?
-                    throw new NotImplementedException();
-                    
+                    streamTrack = _screenShareAudioTrack = new StreamAudioTrack((AudioStreamTrack)mediaStreamTrack);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
-            
+
             TrackAdded?.Invoke(this, streamTrack);
+        }
+
+        internal void SetTrackEnabled(TrackType type, bool enabled)
+        {
+            var streamTrack = GetStreamTrack(type);
+            streamTrack.SetEnabled(enabled);
+
+            //StreamTodo: we should trigger some event that track status changed
         }
 
         protected override string InternalUniqueId
@@ -134,12 +162,13 @@ namespace StreamVideo.Core.StatefulModels
         }
 
         protected override StreamVideoCallParticipant Self => this;
-        
+
         #region Tracks
 
-        private readonly StreamAudioTrack _audioTrack = new StreamAudioTrack();
-        private readonly StreamVideoTrack _videoTrack = new StreamVideoTrack();
-        private readonly StreamVideoTrack _screenShareTrack = new StreamVideoTrack();
+        private StreamAudioTrack _audioTrack;
+        private StreamVideoTrack _videoTrack;
+        private StreamVideoTrack _screenShareTrack;
+        private StreamAudioTrack _screenShareAudioTrack;
 
         #endregion
 
@@ -149,5 +178,20 @@ namespace StreamVideo.Core.StatefulModels
         private readonly List<string> _roles = new List<string>();
 
         #endregion
+        
+        private BaseStreamTrack GetStreamTrack(TrackType type)
+        {
+            switch (type)
+            {
+                case TrackType.Unspecified:
+                    throw new NotSupportedException();
+                case TrackType.Audio: return _audioTrack;
+                case TrackType.Video: return _videoTrack;
+                case TrackType.ScreenShare: return _screenShareTrack;
+                case TrackType.ScreenShareAudio: return _screenShareAudioTrack;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
     }
 }

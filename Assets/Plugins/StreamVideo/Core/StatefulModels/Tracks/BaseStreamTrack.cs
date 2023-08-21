@@ -3,22 +3,35 @@ using Unity.WebRTC;
 
 namespace StreamVideo.Core.StatefulModels.Tracks
 {
-    public abstract class BaseStreamTrack<TTrack> : IStreamTrack
-        where TTrack : MediaStreamTrack
+    public abstract class BaseStreamTrack : IStreamTrack
     {
         //StreamTodo: should we check ReadyState as well or is Enabled flag covering this?
-        public bool IsActive => Track?.Enabled ?? false;
-        
-        public TTrack Track { get; private set; }
+        public bool Enabled => InternalTrack.Enabled;
 
-        internal void SetTrack(TTrack track)
+        internal BaseStreamTrack(MediaStreamTrack track)
         {
-            Track = track ?? throw new ArgumentNullException(nameof(track));
+            InternalTrack = track ?? throw new ArgumentNullException(nameof(track));
         }
-
+        
         internal virtual void Update()
         {
             
+        }
+
+        internal void SetEnabled(bool enabled) => InternalTrack.Enabled = enabled;
+
+        protected MediaStreamTrack InternalTrack { get; set; }
+    }
+
+    public abstract class BaseStreamTrack<TTrack> : BaseStreamTrack
+        where TTrack : MediaStreamTrack
+    {
+        protected TTrack Track { get; }
+
+        protected BaseStreamTrack(MediaStreamTrack track) 
+            : base(track)
+        {
+            Track = (TTrack)track;
         }
     }
 }

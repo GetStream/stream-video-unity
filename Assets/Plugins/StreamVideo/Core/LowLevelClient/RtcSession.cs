@@ -12,6 +12,7 @@ using Stream.Video.v1.Sfu.Signal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Models.Sfu;
+using StreamVideo.Core.State;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
@@ -21,7 +22,8 @@ using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
-using TrackType = Stream.Video.v1.Sfu.Models.TrackType;
+using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
+using TrackTypeInternal = Stream.Video.v1.Sfu.Models.TrackType;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -32,7 +34,6 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IDisposable
     {
-
         public CallingState CallState
         {
             get => _callState;
@@ -62,6 +63,8 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
             _sfuWebSocket.IceTrickle += OnSfuIceTrickle;
             _sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
+            _sfuWebSocket.TrackPublished += OnSfuTrackPublished;
+            _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
         }
 
         public void Dispose()
@@ -71,6 +74,8 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
             _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
             _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
+            _sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
+            _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
             _sfuWebSocket.Dispose();
 
             DisposeSubscriber();
@@ -198,7 +203,7 @@ namespace StreamVideo.Core.LowLevelClient
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()
         {
             //StreamTodo: inject info on what tracks we want and what dimensions
-            var trackTypes = new[] { TrackType.Video, TrackType.Audio };
+            var trackTypes = new[] { TrackTypeInternal.Video, TrackTypeInternal.Audio };
 
             foreach (var participant in _activeCall.Participants)
             {
@@ -325,6 +330,53 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Exception(e);
             }
         }
+        
+        private void OnSfuTrackUnpublished(TrackUnpublished trackUnpublished)
+        {
+            var userId = trackUnpublished.UserId;
+            var sessionId = trackUnpublished.SessionId;
+            var type = trackUnpublished.Type.ToPublicEnum();
+            var cause = trackUnpublished.Cause;
+            
+            // Optionally available. Read TrackUnpublished.participant comment in events.proto
+            var participant = trackUnpublished.Participant;
+
+            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, out var streamParticipant);
+            
+            if (participant != null && streamParticipant != null)
+            {
+                streamParticipant.UpdateFromSfu(participant);
+            }
+        }
+
+        private void OnSfuTrackPublished(TrackPublished trackPublished)
+        {
+            var userId = trackPublished.UserId;
+            var sessionId = trackPublished.SessionId;
+            var type = trackPublished.Type.ToPublicEnum();
+            
+            // Optionally available. Read TrackUnpublished.participant comment in events.proto
+            var participant = trackPublished.Participant;
+
+            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, out var streamParticipant);
+            
+            if (participant != null && streamParticipant != null)
+            {
+                streamParticipant.UpdateFromSfu(participant);
+            }
+        }
+
+        private void UpdateParticipantTracksState(string userId, string sessionId, TrackType trackType, bool isEnabled, out StreamVideoCallParticipant participant)
+        {
+            participant = (StreamVideoCallParticipant)_activeCall.Participants.FirstOrDefault(p => p.SessionId == sessionId);
+            if (participant == null)
+            {
+                _logs.Error($"Failed to find participant with session ID: `{sessionId}` and user ID: `{userId}`");
+                return;
+            }
+            
+            participant.SetTrackEnabled(trackType, isEnabled);
+        }
 
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
@@ -447,7 +499,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            if (trackType == Models.Sfu.TrackType.Unspecified)
+            if (trackType == TrackType.Unspecified)
             {
                 _logs.Error($"Unexpected {nameof(trackType)} of value: {trackType} on media stream with ID: {mediaStream.Id}");
                 return;

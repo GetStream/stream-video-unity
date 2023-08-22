@@ -1,0 +1,20 @@
+{
+    "name": "Unity.WebRTC.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:f12aafacab75a87499e7e45c873ffab8",
+        "GUID:478a2357cc57436488a56e564b08d223",
+        "GUID:e69bbe010f003654cb3029184df3386b"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

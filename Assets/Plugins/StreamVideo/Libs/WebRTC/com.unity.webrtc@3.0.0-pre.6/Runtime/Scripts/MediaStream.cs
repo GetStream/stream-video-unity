@@ -135,6 +135,13 @@ namespace Unity.WebRTC
             cacheTracks.Remove(track);
             return NativeMethods.MediaStreamRemoveTrack(GetSelfOrThrow(), track.GetSelfOrThrow());
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        public MediaStream(string id) : this(WebRTC.Context.CreateMediaStream(id))
+        {
+        }
 
         /// <summary>
         /// 

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
+using UnityEngine;
 
 namespace StreamVideo.Core
 {
@@ -15,5 +16,9 @@ namespace StreamVideo.Core
 
         Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify);
+
+        void SetAudioInputSource(AudioSource audioSource);
+
+        void SetCameraInputSource(WebCamTexture webCamTexture);
     }
 }

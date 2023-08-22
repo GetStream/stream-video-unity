@@ -46,6 +46,7 @@ namespace StreamVideo.Core
         public bool Backstage { get; private set; }
 
         public IReadOnlyList<string> BlockedUserIds => _blockedUserIds;
+        public IReadOnlyList<OwnCapability> OwnCapabilities => _ownCapabilities;
 
         /// <summary>
         /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)

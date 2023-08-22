@@ -60,6 +60,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             var current = rect.sizeDelta;
             rect.sizeDelta = new Vector2(current.x, current.x * (1/sizeRatio));
 
+            //StreamTodo: use CopyTexture if available on this GPU
             Graphics.Blit(source, _targetTexture);
             _targetTexture.IncrementUpdateCount();
         }

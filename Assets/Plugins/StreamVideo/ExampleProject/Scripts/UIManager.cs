@@ -10,6 +10,10 @@ namespace StreamVideo.ExampleProject
     public class UIManager : MonoBehaviour
     {
         public event Action JoinClicked;
+        public event Action CameraInputChanged;
+
+        public AudioSource InputAudioSource => _inputAudioSource;
+        public WebCamTexture InputCameraSource => _activeCamera;
         
         public int Width = 1280;
         public int Height = 720;
@@ -36,26 +40,22 @@ namespace StreamVideo.ExampleProject
             foreach (var device in cameraDevices)
             {
                 _cameraDeviceDropdown.options.Add(new TMP_Dropdown.OptionData(device.name));
-
-                var res = "None";
-                if (device.availableResolutions != null)
-                {
-                    res = string.Join(",",
-                        device.availableResolutions.Select(res
-                            => $"[{res.width}:{res.height}]"));
-                }
-
-                Debug.Log(
-                    $"-------- DEVICE: {device.name}, kind:{device.kind}, isFrontFacing:{device.isFrontFacing}, isAutoFocusPointSupported:{device.isAutoFocusPointSupported}, resolutions: {res}");
             }
 
             SmartPickDefaultCamera();
+
+            if (!string.IsNullOrEmpty(_defaultCamera.name))
+            {
+                ChangeCamera(_defaultCamera.name);
+            }
         }
 
         protected void Start()
         {
             _microphoneDeviceToggle.onValueChanged.AddListener(OnMicrophoneToggled);
             OnMicrophoneToggled(_microphoneDeviceToggle.enabled);
+            
+            //StreamTodo: handle camera toggle
         }
 
         [SerializeField]
@@ -88,7 +88,7 @@ namespace StreamVideo.ExampleProject
         private string _activeMicrophoneDeviceName;
 
         private WebCamTexture _activeCamera;
-        private WebCamDevice _defaultDevice;
+        private WebCamDevice _defaultCamera;
 
         private void OnMicrophoneDeviceChanged(int index)
         {
@@ -138,7 +138,8 @@ namespace StreamVideo.ExampleProject
 
 #if UNITY_STANDALONE_WIN
 
-            _defaultDevice = devices.FirstOrDefault(d => d.name.Contains("Capture"));
+            //StreamTodo: remove this, "Capture" is our debug camera
+            _defaultCamera = devices.FirstOrDefault(d => d.name.Contains("Capture"));
 
 #elif UNITY_ANDROID || UNITY_IOS
         _defaultDevice = devices.FirstOrDefault(d => d.isFrontFacing);
@@ -148,13 +149,13 @@ namespace StreamVideo.ExampleProject
 
 #endif
 
-            if (string.IsNullOrEmpty(_defaultDevice.name))
+            if (string.IsNullOrEmpty(_defaultCamera.name))
             {
                 Debug.LogError("Failed to pick default camera device");
                 return;
             }
 
-            Debug.Log($"---------- Default Camera: {_defaultDevice.name}");
+            Debug.Log($"---------- Default Camera: {_defaultCamera.name}");
         }
         
         private void OnCameraChanged(int optionIndex) => ChangeCamera(_cameraDeviceDropdown.options[optionIndex].text);
@@ -171,6 +172,8 @@ namespace StreamVideo.ExampleProject
             _localCameraImage.texture = _activeCamera;
 
             _activeCamera.Play();
+            
+            CameraInputChanged?.Invoke();
         }
     }
 }

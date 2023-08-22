@@ -84,6 +84,9 @@ namespace StreamVideo.ExampleProject
 
                 var create = string.IsNullOrEmpty(_joinCallId);
                 var callId = create ? Guid.NewGuid().ToString() : _joinCallId;
+                
+                _client.SetAudioInputSource(_uiManager.InputAudioSource);
+                _client.SetCameraInputSource(_uiManager.InputCameraSource);
 
                 var streamCall
                     = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using StreamVideo.Core.Models;
 using StreamVideo.Libs.Logs;
 using Unity.WebRTC;
+using UnityEngine;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -34,8 +35,10 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers)
+        public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
+            Func<TrackKind, string> streamIdFactory, IMediaInputProvider mediaInputProvider)
         {
+            _mediaInputProvider = mediaInputProvider;
             _peerType = peerType;
             _logs = logs;
 
@@ -68,105 +71,48 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnTrack += OnTrack;
 
             //StreamTodo: for Publisher we need to wait for SFU connected in order to buildTrackId with state.trackLookupPrefix
-            var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video);
-            var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio);
+            var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video, streamIdFactory);
+            var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio, streamIdFactory);
 
             _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
             _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
-        }
 
-        private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind)
-        {
-            if (type == StreamPeerType.Subscriber)
+            if (_peerType == StreamPeerType.Publisher)
             {
-                switch (kind)
-                {
-                    case TrackKind.Audio:
-                    case TrackKind.Video:
-                        return new RTCRtpTransceiverInit
-                        {
-                            direction = RTCRtpTransceiverDirection.RecvOnly,
-                        };
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-                }
+                //Video
+                
+                var videoMediaStreamId = streamIdFactory(TrackKind.Video);
+                _logs.Warning("Publisher create stream with ID " + videoMediaStreamId);
+                var videoMediaStream = new MediaStream(videoMediaStreamId);
+                
+                var gfxType = SystemInfo.graphicsDeviceType;
+                var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+                        
+                //StreamTodo: hardcoded resolution
+                _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
+
+                var videoTrack = new VideoStreamTrack(_publisherVideoTrackTexture);
+                videoMediaStream.AddTrack(videoTrack);
+
+                _videoTransceiver.Sender.ReplaceTrack(videoTrack);
+                
+                //Audio
+                
+                var audioMediaStreamId = streamIdFactory(TrackKind.Audio);
+                var audioMediaStream = new MediaStream(audioMediaStreamId);
+                var audioTrack = new AudioStreamTrack(_mediaInputProvider.AudioInput);
+                audioMediaStream.AddTrack(audioTrack);
+                _audioTransceiver.Sender.ReplaceTrack(audioTrack);
             }
 
-            if (type == StreamPeerType.Publisher)
-            {
-                switch (kind)
-                {
-                    case TrackKind.Audio:
-
-                        var audioEncoding = new RTCRtpEncodingParameters
-                        {
-                            active = true,
-                            maxBitrate = 500_000,
-                            //minBitrate = null,
-                            //maxFramerate = null,
-                            scaleResolutionDownBy = 1.0,
-                            rid = "a"
-                        };
-
-                        return new RTCRtpTransceiverInit
-                        {
-                            direction = RTCRtpTransceiverDirection.SendOnly,
-                            sendEncodings = new RTCRtpEncodingParameters[]
-                            {
-                                audioEncoding
-                            }
-                        };
-
-                    case TrackKind.Video:
-
-                        //StreamTodo: move to some config + perhaps allow user to set this
-                        var maxPublishingBitrate = (ulong)1_200_000;
-
-                        var fullQuality = new RTCRtpEncodingParameters
-                        {
-                            active = true,
-                            maxBitrate = maxPublishingBitrate,
-                            scaleResolutionDownBy = 1.0,
-                            rid = "f"
-                        };
-
-                        var halfQuality = new RTCRtpEncodingParameters
-                        {
-                            active = true,
-                            maxBitrate = maxPublishingBitrate / 2,
-                            scaleResolutionDownBy = 2.0,
-                            rid = "f"
-                        };
-
-                        var quarterQuality = new RTCRtpEncodingParameters
-                        {
-                            active = true,
-                            maxBitrate = maxPublishingBitrate / 4,
-                            scaleResolutionDownBy = 4.0,
-                            rid = "f"
-                        };
-
-                        return new RTCRtpTransceiverInit
-                        {
-                            direction = RTCRtpTransceiverDirection.SendOnly,
-                            sendEncodings = new RTCRtpEncodingParameters[]
-                            {
-                                fullQuality, halfQuality, quarterQuality
-                            }
-                        };
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-                }
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            _logs.Warning($" [{_peerType}]------- Added Transceivers: " + _peerConnection.GetTransceivers().Count());
         }
 
         public void RestartIce() => _peerConnection.RestartIce();
 
         public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer)
         {
-            _logs.Warning($"------------------- [{_peerType}] Set LocalDesc:\n" + offer.sdp);
+            //_logs.Warning($"------------------- [{_peerType}] Set LocalDesc:\n" + offer.sdp);
             return _peerConnection.SetLocalDescriptionAsync(ref offer);
         }
 
@@ -174,8 +120,8 @@ namespace StreamVideo.Core.LowLevelClient
         {
             await _peerConnection.SetRemoteDescriptionAsync(ref offer);
 
-            _logs.Warning(
-                $"------------------- [{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer:\n{offer.sdp}");
+            //_logs.Warning(
+            //    $"------------------- [{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer:\n{offer.sdp}");
 
             foreach (var iceCandidate in _pendingIceCandidates)
             {
@@ -185,8 +131,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void AddIceCandidate(RTCIceCandidateInit iceCandidateInit)
         {
-            _logs.Warning(
-                $"---------------------[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
+            //_logs.Warning(
+            //    $"---------------------[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
             {
@@ -202,6 +148,14 @@ namespace StreamVideo.Core.LowLevelClient
         public Task<RTCSessionDescription> CreateAnswerAsync() => _peerConnection.CreateAnswerAsync();
 
         public IEnumerable<RTCRtpTransceiver> GetTransceivers() => _peerConnection.GetTransceivers();
+
+        public void Update()
+        {
+            if (_publisherVideoTrackTexture != null && _mediaInputProvider.VideoInput != null)
+            {
+                Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
+            }
+        }
 
         public void Dispose()
         {
@@ -219,10 +173,12 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly RTCRtpTransceiver _audioTransceiver;
         private readonly ILogs _logs;
         private readonly StreamPeerType _peerType;
+        private readonly IMediaInputProvider _mediaInputProvider;
 
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
 
         private VideoStreamTrack _videoStreamTrack;
+        private RenderTexture _publisherVideoTrackTexture;
 
         private void OnIceCandidate(RTCIceCandidate candidate) => IceTrickled?.Invoke(candidate, _peerType);
 
@@ -233,7 +189,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnNegotiationNeeded()
         {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnNegotiationNeeded");
+            //_logs.Warning($"$$$$$$$ [{_peerType}] OnNegotiationNeeded");
 
             //StreamTodo: take into account race conditions https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
             //We want to set the local description if signalingState is stable - we need to check it because state could change during async operations
@@ -260,6 +216,110 @@ namespace StreamVideo.Core.LowLevelClient
                     audioTrack.Enabled = true;
                 }
             }
+        }
+
+        private RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind,
+            Func<TrackKind, string> streamIdFactory)
+        {
+            //StreamTodo: move to some config + perhaps allow user to set this
+            const ulong maxPublishVideoBitrate = 1_200_000;
+            const ulong maxPublishAudioBitrate = 500_000;
+
+            if (type == StreamPeerType.Subscriber)
+            {
+                switch (kind)
+                {
+                    case TrackKind.Audio:
+                    case TrackKind.Video:
+                        return new RTCRtpTransceiverInit
+                        {
+                            direction = RTCRtpTransceiverDirection.RecvOnly,
+                        };
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+                }
+            }
+
+            if (type == StreamPeerType.Publisher)
+            {
+                // var streamId = streamIdFactory(kind);
+                // _logs.Warning("Publisher create stream with ID " + streamId);
+                // var mediaStream = new MediaStream(streamId);
+                // _logs.Warning("Publisher CCREATEED stream with ID " + streamId);
+
+                switch (kind)
+                {
+                    case TrackKind.Audio:
+                        
+                        // mediaStream.AddTrack(new AudioStreamTrack(_mediaInputProvider.AudioInput));
+
+                        var audioEncoding = new RTCRtpEncodingParameters
+                        {
+                            active = true,
+                            maxBitrate = maxPublishAudioBitrate,
+                            scaleResolutionDownBy = 1.0,
+                            rid = "a"
+                        };
+
+                        return new RTCRtpTransceiverInit
+                        {
+                            direction = RTCRtpTransceiverDirection.SendOnly,
+                            sendEncodings = new RTCRtpEncodingParameters[]
+                            {
+                                audioEncoding
+                            },
+                            //streams = new[] { mediaStream }
+                        };
+
+                    case TrackKind.Video:
+                        
+                        // var gfxType = SystemInfo.graphicsDeviceType;
+                        // var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+                        //
+                        // //StreamTodo: hardcoded resolution
+                        // _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
+                        //
+                        // mediaStream.AddTrack(new VideoStreamTrack(_publisherVideoTrackTexture));
+
+                        var fullQuality = new RTCRtpEncodingParameters
+                        {
+                            active = true,
+                            maxBitrate = maxPublishVideoBitrate,
+                            scaleResolutionDownBy = 1.0,
+                            rid = "f"
+                        };
+
+                        var halfQuality = new RTCRtpEncodingParameters
+                        {
+                            active = true,
+                            maxBitrate = maxPublishVideoBitrate / 2,
+                            scaleResolutionDownBy = 2.0,
+                            rid = "h"
+                        };
+
+                        var quarterQuality = new RTCRtpEncodingParameters
+                        {
+                            active = true,
+                            maxBitrate = maxPublishVideoBitrate / 4,
+                            scaleResolutionDownBy = 4.0,
+                            rid = "q"
+                        };
+
+                        return new RTCRtpTransceiverInit
+                        {
+                            direction = RTCRtpTransceiverDirection.SendOnly,
+                            sendEncodings = new RTCRtpEncodingParameters[]
+                            {
+                                fullQuality, halfQuality, quarterQuality
+                            },
+                            //streams = new[] { mediaStream }
+                        };
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+                }
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
     }
 }

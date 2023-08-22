@@ -17,6 +17,7 @@ using StreamVideo.Libs.NetworkMonitors;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Websockets;
+using UnityEngine;
 using Cache = StreamVideo.Core.State.Caches.Cache;
 
 namespace StreamVideo.Core
@@ -158,6 +159,17 @@ namespace StreamVideo.Core
         public void Update() => InternalLowLevelClient.Update();
 
         public Task DisconnectAsync() => InternalLowLevelClient.DisconnectAsync();
+
+        public void SetAudioInputSource(AudioSource audioSource)
+        {
+            InternalLowLevelClient.RtcSession.AudioInput = audioSource;
+        }
+
+        //StreamTodo: later we should accept just Texture or RenderTexture or TextureProvider
+        public void SetCameraInputSource(WebCamTexture webCamTexture)
+        {
+            InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;
+        }
 
         internal StreamVideoLowLevelClient InternalLowLevelClient { get; private set; }
 

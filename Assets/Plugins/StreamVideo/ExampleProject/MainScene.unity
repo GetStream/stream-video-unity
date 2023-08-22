@@ -3374,10 +3374,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _uiManager: {fileID: 996985033}
-  _joinCallId: 3ttAFbOnBC5m
+  _joinCallId: R1OgvB2Gm9RZ
   _apiKey: hd8szvscpxvd
   _userId: daniel_sierpinski
-  _userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkyMDg4ODcyLCJleHAiOjE2OTI2OTM2Nzd9.B--jmK3YLhfO-oxTtPB58fv5YXmZw4ai_jwbsZ9XwxU
+  _userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkyNzExNjEwLCJleHAiOjE2OTI3MjYwMTV9.Hq8mOQA9iCvKe-1R1COAyZXASWGHAUV7NcnqmMTTxiA
   _remoteImage: {fileID: 0}
 --- !u!4 &1354881825
 Transform:

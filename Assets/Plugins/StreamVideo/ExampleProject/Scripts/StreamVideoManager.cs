@@ -71,9 +71,6 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private string _userToken = "";
 
-        [SerializeField]
-        private RawImage _remoteImage;
-
         private IStreamVideoClient _client;
 
         private async void OnJoinClicked()

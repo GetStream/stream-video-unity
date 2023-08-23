@@ -74,37 +74,25 @@ namespace StreamVideo.Core.LowLevelClient
             var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video, streamIdFactory);
             var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio, streamIdFactory);
 
-            _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
-            _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
 
-            if (_peerType == StreamPeerType.Publisher)
-            {
-                //Video
-                
-                var videoMediaStreamId = streamIdFactory(TrackKind.Video);
-                _logs.Warning("Publisher create stream with ID " + videoMediaStreamId);
-                var videoMediaStream = new MediaStream(videoMediaStreamId);
-                
-                var gfxType = SystemInfo.graphicsDeviceType;
-                var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
-                        
-                //StreamTodo: hardcoded resolution
-                _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
+            //_audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
+            
+            // var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
+            // _videoTransceiver.SetCodecPreferences(capabilities.codecs);
+            
+            var streamId = streamIdFactory(TrackKind.Video);
+            var mediaStream = new MediaStream(streamId);
+            var videoTrack = CreatePublisherVideoTrack();
+            mediaStream.AddTrack(videoTrack);
 
-                var videoTrack = new VideoStreamTrack(_publisherVideoTrackTexture);
-                videoMediaStream.AddTrack(videoTrack);
-
-                _videoTransceiver.Sender.ReplaceTrack(videoTrack);
-                
-                //Audio
-                
-                var audioMediaStreamId = streamIdFactory(TrackKind.Audio);
-                var audioMediaStream = new MediaStream(audioMediaStreamId);
-                var audioTrack = new AudioStreamTrack(_mediaInputProvider.AudioInput);
-                audioMediaStream.AddTrack(audioTrack);
-                _audioTransceiver.Sender.ReplaceTrack(audioTrack);
-            }
-
+            //This is critical so that local SDP has the
+            //a=sendonly\r\na=msid:653a6b6b-0934-467b-9b64-13c3de470e9f:Video:162238662 f83260d1-5554-4f4a-baea-b33e4a8d6dd2
+            //record
+            videoTransceiverInit.streams = new[] { mediaStream };
+            
+            _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
+            _videoTransceiver.Sender.ReplaceTrack(videoTrack);
+            
             _logs.Warning($" [{_peerType}]------- Added Transceivers: " + _peerConnection.GetTransceivers().Count());
         }
 
@@ -218,108 +206,97 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind,
+        private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind,
             Func<TrackKind, string> streamIdFactory)
         {
-            //StreamTodo: move to some config + perhaps allow user to set this
-            const ulong maxPublishVideoBitrate = 1_200_000;
-            const ulong maxPublishAudioBitrate = 500_000;
-
             if (type == StreamPeerType.Subscriber)
             {
-                switch (kind)
+                return new RTCRtpTransceiverInit
                 {
-                    case TrackKind.Audio:
-                    case TrackKind.Video:
-                        return new RTCRtpTransceiverInit
-                        {
-                            direction = RTCRtpTransceiverDirection.RecvOnly,
-                        };
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-                }
+                    direction = RTCRtpTransceiverDirection.RecvOnly,
+                };
             }
 
-            if (type == StreamPeerType.Publisher)
+            var encodings = GetVideoEncodingParameters(kind).ToArray();
+
+            return new RTCRtpTransceiverInit
             {
-                // var streamId = streamIdFactory(kind);
-                // _logs.Warning("Publisher create stream with ID " + streamId);
-                // var mediaStream = new MediaStream(streamId);
-                // _logs.Warning("Publisher CCREATEED stream with ID " + streamId);
+                direction = RTCRtpTransceiverDirection.SendOnly,
+                sendEncodings = encodings,
+            };
+        }
 
-                switch (kind)
-                {
-                    case TrackKind.Audio:
-                        
-                        // mediaStream.AddTrack(new AudioStreamTrack(_mediaInputProvider.AudioInput));
+        private static IEnumerable<RTCRtpEncodingParameters> GetVideoEncodingParameters(TrackKind trackKind)
+        {
+            //StreamTodo: move to some config + perhaps allow user to set this
+            const ulong maxPublishAudioBitrate = 500_000;
+            const ulong maxPublishVideoBitrate = 1_200_000;
 
-                        var audioEncoding = new RTCRtpEncodingParameters
-                        {
-                            active = true,
-                            maxBitrate = maxPublishAudioBitrate,
-                            scaleResolutionDownBy = 1.0,
-                            rid = "a"
-                        };
+            switch (trackKind)
+            {
+                case TrackKind.Audio:
+                    
+                    var audioEncoding = new RTCRtpEncodingParameters
+                    {
+                        active = true,
+                        maxBitrate = maxPublishAudioBitrate,
+                        scaleResolutionDownBy = 1.0,
+                        rid = "a"
+                    };
 
-                        return new RTCRtpTransceiverInit
-                        {
-                            direction = RTCRtpTransceiverDirection.SendOnly,
-                            sendEncodings = new RTCRtpEncodingParameters[]
-                            {
-                                audioEncoding
-                            },
-                            //streams = new[] { mediaStream }
-                        };
+                    yield return audioEncoding;
+                    
+                    break;
+                case TrackKind.Video:
+                    
+                    var fullQuality = new RTCRtpEncodingParameters
+                    {
+                        active = true,
+                        maxBitrate = maxPublishVideoBitrate,
+                        scaleResolutionDownBy = 1.0,
+                        rid = "f"
+                    };
 
-                    case TrackKind.Video:
-                        
-                        // var gfxType = SystemInfo.graphicsDeviceType;
-                        // var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
-                        //
-                        // //StreamTodo: hardcoded resolution
-                        // _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
-                        //
-                        // mediaStream.AddTrack(new VideoStreamTrack(_publisherVideoTrackTexture));
+                    var halfQuality = new RTCRtpEncodingParameters
+                    {
+                        active = true,
+                        maxBitrate = maxPublishVideoBitrate / 2,
+                        scaleResolutionDownBy = 2.0,
+                        rid = "h"
+                    };
 
-                        var fullQuality = new RTCRtpEncodingParameters
-                        {
-                            active = true,
-                            maxBitrate = maxPublishVideoBitrate,
-                            scaleResolutionDownBy = 1.0,
-                            rid = "f"
-                        };
+                    var quarterQuality = new RTCRtpEncodingParameters
+                    {
+                        active = true,
+                        maxBitrate = maxPublishVideoBitrate / 4,
+                        scaleResolutionDownBy = 4.0,
+                        rid = "q"
+                    };
 
-                        var halfQuality = new RTCRtpEncodingParameters
-                        {
-                            active = true,
-                            maxBitrate = maxPublishVideoBitrate / 2,
-                            scaleResolutionDownBy = 2.0,
-                            rid = "h"
-                        };
-
-                        var quarterQuality = new RTCRtpEncodingParameters
-                        {
-                            active = true,
-                            maxBitrate = maxPublishVideoBitrate / 4,
-                            scaleResolutionDownBy = 4.0,
-                            rid = "q"
-                        };
-
-                        return new RTCRtpTransceiverInit
-                        {
-                            direction = RTCRtpTransceiverDirection.SendOnly,
-                            sendEncodings = new RTCRtpEncodingParameters[]
-                            {
-                                fullQuality, halfQuality, quarterQuality
-                            },
-                            //streams = new[] { mediaStream }
-                        };
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
-                }
+                    yield return fullQuality;
+                    yield return halfQuality;
+                    yield return quarterQuality;
+                    
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(trackKind), trackKind, null);
             }
+        }
+        
+        private VideoStreamTrack CreatePublisherVideoTrack()
+        {
+            var gfxType = SystemInfo.graphicsDeviceType;
+            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+                         
+            //StreamTodo: hardcoded resolution
+            _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
+            
+            return new VideoStreamTrack(_publisherVideoTrackTexture);
+        }
 
-            throw new ArgumentOutOfRangeException(nameof(type), type, null);
+        private AudioStreamTrack CreatePublisherAudioTrack()
+        {
+            return new AudioStreamTrack(_mediaInputProvider.AudioInput);
         }
     }
 }

@@ -126,7 +126,7 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void SetTrack(TrackType type, MediaStreamTrack mediaStreamTrack, out IStreamTrack streamTrack)
         {
-            Debug.LogWarning($"{GetType()} set track of type {type}");
+            Debug.LogWarning($"[Participant] Local: {IsLocalParticipant} Session ID: {SessionId} set track of type {type}");
             switch (type)
             {
                 case TrackType.Unspecified:

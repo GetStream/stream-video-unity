@@ -50,13 +50,13 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Warning($"Call state changed from {prevState} to {value}");
             }
         }
-        
+
         #region IInputProvider
-        
+
         //StreamTodo: move IInputProvider elsewhere. it's for easy testing only
         public AudioSource AudioInput { get; set; }
         public WebCamTexture VideoInput { get; set; }
-        
+
         #endregion
 
         public string SessionId { get; private set; }
@@ -126,11 +126,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             CreateSubscriber(iceServers);
 
-            if (CanPublish())
-            {
-                CreatePublisher(iceServers);
-            }
-
             SessionId = Guid.NewGuid().ToString();
             _logs.Warning($"START Session: " + SessionId);
 
@@ -145,6 +140,12 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTodo: implement a timeout if something goes wrong
                 //StreamTodo: implement cancellation token
                 await Task.Delay(1);
+            }
+            
+            // Wait for SFU connected to receive track prefix
+            if (CanPublish())
+            {
+                CreatePublisher(iceServers);
             }
 
             await SubscribeToTracksAsync();
@@ -261,7 +262,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuJoinResponse(JoinResponse joinResponse)
         {
             _logs.InfoIfDebug($"Handle Sfu {nameof(JoinResponse)}");
-            ((StreamCall)_activeCall).UpdateFromSfu(joinResponse);
+            _activeCall.UpdateFromSfu(joinResponse);
             OnSfuJoinedCall();
         }
 
@@ -386,7 +387,7 @@ namespace StreamVideo.Core.LowLevelClient
             participant.SetTrackEnabled(trackType, isEnabled);
         }
 
-        
+
         //StreamTodo: implement retry strategy like in Android SDK
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
@@ -469,7 +470,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 var offer = await _publisher.CreateOfferAsync();
                 await _publisher.SetLocalDescriptionAsync(ref offer);
-
+                
                 //StreamTodo: timeout + break if we're disconnecting/reconnecting
                 while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
                 {
@@ -485,6 +486,11 @@ namespace StreamVideo.Core.LowLevelClient
                     SessionId = SessionId,
                 };
                 request.Tracks.AddRange(tracks);
+
+#if STREAM_DEBUG_ENABLED
+                var serializedRequest = _serializer.Serialize(request);
+                _logs.Warning($"SetPublisherRequest:\n{serializedRequest}");
+#endif
 
                 var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher));
 
@@ -505,30 +511,31 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: get resolution from some IMediaDeviceProvider / IMediaSourceProvider
             var captureResolution = (Width: 1920, Height: 1080);
 
-            var senderTracks = _publisher.GetTransceivers().ToArray();
-            
+            var transceivers = _publisher.GetTransceivers().ToArray();
+
+            //StreamTodo: investigate why this return no results
             // var senderTracks = _publisher.GetTransceivers().Where(t
             //     => t.Direction == RTCRtpTransceiverDirection.SendOnly && t.Sender?.Track != null).ToArray();
 
-            _logs.Warning($"GetPublisherTracks - transceivers: {senderTracks?.Count()} ");
+            _logs.Warning($"GetPublisherTracks - transceivers: {transceivers?.Count()} ");
 
             //StreamTodo: figure out TrackType, because we rely on transceiver track type mapping we don't support atm screen video/audio share tracks
             //This implementation is based on the Android SDK, perhaps we shouldn't rely on GetTransceivers() but maintain our own TrackType => Transceiver mapping
 
-            foreach (var transceiver in senderTracks)
+            foreach (var t in transceivers)
             {
                 //StreamTodo: remove this. Skip for now due to `invalid SetPublisher request: track c59b906b-96a5-4d3f-8bed-166f16c284ef: audio cannot have simulcast layers` RPC error
-                if (transceiver.Sender.Track.Kind == TrackKind.Audio)
+                if (t.Sender.Track.Kind == TrackKind.Audio)
                 {
                     continue;
                 }
-                
-                var videoLayers = GetVideoLayers(transceiver, captureResolution);
-                _logs.Warning($"Video layers: {videoLayers.Count()} for transceiver: {transceiver.Sender.Track.Kind}");
+
+                var videoLayers = GetVideoLayers(t, captureResolution);
+                _logs.Warning($"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
                 var trackInfo = new TrackInfo
                 {
-                    TrackId = transceiver.Sender.Track.Id,
-                    TrackType = transceiver.Sender.Track.Kind.ToInternalEnum(),
+                    TrackId = t.Sender.Track.Id,
+                    TrackType = t.Sender.Track.Kind.ToInternalEnum(),
                 };
                 trackInfo.Layers.AddRange(videoLayers);
                 yield return trackInfo;
@@ -629,7 +636,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
-            _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers, MediaStreamIdFactory, this);
+            _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers, MediaStreamIdFactory,
+                this);
             _subscriber.IceTrickled += OnIceTrickled;
             _subscriber.StreamAdded += OnSubscriberStreamAdded;
         }
@@ -647,6 +655,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private string MediaStreamIdFactory(TrackKind trackKind)
         {
+            //StreamTodo: joining old call will have no participants (not sure if SDK bug)
             var localParticipant = _activeCall.Participants.Single(p => p.SessionId == SessionId);
             var trackPrefix = localParticipant.TrackLookupPrefix;
             var trackType = trackKind.ToInternalEnum();
@@ -665,7 +674,8 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: Handle default settings -> speaker off, mic off, cam off
             var callSettings = _activeCall.Settings;
 
-            _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers, MediaStreamIdFactory, this);
+            _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers, MediaStreamIdFactory,
+                this);
             _publisher.IceTrickled += OnIceTrickled;
             _publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
         }

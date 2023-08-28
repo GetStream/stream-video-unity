@@ -3,8 +3,8 @@
     "rootNamespace": "",
     "references": [
         "GUID:f12aafacab75a87499e7e45c873ffab8",
-        "GUID:478a2357cc57436488a56e564b08d223",
-        "GUID:e69bbe010f003654cb3029184df3386b"
+        "Unity.EditorCoroutines.Editor",
+        "Unity.WebRTC"
     ],
     "includePlatforms": [
         "Editor"

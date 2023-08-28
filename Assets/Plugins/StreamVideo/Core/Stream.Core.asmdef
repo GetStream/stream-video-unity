@@ -2,11 +2,9 @@
     "name": "Stream.Core",
     "rootNamespace": "",
     "references": [
-        "GUID:45f99e6948181224abd5a0b0ca925d1b",
-        "GUID:89883f65dd3cc09459ed3d391f4964f2",
-        "GUID:f12aafacab75a87499e7e45c873ffab8",
-        "GUID:c3bc0afe4a069b54aa23296f3c18a871",
-        "GUID:e69bbe010f003654cb3029184df3386b"
+        "StreamVideo.Libs",
+        "Google.Protobuf",
+        "Unity.WebRTC"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

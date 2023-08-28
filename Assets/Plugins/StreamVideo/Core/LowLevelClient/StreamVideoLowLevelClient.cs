@@ -11,10 +11,8 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
-using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
-using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
@@ -52,6 +50,7 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
 
+        //StreamTodo: review exposed state, we should probably take into account that coordinator is only 1 of the things we connect to
         public ConnectionState ConnectionState => _coordinatorWS.ConnectionState;
 
         /// <summary>
@@ -334,6 +333,9 @@ namespace StreamVideo.Core.LowLevelClient
         
         private static readonly Uri ServerBaseUrl = new Uri("wss://video.stream-io-api.com/video/connect");
         private static readonly Uri LocationHintWebUri = new Uri("https://hint.stream-io-video.com/");
+
+        internal static Uri LocalSfuWebSocketUri = new Uri("ws://localhost:3031/ws");
+        internal static Uri LocalSfuRpcUri = new Uri("http://localhost:3031/twirp");
 
         private readonly IPersistentWebSocket _coordinatorWS;
 

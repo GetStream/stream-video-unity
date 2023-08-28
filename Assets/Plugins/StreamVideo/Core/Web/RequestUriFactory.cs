@@ -11,7 +11,8 @@ namespace StreamVideo.Core.Web
     /// </summary>
     internal class RequestUriFactory : IRequestUriFactory
     {
-        public RequestUriFactory(IAuthProvider authProvider, IStreamVideoLowLevelClient connectionProvider, Func<string> clientInfoFactory)
+        public RequestUriFactory(IAuthProvider authProvider, IStreamVideoLowLevelClient connectionProvider,
+            Func<string> clientInfoFactory)
         {
             _authProvider = authProvider ?? throw new ArgumentNullException(nameof(authProvider));
             _connectionProvider = connectionProvider ?? throw new ArgumentNullException(nameof(connectionProvider));
@@ -35,6 +36,9 @@ namespace StreamVideo.Core.Web
 
         public Uri CreateSfuConnectionUri(string sfuUrl)
         {
+#if STREAM_LOCAL_SFU
+            return StreamVideoLowLevelClient.LocalSfuWebSocketUri;
+#endif
             sfuUrl = sfuUrl.Replace("/twirp", "/ws");
             return new UriBuilder(sfuUrl) { Scheme = "wss" }.Uri;
         }
@@ -58,8 +62,8 @@ namespace StreamVideo.Core.Web
         private readonly IStreamVideoLowLevelClient _connectionProvider;
         private readonly Func<string> _clientInfoFactory;
 
-        private Dictionary<string, string> GetDefaultParameters() =>
-            new Dictionary<string, string>
+        private Dictionary<string, string> GetDefaultParameters()
+            => new Dictionary<string, string>
             {
                 { "user_id", _authProvider.UserId },
                 { "api_key", _authProvider.ApiKey },

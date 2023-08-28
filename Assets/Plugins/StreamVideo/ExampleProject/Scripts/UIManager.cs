@@ -142,10 +142,10 @@ namespace StreamVideo.ExampleProject
             _defaultCamera = devices.FirstOrDefault(d => d.name.Contains("Capture"));
 
 #elif UNITY_ANDROID || UNITY_IOS
-        _defaultDevice = devices.FirstOrDefault(d => d.isFrontFacing);
+        _defaultCamera = devices.FirstOrDefault(d => d.isFrontFacing);
 
 #else
-        _defaultDevice = devices.FirstOrDefault();
+        _defaultCamera = devices.FirstOrDefault();
 
 #endif
 

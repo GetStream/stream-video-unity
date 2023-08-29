@@ -79,21 +79,26 @@ namespace StreamVideo.Core.LowLevelClient
             
             // var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
             // _videoTransceiver.SetCodecPreferences(capabilities.codecs);
-            
-            var streamId = streamIdFactory(TrackKind.Video);
-            var mediaStream = new MediaStream(streamId);
-            var videoTrack = CreatePublisherVideoTrack();
-            mediaStream.AddTrack(videoTrack);
 
-            //This is critical so that local SDP has the
-            //a=sendonly\r\na=msid:653a6b6b-0934-467b-9b64-13c3de470e9f:Video:162238662 f83260d1-5554-4f4a-baea-b33e4a8d6dd2
-            //record
-            videoTransceiverInit.streams = new[] { mediaStream };
+            if (_peerType == StreamPeerType.Publisher)
+            {
+                var streamId = streamIdFactory(TrackKind.Video);
+                var mediaStream = new MediaStream(streamId);
+                var videoTrack = CreatePublisherVideoTrack();
+                mediaStream.AddTrack(videoTrack);
+
+                //This is critical so that local SDP has the
+                //a=sendonly\r\na=msid:653a6b6b-0934-467b-9b64-13c3de470e9f:Video:162238662 f83260d1-5554-4f4a-baea-b33e4a8d6dd2
+                //record
+                videoTransceiverInit.streams = new[] { mediaStream };
             
-            _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
-            _videoTransceiver.Sender.ReplaceTrack(videoTrack);
+                _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
+                _videoTransceiver.Sender.ReplaceTrack(videoTrack);
             
-            _logs.Warning($" [{_peerType}]------- Added Transceivers: " + _peerConnection.GetTransceivers().Count());
+                _logs.Warning($" [{_peerType}]------- Added Transceivers: " + _peerConnection.GetTransceivers().Count());
+            }
+            
+
         }
 
         public void RestartIce() => _peerConnection.RestartIce();

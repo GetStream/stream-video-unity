@@ -390,7 +390,7 @@ namespace StreamVideo.Core.LowLevelClient
                 => p.SessionId == sessionId);
             if (participant == null)
             {
-                var participantsLogs = _activeCall.Participants.Select(p => $"sId: {p.SessionId} - uId:{p.UserId}");
+                var participantsLogs = _activeCall.Participants.Select(p => $"{p.UserId}({p.UserId})");
                 var merged = string.Join(",", participantsLogs);
 
                 _logs.Error(
@@ -411,7 +411,7 @@ namespace StreamVideo.Core.LowLevelClient
             _activeCall.UpdateFromSfu(participantJoined, _cache);
             
             //StreamTodo: optimize with StringBuilder
-            var id = $"u:{participantJoined.Participant.UserId}/s:{participantJoined.Participant.SessionId}";
+            var id = $"{participantJoined.Participant.UserId}({participantJoined.Participant.SessionId})";
             _logs.Info($"Participant: {id} joined");
         }
 
@@ -425,7 +425,7 @@ namespace StreamVideo.Core.LowLevelClient
             _activeCall.UpdateFromSfu(participantLeft, _cache);
             
             //StreamTodo: optimize with StringBuilder
-            var id = $"u:{participantLeft.Participant.UserId}/s:{participantLeft.Participant.SessionId}";
+            var id = $"{participantLeft.Participant.UserId}({participantLeft.Participant.SessionId})";
             _logs.Info($"Participant: {id} left");
         }
 
@@ -736,9 +736,9 @@ namespace StreamVideo.Core.LowLevelClient
         
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)
         {
-            if (activeCall.Id != callId)
+            if (callId != null && activeCall?.Cid != callId)
             {
-                var activeCallIdLog = activeCall == null ? $"{nameof(activeCall)} is null" : activeCall.Id;
+                var activeCallIdLog = activeCall == null ? $"{nameof(activeCall)} is null" : $"{nameof(activeCall)} is {activeCall.Id}";
                 logs.Warning($"Received {nameof(ParticipantJoined)} event for call ID: {callId} but {activeCallIdLog}");
                 return false;
             }

@@ -78,7 +78,7 @@ namespace StreamVideo.Core.Models
         {
             var participant = cache.TryCreateOrUpdate(participantJoined.Participant);
 
-            if (_participants.Contains(participant))
+            if (!_participants.Contains(participant))
             {
                 _participants.Add(participant);
             }

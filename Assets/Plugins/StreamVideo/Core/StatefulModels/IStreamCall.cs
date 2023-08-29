@@ -17,5 +17,10 @@ namespace StreamVideo.Core.StatefulModels
         /// Call ID
         /// </summary>
         string Id { get; }
+
+        /// <summary>
+        /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)
+        /// </summary>
+        string Cid { get; }
     }
 }

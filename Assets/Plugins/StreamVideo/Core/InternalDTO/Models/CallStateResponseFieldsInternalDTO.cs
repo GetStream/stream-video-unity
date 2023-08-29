@@ -33,7 +33,7 @@ namespace StreamVideo.Core.InternalDTO.Models
         /// <summary>
         /// Current user membership object
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("membership", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("membership", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public MemberResponseInternalDTO Membership { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("own_capabilities", Required = Newtonsoft.Json.Required.Always, ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

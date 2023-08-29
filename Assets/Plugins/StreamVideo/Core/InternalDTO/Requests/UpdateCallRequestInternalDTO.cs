@@ -21,19 +21,19 @@ namespace StreamVideo.Core.InternalDTO.Requests
         /// <summary>
         /// Custom data for this object
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
 
         /// <summary>
         /// the settings to change for this call
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("settings_override", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("settings_override", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public CallSettingsRequestInternalDTO SettingsOverride { get; set; } = default!;
 
         /// <summary>
         /// the time the call is scheduled to start
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset StartsAt { get; set; } = default!;
 
     }

@@ -45,7 +45,7 @@ namespace StreamVideo.Core.InternalDTO.Models
         /// <summary>
         /// Additional error info
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("exception_fields", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("exception_fields", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.Dictionary<string, string> ExceptionFields { get; set; } = default!;
 
         /// <summary>

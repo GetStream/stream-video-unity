@@ -21,13 +21,13 @@ namespace StreamVideo.Core.InternalDTO.Requests
         /// <summary>
         /// List of userID to remove
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("remove_members", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("remove_members", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.List<string> RemoveMembers { get; set; } = default!;
 
         /// <summary>
         /// List of members to update or insert
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("update_members", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("update_members", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.List<MemberRequestInternalDTO> UpdateMembers { get; set; } = default!;
 
     }

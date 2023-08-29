@@ -21,31 +21,31 @@ namespace StreamVideo.Core.InternalDTO.Requests
         /// <summary>
         /// if true the call will be created if it doesn't exist
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("create", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("create", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Create { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("data", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("data", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public CallRequestInternalDTO Data { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("location", Required = Newtonsoft.Json.Required.Always)]
         public string Location { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("members_limit", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("members_limit", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int MembersLimit { get; set; } = default!;
 
         /// <summary>
         /// If the participant is migrating from another SFU, then this is the ID of the previous SFU
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("migrating_from", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("migrating_from", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string MigratingFrom { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("notify", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("notify", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Notify { get; set; } = default!;
 
         /// <summary>
         /// if true and the call is created, the notification will include ring=true
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("ring", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("ring", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Ring { get; set; } = default!;
 
     }

@@ -21,7 +21,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Always)]
         public bool Broadcasting { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("hls", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("hls", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public EgressHLSResponseInternalDTO Hls { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("rtmps", Required = Newtonsoft.Json.Required.Always)]

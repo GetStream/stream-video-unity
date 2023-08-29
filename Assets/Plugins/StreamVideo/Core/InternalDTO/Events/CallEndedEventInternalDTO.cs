@@ -39,7 +39,7 @@ namespace StreamVideo.Core.InternalDTO.Events
         /// <summary>
         /// The user who ended the call, null if the call was ended by the server
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public UserResponseInternalDTO User { get; set; } = default!;
 
     }

@@ -27,13 +27,13 @@ namespace StreamVideo.Core.InternalDTO.Models
         /// <summary>
         /// Whether device is disabled or not
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("disabled", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("disabled", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Disabled { get; set; } = default!;
 
         /// <summary>
         /// Reason explaining why device had been disabled
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("disabled_reason", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("disabled_reason", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string DisabledReason { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
@@ -42,13 +42,13 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("push_provider", Required = Newtonsoft.Json.Required.Always)]
         public string PushProvider { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("push_provider_name", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("push_provider_name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string PushProviderName { get; set; } = default!;
 
         /// <summary>
         /// When true the token is for Apple VoIP push notifications
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("voip", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("voip", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Voip { get; set; } = default!;
 
     }

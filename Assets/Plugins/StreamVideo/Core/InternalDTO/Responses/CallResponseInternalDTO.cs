@@ -60,7 +60,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Date/time when the call ended
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("ended_at", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("ended_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset EndedAt { get; set; } = default!;
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.Always)]
         public bool Recording { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("session", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("session", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public CallSessionResponseInternalDTO Session { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("settings", Required = Newtonsoft.Json.Required.Always)]
@@ -84,10 +84,10 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Date/time when the call will start
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset StartsAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("team", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("team", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Team { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("transcribing", Required = Newtonsoft.Json.Required.Always)]

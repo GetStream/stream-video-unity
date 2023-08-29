@@ -25,7 +25,7 @@ namespace StreamVideo.Core.InternalDTO.Events
         /// <summary>
         /// The user that blocked the user, null if the user was blocked by server-side
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("blocked_by_user", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("blocked_by_user", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public UserResponseInternalDTO BlockedByUser { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]

@@ -5,7 +5,6 @@ using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject
 {
@@ -59,9 +58,12 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private UIManager _uiManager;
 
+        [Header("This Join ID will override the one from UI input")]
         [SerializeField]
         private string _joinCallId = "3TK1d0wL2we0";
 
+        [Space(50)]
+        [Header("Authorization Credentials")]
         [SerializeField]
         private string _apiKey = "";
 
@@ -73,17 +75,43 @@ namespace StreamVideo.ExampleProject
 
         private IStreamVideoClient _client;
 
-        private async void OnJoinClicked()
+        private string TryGetCallId(bool create)
+        {
+            if (create)
+            {
+                return Guid.NewGuid().ToString();
+            }
+
+            if (!string.IsNullOrEmpty(_joinCallId))
+            {
+                return _joinCallId;
+            }
+
+            if (!string.IsNullOrEmpty(_uiManager.JoinCallId))
+            {
+                return _uiManager.JoinCallId;
+            }
+
+            return null;
+        }
+
+        private async void OnJoinClicked(bool create)
         {
             try
             {
-                Debug.Log("Join clicked");
+                var callId = TryGetCallId(create);
+                if (callId == null)
+                {
+                    Debug.LogError($"Failed to get call ID in mode create: {create}.");
+                    return;
+                }
 
-                var create = string.IsNullOrEmpty(_joinCallId);
-                var callId = create ? Guid.NewGuid().ToString() : _joinCallId;
-                
+                _uiManager.SetJoinCallId(callId);
+
                 _client.SetAudioInputSource(_uiManager.InputAudioSource);
                 _client.SetCameraInputSource(_uiManager.InputCameraSource);
+
+                Debug.Log($"Join clicked, create: {create}, callId: {callId}");
 
                 var streamCall
                     = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);

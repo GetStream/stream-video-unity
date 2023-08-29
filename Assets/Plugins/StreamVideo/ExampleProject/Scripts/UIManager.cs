@@ -3,17 +3,21 @@ using System.Linq;
 using StreamVideo.Core.StatefulModels;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject
 {
+    public delegate void JoinCallHandler(bool create);
+    
     public class UIManager : MonoBehaviour
     {
-        public event Action JoinClicked;
+        public event JoinCallHandler JoinClicked;
         public event Action CameraInputChanged;
 
         public AudioSource InputAudioSource => _inputAudioSource;
         public WebCamTexture InputCameraSource => _activeCamera;
+        public string JoinCallId => _joinCallIdInput.text;
         
         public int Width = 1280;
         public int Height = 720;
@@ -25,9 +29,12 @@ namespace StreamVideo.ExampleProject
             view.Init(participant);
         }
 
+        public void SetJoinCallId(string joinCallId) => _joinCallIdInput.text = joinCallId;
+
         protected void Awake()
         {
-            _joinBtn.onClick.AddListener(() => JoinClicked?.Invoke());
+            _joinBtn.onClick.AddListener(() => JoinClicked?.Invoke(false));
+            _createBtn.onClick.AddListener(() => JoinClicked?.Invoke(true));
 
             _microphoneDeviceDropdown.ClearOptions();
             _microphoneDeviceDropdown.onValueChanged.AddListener(OnMicrophoneDeviceChanged);
@@ -60,6 +67,12 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private Button _joinBtn;
+        
+        [SerializeField]
+        private Button _createBtn;
+        
+        [SerializeField]
+        private TMP_InputField _joinCallIdInput;
 
         [SerializeField]
         private Transform _participantsContainer;

@@ -35,6 +35,10 @@ namespace StreamVideo.Core.Models
         public IReadOnlyDictionary<string, DateTimeOffset> RejectedBy => _rejectedBy;
 
         public DateTimeOffset StartedAt { get; private set; }
+        
+        public DateTimeOffset LiveEndedAt { get; private set; }
+
+        public DateTimeOffset LiveStartedAt { get; private set; }
 
         #region Sfu State
 
@@ -52,6 +56,8 @@ namespace StreamVideo.Core.Models
             _participantsCountByRole.TryReplaceValuesFromDto(dto.ParticipantsCountByRole);
             _rejectedBy.TryReplaceValuesFromDto(dto.RejectedBy);
             StartedAt = dto.StartedAt;
+            LiveEndedAt = dto.LiveEndedAt;
+            LiveStartedAt = dto.LiveStartedAt;
         }
 
         void IStateLoadableFrom<SfuCallState, CallSession>.LoadFromDto(SfuCallState dto, ICache cache)

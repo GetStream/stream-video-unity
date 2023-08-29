@@ -240,6 +240,13 @@ namespace StreamVideo.Core
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
         }
         
+        internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache) => Session.UpdateFromSfu(participantJoined, cache);
+        
+        internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
+        {
+            Session.UpdateFromSfu(participantLeft, cache);
+        }
+
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track) => TrackAdded?.Invoke(participant, track);
 
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,

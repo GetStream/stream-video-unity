@@ -12,6 +12,7 @@ using Stream.Video.v1.Sfu.Signal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Models.Sfu;
+using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
@@ -74,6 +75,8 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
             _sfuWebSocket.TrackPublished += OnSfuTrackPublished;
             _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
+            _sfuWebSocket.ParticipantJoined += OnSfuParticipantJoined;
+            _sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
         }
 
         public void Dispose()
@@ -85,6 +88,8 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
             _sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
             _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
+            _sfuWebSocket.ParticipantJoined -= OnSfuParticipantJoined;
+            _sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
             _sfuWebSocket.Dispose();
 
             DisposeSubscriber();
@@ -105,6 +110,9 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
         }
+
+        //StreamTodo: solve this dependency better
+        public void SetCache(ICache cache) => _cache = cache;
 
         public async Task StartAsync(StreamCall call)
         {
@@ -181,6 +189,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private StreamPeerConnection _subscriber;
         private StreamPeerConnection _publisher;
+        private ICache _cache;
 
         private void CleanUpSession()
         {
@@ -365,6 +374,7 @@ namespace StreamVideo.Core.LowLevelClient
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
             var participant = trackPublished.Participant;
 
+
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, out var streamParticipant);
 
             if (participant != null && streamParticipant != null)
@@ -380,13 +390,44 @@ namespace StreamVideo.Core.LowLevelClient
                 => p.SessionId == sessionId);
             if (participant == null)
             {
-                _logs.Error($"Failed to find participant with session ID: `{sessionId}` and user ID: `{userId}`");
+                var participantsLogs = _activeCall.Participants.Select(p => $"sId: {p.SessionId} - uId:{p.UserId}");
+                var merged = string.Join(",", participantsLogs);
+
+                _logs.Error(
+                    $"Failed to find participant with session ID: `{sessionId}` and user ID: `{userId}`. Participants: {merged}");
                 return;
             }
 
             participant.SetTrackEnabled(trackType, isEnabled);
         }
 
+        private void OnSfuParticipantJoined(ParticipantJoined participantJoined)
+        {
+            if (!AssertCallIdMatch(_activeCall, participantJoined.CallCid, _logs))
+            {
+                return;
+            }
+
+            _activeCall.UpdateFromSfu(participantJoined, _cache);
+            
+            //StreamTodo: optimize with StringBuilder
+            var id = $"u:{participantJoined.Participant.UserId}/s:{participantJoined.Participant.SessionId}";
+            _logs.Info($"Participant: {id} joined");
+        }
+
+        private void OnSfuParticipantLeft(ParticipantLeft participantLeft)
+        {
+            if (!AssertCallIdMatch(_activeCall, participantLeft.CallCid, _logs))
+            {
+                return;
+            }
+            
+            _activeCall.UpdateFromSfu(participantLeft, _cache);
+            
+            //StreamTodo: optimize with StringBuilder
+            var id = $"u:{participantLeft.Participant.UserId}/s:{participantLeft.Participant.SessionId}";
+            _logs.Info($"Participant: {id} left");
+        }
 
         //StreamTodo: implement retry strategy like in Android SDK
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
@@ -470,7 +511,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 var offer = await _publisher.CreateOfferAsync();
                 await _publisher.SetLocalDescriptionAsync(ref offer);
-                
+
                 //StreamTodo: timeout + break if we're disconnecting/reconnecting
                 while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
                 {
@@ -691,6 +732,18 @@ namespace StreamVideo.Core.LowLevelClient
                 _publisher.Dispose();
                 _publisher = null;
             }
+        }
+        
+        private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)
+        {
+            if (activeCall.Id != callId)
+            {
+                var activeCallIdLog = activeCall == null ? $"{nameof(activeCall)} is null" : activeCall.Id;
+                logs.Warning($"Received {nameof(ParticipantJoined)} event for call ID: {callId} but {activeCallIdLog}");
+                return false;
+            }
+
+            return true;
         }
     }
 }

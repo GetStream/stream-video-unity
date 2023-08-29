@@ -184,6 +184,7 @@ namespace StreamVideo.Core
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
 
             _cache = new Cache(this, serializer, _logs);
+            InternalLowLevelClient.RtcSession.SetCache(_cache);
 
             SubscribeTo(InternalLowLevelClient);
         }

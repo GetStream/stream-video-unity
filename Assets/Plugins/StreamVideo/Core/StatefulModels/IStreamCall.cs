@@ -12,5 +12,10 @@ namespace StreamVideo.Core.StatefulModels
         Credentials Credentials { get; }
         IReadOnlyList<IStreamVideoCallParticipant> Participants { get; }
         IReadOnlyList<OwnCapability> OwnCapabilities { get; }
+
+        /// <summary>
+        /// Call ID
+        /// </summary>
+        string Id { get; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Stream.Video.v1.Sfu.Events;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.State;
@@ -35,7 +36,7 @@ namespace StreamVideo.Core.Models
         public IReadOnlyDictionary<string, DateTimeOffset> RejectedBy => _rejectedBy;
 
         public DateTimeOffset StartedAt { get; private set; }
-        
+
         public DateTimeOffset LiveEndedAt { get; private set; }
 
         public DateTimeOffset LiveStartedAt { get; private set; }
@@ -71,6 +72,24 @@ namespace StreamVideo.Core.Models
 
             ((IStateLoadableFrom<SfuParticipantCount, ParticipantCount>)ParticipantCount).LoadFromDto(
                 dto.ParticipantCount, cache);
+        }
+
+        internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
+        {
+            var participant = cache.TryCreateOrUpdate(participantJoined.Participant);
+
+            if (_participants.Contains(participant))
+            {
+                _participants.Add(participant);
+            }
+        }
+        
+        internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
+        {
+            var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
+            _participants.Remove(participant);
+            
+            //StreamTodo: we should either remove the participant from cache or somehow mark to be removed. Otherwise cache will grow while the app is running
         }
 
         private readonly Dictionary<string, DateTimeOffset> _acceptedBy = new Dictionary<string, DateTimeOffset>();

@@ -261,7 +261,7 @@ namespace StreamVideo.Core.LowLevelClient
         // }
         
 
-        public async Task<string> GetLocationHintAsync()
+        public Task<string> GetLocationHintAsync()
         {
             // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
             if (_locationHint.IsNullOrEmpty())
@@ -270,7 +270,7 @@ namespace StreamVideo.Core.LowLevelClient
                 throw new InvalidOperationException("No location hint");
             }
 
-            return _locationHint;
+            return Task.FromResult(_locationHint);
         }
 
         public void Dispose()

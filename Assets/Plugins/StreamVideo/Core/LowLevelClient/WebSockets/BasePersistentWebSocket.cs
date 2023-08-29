@@ -85,7 +85,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             {
                 return OnConnectAsync(cancellationToken);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 ConnectionState = ConnectionState.Disconnected;
                 throw;

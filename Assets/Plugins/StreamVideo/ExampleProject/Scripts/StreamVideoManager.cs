@@ -106,6 +106,9 @@ namespace StreamVideo.ExampleProject
                 {
                     _uiManager.AddParticipant(participant);
                 }
+                
+                streamCall.ParticipantJoined += _uiManager.AddParticipant;
+                streamCall.ParticipantLeft += _uiManager.RemoveParticipant;
             }
             catch (Exception e)
             {

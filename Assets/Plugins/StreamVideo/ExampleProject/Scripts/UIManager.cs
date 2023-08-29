@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using StreamVideo.Core.StatefulModels;
 using TMPro;
@@ -27,6 +28,19 @@ namespace StreamVideo.ExampleProject
         {
             var view = Instantiate(_participantViewPrefab, _participantsContainer);
             view.Init(participant);
+            _participantSessionIdToView.Add(participant.SessionId, view);
+        }
+        
+        public void RemoveParticipant(string sessionId, string userId)
+        {
+            if (!_participantSessionIdToView.TryGetValue(sessionId, out var view))
+            {
+                Debug.LogError("Failed to find view for removed participant with sessionId: " + sessionId);
+                return;
+            }
+
+            _participantSessionIdToView.Remove(sessionId);
+            Destroy(view);
         }
 
         public void SetJoinCallId(string joinCallId) => _joinCallIdInput.text = joinCallId;
@@ -64,6 +78,8 @@ namespace StreamVideo.ExampleProject
             
             //StreamTodo: handle camera toggle
         }
+        
+        private readonly Dictionary<string, ParticipantView> _participantSessionIdToView = new Dictionary<string, ParticipantView>();
 
         [SerializeField]
         private Button _joinBtn;

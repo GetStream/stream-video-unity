@@ -17,6 +17,11 @@ namespace StreamVideo.ExampleProject
 
         protected void Start()
         {
+            if (!string.IsNullOrEmpty(_joinCallId))
+            {
+                _uiManager.SetJoinCallId(_joinCallId);
+            }
+
             var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
 
             _client = StreamVideoClient.CreateDefaultClient(new StreamClientConfig
@@ -25,7 +30,6 @@ namespace StreamVideo.ExampleProject
             });
 
             _client.ConnectUserAsync(credentials).LogIfFailed();
-
 
             //StreamTodo: handle by SDK
             StartCoroutine(WebRTC.Update());
@@ -58,7 +62,7 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private UIManager _uiManager;
 
-        [Header("This Join ID will override the one from UI input")]
+        [Header("The Join Call ID from UI's Input will override this value")]
         [SerializeField]
         private string _joinCallId = "3TK1d0wL2we0";
 
@@ -75,32 +79,14 @@ namespace StreamVideo.ExampleProject
 
         private IStreamVideoClient _client;
 
-        private string TryGetCallId(bool create)
-        {
-            if (create)
-            {
-                return Guid.NewGuid().ToString();
-            }
-
-            if (!string.IsNullOrEmpty(_joinCallId))
-            {
-                return _joinCallId;
-            }
-
-            if (!string.IsNullOrEmpty(_uiManager.JoinCallId))
-            {
-                return _uiManager.JoinCallId;
-            }
-
-            return null;
-        }
+        private string TryGetCallId(bool create) => create ? Guid.NewGuid().ToString() : _uiManager.JoinCallId;
 
         private async void OnJoinClicked(bool create)
         {
             try
             {
                 var callId = TryGetCallId(create);
-                if (callId == null)
+                if (string.IsNullOrEmpty(callId))
                 {
                     Debug.LogError($"Failed to get call ID in mode create: {create}.");
                     return;

@@ -74,7 +74,7 @@ namespace StreamVideo.Core.Models
                 dto.ParticipantCount, cache);
         }
 
-        internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
+        internal IStreamVideoCallParticipant UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
         {
             var participant = cache.TryCreateOrUpdate(participantJoined.Participant);
 
@@ -82,14 +82,17 @@ namespace StreamVideo.Core.Models
             {
                 _participants.Add(participant);
             }
+
+            return participant;
         }
         
-        internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
+        internal (string sessionId, string userId) UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
+            //StreamTodo: we should either remove the participant from cache or somehow mark to be removed. Otherwise cache will grow while the app is running
             var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
             _participants.Remove(participant);
             
-            //StreamTodo: we should either remove the participant from cache or somehow mark to be removed. Otherwise cache will grow while the app is running
+            return (participantLeft.Participant.SessionId, participantLeft.Participant.UserId);
         }
 
         private readonly Dictionary<string, DateTimeOffset> _acceptedBy = new Dictionary<string, DateTimeOffset>();

@@ -153,7 +153,6 @@ namespace StreamVideo.Core.StatefulModels
         internal void SetTrackEnabled(TrackType type, bool enabled)
         {
             var streamTrack = GetStreamTrack(type);
-
             if (streamTrack == null)
             {
                 Logs.Error($"Failed to get track of type `{type}` for: {this}");

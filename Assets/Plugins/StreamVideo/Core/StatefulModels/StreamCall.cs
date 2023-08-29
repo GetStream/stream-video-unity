@@ -38,6 +38,8 @@ namespace StreamVideo.Core
 
         public event ParticipantTrackChangedHandler TrackAdded;
 
+        public event ParticipantJoinedHandler ParticipantJoined;
+        public event ParticipantLeftHandler ParticipantLeft;
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
 
@@ -240,11 +242,18 @@ namespace StreamVideo.Core
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
         }
         
-        internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache) => Session.UpdateFromSfu(participantJoined, cache);
-        
+        internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
+        {
+            var participant = Session.UpdateFromSfu(participantJoined, cache);
+            ParticipantJoined?.Invoke(participant);
+        }
+
         internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
-            Session.UpdateFromSfu(participantLeft, cache);
+            var participant = Session.UpdateFromSfu(participantLeft, cache);
+            
+            //StreamTodo: if we delete the participant from cache we should then pass SessionId and UserId
+            ParticipantLeft?.Invoke(participant.sessionId, participant.userId);
         }
 
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track) => TrackAdded?.Invoke(participant, track);

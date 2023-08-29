@@ -22,5 +22,8 @@ namespace StreamVideo.Core.StatefulModels
         /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)
         /// </summary>
         string Cid { get; }
+
+        event ParticipantJoinedHandler ParticipantJoined;
+        event ParticipantLeftHandler ParticipantLeft;
     }
 }

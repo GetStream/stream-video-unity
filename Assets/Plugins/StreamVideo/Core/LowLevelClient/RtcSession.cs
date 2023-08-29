@@ -30,6 +30,8 @@ using TrackTypeInternal = Stream.Video.v1.Sfu.Models.TrackType;
 namespace StreamVideo.Core.LowLevelClient
 {
     public delegate void ParticipantTrackChangedHandler(IStreamVideoCallParticipant participant, IStreamTrack track);
+    public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
+    public delegate void ParticipantLeftHandler(string sessionId, string userId);
 
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
 

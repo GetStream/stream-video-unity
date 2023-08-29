@@ -151,7 +151,7 @@ namespace StreamVideo.Core.LowLevelClient
             InternalVideoClientApi
                 = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
 
-            _rtcSession = new RtcSession(sfuWebSocketWrapper, _logs, _serializer, _httpClient);
+            _rtcSession = new RtcSession(sfuWebSocketWrapper, _logs, _serializer, _httpClient, _timeService);
 
             RegisterCoordinatorEventHandlers();
 

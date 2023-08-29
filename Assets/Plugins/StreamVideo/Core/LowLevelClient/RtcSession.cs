@@ -19,6 +19,7 @@ using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Http;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
+using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using UnityEngine;
@@ -30,7 +31,9 @@ using TrackTypeInternal = Stream.Video.v1.Sfu.Models.TrackType;
 namespace StreamVideo.Core.LowLevelClient
 {
     public delegate void ParticipantTrackChangedHandler(IStreamVideoCallParticipant participant, IStreamTrack track);
+
     public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
+
     public delegate void ParticipantLeftHandler(string sessionId, string userId);
 
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
@@ -64,8 +67,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         public string SessionId { get; private set; }
 
-        public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, ISerializer serializer, IHttpClient httpClient)
+        public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, ISerializer serializer, IHttpClient httpClient,
+            ITimeService timeService)
         {
+            _timeService = timeService;
             _serializer = serializer;
             _httpClient = httpClient;
             _logs = logs;
@@ -111,6 +116,8 @@ namespace StreamVideo.Core.LowLevelClient
                     p.Update();
                 }
             }
+
+            TryExecuteSubscribeToTracksAsync();
         }
 
         //StreamTodo: solve this dependency better
@@ -179,9 +186,12 @@ namespace StreamVideo.Core.LowLevelClient
             _publisher?.RestartIce();
         }
 
+        private const float TrackSubscriptionDebounceTime = 0.1f;
+
         private readonly SfuWebSocket _sfuWebSocket;
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
+        private readonly ITimeService _timeService;
 
         private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
 
@@ -193,13 +203,56 @@ namespace StreamVideo.Core.LowLevelClient
         private StreamPeerConnection _publisher;
         private ICache _cache;
 
+        private float _lastTrackSubscriptionRequestTime;
+        private bool _trackSubscriptionRequested;
+        private bool _trackSubscriptionRequestedActive;
+
         private void CleanUpSession()
         {
             _pendingIceTrickleRequests.Clear();
         }
 
+        private void QueueTracksSubscriptionRequest()
+        {
+            if (_trackSubscriptionRequested)
+            {
+                return;
+            }
+
+            _trackSubscriptionRequested = true;
+        }
+
+        private void TryExecuteSubscribeToTracksAsync()
+        {
+            if (!_trackSubscriptionRequested || _trackSubscriptionRequestedActive)
+            {
+                return;
+            }
+
+            var timeSinceLastRequest = _timeService.Time - _lastTrackSubscriptionRequestTime;
+            if (timeSinceLastRequest < TrackSubscriptionDebounceTime)
+            {
+                return;
+            }
+
+            SubscribeToTracksAsync().LogIfFailed();
+
+            _lastTrackSubscriptionRequestTime = _timeService.Time;
+            _trackSubscriptionRequested = false;
+        }
+
+        /// <summary>
+        /// Request this via <see cref="QueueTracksSubscriptionRequest"/>. We don't want to call it too often
+        /// </summary>
         private async Task SubscribeToTracksAsync()
         {
+            if (_trackSubscriptionRequestedActive)
+            {
+                QueueTracksSubscriptionRequest();
+                return;
+            }
+
+            _trackSubscriptionRequestedActive = true;
             _logs.Info("Request SFU - UpdateSubscriptionsRequest");
             var tracks = GetDesiredTracksDetails();
 
@@ -217,6 +270,8 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 _logs.Error(response.Error.Message);
             }
+
+            _trackSubscriptionRequestedActive = false;
         }
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()
@@ -392,11 +447,7 @@ namespace StreamVideo.Core.LowLevelClient
                 => p.SessionId == sessionId);
             if (participant == null)
             {
-                var participantsLogs = _activeCall.Participants.Select(p => $"{p.UserId}({p.UserId})");
-                var merged = string.Join(",", participantsLogs);
-
-                _logs.Error(
-                    $"Failed to find participant with session ID: `{sessionId}` and user ID: `{userId}`. Participants: {merged}");
+                // This seems to be a valid case. When other participant joins we may receive TrackPublished event before we manage to subscribe for it
                 return;
             }
 
@@ -411,10 +462,12 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _activeCall.UpdateFromSfu(participantJoined, _cache);
-            
+
             //StreamTodo: optimize with StringBuilder
             var id = $"{participantJoined.Participant.UserId}({participantJoined.Participant.SessionId})";
             _logs.Info($"Participant: {id} joined");
+
+            QueueTracksSubscriptionRequest();
         }
 
         private void OnSfuParticipantLeft(ParticipantLeft participantLeft)
@@ -423,12 +476,14 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 return;
             }
-            
+
             _activeCall.UpdateFromSfu(participantLeft, _cache);
-            
+
             //StreamTodo: optimize with StringBuilder
             var id = $"{participantLeft.Participant.UserId}({participantLeft.Participant.SessionId})";
             _logs.Info($"Participant: {id} left");
+
+            QueueTracksSubscriptionRequest();
         }
 
         //StreamTodo: implement retry strategy like in Android SDK
@@ -735,12 +790,14 @@ namespace StreamVideo.Core.LowLevelClient
                 _publisher = null;
             }
         }
-        
+
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)
         {
             if (callId != null && activeCall?.Cid != callId)
             {
-                var activeCallIdLog = activeCall == null ? $"{nameof(activeCall)} is null" : $"{nameof(activeCall)} is {activeCall.Id}";
+                var activeCallIdLog = activeCall == null
+                    ? $"{nameof(activeCall)} is null"
+                    : $"{nameof(activeCall)} is {activeCall.Id}";
                 logs.Warning($"Received {nameof(ParticipantJoined)} event for call ID: {callId} but {activeCallIdLog}");
                 return false;
             }

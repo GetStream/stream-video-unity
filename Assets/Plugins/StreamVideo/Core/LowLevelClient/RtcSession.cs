@@ -141,7 +141,7 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTodo: implement cancellation token
                 await Task.Delay(1);
             }
-            
+
             // Wait for SFU connected to receive track prefix
             if (CanPublish())
             {
@@ -531,11 +531,13 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 var videoLayers = GetVideoLayers(t, captureResolution);
-                _logs.Warning($"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
+                _logs.Warning(
+                    $"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
                 var trackInfo = new TrackInfo
                 {
                     TrackId = t.Sender.Track.Id,
                     TrackType = t.Sender.Track.Kind.ToInternalEnum(),
+                    Mid = t.Mid
                 };
                 trackInfo.Layers.AddRange(videoLayers);
                 yield return trackInfo;

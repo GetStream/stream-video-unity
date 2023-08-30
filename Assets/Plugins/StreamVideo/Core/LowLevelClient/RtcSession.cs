@@ -117,7 +117,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
 
-            TryExecuteSubscribeToTracksAsync();
+            TryExecuteSubscribeToTracks();
         }
 
         //StreamTodo: solve this dependency better
@@ -222,7 +222,7 @@ namespace StreamVideo.Core.LowLevelClient
             _trackSubscriptionRequested = true;
         }
 
-        private void TryExecuteSubscribeToTracksAsync()
+        private void TryExecuteSubscribeToTracks()
         {
             if (!_trackSubscriptionRequested || _trackSubscriptionRequestedActive)
             {

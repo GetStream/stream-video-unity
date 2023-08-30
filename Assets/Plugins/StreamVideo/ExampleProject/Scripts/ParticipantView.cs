@@ -2,7 +2,6 @@
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using TMPro;
-using Unity.WebRTC;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,6 +31,8 @@ namespace StreamVideo.ExampleProject
             {
                 _name.text += " (local)";
             }
+            
+            _name.text += $"<br>{_participant.SessionId}";
         }
 
         public void OnDestroy()

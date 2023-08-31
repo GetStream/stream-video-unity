@@ -261,15 +261,16 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _trackSubscriptionRequestedActive = true;
-            _logs.Info("Request SFU - UpdateSubscriptionsRequest");
+
             var tracks = GetDesiredTracksDetails();
 
             var request = new UpdateSubscriptionsRequest
             {
                 SessionId = SessionId,
             };
-
             request.Tracks.AddRange(tracks);
+
+            _logs.Info($"Request SFU - UpdateSubscriptionsRequest\n{_serializer.Serialize(request)}");
 
             var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions,
                 nameof(GeneratedAPI.UpdateSubscriptions));
@@ -289,6 +290,11 @@ namespace StreamVideo.Core.LowLevelClient
 
             foreach (var participant in _activeCall.Participants)
             {
+                if (participant.IsLocalParticipant)
+                {
+                    continue;
+                }
+
                 foreach (var trackType in trackTypes)
                 {
                     yield return new TrackSubscriptionDetails
@@ -377,6 +383,7 @@ namespace StreamVideo.Core.LowLevelClient
      */
         private async void OnSfuSubscriberOffer(SubscriberOffer subscriberOffer)
         {
+            _logs.Warning("OnSfuSubscriberOffer");
             //StreamTodo: check RtcSession.kt handleSubscriberOffer for the retry logic
 
             try
@@ -446,6 +453,10 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 streamParticipant.UpdateFromSfu(participant);
             }
+
+            //StreamTodo: fixes the case when joining a call where other participant starts with no video and activates video track after we've joined -
+            // validated that this how Android/Js is handling this
+            QueueTracksSubscriptionRequest();
         }
 
         private void UpdateParticipantTracksState(string userId, string sessionId, TrackType trackType, bool isEnabled,

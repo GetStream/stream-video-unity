@@ -4243,10 +4243,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _uiManager: {fileID: 996985033}
-  _joinCallId: 
+  _joinCallId: QcXi0j5yaEvk
   _apiKey: hd8szvscpxvd
   _userId: daniel_sierpinski
-  _userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkzMzkzMDE3LCJleHAiOjE2OTM0MDc0MjJ9.mUaougUdXOsrf4FElIhwPwZscwIrbqKRZtGhQKe6LhY
+  _userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkzNDc2ODEwLCJleHAiOjE2OTM0OTEyMTV9.BOK6lIfG5_mfOh94Srd2UFXLwus7aNJ0kYPTLcG7_Ts
 --- !u!4 &1354881825
 Transform:
   m_ObjectHideFlags: 0

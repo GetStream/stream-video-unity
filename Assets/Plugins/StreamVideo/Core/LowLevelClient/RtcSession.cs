@@ -41,6 +41,14 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IMediaInputProvider, IDisposable
     {
+        //StreamTodo: move to some config + perhaps allow user to set this
+        public const ulong MaxPublishAudioBitrate = 500_000;
+        public const ulong MaxPublishVideoBitrate = 1_200_000;
+
+        public const ulong FullPublishVideoBitrate = 1_200_000;
+        public const ulong HalfPublishVideoBitrate = MaxPublishVideoBitrate / 2;
+        public const ulong QuarterPublishVideoBitrate = MaxPublishVideoBitrate / 4;
+
         public CallingState CallState
         {
             get => _callState;
@@ -566,14 +574,23 @@ namespace StreamVideo.Core.LowLevelClient
             Debug.LogWarning("OnPublisherNegotiationNeeded");
             try
             {
+                if (_publisher.SignalingState != RTCSignalingState.Stable)
+                {
+                    _logs.Error(
+                        $"{nameof(_publisher.SignalingState)} state is not stable, current state: {_publisher.SignalingState}");
+                }
+
                 var offer = await _publisher.CreateOfferAsync();
                 await _publisher.SetLocalDescriptionAsync(ref offer);
 
-                //StreamTodo: timeout + break if we're disconnecting/reconnecting
-                while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
-                {
-                    await Task.Delay(1);
-                }
+                // //StreamTodo: timeout + break if we're disconnecting/reconnecting
+                // while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
+                // {
+                //     await Task.Delay(1);
+                // }
+
+
+                _logs.Warning($"[Publisher] LocalDesc (SDP Offer):\n{offer.sdp}");
 
                 var tracks = GetPublisherTracks();
 
@@ -591,6 +608,8 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
                 var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher));
+
+                _logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
 
                 await _publisher.SetRemoteDescriptionAsync(new RTCSessionDescription()
                 {
@@ -653,9 +672,15 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var quality = EncodingsToVideoQuality(encoding);
 
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning(
+                    $"Video layer - rid: {encoding.rid} quality: {quality}, scaleBy: {scaleBy}, width: {width}, height: {height}");
+#endif
+
                 yield return new VideoLayer
                 {
-                    Rid = encoding.rid,
+                    //Rid = encoding.rid,
+                    Rid = "h", //StreamTodo: remove this
                     VideoDimension = new VideoDimension
                     {
                         Width = width,
@@ -665,11 +690,25 @@ namespace StreamVideo.Core.LowLevelClient
                     Fps = 24, //StreamTodo: hardcoded value, should integrator set this?
                     Quality = quality,
                 };
+
+                //StreamTodo: remove this
+                yield break;
             }
         }
 
         private static VideoQuality EncodingsToVideoQuality(RTCRtpEncodingParameters encodings)
         {
+            //StreamTodo: probably remove this or put as DEBUG_ONLY, this is only needed when testing with single video layer because `rid` is set only when simulcasting
+            if (string.IsNullOrEmpty(encodings.rid))
+            {
+                switch (encodings.maxBitrate)
+                {
+                    case FullPublishVideoBitrate: return VideoQuality.High;
+                    case HalfPublishVideoBitrate: return VideoQuality.Mid;
+                    default: return VideoQuality.LowUnspecified;
+                }
+            }
+
             switch (encodings.rid)
             {
                 case "f": return VideoQuality.High;

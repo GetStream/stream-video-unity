@@ -35,6 +35,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        public RTCSignalingState SignalingState => _peerConnection.SignalingState;
+
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
             Func<TrackKind, string> streamIdFactory, IMediaInputProvider mediaInputProvider)
         {
@@ -76,7 +78,7 @@ namespace StreamVideo.Core.LowLevelClient
 
 
             //_audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
-            
+
             // var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
             // _videoTransceiver.SetCodecPreferences(capabilities.codecs);
 
@@ -91,21 +93,42 @@ namespace StreamVideo.Core.LowLevelClient
                 //a=sendonly\r\na=msid:653a6b6b-0934-467b-9b64-13c3de470e9f:Video:162238662 f83260d1-5554-4f4a-baea-b33e4a8d6dd2
                 //record
                 videoTransceiverInit.streams = new[] { mediaStream };
-            
+
                 _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
                 _videoTransceiver.Sender.ReplaceTrack(videoTrack);
-            
-                _logs.Warning($" [{_peerType}]------- Added Transceivers: " + _peerConnection.GetTransceivers().Count());
-            }
-            
 
+
+                #region ForceCodec
+
+                var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
+                foreach (var codec in capabilities.codecs)
+                {
+                    Debug.LogWarning(
+                        $"Available video codec - {nameof(codec.mimeType)}:{codec.mimeType}, {nameof(codec.sdpFmtpLine)}:{codec.sdpFmtpLine}");
+                }
+
+                var vp8Codec = capabilities.codecs.Single(c
+                    => c.mimeType.IndexOf("vp8", StringComparison.OrdinalIgnoreCase) != -1);
+                var preferredCodecs = new[] { vp8Codec };
+                _videoTransceiver.SetCodecPreferences(preferredCodecs);
+                
+                #endregion
+
+                foreach (var encoding in _videoTransceiver.Sender.GetParameters().encodings)
+                {
+                    _logs.Warning(
+                        $"[{_peerType}] Added Encoding to transceiver - rid: {encoding.rid}, maxBitrate: {encoding.maxBitrate}, scaleResolutionDownBy: {encoding.scaleResolutionDownBy}");
+                }
+
+                _logs.Warning($"[{_peerType}] Added Transceivers: " + _peerConnection.GetTransceivers().Count());
+            }
         }
 
         public void RestartIce() => _peerConnection.RestartIce();
 
         public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer)
         {
-            //_logs.Warning($"------------------- [{_peerType}] Set LocalDesc:\n" + offer.sdp);
+            _logs.Warning($"[{_peerType}] Set LocalDesc:\n" + offer.sdp);
             return _peerConnection.SetLocalDescriptionAsync(ref offer);
         }
 
@@ -113,8 +136,8 @@ namespace StreamVideo.Core.LowLevelClient
         {
             await _peerConnection.SetRemoteDescriptionAsync(ref offer);
 
-            //_logs.Warning(
-            //    $"------------------- [{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer:\n{offer.sdp}");
+            _logs.Warning(
+                $"[{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer:\n{offer.sdp}");
 
             foreach (var iceCandidate in _pendingIceCandidates)
             {
@@ -124,8 +147,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void AddIceCandidate(RTCIceCandidateInit iceCandidateInit)
         {
-            //_logs.Warning(
-            //    $"---------------------[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
+            _logs.Warning(
+                $"[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
             {
@@ -177,7 +200,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnIceConnectionChange(RTCIceConnectionState state)
         {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnIceConnectionChange to: " + state);
+            _logs.Warning($"[{_peerType}] OnIceConnectionChange to: " + state);
         }
 
         private void OnNegotiationNeeded()
@@ -192,12 +215,12 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnConnectionStateChange(RTCPeerConnectionState state)
         {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnConnectionStateChange to: {state}");
+            _logs.Warning($"[{_peerType}] OnConnectionStateChange to: {state}");
         }
 
         private void OnTrack(RTCTrackEvent trackEvent)
         {
-            _logs.Warning($"$$$$$$$ [{_peerType}] OnTrack {trackEvent.Track.GetType()}");
+            _logs.Warning($"[{_peerType}] OnTrack {trackEvent.Track.GetType()}");
 
             foreach (var stream in trackEvent.Streams)
             {
@@ -233,31 +256,27 @@ namespace StreamVideo.Core.LowLevelClient
 
         private static IEnumerable<RTCRtpEncodingParameters> GetVideoEncodingParameters(TrackKind trackKind)
         {
-            //StreamTodo: move to some config + perhaps allow user to set this
-            const ulong maxPublishAudioBitrate = 500_000;
-            const ulong maxPublishVideoBitrate = 1_200_000;
-
             switch (trackKind)
             {
                 case TrackKind.Audio:
-                    
+
                     var audioEncoding = new RTCRtpEncodingParameters
                     {
                         active = true,
-                        maxBitrate = maxPublishAudioBitrate,
+                        maxBitrate = RtcSession.MaxPublishAudioBitrate,
                         scaleResolutionDownBy = 1.0,
                         rid = "a"
                     };
 
                     yield return audioEncoding;
-                    
+
                     break;
                 case TrackKind.Video:
-                    
+
                     var fullQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
-                        maxBitrate = maxPublishVideoBitrate,
+                        maxBitrate = RtcSession.FullPublishVideoBitrate,
                         scaleResolutionDownBy = 1.0,
                         rid = "f"
                     };
@@ -265,7 +284,7 @@ namespace StreamVideo.Core.LowLevelClient
                     var halfQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
-                        maxBitrate = maxPublishVideoBitrate / 2,
+                        maxBitrate = RtcSession.HalfPublishVideoBitrate,
                         scaleResolutionDownBy = 2.0,
                         rid = "h"
                     };
@@ -273,29 +292,33 @@ namespace StreamVideo.Core.LowLevelClient
                     var quarterQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
-                        maxBitrate = maxPublishVideoBitrate / 4,
+                        maxBitrate = RtcSession.QuarterPublishVideoBitrate,
                         scaleResolutionDownBy = 4.0,
                         rid = "q"
                     };
 
+                    Debug.LogWarning($"Rid values: {fullQuality.rid}, {halfQuality.rid}, {quarterQuality.rid}");
+
                     yield return fullQuality;
-                    yield return halfQuality;
-                    yield return quarterQuality;
-                    
+
+                    //StreamTodo: re-add this later. Seems that simulcast doesn't work with H264 https://github.com/Unity-Technologies/com.unity.webrtc/issues/925
+                    //yield return halfQuality;
+                    //yield return quarterQuality;
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(trackKind), trackKind, null);
             }
         }
-        
+
         private VideoStreamTrack CreatePublisherVideoTrack()
         {
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
-                         
+
             //StreamTodo: hardcoded resolution
             _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
-            
+
             return new VideoStreamTrack(_publisherVideoTrackTexture);
         }
 

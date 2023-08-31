@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
 using Unity.WebRTC;
 using UnityEngine;
@@ -141,7 +142,10 @@ namespace StreamVideo.Core.LowLevelClient
 
             foreach (var iceCandidate in _pendingIceCandidates)
             {
-                _peerConnection.AddIceCandidate(iceCandidate);
+                if(!_peerConnection.AddIceCandidate(iceCandidate))
+                {
+                    _logs.Error($"[{_peerType}] AddIceCandidate failed: {iceCandidate.Print()}");
+                }
             }
         }
 

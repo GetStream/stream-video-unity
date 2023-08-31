@@ -104,6 +104,4 @@ namespace StreamVideo.Core.Utils
             }
         }
     }
-    
-    
 }

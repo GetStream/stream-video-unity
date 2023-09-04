@@ -690,8 +690,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 yield return new VideoLayer
                 {
-                    //Rid = encoding.rid,
-                    Rid = "h", //StreamTodo: remove this
+                    Rid = encoding.rid,
                     VideoDimension = new VideoDimension
                     {
                         Width = width,

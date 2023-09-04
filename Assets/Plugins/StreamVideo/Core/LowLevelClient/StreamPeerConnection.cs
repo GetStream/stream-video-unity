@@ -69,6 +69,7 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection = new RTCPeerConnection(ref conf);
             _peerConnection.OnIceCandidate += OnIceCandidate;
             _peerConnection.OnIceConnectionChange += OnIceConnectionChange;
+            _peerConnection.OnIceGatheringStateChange += OnIceGatheringStateChange;
             _peerConnection.OnNegotiationNeeded += OnNegotiationNeeded;
             _peerConnection.OnConnectionStateChange += OnConnectionStateChange;
             _peerConnection.OnTrack += OnTrack;
@@ -88,42 +89,28 @@ namespace StreamVideo.Core.LowLevelClient
                 var streamId = streamIdFactory(TrackKind.Video);
                 var mediaStream = new MediaStream(streamId);
                 var videoTrack = CreatePublisherVideoTrack();
-                mediaStream.AddTrack(videoTrack);
+
+                _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
+                ForceVp8Codec(_videoTransceiver);
+                
+                //mediaStream.AddTrack(videoTrack);
 
                 //This is critical so that local SDP has the
                 //a=sendonly\r\na=msid:653a6b6b-0934-467b-9b64-13c3de470e9f:Video:162238662 f83260d1-5554-4f4a-baea-b33e4a8d6dd2
                 //record
-                videoTransceiverInit.streams = new[] { mediaStream };
+                //videoTransceiverInit.streams = new[] { mediaStream };
 
-                _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
-                _videoTransceiver.Sender.ReplaceTrack(videoTrack);
+                //_videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
+                //_videoTransceiver.Sender.ReplaceTrack(videoTrack);
 
+                Sender = _peerConnection.AddTrack(videoTrack, mediaStream);
 
-                #region ForceCodec
-
-                var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
-                foreach (var codec in capabilities.codecs)
-                {
-                    Debug.LogWarning(
-                        $"Available video codec - {nameof(codec.mimeType)}:{codec.mimeType}, {nameof(codec.sdpFmtpLine)}:{codec.sdpFmtpLine}");
-                }
-
-                var vp8Codec = capabilities.codecs.Single(c
-                    => c.mimeType.IndexOf("vp8", StringComparison.OrdinalIgnoreCase) != -1);
-                var preferredCodecs = new[] { vp8Codec };
-                _videoTransceiver.SetCodecPreferences(preferredCodecs);
-                
-                #endregion
-
-                foreach (var encoding in _videoTransceiver.Sender.GetParameters().encodings)
-                {
-                    _logs.Warning(
-                        $"[{_peerType}] Added Encoding to transceiver - rid: {encoding.rid}, maxBitrate: {encoding.maxBitrate}, scaleResolutionDownBy: {encoding.scaleResolutionDownBy}");
-                }
 
                 _logs.Warning($"[{_peerType}] Added Transceivers: " + _peerConnection.GetTransceivers().Count());
             }
         }
+
+public RTCRtpSender Sender { get; private set; }
 
         public void RestartIce() => _peerConnection.RestartIce();
 
@@ -181,6 +168,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             _peerConnection.OnIceCandidate -= OnIceCandidate;
             _peerConnection.OnIceConnectionChange -= OnIceConnectionChange;
+            _peerConnection.OnIceGatheringStateChange -= OnIceGatheringStateChange;
             _peerConnection.OnNegotiationNeeded -= OnNegotiationNeeded;
             _peerConnection.OnConnectionStateChange -= OnConnectionStateChange;
             _peerConnection.OnTrack -= OnTrack;
@@ -205,6 +193,11 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnIceConnectionChange(RTCIceConnectionState state)
         {
             _logs.Warning($"[{_peerType}] OnIceConnectionChange to: " + state);
+        }
+        
+        private void OnIceGatheringStateChange(RTCIceGatheringState state)
+        {
+            _logs.Warning($"[{_peerType}] OnIceGatheringStateChange to: " + state);
         }
 
         private void OnNegotiationNeeded()
@@ -306,8 +299,8 @@ namespace StreamVideo.Core.LowLevelClient
                     yield return fullQuality;
 
                     //StreamTodo: re-add this later. Seems that simulcast doesn't work with H264 https://github.com/Unity-Technologies/com.unity.webrtc/issues/925
-                    //yield return halfQuality;
-                    //yield return quarterQuality;
+                    yield return halfQuality;
+                    yield return quarterQuality;
 
                     break;
                 default:
@@ -329,6 +322,19 @@ namespace StreamVideo.Core.LowLevelClient
         private AudioStreamTrack CreatePublisherAudioTrack()
         {
             return new AudioStreamTrack(_mediaInputProvider.AudioInput);
+        }
+        
+        private void ForceVp8Codec(RTCRtpTransceiver transceiver)
+        {
+            var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
+            var vp8 = capabilities.codecs.Single(c => c.mimeType.IndexOf("vp8", StringComparison.OrdinalIgnoreCase) != -1);
+
+            var error = transceiver.SetCodecPreferences(new RTCRtpCodecCapability[]
+            {
+                vp8
+            });
+        
+            Debug.LogWarning($"Set codecs error: {error}");
         }
     }
 }

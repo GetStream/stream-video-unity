@@ -658,7 +658,7 @@ namespace StreamVideo.Core.LowLevelClient
                     continue;
                 }
 
-                var videoLayers = GetVideoLayers(t, captureResolution);
+                var videoLayers = GetVideoLayers(_publisher.Sender.GetParameters().encodings, captureResolution);
                 _logs.Warning(
                     $"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
                 var trackInfo = new TrackInfo
@@ -672,10 +672,10 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private IEnumerable<VideoLayer> GetVideoLayers(RTCRtpTransceiver transceiver,
+        private IEnumerable<VideoLayer> GetVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
             (int Width, int Height) captureResolution)
         {
-            foreach (var encoding in transceiver.Sender.GetParameters().encodings)
+            foreach (var encoding in encodings)
             {
                 var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
                 var width = (uint)(captureResolution.Width / scaleBy);
@@ -808,7 +808,7 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: joining old call will have no participants (not sure if SDK bug)
             var localParticipant = _activeCall.Participants.Single(p => p.SessionId == SessionId);
             var trackPrefix = localParticipant.TrackLookupPrefix;
-            var trackType = trackKind.ToInternalEnum();
+            var trackType = (int)trackKind.ToInternalEnum();
 
             //StreamTodo: revise that, not sure what's the point of the random number here if the (trackPrefix, trackType) should be a unique pair
             var randomNumber = new Random().Next();

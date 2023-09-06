@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
@@ -592,6 +593,11 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 var offer = await _publisher.CreateOfferAsync();
+
+                // var mangledSdp = ReplaceVp8PayloadType(offer.sdp);
+                // _logs.Warning($"Mangled SDP:\n{mangledSdp}");
+                // offer.sdp = mangledSdp;
+                
                 await _publisher.SetLocalDescriptionAsync(ref offer);
 
                 // //StreamTodo: timeout + break if we're disconnecting/reconnecting
@@ -603,7 +609,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                 _logs.Warning($"[Publisher] LocalDesc (SDP Offer):\n{offer.sdp}");
 
-                var tracks = GetPublisherTracks();
+                var forcedVideoTrackId = ExtractVideoTrackId(offer.sdp);
+                forcedVideoTrackId = forcedVideoTrackId.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
+
+                var tracks = GetPublisherTracks(forcedVideoTrackId);
 
                 //StreamTodo: mangle SDP
                 var request = new SetPublisherRequest
@@ -634,7 +643,15 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private IEnumerable<TrackInfo> GetPublisherTracks()
+        private string ExtractVideoTrackId(string sdp)
+        {
+            var lines = sdp.Split("\n");
+            var mediaStreamRecord = lines.Single(l => l.StartsWith("a=msid:"));
+            var parts = mediaStreamRecord.Split(" ");
+            return parts[1];
+        }
+
+        private IEnumerable<TrackInfo> GetPublisherTracks(string forcedVideoTrackId)
         {
             //StreamTodo: get resolution from some IMediaDeviceProvider / IMediaSourceProvider
             var captureResolution = (Width: 1920, Height: 1080);
@@ -653,23 +670,50 @@ namespace StreamVideo.Core.LowLevelClient
             foreach (var t in transceivers)
             {
                 //StreamTodo: remove this. Skip for now due to `invalid SetPublisher request: track c59b906b-96a5-4d3f-8bed-166f16c284ef: audio cannot have simulcast layers` RPC error
-                if (t.Sender.Track.Kind == TrackKind.Audio)
+                if (t.Sender.Track.Kind != TrackKind.Audio)
                 {
                     continue;
                 }
 
-                var videoLayers = GetVideoLayers(_publisher.Sender.GetParameters().encodings, captureResolution);
-                _logs.Warning(
-                    $"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
                 var trackInfo = new TrackInfo
                 {
-                    TrackId = t.Sender.Track.Id,
+                    TrackId = string.IsNullOrEmpty(forcedVideoTrackId) ? t.Sender.Track.Id : forcedVideoTrackId,
                     TrackType = t.Sender.Track.Kind.ToInternalEnum(),
                     Mid = t.Mid
                 };
-                trackInfo.Layers.AddRange(videoLayers);
+
+                if (t.Sender.Track.Kind == TrackKind.Video)
+                {
+                    var videoLayers = GetVideoLayers(_publisher.Sender.GetParameters().encodings, captureResolution);
+                    trackInfo.Layers.AddRange(videoLayers);
+                    _logs.Warning(
+                        $"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
+                }
+
                 yield return trackInfo;
             }
+        }
+
+        private string ReplaceVp8PayloadType(string sdpOffer)
+        {
+            string[] patterns = 
+            {
+                @"m=video 9 UDP/TLS/RTP/SAVPF 127",
+                @"a=rtpmap:127 VP8/90000",
+                @"a=rtcp-fb:127 goog-remb",
+                @"a=rtcp-fb:127 transport-cc",
+                @"a=rtcp-fb:127 ccm fir",
+                @"a=rtcp-fb:127 nack",
+                @"a=rtcp-fb:127 nack pli",
+                @"a=fmtp:127"
+            };
+
+            foreach (var pattern in patterns)
+            {
+                sdpOffer = Regex.Replace(sdpOffer, pattern, pattern.Replace("127", "96"));
+            }
+
+            return sdpOffer;
         }
 
         private IEnumerable<VideoLayer> GetVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
@@ -700,9 +744,6 @@ namespace StreamVideo.Core.LowLevelClient
                     Fps = 24, //StreamTodo: hardcoded value, should integrator set this?
                     Quality = quality,
                 };
-
-                //StreamTodo: remove this
-                yield break;
             }
         }
 
@@ -810,7 +851,7 @@ namespace StreamVideo.Core.LowLevelClient
             var trackType = (int)trackKind.ToInternalEnum();
 
             //StreamTodo: revise that, not sure what's the point of the random number here if the (trackPrefix, trackType) should be a unique pair
-            var randomNumber = new Random().Next();
+            var randomNumber = UnityEngine.Random.Range(1, 10);
             var id = $"{trackPrefix}:{trackType}:{randomNumber}";
             return id;
         }

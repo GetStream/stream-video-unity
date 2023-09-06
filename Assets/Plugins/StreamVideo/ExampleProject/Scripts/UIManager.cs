@@ -64,11 +64,7 @@ namespace StreamVideo.ExampleProject
             }
 
             SmartPickDefaultCamera();
-
-            if (!string.IsNullOrEmpty(_defaultCamera.name))
-            {
-                ChangeCamera(_defaultCamera.name);
-            }
+            SmartPickDefaultMicrophone();
         }
 
         protected void Start()
@@ -124,6 +120,11 @@ namespace StreamVideo.ExampleProject
             StopAudioRecording();
             _activeMicrophoneDeviceName = _microphoneDeviceDropdown.options[index].text;
             Debug.Log("Microphone device changed to: " + _activeMicrophoneDeviceName);
+
+            if (_microphoneDeviceToggle.enabled)
+            {
+                StartAudioRecording();
+            }
         }
 
         private void OnMicrophoneToggled(bool enabled)
@@ -185,6 +186,31 @@ namespace StreamVideo.ExampleProject
             }
 
             Debug.Log($"---------- Default Camera: {_defaultCamera.name}");
+            
+            if (!string.IsNullOrEmpty(_defaultCamera.name))
+            {
+                ChangeCamera(_defaultCamera.name);
+            }
+        }
+
+        //StreamTodo: remove
+        private void SmartPickDefaultMicrophone()
+        {
+            var preferredMicDevices = new[] { "bose", "airpods" };
+            var defaultMicrophone = Microphone.devices.FirstOrDefault(d
+                => preferredMicDevices.Any(m => d.IndexOf(m, StringComparison.OrdinalIgnoreCase) != -1));
+
+            if (!string.IsNullOrEmpty(defaultMicrophone))
+            {
+                var index = Array.IndexOf(Microphone.devices, defaultMicrophone);
+                if (index == -1)
+                {
+                    Debug.LogError("Failed to find index of smart picked microphone");
+                    return;
+                }
+
+                _microphoneDeviceDropdown.value = index;
+            }
         }
         
         private void OnCameraChanged(int optionIndex) => ChangeCamera(_cameraDeviceDropdown.options[optionIndex].text);

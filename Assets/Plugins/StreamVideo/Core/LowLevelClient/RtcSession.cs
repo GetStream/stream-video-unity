@@ -471,6 +471,11 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
+            if (participant.IsLocalParticipant)
+            {
+                return;
+            }
+
             participant.SetTrackEnabled(trackType, isEnabled);
         }
 

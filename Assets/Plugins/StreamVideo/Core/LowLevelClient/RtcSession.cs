@@ -651,7 +651,7 @@ namespace StreamVideo.Core.LowLevelClient
         private string ExtractVideoTrackId(string sdp)
         {
             var lines = sdp.Split("\n");
-            var mediaStreamRecord = lines.Single(l => l.StartsWith("a=msid:"));
+            var mediaStreamRecord = lines.Single(l => l.StartsWith($"a=msid:{_publisher.PublisherVideoMediaStream.Id}"));
             var parts = mediaStreamRecord.Split(" ");
             return parts[1];
         }
@@ -675,21 +675,23 @@ namespace StreamVideo.Core.LowLevelClient
             foreach (var t in transceivers)
             {
                 //StreamTodo: remove this. Skip for now due to `invalid SetPublisher request: track c59b906b-96a5-4d3f-8bed-166f16c284ef: audio cannot have simulcast layers` RPC error
-                if (t.Sender.Track.Kind != TrackKind.Audio)
-                {
-                    continue;
-                }
+                // if (t.Sender.Track.Kind != TrackKind.Audio)
+                // {
+                //     continue;
+                // }
+
+                var trackId = t.Sender.Track.Kind == TrackKind.Video ? forcedVideoTrackId : t.Sender.Track.Id;
 
                 var trackInfo = new TrackInfo
                 {
-                    TrackId = string.IsNullOrEmpty(forcedVideoTrackId) ? t.Sender.Track.Id : forcedVideoTrackId,
+                    TrackId = trackId,
                     TrackType = t.Sender.Track.Kind.ToInternalEnum(),
                     Mid = t.Mid
                 };
 
                 if (t.Sender.Track.Kind == TrackKind.Video)
                 {
-                    var videoLayers = GetVideoLayers(_publisher.Sender.GetParameters().encodings, captureResolution);
+                    var videoLayers = GetVideoLayers(_publisher.VideoSender.GetParameters().encodings, captureResolution);
                     trackInfo.Layers.AddRange(videoLayers);
                     _logs.Warning(
                         $"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");

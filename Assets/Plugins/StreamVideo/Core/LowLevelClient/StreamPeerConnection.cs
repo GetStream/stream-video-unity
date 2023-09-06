@@ -37,6 +37,9 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public RTCSignalingState SignalingState => _peerConnection.SignalingState;
+        public MediaStream PublisherVideoMediaStream { get; private set; }
+        public MediaStream PublisherAudioMediaStream { get; private set; }
+        public RTCRtpSender VideoSender { get; private set; }
 
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
             Func<TrackKind, string> streamIdFactory, IMediaInputProvider mediaInputProvider)
@@ -79,20 +82,35 @@ namespace StreamVideo.Core.LowLevelClient
             var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio, streamIdFactory);
 
 
-            //_audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
+            _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
 
-            // var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
-            // _videoTransceiver.SetCodecPreferences(capabilities.codecs);
+
+            _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
+            ForceVp8Codec(_videoTransceiver);
 
             if (_peerType == StreamPeerType.Publisher)
             {
+                #region Audio
+
+                var audioStreamId = streamIdFactory(TrackKind.Audio);
+                PublisherAudioMediaStream = new MediaStream(audioStreamId);
+                var audioTrack = CreatePublisherAudioTrack();
+
+                PublisherAudioMediaStream.AddTrack(audioTrack);
+                _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
+
+                #endregion
+
                 var streamId = streamIdFactory(TrackKind.Video);
-                var mediaStream = new MediaStream(streamId);
+                PublisherVideoMediaStream = new MediaStream(streamId);
                 var videoTrack = CreatePublisherVideoTrack();
 
-                _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
-                ForceVp8Codec(_videoTransceiver);
-                
+                PublisherVideoMediaStream.AddTrack(videoTrack);
+                //videoTransceiverInit.streams = new[] { mediaStream };
+
+                // _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
+                // ForceVp8Codec(_videoTransceiver);
+
                 //mediaStream.AddTrack(videoTrack);
 
                 //This is critical so that local SDP has the
@@ -103,14 +121,19 @@ namespace StreamVideo.Core.LowLevelClient
                 //_videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
                 //_videoTransceiver.Sender.ReplaceTrack(videoTrack);
 
-                Sender = _peerConnection.AddTrack(videoTrack, mediaStream);
+                VideoSender = _peerConnection.AddTrack(videoTrack, PublisherVideoMediaStream);
 
+                var sendersMatch = _videoTransceiver.Sender == VideoSender;
+                var senderTrackMatch = VideoSender.Track.Id == videoTrack.Id;
 
-                _logs.Warning($"[{_peerType}] Added Transceivers: " + _peerConnection.GetTransceivers().Count());
+                var mediaStreamTrackCount = PublisherVideoMediaStream.GetTracks().Count();
+
+                _logs.Warning($"[{_peerType}] Added Transceivers: " + _peerConnection.GetTransceivers().Count() +
+                              $", sendersMatch: {sendersMatch}, " +
+                              $"senderTrackMatch: {senderTrackMatch}, Video track ID: {videoTrack.Id}, video track enabled: {videoTrack.Enabled}, Sender.Track.Id: {VideoSender.Track.Id}, " +
+                              $"Media stream ID: {PublisherVideoMediaStream.Id}, mediaStreamTrackCount: {mediaStreamTrackCount}");
             }
         }
-
-public RTCRtpSender Sender { get; private set; }
 
         public void RestartIce() => _peerConnection.RestartIce();
 
@@ -129,7 +152,7 @@ public RTCRtpSender Sender { get; private set; }
 
             foreach (var iceCandidate in _pendingIceCandidates)
             {
-                if(!_peerConnection.AddIceCandidate(iceCandidate))
+                if (!_peerConnection.AddIceCandidate(iceCandidate))
                 {
                     _logs.Error($"[{_peerType}] AddIceCandidate failed: {iceCandidate.Print()}");
                 }
@@ -194,7 +217,7 @@ public RTCRtpSender Sender { get; private set; }
         {
             _logs.Warning($"[{_peerType}] OnIceConnectionChange to: " + state);
         }
-        
+
         private void OnIceGatheringStateChange(RTCIceGatheringState state)
         {
             _logs.Warning($"[{_peerType}] OnIceGatheringStateChange to: " + state);
@@ -270,18 +293,22 @@ public RTCRtpSender Sender { get; private set; }
                     break;
                 case TrackKind.Video:
 
+
                     var fullQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
                         maxBitrate = RtcSession.FullPublishVideoBitrate,
+                        minBitrate = RtcSession.FullPublishVideoBitrate / 2,
+                        maxFramerate = 30,
                         scaleResolutionDownBy = 1.0,
                         rid = "f"
                     };
-
                     var halfQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
                         maxBitrate = RtcSession.HalfPublishVideoBitrate,
+                        minBitrate = RtcSession.HalfPublishVideoBitrate / 2,
+                        maxFramerate = 20,
                         scaleResolutionDownBy = 2.0,
                         rid = "h"
                     };
@@ -290,17 +317,18 @@ public RTCRtpSender Sender { get; private set; }
                     {
                         active = true,
                         maxBitrate = RtcSession.QuarterPublishVideoBitrate,
+                        minBitrate = RtcSession.QuarterPublishVideoBitrate / 2,
+                        maxFramerate = 10,
                         scaleResolutionDownBy = 4.0,
                         rid = "q"
                     };
 
                     Debug.LogWarning($"Rid values: {fullQuality.rid}, {halfQuality.rid}, {quarterQuality.rid}");
 
+                    yield return quarterQuality;
+                    yield return halfQuality;
                     yield return fullQuality;
 
-                    //StreamTodo: re-add this later. Seems that simulcast doesn't work with H264 https://github.com/Unity-Technologies/com.unity.webrtc/issues/925
-                    yield return halfQuality;
-                    yield return quarterQuality;
 
                     break;
                 default:
@@ -316,24 +344,37 @@ public RTCRtpSender Sender { get; private set; }
             //StreamTodo: hardcoded resolution
             _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
 
-            return new VideoStreamTrack(_publisherVideoTrackTexture);
+            Texture texture = _mediaInputProvider.VideoInput;
+
+            if (_mediaInputProvider.VideoInput == null)
+            {
+                Debug.LogError("Video Input is null");
+                texture = _publisherVideoTrackTexture;
+            }
+
+            Debug.LogWarning($"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}");
+
+            return new VideoStreamTrack(_mediaInputProvider.VideoInput);
         }
 
         private AudioStreamTrack CreatePublisherAudioTrack()
         {
             return new AudioStreamTrack(_mediaInputProvider.AudioInput);
         }
-        
+
         private void ForceVp8Codec(RTCRtpTransceiver transceiver)
         {
             var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
-            var vp8 = capabilities.codecs.Single(c => c.mimeType.IndexOf("vp8", StringComparison.OrdinalIgnoreCase) != -1);
+            var vp8 = capabilities.codecs.Where(c
+                => c.mimeType.IndexOf("vp8", StringComparison.OrdinalIgnoreCase) != -1);
 
-            var error = transceiver.SetCodecPreferences(new RTCRtpCodecCapability[]
+            foreach (var c in capabilities.codecs)
             {
-                vp8
-            });
-        
+                Debug.LogWarning($"Available codec: {c.mimeType}, {c.channels}, {c.clockRate}, {c.sdpFmtpLine}");
+            }
+
+            var error = transceiver.SetCodecPreferences(vp8.ToArray());
+
             Debug.LogWarning($"Set codecs error: {error}");
         }
     }

@@ -1,7 +1,10 @@
 using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
 using StreamVideo.Libs.Auth;
+using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using UnityEngine;
@@ -29,7 +32,7 @@ namespace StreamVideo.ExampleProject
                 LogLevel = StreamLogLevel.Debug
             });
 
-            _client.ConnectUserAsync(credentials).LogIfFailed();
+            ConnectToStreamAsync(credentials).LogIfFailed();
 
             //StreamTodo: handle by SDK
             StartCoroutine(WebRTC.Update());
@@ -57,6 +60,12 @@ namespace StreamVideo.ExampleProject
 
             _client.Dispose();
             _client = null;
+        }
+        
+        private class TokenResponse
+        {
+            public string userId;
+            public string token;
         }
 
         [SerializeField]
@@ -96,6 +105,7 @@ namespace StreamVideo.ExampleProject
 
                 _client.SetAudioInputSource(_uiManager.InputAudioSource);
                 _client.SetCameraInputSource(_uiManager.InputCameraSource);
+                
 
                 Debug.Log($"Join clicked, create: {create}, callId: {callId}");
 
@@ -114,6 +124,40 @@ namespace StreamVideo.ExampleProject
             {
                 Debug.LogException(e);
             }
+        }
+        
+        private async Task ConnectToStreamAsync(AuthCredentials credentials)
+        {
+            var token = await GetTokenAsync();
+            Debug.Log($"Try to get token: {token != null}");
+
+            await _client.ConnectUserAsync(credentials.CreateWithNewUserToken(token));
+        }
+
+        //StreamTodo: remove
+        private async Task<string> GetTokenAsync()
+        {
+            var httpClient = new HttpClient();
+            var uriBuilder = new UriBuilder()
+            {
+                Host = "stream-calls-dogfood.vercel.app",
+                Path = "/api/auth/create-token",
+                Query = $"api_key={_apiKey}&user_id={_userId}&exp=14400",
+                Scheme = "https",
+            };
+
+            var uri = uriBuilder.Uri;
+            var response = await httpClient.GetAsync(uri);
+            var result = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to get token with status code: {response.StatusCode}");
+            }
+
+            var serializer = new NewtonsoftJsonSerializer();
+            var tokenResponse = serializer.Deserialize<TokenResponse>(result);
+
+            return tokenResponse.token;
         }
     }
 }

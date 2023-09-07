@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using StreamVideo.Core.StatefulModels;
-using StreamVideo.Core.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -41,7 +40,7 @@ namespace StreamVideo.ExampleProject
             }
 
             _participantSessionIdToView.Remove(sessionId);
-            Destroy(view);
+            Destroy(view.gameObject);
         }
 
         public void SetJoinCallId(string joinCallId) => _joinCallIdInput.text = joinCallId;
@@ -75,18 +74,6 @@ namespace StreamVideo.ExampleProject
 
             //StreamTodo: handle camera toggle
         }
-
-        protected void Update()
-        {
-            byte[] currentHash = TextureUtils.ComputeTextureHash(_activeCamera);
-
-            var textureChanged = lastFrameHash != null && !TextureUtils.ByteArraysEqual(lastFrameHash, currentHash);
-            
-            Debug.LogWarning($"VideoCamera. textureChanged: {textureChanged}");
-            lastFrameHash = currentHash;
-        }
-
-        private byte[] lastFrameHash;
 
         private readonly Dictionary<string, ParticipantView> _participantSessionIdToView
             = new Dictionary<string, ParticipantView>();

@@ -83,7 +83,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video, streamIdFactory);
 
                 _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
-                
+
                 #region Audio
 
                 var audioStreamId = streamIdFactory(TrackKind.Audio);
@@ -95,31 +95,22 @@ namespace StreamVideo.Core.LowLevelClient
 
                 #endregion
 
+                #region Video
+
                 var streamId = streamIdFactory(TrackKind.Video);
                 PublisherVideoMediaStream = new MediaStream(streamId);
                 var videoTrack = CreatePublisherVideoTrack();
-                //var videoTrack = CreatePublisherVideoTrackFromSceneCamera();
 
                 PublisherVideoMediaStream.AddTrack(videoTrack);
                 videoTransceiverInit.streams = new[] { PublisherVideoMediaStream };
 
                 _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
 
-                ForceVp8Codec(_videoTransceiver);
+                ForceCodec(_videoTransceiver, CodecKeyH264);
 
                 VideoSender = _videoTransceiver.Sender;
-                
-                //_peerConnection.Get
 
-                var sendersMatch = _videoTransceiver.Sender == VideoSender;
-                var senderTrackMatch = VideoSender.Track.Id == videoTrack.Id;
-
-                var mediaStreamTrackCount = PublisherVideoMediaStream.GetTracks().Count();
-
-                _logs.Warning($"[{_peerType}] Added Transceivers: " + _peerConnection.GetTransceivers().Count() +
-                              $", sendersMatch: {sendersMatch}, " +
-                              $"senderTrackMatch: {senderTrackMatch}, Video track ID: {videoTrack.Id}, video track enabled: {videoTrack.Enabled}, Sender.Track.Id: {VideoSender.Track.Id}, " +
-                              $"Media stream ID: {PublisherVideoMediaStream.Id}, mediaStreamTrackCount: {mediaStreamTrackCount}");
+                #endregion
             }
         }
 
@@ -186,6 +177,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             _peerConnection.Close();
         }
+
+        private const string CodecKeyH264 = "h264";
+        private const string CodecKeyVP8 = "vp8";
 
         private readonly RTCPeerConnection _peerConnection;
         private readonly RTCRtpTransceiver _videoTransceiver;
@@ -314,8 +308,8 @@ namespace StreamVideo.Core.LowLevelClient
                     Debug.LogWarning($"Rid values: {fullQuality.rid}, {halfQuality.rid}, {quarterQuality.rid}");
 
                     //StreamTodo: temporarily disabled because simulcast is not working with current Unity's WebRTC lib
-                    //yield return quarterQuality;
-                    //yield return halfQuality;
+                    yield return quarterQuality;
+                    yield return halfQuality;
                     yield return fullQuality;
 
                     break;
@@ -340,11 +334,12 @@ namespace StreamVideo.Core.LowLevelClient
                 texture = _publisherVideoTrackTexture;
             }
 
-            Debug.LogWarning($"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
+            Debug.LogWarning(
+                $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
 
             return new VideoStreamTrack(_mediaInputProvider.VideoInput);
         }
-        
+
         private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()
         {
             var gfxType = SystemInfo.graphicsDeviceType;
@@ -362,20 +357,30 @@ namespace StreamVideo.Core.LowLevelClient
             return new AudioStreamTrack(_mediaInputProvider.AudioInput);
         }
 
-        private void ForceVp8Codec(RTCRtpTransceiver transceiver)
+        private static void ForceCodec(RTCRtpTransceiver transceiver, string codecKey)
         {
             var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
-            var vp8 = capabilities.codecs.Where(c
-                => c.mimeType.IndexOf("vp8", StringComparison.OrdinalIgnoreCase) != -1);
+            var forcedCodecs = capabilities.codecs.Where(c
+                => c.mimeType.IndexOf(codecKey, StringComparison.OrdinalIgnoreCase) != -1);
 
-            foreach (var c in capabilities.codecs)
+            if (!forcedCodecs.Any())
             {
-                Debug.LogWarning($"Available codec: {c.mimeType}, {c.channels}, {c.clockRate}, {c.sdpFmtpLine}");
+                var availableCodecs = string.Join(", ", capabilities.codecs.Select(c => c.mimeType));
+                Debug.LogError($"Tried to filter codecs by `{codecKey}` key but no results were found. Available codecs: {availableCodecs}");
+                return;
             }
 
-            var error = transceiver.SetCodecPreferences(vp8.ToArray());
+            foreach (var c in forcedCodecs)
+            {
+                Debug.LogWarning($"Forced Codec: {c.mimeType}, ");
+            }
 
-            Debug.LogWarning($"Set codecs error: {error}");
+            var error = transceiver.SetCodecPreferences(forcedCodecs.ToArray());
+
+            if (error != RTCErrorType.None)
+            {
+                Debug.LogError("Failed to set codecs.");
+            }
         }
     }
 }

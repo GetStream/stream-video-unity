@@ -23,6 +23,7 @@ using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using UnityEngine;
+using Error = Stream.Video.v1.Sfu.Events.Error;
 using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using TrackTypeInternal = Stream.Video.v1.Sfu.Models.TrackType;
@@ -92,6 +93,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
             _sfuWebSocket.ParticipantJoined += OnSfuParticipantJoined;
             _sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
+            _sfuWebSocket.Error += SfuWebSocketOnError;
         }
 
         public void Dispose()
@@ -105,6 +107,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
             _sfuWebSocket.ParticipantJoined -= OnSfuParticipantJoined;
             _sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
+            _sfuWebSocket.Error -= SfuWebSocketOnError;
             _sfuWebSocket.Dispose();
 
             DisposeSubscriber();
@@ -508,6 +511,11 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Info($"Participant: {id} left");
 
             QueueTracksSubscriptionRequest();
+        }
+        
+        private void SfuWebSocketOnError(Error obj)
+        {
+            _logs.Error($"Sfu Error - Code: {obj.Error_.Code}, Message: {obj.Error_.Message}, ShouldRetry: {obj.Error_.ShouldRetry}");
         }
 
         //StreamTodo: implement retry strategy like in Android SDK

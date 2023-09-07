@@ -71,6 +71,7 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: move IInputProvider elsewhere. it's for easy testing only
         public AudioSource AudioInput { get; set; }
         public WebCamTexture VideoInput { get; set; }
+        public Camera VideoSceneInput { get; set; }
 
         #endregion
 

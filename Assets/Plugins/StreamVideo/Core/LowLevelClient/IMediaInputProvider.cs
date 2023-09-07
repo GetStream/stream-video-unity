@@ -6,5 +6,6 @@ namespace StreamVideo.Core.LowLevelClient
     {
         AudioSource AudioInput { get; }
         WebCamTexture VideoInput { get; }
+        Camera VideoSceneInput { get; set; }
     }
 }

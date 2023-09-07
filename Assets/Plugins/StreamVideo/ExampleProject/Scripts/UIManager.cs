@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.Utils;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject
 {
     public delegate void JoinCallHandler(bool create);
-    
+
     public class UIManager : MonoBehaviour
     {
         public event JoinCallHandler JoinClicked;
@@ -18,8 +18,9 @@ namespace StreamVideo.ExampleProject
 
         public AudioSource InputAudioSource => _inputAudioSource;
         public WebCamTexture InputCameraSource => _activeCamera;
+        public Camera InputSceneCamera => _inputSceneCamera;
         public string JoinCallId => _joinCallIdInput.text;
-        
+
         public int Width = 1280;
         public int Height = 720;
         public int FPS = 30;
@@ -30,7 +31,7 @@ namespace StreamVideo.ExampleProject
             view.Init(participant);
             _participantSessionIdToView.Add(participant.SessionId, view);
         }
-        
+
         public void RemoveParticipant(string sessionId, string userId)
         {
             if (!_participantSessionIdToView.TryGetValue(sessionId, out var view))
@@ -71,18 +72,31 @@ namespace StreamVideo.ExampleProject
         {
             _microphoneDeviceToggle.onValueChanged.AddListener(OnMicrophoneToggled);
             OnMicrophoneToggled(_microphoneDeviceToggle.enabled);
-            
+
             //StreamTodo: handle camera toggle
         }
-        
-        private readonly Dictionary<string, ParticipantView> _participantSessionIdToView = new Dictionary<string, ParticipantView>();
+
+        protected void Update()
+        {
+            byte[] currentHash = TextureUtils.ComputeTextureHash(_activeCamera);
+
+            var textureChanged = lastFrameHash != null && !TextureUtils.ByteArraysEqual(lastFrameHash, currentHash);
+            
+            Debug.LogWarning($"VideoCamera. textureChanged: {textureChanged}");
+            lastFrameHash = currentHash;
+        }
+
+        private byte[] lastFrameHash;
+
+        private readonly Dictionary<string, ParticipantView> _participantSessionIdToView
+            = new Dictionary<string, ParticipantView>();
 
         [SerializeField]
         private Button _joinBtn;
-        
+
         [SerializeField]
         private Button _createBtn;
-        
+
         [SerializeField]
         private TMP_InputField _joinCallIdInput;
 
@@ -106,9 +120,12 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private AudioSource _inputAudioSource;
-        
+
         [SerializeField]
         private RawImage _localCameraImage;
+        
+        [SerializeField]
+        private Camera _inputSceneCamera;
 
         private string _activeMicrophoneDeviceName;
 
@@ -186,7 +203,7 @@ namespace StreamVideo.ExampleProject
             }
 
             Debug.Log($"---------- Default Camera: {_defaultCamera.name}");
-            
+
             if (!string.IsNullOrEmpty(_defaultCamera.name))
             {
                 ChangeCamera(_defaultCamera.name);
@@ -212,7 +229,7 @@ namespace StreamVideo.ExampleProject
                 _microphoneDeviceDropdown.value = index;
             }
         }
-        
+
         private void OnCameraChanged(int optionIndex) => ChangeCamera(_cameraDeviceDropdown.options[optionIndex].text);
 
         private void ChangeCamera(string deviceName)
@@ -227,7 +244,7 @@ namespace StreamVideo.ExampleProject
             _localCameraImage.texture = _activeCamera;
 
             _activeCamera.Play();
-            
+
             CameraInputChanged?.Invoke();
         }
     }

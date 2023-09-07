@@ -170,6 +170,11 @@ namespace StreamVideo.Core
         {
             InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;
         }
+        
+        public void SetCameraInputSource(Camera sceneCamera)
+        {
+            InternalLowLevelClient.RtcSession.VideoSceneInput = sceneCamera;
+        }
 
         internal StreamVideoLowLevelClient InternalLowLevelClient { get; private set; }
 

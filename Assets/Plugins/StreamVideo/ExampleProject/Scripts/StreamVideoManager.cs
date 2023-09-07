@@ -105,6 +105,7 @@ namespace StreamVideo.ExampleProject
 
                 _client.SetAudioInputSource(_uiManager.InputAudioSource);
                 _client.SetCameraInputSource(_uiManager.InputCameraSource);
+                _client.SetCameraInputSource(_uiManager.InputSceneCamera);
                 
 
                 Debug.Log($"Join clicked, create: {create}, callId: {callId}");

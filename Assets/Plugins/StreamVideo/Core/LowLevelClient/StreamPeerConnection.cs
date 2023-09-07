@@ -104,6 +104,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var streamId = streamIdFactory(TrackKind.Video);
                 PublisherVideoMediaStream = new MediaStream(streamId);
                 var videoTrack = CreatePublisherVideoTrack();
+                //var videoTrack = CreatePublisherVideoTrackFromSceneCamera();
 
                 PublisherVideoMediaStream.AddTrack(videoTrack);
                 //videoTransceiverInit.streams = new[] { mediaStream };
@@ -352,9 +353,24 @@ namespace StreamVideo.Core.LowLevelClient
                 texture = _publisherVideoTrackTexture;
             }
 
-            Debug.LogWarning($"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}");
+            Debug.LogWarning($"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
+            
+            _mediaInputProvider.VideoInput.Stop();
+            _mediaInputProvider.VideoInput.Play();
 
-            return new VideoStreamTrack(_mediaInputProvider.VideoInput);
+            return new VideoStreamTrack(_mediaInputProvider.VideoInput, needFlip: false);
+        }
+        
+        private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()
+        {
+            var gfxType = SystemInfo.graphicsDeviceType;
+            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+
+            //StreamTodo: hardcoded resolution
+            _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
+
+            var track = _mediaInputProvider.VideoSceneInput.CaptureStreamTrack(1920, 1080);
+            return track;
         }
 
         private AudioStreamTrack CreatePublisherAudioTrack()

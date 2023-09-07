@@ -64,7 +64,7 @@ namespace StreamVideo.Core.LowLevelClient
             var conf = new RTCConfiguration
             {
                 iceServers = rtcIceServers.ToArray(),
-                iceTransportPolicy = RTCIceTransportPolicy.Relay,
+                iceTransportPolicy = RTCIceTransportPolicy.All,
                 bundlePolicy = null,
                 iceCandidatePoolSize = null
             };
@@ -77,19 +77,13 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnConnectionStateChange += OnConnectionStateChange;
             _peerConnection.OnTrack += OnTrack;
 
-            //StreamTodo: for Publisher we need to wait for SFU connected in order to buildTrackId with state.trackLookupPrefix
-            var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video, streamIdFactory);
-            var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio, streamIdFactory);
-
-
-            _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
-
-
-            _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
-            ForceVp8Codec(_videoTransceiver);
-
             if (_peerType == StreamPeerType.Publisher)
             {
+                var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio, streamIdFactory);
+                var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video, streamIdFactory);
+
+                _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
+                
                 #region Audio
 
                 var audioStreamId = streamIdFactory(TrackKind.Audio);
@@ -107,22 +101,15 @@ namespace StreamVideo.Core.LowLevelClient
                 //var videoTrack = CreatePublisherVideoTrackFromSceneCamera();
 
                 PublisherVideoMediaStream.AddTrack(videoTrack);
-                //videoTransceiverInit.streams = new[] { mediaStream };
+                videoTransceiverInit.streams = new[] { PublisherVideoMediaStream };
 
-                // _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
-                // ForceVp8Codec(_videoTransceiver);
+                _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
 
-                //mediaStream.AddTrack(videoTrack);
+                ForceVp8Codec(_videoTransceiver);
 
-                //This is critical so that local SDP has the
-                //a=sendonly\r\na=msid:653a6b6b-0934-467b-9b64-13c3de470e9f:Video:162238662 f83260d1-5554-4f4a-baea-b33e4a8d6dd2
-                //record
-                //videoTransceiverInit.streams = new[] { mediaStream };
-
-                //_videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
-                //_videoTransceiver.Sender.ReplaceTrack(videoTrack);
-
-                VideoSender = _peerConnection.AddTrack(videoTrack, PublisherVideoMediaStream);
+                VideoSender = _videoTransceiver.Sender;
+                
+                //_peerConnection.Get
 
                 var sendersMatch = _videoTransceiver.Sender == VideoSender;
                 var senderTrackMatch = VideoSender.Track.Id == videoTrack.Id;
@@ -299,7 +286,7 @@ namespace StreamVideo.Core.LowLevelClient
                     {
                         active = true,
                         maxBitrate = RtcSession.FullPublishVideoBitrate,
-                        minBitrate = RtcSession.FullPublishVideoBitrate / 2,
+                        //minBitrate = RtcSession.FullPublishVideoBitrate / 2,
                         maxFramerate = 30,
                         scaleResolutionDownBy = 1.0,
                         rid = "f"
@@ -308,7 +295,7 @@ namespace StreamVideo.Core.LowLevelClient
                     {
                         active = true,
                         maxBitrate = RtcSession.HalfPublishVideoBitrate,
-                        minBitrate = RtcSession.HalfPublishVideoBitrate / 2,
+                        //minBitrate = RtcSession.HalfPublishVideoBitrate / 2,
                         maxFramerate = 20,
                         scaleResolutionDownBy = 2.0,
                         rid = "h"
@@ -318,7 +305,7 @@ namespace StreamVideo.Core.LowLevelClient
                     {
                         active = true,
                         maxBitrate = RtcSession.QuarterPublishVideoBitrate,
-                        minBitrate = RtcSession.QuarterPublishVideoBitrate / 2,
+                        //minBitrate = RtcSession.QuarterPublishVideoBitrate / 2,
                         maxFramerate = 10,
                         scaleResolutionDownBy = 4.0,
                         rid = "q"
@@ -326,10 +313,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                     Debug.LogWarning($"Rid values: {fullQuality.rid}, {halfQuality.rid}, {quarterQuality.rid}");
 
-                    yield return quarterQuality;
-                    yield return halfQuality;
+                    //StreamTodo: temporarily disabled because simulcast is not working with current Unity's WebRTC lib
+                    //yield return quarterQuality;
+                    //yield return halfQuality;
                     yield return fullQuality;
-
 
                     break;
                 default:
@@ -354,11 +341,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             Debug.LogWarning($"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
-            
-            _mediaInputProvider.VideoInput.Stop();
-            _mediaInputProvider.VideoInput.Play();
 
-            return new VideoStreamTrack(_mediaInputProvider.VideoInput, needFlip: false);
+            return new VideoStreamTrack(_mediaInputProvider.VideoInput);
         }
         
         private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
@@ -25,7 +24,6 @@ using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using UnityEngine;
 using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
-using Random = System.Random;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using TrackTypeInternal = Stream.Video.v1.Sfu.Models.TrackType;
 
@@ -742,7 +740,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 yield return new VideoLayer
                 {
-                    Rid = encoding.rid,
+                    Rid = string.IsNullOrEmpty(encoding.rid) ? "f" : encoding.rid,
                     VideoDimension = new VideoDimension
                     {
                         Width = width,

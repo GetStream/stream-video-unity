@@ -3253,6 +3253,7 @@ MonoBehaviour:
   _cameraDeviceToggle: {fileID: 1214311663}
   _inputAudioSource: {fileID: 1825738054}
   _localCameraImage: {fileID: 68451405}
+  _inputSceneCamera: {fileID: 0}
 --- !u!1 &1110606376
 GameObject:
   m_ObjectHideFlags: 0
@@ -4243,7 +4244,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _uiManager: {fileID: 996985033}
-  _joinCallId: QcXi0j5yaEvk
+  _joinCallId: zFoowZlpJ8X7
   _apiKey: hd8szvscpxvd
   _userId: daniel_sierpinski
   _userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZGFuaWVsX3NpZXJwaW5za2kiLCJpc3MiOiJwcm9udG8iLCJzdWIiOiJ1c2VyL2RhbmllbF9zaWVycGluc2tpIiwiaWF0IjoxNjkzNDc2ODEwLCJleHAiOjE2OTM0OTEyMTV9.BOK6lIfG5_mfOh94Srd2UFXLwus7aNJ0kYPTLcG7_Ts

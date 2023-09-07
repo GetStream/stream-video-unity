@@ -155,7 +155,7 @@ namespace StreamVideo.Core.StatefulModels
             var streamTrack = GetStreamTrack(type);
             if (streamTrack == null)
             {
-                Logs.Error($"Failed to get track of type `{type}` for: {this}");
+                // Not an error, sometimes we receive tracks info from the API before webRTC triggers onTrack event
                 return;
             }
             

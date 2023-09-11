@@ -1,0 +1,18 @@
+{
+    "name": "StreamVideo.Tests",
+    "rootNamespace": "",
+    "references": [
+        "Stream.Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

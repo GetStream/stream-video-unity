@@ -32,6 +32,7 @@ using StreamVideo.Libs.Websockets;
 #if UNITY_EDITOR
 using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("StreamVideo.EditorTools")]
+[assembly: InternalsVisibleTo("StreamVideo.Tests")]
 #endif
 
 namespace StreamVideo.Core.LowLevelClient

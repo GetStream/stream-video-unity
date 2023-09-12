@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
 using Stream.Video.v1.Sfu.Signal;
+using StreamVideo.Core.Configs;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Models.Sfu;
@@ -77,8 +78,9 @@ namespace StreamVideo.Core.LowLevelClient
         public string SessionId { get; private set; }
 
         public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, ISerializer serializer, IHttpClient httpClient,
-            ITimeService timeService)
+            ITimeService timeService, IStreamClientConfig config)
         {
+            _config = config;
             _timeService = timeService;
             _serializer = serializer;
             _httpClient = httpClient;
@@ -203,6 +205,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
         private readonly ITimeService _timeService;
+        private readonly IStreamClientConfig _config;
 
         private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
 
@@ -606,10 +609,15 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var offer = await _publisher.CreateOfferAsync();
 
-                // var mangledSdp = ReplaceVp8PayloadType(offer.sdp);
-                // _logs.Warning($"Mangled SDP:\n{mangledSdp}");
-                // offer.sdp = mangledSdp;
-                
+                if (_config.Audio.EnableRed || _config.Audio.EnableDtx)
+                {
+                    offer = new RTCSessionDescription()
+                    {
+                        type = offer.type,
+                        sdp = _sdpMungeUtils.ModifySdp(offer.sdp, _config.Audio.EnableRed, _config.Audio.EnableDtx)
+                    };
+                }
+
                 await _publisher.SetLocalDescriptionAsync(ref offer);
 
                 // //StreamTodo: timeout + break if we're disconnecting/reconnecting
@@ -654,6 +662,8 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Exception(e);
             }
         }
+
+        private SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
 
         private string ExtractVideoTrackId(string sdp)
         {

@@ -44,6 +44,23 @@ namespace StreamVideo.Core.LowLevelClient
 
             return _fileSb.ToString();
         }
+        
+        private readonly StringBuilder _fileSb = new StringBuilder();
+        private readonly StringBuilder _mediaLineSb = new StringBuilder();
+        private readonly List<string> _fileBuffer = new List<string>();
+
+        private string _audioMRecord;
+        private int? _audioMRecordLineIndex;
+
+        private string _opusPayloadType;
+        private int? _opusPosition;
+        private string _opusFtmpRecord;
+        private int _opusFtmpRecordLineIndex;
+
+        private string _redPayloadType;
+        private int? _redPosition;
+        private string _redFtmpRecord;
+        private int _redFtmpRecordLineIndex;
 
         private string SwapOpusAndRed(string line)
         {
@@ -147,23 +164,6 @@ namespace StreamVideo.Core.LowLevelClient
             _redFtmpRecord = default;
             _redFtmpRecordLineIndex = default;
         }
-
-        private readonly StringBuilder _fileSb = new StringBuilder();
-        private readonly StringBuilder _mediaLineSb = new StringBuilder();
-        private readonly List<string> _fileBuffer = new List<string>();
-
-        private string _audioMRecord;
-        private int? _audioMRecordLineIndex;
-
-        private string _opusPayloadType;
-        private int? _opusPosition;
-        private string _opusFtmpRecord;
-        private int _opusFtmpRecordLineIndex;
-
-        private string _redPayloadType;
-        private int? _redPosition;
-        private string _redFtmpRecord;
-        private int _redFtmpRecordLineIndex;
 
         private static void ParseRtmpMapRecord(string rtmpMapLine, out string payloadType)
         {

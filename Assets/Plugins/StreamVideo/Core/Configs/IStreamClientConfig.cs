@@ -15,5 +15,7 @@ namespace StreamVideo.Core.Configs
         /// Disabled - no logs will be emitted. Not recommended in general - this could be only viable if you're capturing all of the thrown exceptions and handling the logging on your own.
         /// </summary>
         StreamLogLevel LogLevel { get; set; }
+
+        IStreamAudioConfig Audio { get; }
     }
 }

@@ -16,6 +16,8 @@ namespace StreamVideo.ExampleProject
         protected void Awake()
         {
             _uiManager.JoinClicked += OnJoinClicked;
+            _uiManager.ToggledAudioRed += OnToggledAudioRed;
+            _uiManager.ToggledAudioDtx += OnToggledAudioDtx;
         }
 
         protected void Start()
@@ -27,10 +29,17 @@ namespace StreamVideo.ExampleProject
 
             var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
 
-            _client = StreamVideoClient.CreateDefaultClient(new StreamClientConfig
+            _clientConfig = new StreamClientConfig
             {
-                LogLevel = StreamLogLevel.Debug
-            });
+                LogLevel = StreamLogLevel.Debug,
+                Audio =
+                {
+                    EnableRed = _uiManager.AudioRedEnabled,
+                    EnableDtx = _uiManager.AudioDtxEnabled
+                }
+            };
+
+            _client = StreamVideoClient.CreateDefaultClient(_clientConfig);
 
             ConnectToStreamAsync(credentials).LogIfFailed();
 
@@ -43,6 +52,8 @@ namespace StreamVideo.ExampleProject
         protected async void OnDestroy()
         {
             _uiManager.JoinClicked -= OnJoinClicked;
+            _uiManager.ToggledAudioRed -= OnToggledAudioRed;
+            _uiManager.ToggledAudioDtx -= OnToggledAudioDtx;
 
             if (_client == null)
             {
@@ -87,6 +98,7 @@ namespace StreamVideo.ExampleProject
         private string _userToken = "";
 
         private IStreamVideoClient _client;
+        private StreamClientConfig _clientConfig;
 
         private string TryGetCallId(bool create) => create ? Guid.NewGuid().ToString() : _uiManager.JoinCallId;
 
@@ -125,6 +137,16 @@ namespace StreamVideo.ExampleProject
             {
                 Debug.LogException(e);
             }
+        }
+        
+        private void OnToggledAudioDtx(bool value)
+        {
+            _clientConfig.Audio.EnableDtx = value;
+        }
+
+        private void OnToggledAudioRed(bool value)
+        {
+            _clientConfig.Audio.EnableRed = value;
         }
         
         private async Task ConnectToStreamAsync(AuthCredentials credentials)

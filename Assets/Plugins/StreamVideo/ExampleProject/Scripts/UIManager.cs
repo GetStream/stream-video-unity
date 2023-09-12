@@ -14,11 +14,17 @@ namespace StreamVideo.ExampleProject
     {
         public event JoinCallHandler JoinClicked;
         public event Action CameraInputChanged;
+        
+        public event Action<bool> ToggledAudioRed;
+        public event Action<bool> ToggledAudioDtx;
 
         public AudioSource InputAudioSource => _inputAudioSource;
         public WebCamTexture InputCameraSource => _activeCamera;
         public Camera InputSceneCamera => _inputSceneCamera;
         public string JoinCallId => _joinCallIdInput.text;
+
+        public bool AudioRedEnabled => _audioRedToggle.enabled;
+        public bool AudioDtxEnabled => _audioDtxToggle.enabled;
 
         public int Width = 1280;
         public int Height = 720;
@@ -49,6 +55,9 @@ namespace StreamVideo.ExampleProject
         {
             _joinBtn.onClick.AddListener(() => JoinClicked?.Invoke(false));
             _createBtn.onClick.AddListener(() => JoinClicked?.Invoke(true));
+            
+            _audioRedToggle.onValueChanged.AddListener(enabled => ToggledAudioRed?.Invoke(enabled));
+            _audioDtxToggle.onValueChanged.AddListener(enabled => ToggledAudioDtx?.Invoke(enabled));
 
             _microphoneDeviceDropdown.ClearOptions();
             _microphoneDeviceDropdown.onValueChanged.AddListener(OnMicrophoneDeviceChanged);
@@ -113,6 +122,12 @@ namespace StreamVideo.ExampleProject
         
         [SerializeField]
         private Camera _inputSceneCamera;
+        
+        [SerializeField]
+        private Toggle _audioRedToggle;
+        
+        [SerializeField]
+        private Toggle _audioDtxToggle;
 
         private string _activeMicrophoneDeviceName;
 

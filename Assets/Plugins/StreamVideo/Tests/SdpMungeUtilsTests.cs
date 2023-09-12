@@ -1,8 +1,8 @@
+#if STREAM_TESTS_ENABLED
 using System.Linq;
 using NUnit.Framework;
 using StreamVideo.Core.LowLevelClient;
 
-//StreamTodo: wrap in compiler flag
 namespace StreamVideo.Tests
 {
     internal sealed class SdpMungeUtilsTests
@@ -11,18 +11,29 @@ namespace StreamVideo.Tests
         public void When_enabled_red_expect_red_codec_in_front_of_the_list()
         {
             var utils = new SdpMungeUtils();
-            var modifiedSdp = utils.ModifySdp(_sampleSdp, enableRed: true, enableDtx: false);
+            var modifiedSdp = utils.ModifySdp(SampleSdp, enableRed: true, enableDtx: false);
             
             var lines = modifiedSdp.Split("\n");
             var mRecord = lines.Single(l => l.StartsWith("m=audio"));
             var mRecordParts = mRecord.Remove(0, "m=audio 9 UDP/TLS/RTP/SAVPF".Length).Trim();
             var codecs = mRecordParts.Split(" ").Select(int.Parse);
             
+            // In sample SDP Red is 97 -> "a=rtpmap:97 red/48000/2"
             Assert.That(codecs.First() == 97);
-
         }
 
-        private const string _sampleSdp = @"v=0
+        [Test]
+        public void When_dtx_enabled_expect_param_added_to_audio_parameters()
+        {
+            var utils = new SdpMungeUtils();
+            var modifiedSdp = utils.ModifySdp(SampleSdp, enableRed: false, enableDtx: true);
+            
+            var lines = modifiedSdp.Split("\n");
+            var audioParamRecords = lines.Where(l => l.Contains("useinbandfec=1"));
+            Assert.That(audioParamRecords.All(l => l.Contains("usedtx=1")));
+        }
+
+        private const string SampleSdp = @"v=0
 o=- 5881996535939993027 2 IN IP4 127.0.0.1
 s=-
 t=0 0
@@ -130,3 +141,4 @@ a=rid:f send
 a=simulcast:send q;h;f";
     }
 }
+#endif

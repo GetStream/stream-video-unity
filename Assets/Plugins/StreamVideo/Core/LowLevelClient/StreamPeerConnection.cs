@@ -42,7 +42,7 @@ namespace StreamVideo.Core.LowLevelClient
         public RTCRtpSender VideoSender { get; private set; }
 
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
-            Func<TrackKind, string> streamIdFactory, IMediaInputProvider mediaInputProvider)
+            Func<TrackKind, string> streamIdFactory, IMediaInputProvider mediaInputProvider, bool enableAudioRed = false)
         {
             _mediaInputProvider = mediaInputProvider;
             _peerType = peerType;
@@ -93,6 +93,11 @@ namespace StreamVideo.Core.LowLevelClient
                 PublisherAudioMediaStream.AddTrack(audioTrack);
                 _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
 
+                if (enableAudioRed)
+                {
+                    ForceCodec(_audioTransceiver, AudioCodecKeyRed, TrackKind.Audio);
+                }
+
                 #endregion
 
                 #region Video
@@ -106,7 +111,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
 
-                ForceCodec(_videoTransceiver, CodecKeyH264);
+                ForceCodec(_videoTransceiver, VideoCodecKeyH264, TrackKind.Video);
 
                 VideoSender = _videoTransceiver.Sender;
 
@@ -178,8 +183,9 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.Close();
         }
 
-        private const string CodecKeyH264 = "h264";
-        private const string CodecKeyVP8 = "vp8";
+        private const string VideoCodecKeyH264 = "h264";
+        private const string VideoCodecKeyVP8 = "vp8";
+        private const string AudioCodecKeyRed = "red";
 
         private readonly RTCPeerConnection _peerConnection;
         private readonly RTCRtpTransceiver _videoTransceiver;
@@ -357,29 +363,38 @@ namespace StreamVideo.Core.LowLevelClient
             return new AudioStreamTrack(_mediaInputProvider.AudioInput);
         }
 
-        private static void ForceCodec(RTCRtpTransceiver transceiver, string codecKey)
+        private void ForceCodec(RTCRtpTransceiver transceiver, string codecKey, TrackKind kind)
         {
-            var capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
+            var capabilities = RTCRtpSender.GetCapabilities(kind);
             var forcedCodecs = capabilities.codecs.Where(c
                 => c.mimeType.IndexOf(codecKey, StringComparison.OrdinalIgnoreCase) != -1);
+
+#if STREAM_DEBUG_ENABLED
+
+            foreach (var codec in capabilities.codecs)
+            {
+                _logs.Info($"Available codec of kind `{kind}`: {codec.mimeType}");
+            }
+
+#endif
 
             if (!forcedCodecs.Any())
             {
                 var availableCodecs = string.Join(", ", capabilities.codecs.Select(c => c.mimeType));
-                Debug.LogError($"Tried to filter codecs by `{codecKey}` key but no results were found. Available codecs: {availableCodecs}");
+                _logs.Error(
+                    $"Tried to filter codecs by `{codecKey}` key and kind `{kind}` but no results were found. Available codecs: {availableCodecs}");
                 return;
             }
 
             foreach (var c in forcedCodecs)
             {
-                Debug.LogWarning($"Forced Codec: {c.mimeType}, ");
+                _logs.Info($"Forced Codec of kind `{kind}`: {c.mimeType}, ");
             }
 
             var error = transceiver.SetCodecPreferences(forcedCodecs.ToArray());
-
             if (error != RTCErrorType.None)
             {
-                Debug.LogError("Failed to set codecs.");
+                _logs.Error($"Failed to set codecs for kind kind `{kind}` due to error: {error}");
             }
         }
     }

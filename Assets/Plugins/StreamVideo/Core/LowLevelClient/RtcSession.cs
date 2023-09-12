@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
@@ -609,13 +610,18 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var offer = await _publisher.CreateOfferAsync();
 
-                if (_config.Audio.EnableRed || _config.Audio.EnableDtx)
+                //StreamTodo: ignored the _config.Audio.EnableRed because with current webRTC version this modification causes a crash
+                //We're also forcing the red codec in the StreamPeerConnection but atm this results in "InvalidModification"
+                //This is most likely issue with the webRTC lib
+                if (_config.Audio.EnableDtx)
                 {
                     offer = new RTCSessionDescription()
                     {
                         type = offer.type,
-                        sdp = _sdpMungeUtils.ModifySdp(offer.sdp, _config.Audio.EnableRed, _config.Audio.EnableDtx)
+                        sdp = _sdpMungeUtils.ModifySdp(offer.sdp, enableRed: false, _config.Audio.EnableDtx)
                     };
+                    
+                    _logs.Info($"Modified SDP, enable red: {_config.Audio.EnableRed}, enable DTX: {_config.Audio.EnableDtx} ");
                 }
 
                 await _publisher.SetLocalDescriptionAsync(ref offer);
@@ -889,7 +895,7 @@ namespace StreamVideo.Core.LowLevelClient
             var callSettings = _activeCall.Settings;
 
             _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers, MediaStreamIdFactory,
-                this);
+                this, _config.Audio.EnableRed);
             _publisher.IceTrickled += OnIceTrickled;
             _publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
         }

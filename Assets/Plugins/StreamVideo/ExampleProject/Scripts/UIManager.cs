@@ -23,8 +23,8 @@ namespace StreamVideo.ExampleProject
         public Camera InputSceneCamera => _inputSceneCamera;
         public string JoinCallId => _joinCallIdInput.text;
 
-        public bool AudioRedEnabled => _audioRedToggle.enabled;
-        public bool AudioDtxEnabled => _audioDtxToggle.enabled;
+        public bool AudioRedEnabled => _audioRedToggle.isOn;
+        public bool AudioDtxEnabled => _audioDtxToggle.isOn;
 
         public int Width = 1280;
         public int Height = 720;

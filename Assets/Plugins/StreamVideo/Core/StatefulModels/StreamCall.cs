@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
@@ -35,13 +36,21 @@ namespace StreamVideo.Core
      * * audio only participants by when they joined
      *
      */
-
         public event ParticipantTrackChangedHandler TrackAdded;
 
         public event ParticipantJoinedHandler ParticipantJoined;
         public event ParticipantLeftHandler ParticipantLeft;
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
+
+        public bool IsLocalUserOwner
+        {
+            get
+            {
+                var localParticipant = Participants.FirstOrDefault(p => p.IsLocalParticipant);
+                return CreatedBy.Id == localParticipant?.UserId;
+            }
+        }
 
         #region State
 
@@ -63,7 +72,7 @@ namespace StreamVideo.Core
         /// <summary>
         /// The user that created the call
         /// </summary>
-        public StreamVideoUser CreatedBy { get; private set; }
+        public IStreamVideoUser CreatedBy { get; private set; }
 
         public string CurrentSessionId { get; private set; }
 
@@ -108,28 +117,26 @@ namespace StreamVideo.Core
         /// <summary>
         /// The type of call
         /// </summary>
-        public string Type { get; private set; }
+        public StreamCallType Type { get; private set; }
 
         /// <summary>
         /// Date/time of the last update
         /// </summary>
         public DateTimeOffset UpdatedAt { get; private set; }
-        
+
         // Below don't belong to CallResponse
-        
+
         public bool Created { get; private set; }
-        
+
         //StreamTodo: should credentials be internal? 
         public Credentials Credentials { get; private set; }
         public string Duration { get; private set; }
         public CallMember Membership { get; private set; }
 
         #endregion
-        
+
         #region State from SFU
-        
-        
-        
+
         #endregion
 
         public Task GetOrCreateAsync()
@@ -171,10 +178,13 @@ namespace StreamVideo.Core
             return Task.CompletedTask;
         }
 
-        public Task Leave()
+        public Task LeaveAsync()
         {
-            return Task.CompletedTask;
+            //StreamTodo: review if we need any of this - on Android leave() makes -> remove "ActiveCall" in client.state, camera.disable(), microphone.disable()
+            return Client.LeaveCallAsync(this);
         }
+
+        public Task EndAsync() => Client.EndCallAsync(this);
 
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
@@ -196,7 +206,7 @@ namespace StreamVideo.Core
             StartsAt = dto.StartsAt;
             Team = dto.Team;
             Transcribing = dto.Transcribing;
-            Type = dto.Type;
+            Type = new StreamCallType(dto.Type);
             UpdatedAt = dto.UpdatedAt;
         }
 
@@ -208,7 +218,8 @@ namespace StreamVideo.Core
             _blockedUsers.TryReplaceTrackedObjects(dto.BlockedUsers, cache.Users);
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
-            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum, cache);
+            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
+                cache);
         }
 
         void IUpdateableFrom<GetOrCreateCallResponseInternalDTO, StreamCall>.UpdateFromDto(
@@ -220,7 +231,8 @@ namespace StreamVideo.Core
             Created = dto.Created;
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
-            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum, cache);
+            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
+                cache);
         }
 
         void IUpdateableFrom<JoinCallResponseInternalDTO, StreamCall>.UpdateFromDto(JoinCallResponseInternalDTO dto,
@@ -233,15 +245,16 @@ namespace StreamVideo.Core
             Credentials = cache.TryUpdateOrCreateFromDto(Credentials, dto.Credentials);
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
-            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum, cache);
+            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
+                cache);
         }
-        
+
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
         }
-        
+
         internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
         {
             var participant = Session.UpdateFromSfu(participantJoined, cache);
@@ -251,12 +264,13 @@ namespace StreamVideo.Core
         internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
             var participant = Session.UpdateFromSfu(participantLeft, cache);
-            
+
             //StreamTodo: if we delete the participant from cache we should then pass SessionId and UserId
             ParticipantLeft?.Invoke(participant.sessionId, participant.userId);
         }
 
-        internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track) => TrackAdded?.Invoke(participant, track);
+        internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+            => TrackAdded?.Invoke(participant, track);
 
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
@@ -276,15 +290,15 @@ namespace StreamVideo.Core
 
         //StreamTodo: is this always in sync with _blockedUsers? 
         private readonly List<string> _blockedUserIds = new List<string>();
-        
+
         // Below is not part of call response
-        
+
         private readonly Dictionary<string, CallMember> _members = new Dictionary<string, CallMember>();
         private readonly List<OwnCapability> _ownCapabilities = new List<OwnCapability>();
         private readonly List<StreamVideoUser> _blockedUsers = new List<StreamVideoUser>();
 
         #endregion
-        
+
         private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
         private string _id;

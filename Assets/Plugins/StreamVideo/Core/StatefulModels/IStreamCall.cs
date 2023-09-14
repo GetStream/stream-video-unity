@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.State;
@@ -23,7 +24,23 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         string Cid { get; }
 
+        /// <summary>
+        /// The type of call
+        /// </summary>
+        StreamCallType Type { get; }
+
+        /// <summary>
+        /// The user that created the call
+        /// </summary>
+        IStreamVideoUser CreatedBy { get; }
+
+        bool IsLocalUserOwner { get; }
+
         event ParticipantJoinedHandler ParticipantJoined;
         event ParticipantLeftHandler ParticipantLeft;
+
+        Task LeaveAsync();
+
+        Task EndAsync();
     }
 }

@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
+using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
@@ -16,6 +17,8 @@ namespace StreamVideo.ExampleProject
         protected void Awake()
         {
             _uiManager.JoinClicked += OnJoinClicked;
+            _uiManager.LeaveCallClicked += OnLeaveCallClicked;
+            _uiManager.EndCallClicked += OnEndCallClicked;
             _uiManager.ToggledAudioRed += OnToggledAudioRed;
             _uiManager.ToggledAudioDtx += OnToggledAudioDtx;
         }
@@ -40,6 +43,8 @@ namespace StreamVideo.ExampleProject
             };
 
             _client = StreamVideoClient.CreateDefaultClient(_clientConfig);
+            _client.CallStarted += OnCallStarted;
+            _client.CallEnded += OnCallEnded;
 
             ConnectToStreamAsync(credentials).LogIfFailed();
 
@@ -52,25 +57,27 @@ namespace StreamVideo.ExampleProject
         protected async void OnDestroy()
         {
             _uiManager.JoinClicked -= OnJoinClicked;
+            _uiManager.LeaveCallClicked -= OnLeaveCallClicked;
+            _uiManager.EndCallClicked -= OnEndCallClicked;
             _uiManager.ToggledAudioRed -= OnToggledAudioRed;
             _uiManager.ToggledAudioDtx -= OnToggledAudioDtx;
 
-            if (_client == null)
+            if (_client != null)
             {
-                return;
-            }
+                try
+                {
+                    await _client.DisconnectAsync();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
 
-            try
-            {
-                await _client.DisconnectAsync();
+                _client.CallStarted -= OnCallStarted;
+                _client.CallEnded -= OnCallEnded;
+                _client.Dispose();
+                _client = null;
             }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-
-            _client.Dispose();
-            _client = null;
         }
         
         private class TokenResponse
@@ -99,6 +106,7 @@ namespace StreamVideo.ExampleProject
 
         private IStreamVideoClient _client;
         private StreamClientConfig _clientConfig;
+        private IStreamCall _activeCall;
 
         private string TryGetCallId(bool create) => create ? Guid.NewGuid().ToString() : _uiManager.JoinCallId;
 
@@ -113,25 +121,15 @@ namespace StreamVideo.ExampleProject
                     return;
                 }
 
-                _uiManager.SetJoinCallId(callId);
-
                 _client.SetAudioInputSource(_uiManager.InputAudioSource);
                 _client.SetCameraInputSource(_uiManager.InputCameraSource);
                 _client.SetCameraInputSource(_uiManager.InputSceneCamera);
-                
 
                 Debug.Log($"Join clicked, create: {create}, callId: {callId}");
 
-                var streamCall
-                    = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
-
-                foreach (var participant in streamCall.Participants)
-                {
-                    _uiManager.AddParticipant(participant);
-                }
+                var streamCall = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
                 
-                streamCall.ParticipantJoined += _uiManager.AddParticipant;
-                streamCall.ParticipantLeft += _uiManager.RemoveParticipant;
+
             }
             catch (Exception e)
             {
@@ -181,6 +179,41 @@ namespace StreamVideo.ExampleProject
             var tokenResponse = serializer.Deserialize<TokenResponse>(result);
 
             return tokenResponse.token;
+        }
+        
+        private void OnCallEnded(IStreamCall call)
+        {
+            _activeCall.ParticipantJoined -= _uiManager.AddParticipant;
+            _activeCall.ParticipantLeft -= _uiManager.RemoveParticipant;
+            _activeCall = null; 
+            
+            _uiManager.SetJoinCallId(string.Empty);
+            _uiManager.SetActiveCall(null);
+        }
+
+        private void OnCallStarted(IStreamCall call)
+        {
+            _activeCall = call;
+            foreach (var participant in _activeCall.Participants)
+            {
+                _uiManager.AddParticipant(participant);
+            }
+                
+            _activeCall.ParticipantJoined += _uiManager.AddParticipant;
+            _activeCall.ParticipantLeft += _uiManager.RemoveParticipant;
+            
+            _uiManager.SetJoinCallId(call.Id);
+            _uiManager.SetActiveCall(call);
+        }
+        
+        private void OnEndCallClicked()
+        {
+            _activeCall.EndAsync().LogIfFailed();
+        }
+
+        private void OnLeaveCallClicked()
+        {
+            _activeCall.LeaveAsync().LogIfFailed();
         }
     }
 }

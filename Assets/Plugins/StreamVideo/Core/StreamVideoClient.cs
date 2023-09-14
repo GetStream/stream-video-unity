@@ -22,8 +22,16 @@ using Cache = StreamVideo.Core.State.Caches.Cache;
 
 namespace StreamVideo.Core
 {
+    public delegate void CallHandler(IStreamCall call);
+    
     public class StreamVideoClient : IStreamVideoClient
     {
+        public event CallHandler CallStarted;
+        public event CallHandler CallEnded;
+        
+        public IStreamVideoUser LocalUser { get; private set; }
+        public IStreamCall ActiveCall => InternalLowLevelClient.RtcSession.ActiveCall;
+        
         /// <summary>
         /// Use this method to create the main client instance
         /// </summary>
@@ -75,6 +83,8 @@ namespace StreamVideo.Core
         public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify)
         {
+            //StreamTodo: check if we're already in a call?
+            
             var dto = new CallResponseInternalDTO
             {
                 Backstage = false,
@@ -98,7 +108,7 @@ namespace StreamVideo.Core
                 UpdatedAt = default
             };
 
-            IStreamCall call = null;
+            IStreamCall call;
             if (!create)
             {
                 call = await GetCallAsync(callType, callId);
@@ -143,6 +153,7 @@ namespace StreamVideo.Core
             
             await InternalLowLevelClient.StartCallSessionAsync((StreamCall)call);
 
+            CallStarted?.Invoke(call);
             return call;
         }
         
@@ -178,6 +189,20 @@ namespace StreamVideo.Core
 
         internal StreamVideoLowLevelClient InternalLowLevelClient { get; private set; }
 
+        internal async Task LeaveCallAsync(IStreamCall call)
+        {
+            //StreamTodo: check if call is active
+            await InternalLowLevelClient.RtcSession.StopAsync();
+            CallEnded?.Invoke(call);
+        }
+        
+        internal async Task EndCallAsync(IStreamCall call)
+        {
+            //StreamTodo: check if call is active
+            await InternalLowLevelClient.InternalVideoClientApi.EndCallAsync(call.Type, call.Id);
+            await LeaveCallAsync(call);
+        }
+
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
@@ -190,8 +215,14 @@ namespace StreamVideo.Core
 
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);
+            InternalLowLevelClient.Connected += InternalLowLevelClientOnConnected;
 
             SubscribeTo(InternalLowLevelClient);
+        }
+
+        private void InternalLowLevelClientOnConnected()
+        {
+            throw new NotImplementedException();
         }
 
         private void SubscribeTo(StreamVideoLowLevelClient lowLevelClient)

@@ -8,6 +8,10 @@ namespace StreamVideo.Core
 {
     public interface IStreamVideoClient : IDisposable
     {
+        event CallHandler CallStarted;
+        event CallHandler CallEnded;
+        IStreamCall ActiveCall { get; }
+
         Task ConnectUserAsync(AuthCredentials credentials);
 
         void Update();

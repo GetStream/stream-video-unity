@@ -66,6 +66,8 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Warning($"Call state changed from {prevState} to {value}");
             }
         }
+        
+        public StreamCall ActiveCall { get; private set; }
 
         #region IInputProvider
 
@@ -123,9 +125,9 @@ namespace StreamVideo.Core.LowLevelClient
             _publisher?.Update();
 
             //StreamTodo: we could remove this if we'd maintain a collection of tracks and update them directly
-            if (_activeCall != null)
+            if (ActiveCall != null)
             {
-                foreach (StreamVideoCallParticipant p in _activeCall.Participants)
+                foreach (StreamVideoCallParticipant p in ActiveCall.Participants)
                 {
                     p.Update();
                 }
@@ -139,15 +141,16 @@ namespace StreamVideo.Core.LowLevelClient
 
         public async Task StartAsync(StreamCall call)
         {
-            if (_activeCall != null)
+            if (ActiveCall != null)
             {
                 throw new InvalidOperationException(
-                    $"Cannot start new session until previous call is active. Active call: {_activeCall}");
+                    $"Cannot start new session until previous call is active. Active call: {ActiveCall}");
             }
+            
+            //StreamTodo: perhaps not necessary here
+            ClearSession();
 
-            _activeCall = call ?? throw new ArgumentNullException(nameof(call));
-
-            CleanUpSession();
+            ActiveCall = call ?? throw new ArgumentNullException(nameof(call));
 
             CallState = CallingState.Joining;
 
@@ -187,7 +190,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public async Task StopAsync()
         {
-            CleanUpSession();
+            ClearSession();
             //StreamTodo: check with js definition of "offline" 
             CallState = CallingState.Offline;
             await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Video session stopped");
@@ -210,7 +213,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
 
-        private StreamCall _activeCall;
         private IHttpClient _httpClient;
         private CallingState _callState;
 
@@ -220,11 +222,21 @@ namespace StreamVideo.Core.LowLevelClient
 
         private float _lastTrackSubscriptionRequestTime;
         private bool _trackSubscriptionRequested;
-        private bool _trackSubscriptionRequestedActive;
+        private bool _trackSubscriptionRequestInProgress;
 
-        private void CleanUpSession()
+        private void ClearSession()
         {
             _pendingIceTrickleRequests.Clear();
+            
+            _subscriber?.Dispose();
+            _subscriber = null;
+            _publisher?.Dispose();
+            _publisher = null;
+
+            ActiveCall = null;
+
+            _trackSubscriptionRequested = false;
+            _trackSubscriptionRequestInProgress = false;
         }
 
         private void QueueTracksSubscriptionRequest()
@@ -239,7 +251,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void TryExecuteSubscribeToTracks()
         {
-            if (!_trackSubscriptionRequested || _trackSubscriptionRequestedActive)
+            if (!_trackSubscriptionRequested || _trackSubscriptionRequestInProgress)
             {
                 return;
             }
@@ -261,13 +273,13 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         private async Task SubscribeToTracksAsync()
         {
-            if (_trackSubscriptionRequestedActive)
+            if (_trackSubscriptionRequestInProgress)
             {
                 QueueTracksSubscriptionRequest();
                 return;
             }
 
-            _trackSubscriptionRequestedActive = true;
+            _trackSubscriptionRequestInProgress = true;
 
             var tracks = GetDesiredTracksDetails();
 
@@ -282,12 +294,18 @@ namespace StreamVideo.Core.LowLevelClient
             var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions,
                 nameof(GeneratedAPI.UpdateSubscriptions));
 
+            if (ActiveCall == null)
+            {
+                //Ignore if call ended during this request
+                return;
+            }
+
             if (response.Error != null)
             {
                 _logs.Error(response.Error.Message);
             }
 
-            _trackSubscriptionRequestedActive = false;
+            _trackSubscriptionRequestInProgress = false;
         }
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()
@@ -295,7 +313,7 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: inject info on what tracks we want and what dimensions
             var trackTypes = new[] { TrackTypeInternal.Video, TrackTypeInternal.Audio };
 
-            foreach (var participant in _activeCall.Participants)
+            foreach (var participant in ActiveCall.Participants)
             {
                 if (participant.IsLocalParticipant)
                 {
@@ -349,7 +367,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuJoinResponse(JoinResponse joinResponse)
         {
             _logs.InfoIfDebug($"Handle Sfu {nameof(JoinResponse)}");
-            _activeCall.UpdateFromSfu(joinResponse);
+            ActiveCall.UpdateFromSfu(joinResponse);
             OnSfuJoinedCall();
         }
 
@@ -469,7 +487,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void UpdateParticipantTracksState(string userId, string sessionId, TrackType trackType, bool isEnabled,
             out StreamVideoCallParticipant participant)
         {
-            participant = (StreamVideoCallParticipant)_activeCall.Participants.FirstOrDefault(p
+            participant = (StreamVideoCallParticipant)ActiveCall.Participants.FirstOrDefault(p
                 => p.SessionId == sessionId);
             if (participant == null)
             {
@@ -487,12 +505,12 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuParticipantJoined(ParticipantJoined participantJoined)
         {
-            if (!AssertCallIdMatch(_activeCall, participantJoined.CallCid, _logs))
+            if (!AssertCallIdMatch(ActiveCall, participantJoined.CallCid, _logs))
             {
                 return;
             }
 
-            _activeCall.UpdateFromSfu(participantJoined, _cache);
+            ActiveCall.UpdateFromSfu(participantJoined, _cache);
 
             //StreamTodo: optimize with StringBuilder
             var id = $"{participantJoined.Participant.UserId}({participantJoined.Participant.SessionId})";
@@ -503,12 +521,12 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuParticipantLeft(ParticipantLeft participantLeft)
         {
-            if (!AssertCallIdMatch(_activeCall, participantLeft.CallCid, _logs))
+            if (!AssertCallIdMatch(ActiveCall, participantLeft.CallCid, _logs))
             {
                 return;
             }
 
-            _activeCall.UpdateFromSfu(participantLeft, _cache);
+            ActiveCall.UpdateFromSfu(participantLeft, _cache);
 
             //StreamTodo: optimize with StringBuilder
             var id = $"{participantLeft.Participant.UserId}({participantLeft.Participant.SessionId})";
@@ -534,7 +552,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             //StreamTodo: use injected client or cache this one
-            var connectUrl = _activeCall.Credentials.Server.Url.Replace("/twirp", "");
+            var connectUrl = ActiveCall.Credentials.Server.Url.Replace("/twirp", "");
 
             //StreamTodo: move headers population logic elsewhere + remove duplication with main client
             var httpClient = new HttpClient()
@@ -547,7 +565,7 @@ namespace StreamVideo.Core.LowLevelClient
             };
 
             httpClient.DefaultRequestHeaders.Authorization
-                = new AuthenticationHeaderValue(_activeCall.Credentials.Token);
+                = new AuthenticationHeaderValue(ActiveCall.Credentials.Token);
             httpClient.BaseAddress = new Uri(connectUrl);
 
             var response = await rpcCallAsync(httpClient, request);
@@ -575,8 +593,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         //StreamTodo: subscribe to changes in capabilities. This can potentially change during the call
         private bool CanPublish()
-            => _activeCall != null &&
-               _activeCall.OwnCapabilities.Any(c => c == OwnCapability.SendVideo || c == OwnCapability.SendAudio);
+            => ActiveCall != null &&
+               ActiveCall.OwnCapabilities.Any(c => c == OwnCapability.SendVideo || c == OwnCapability.SendAudio);
 
         /**
      * https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/negotiationneeded_event
@@ -813,7 +831,7 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning($"Subscriber stream received, trackPrefix: {trackPrefix}, trackTypeKey: {trackTypeKey}");
 #endif
 
-            var participant = _activeCall.Participants.SingleOrDefault(p => p.TrackLookupPrefix == trackPrefix);
+            var participant = ActiveCall.Participants.SingleOrDefault(p => p.TrackLookupPrefix == trackPrefix);
             if (participant == null)
             {
                 //StreamTodo: figure out severity of this case. Perhaps it's not an error, maybe we haven't received coordinator event yet like ParticipantJoined
@@ -850,7 +868,7 @@ namespace StreamVideo.Core.LowLevelClient
             foreach (var track in mediaStream.GetTracks())
             {
                 internalParticipant.SetTrack(trackType, track, out var streamTrack);
-                _activeCall.NotifyTrackAdded(internalParticipant, streamTrack);
+                ActiveCall.NotifyTrackAdded(internalParticipant, streamTrack);
             }
         }
 
@@ -876,7 +894,7 @@ namespace StreamVideo.Core.LowLevelClient
         private string MediaStreamIdFactory(TrackKind trackKind)
         {
             //StreamTodo: joining old call will have no participants (not sure if SDK bug)
-            var localParticipant = _activeCall.Participants.Single(p => p.SessionId == SessionId);
+            var localParticipant = ActiveCall.Participants.Single(p => p.SessionId == SessionId);
             var trackPrefix = localParticipant.TrackLookupPrefix;
             var trackType = (int)trackKind.ToInternalEnum();
 
@@ -892,7 +910,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void CreatePublisher(IEnumerable<ICEServer> iceServers)
         {
             //StreamTodo: Handle default settings -> speaker off, mic off, cam off
-            var callSettings = _activeCall.Settings;
+            var callSettings = ActiveCall.Settings;
 
             _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers, MediaStreamIdFactory,
                 this, _config.Audio.EnableRed);

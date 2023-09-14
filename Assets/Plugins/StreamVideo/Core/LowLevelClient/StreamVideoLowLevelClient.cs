@@ -46,7 +46,7 @@ namespace StreamVideo.Core.LowLevelClient
     {
         public const string MenuPrefix = "Stream/";
 
-        public event ConnectionHandler Connected;
+        public event ConnectionHandler Connected; //StreamTodo: never called
         public event Action Reconnecting;
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;

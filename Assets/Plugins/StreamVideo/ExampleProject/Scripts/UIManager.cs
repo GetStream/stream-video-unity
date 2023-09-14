@@ -13,6 +13,8 @@ namespace StreamVideo.ExampleProject
     public class UIManager : MonoBehaviour
     {
         public event JoinCallHandler JoinClicked;
+        public event Action LeaveCallClicked;
+        public event Action EndCallClicked;
         public event Action CameraInputChanged;
         
         public event Action<bool> ToggledAudioRed;
@@ -51,10 +53,30 @@ namespace StreamVideo.ExampleProject
 
         public void SetJoinCallId(string joinCallId) => _joinCallIdInput.text = joinCallId;
 
+        public void SetActiveCall(IStreamCall call)
+        {
+            var isActive = call != null;
+            var isCallOwner = isActive && call.IsLocalUserOwner;
+            
+            // If call is active show end/leave button, otherwise show join/create buttons
+            _beforeCallButtonsContainer.gameObject.SetActive(!isActive);
+            _duringCallButtonsContainer.gameObject.SetActive(isActive);
+            
+            // If local user is the call owner we can "end" the call, otherwise we can only "leave" the call
+            _endBtn.gameObject.SetActive(isCallOwner);
+
+            if (!isActive)
+            {
+                ClearAllParticipants();
+            }
+        }
+
         protected void Awake()
         {
             _joinBtn.onClick.AddListener(() => JoinClicked?.Invoke(false));
             _createBtn.onClick.AddListener(() => JoinClicked?.Invoke(true));
+            _leaveBtn.onClick.AddListener(() => LeaveCallClicked?.Invoke());
+            _endBtn.onClick.AddListener(() => EndCallClicked?.Invoke());
             
             _audioRedToggle.onValueChanged.AddListener(enabled => ToggledAudioRed?.Invoke(enabled));
             _audioDtxToggle.onValueChanged.AddListener(enabled => ToggledAudioDtx?.Invoke(enabled));
@@ -92,6 +114,12 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private Button _createBtn;
+        
+        [SerializeField]
+        private Button _leaveBtn;
+
+        [SerializeField]
+        private Button _endBtn;
 
         [SerializeField]
         private TMP_InputField _joinCallIdInput;
@@ -128,6 +156,12 @@ namespace StreamVideo.ExampleProject
         
         [SerializeField]
         private Toggle _audioDtxToggle;
+        
+        [SerializeField]
+        private Transform _beforeCallButtonsContainer;
+        
+        [SerializeField]
+        private Transform _duringCallButtonsContainer;
 
         private string _activeMicrophoneDeviceName;
 
@@ -248,6 +282,16 @@ namespace StreamVideo.ExampleProject
             _activeCamera.Play();
 
             CameraInputChanged?.Invoke();
+        }
+
+        private void ClearAllParticipants()
+        {
+            foreach (var (sessionId, view) in _participantSessionIdToView)
+            {
+                Destroy(view.gameObject);
+            }
+            
+            _participantSessionIdToView.Clear();
         }
     }
 }

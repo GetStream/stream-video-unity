@@ -139,6 +139,10 @@ namespace StreamVideo.Core
 
         #endregion
 
+        public Task GoLiveAsync() => Client.LeaveCallAsync(this);
+
+        public Task StopLiveAsync() => Client.StopLiveAsync(this);
+
         public Task GetOrCreateAsync()
         {
             return Task.CompletedTask;

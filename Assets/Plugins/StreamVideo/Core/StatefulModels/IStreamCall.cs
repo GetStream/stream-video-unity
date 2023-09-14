@@ -42,5 +42,9 @@ namespace StreamVideo.Core.StatefulModels
         Task LeaveAsync();
 
         Task EndAsync();
+
+        Task GoLiveAsync();
+
+        Task StopLiveAsync();
     }
 }

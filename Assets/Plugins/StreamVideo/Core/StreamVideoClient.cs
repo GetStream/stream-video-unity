@@ -233,6 +233,14 @@ namespace StreamVideo.Core
             return InternalLowLevelClient.InternalVideoClientApi.MuteUsersAsync(call.Type, call.Id, body);
         }
 
+        internal Task BlockUserAsync(IStreamCall call, string userId)
+            => InternalLowLevelClient.InternalVideoClientApi.BlockUserAsync(call.Type, call.Id,
+                new BlockUserRequestInternalDTO
+                {
+                    UserId = userId
+                });
+
+        
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)

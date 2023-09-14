@@ -150,6 +150,12 @@ namespace StreamVideo.Core
         public Task MuteAllUsersAsync(bool audio, bool video, bool screenShare)
             => Client.MuteAllUsersAsync(this, audio, video, screenShare);
 
+        public Task BlockUserAsync(string userId) => Client.BlockUserAsync(this, userId);
+        
+        public Task BlockUserAsync(IStreamVideoUser user) => Client.BlockUserAsync(this, user.Id);
+        
+        public Task BlockUserAsync(IStreamVideoCallParticipant participant) => Client.BlockUserAsync(this, participant.UserId);
+
         public Task GetOrCreateAsync()
         {
             return Task.CompletedTask;

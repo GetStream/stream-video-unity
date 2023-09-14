@@ -213,12 +213,25 @@ namespace StreamVideo.Core
 
         internal Task StopLiveAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StopLiveAsync(call.Type, call.Id);
-        
+
         internal Task StartRecordingAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StartRecordingAsync(call.Type, call.Id);
-        
+
         internal Task StopRecordingAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StopRecordingAsync(call.Type, call.Id);
+
+        internal Task MuteAllUsersAsync(IStreamCall call, bool audio, bool video, bool screenShare)
+        {
+            var body = new MuteUsersRequestInternalDTO
+            {
+                Audio = audio,
+                MuteAllUsers = true,
+                Screenshare = screenShare,
+                //UserIds = null,
+                Video = video
+            };
+            return InternalLowLevelClient.InternalVideoClientApi.MuteUsersAsync(call.Type, call.Id, body);
+        }
 
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,

@@ -147,6 +147,9 @@ namespace StreamVideo.Core
 
         public Task StopRecordingAsync() => Client.StopRecordingAsync(this);
 
+        public Task MuteAllUsersAsync(bool audio, bool video, bool screenShare)
+            => Client.MuteAllUsersAsync(this, audio, video, screenShare);
+
         public Task GetOrCreateAsync()
         {
             return Task.CompletedTask;

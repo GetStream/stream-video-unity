@@ -46,5 +46,11 @@ namespace StreamVideo.Core.StatefulModels
         Task GoLiveAsync();
 
         Task StopLiveAsync();
+
+        Task StartRecordingAsync();
+
+        Task StopRecordingAsync();
+
+        Task MuteAllUsersAsync(bool audio, bool video, bool screenShare);
     }
 }

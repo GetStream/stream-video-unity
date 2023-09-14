@@ -142,6 +142,10 @@ namespace StreamVideo.Core
         public Task GoLiveAsync() => Client.LeaveCallAsync(this);
 
         public Task StopLiveAsync() => Client.StopLiveAsync(this);
+        
+        public Task StartRecordingAsync() => Client.StartRecordingAsync(this);
+
+        public Task StopRecordingAsync() => Client.StopRecordingAsync(this);
 
         public Task GetOrCreateAsync()
         {

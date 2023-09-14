@@ -213,6 +213,12 @@ namespace StreamVideo.Core
 
         internal Task StopLiveAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StopLiveAsync(call.Type, call.Id);
+        
+        internal Task StartRecordingAsync(IStreamCall call)
+            => InternalLowLevelClient.InternalVideoClientApi.StartRecordingAsync(call.Type, call.Id);
+        
+        internal Task StopRecordingAsync(IStreamCall call)
+            => InternalLowLevelClient.InternalVideoClientApi.StopRecordingAsync(call.Type, call.Id);
 
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,

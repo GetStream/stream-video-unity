@@ -155,6 +155,12 @@ namespace StreamVideo.Core
         public Task BlockUserAsync(IStreamVideoUser user) => Client.BlockUserAsync(this, user.Id);
         
         public Task BlockUserAsync(IStreamVideoCallParticipant participant) => Client.BlockUserAsync(this, participant.UserId);
+        
+        public Task UnblockUserAsync(string userId) => Client.UnblockUserAsync(this, userId);
+        
+        public Task UnblockUserAsync(IStreamVideoUser user) => Client.UnblockUserAsync(this, user.Id);
+        
+        public Task UnblockUserAsync(IStreamVideoCallParticipant participant) => Client.UnblockUserAsync(this, participant.UserId);
 
         public Task GetOrCreateAsync()
         {

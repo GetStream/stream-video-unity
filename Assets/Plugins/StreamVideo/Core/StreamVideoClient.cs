@@ -240,6 +240,11 @@ namespace StreamVideo.Core
                     UserId = userId
                 });
 
+        internal Task UnblockUserAsync(IStreamCall call, string userId)
+            => InternalLowLevelClient.InternalVideoClientApi.UnblockUserAsync(call.Type, call.Id, new UnblockUserRequestInternalDTO
+            {
+                UserId = userId
+            });
         
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,

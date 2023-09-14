@@ -52,5 +52,17 @@ namespace StreamVideo.Core.StatefulModels
         Task StopRecordingAsync();
 
         Task MuteAllUsersAsync(bool audio, bool video, bool screenShare);
+
+        Task BlockUserAsync(string userId);
+
+        Task BlockUserAsync(IStreamVideoUser user);
+
+        Task BlockUserAsync(IStreamVideoCallParticipant participant);
+
+        Task UnblockUserAsync(string userId);
+
+        Task UnblockUserAsync(IStreamVideoUser user);
+
+        Task UnblockUserAsync(IStreamVideoCallParticipant participant);
     }
 }

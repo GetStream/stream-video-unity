@@ -874,7 +874,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
-            _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers, MediaStreamIdFactory,
+            _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers,
                 this);
             _subscriber.IceTrickled += OnIceTrickled;
             _subscriber.StreamAdded += OnSubscriberStreamAdded;
@@ -891,19 +891,6 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private string MediaStreamIdFactory(TrackKind trackKind)
-        {
-            //StreamTodo: joining old call will have no participants (not sure if SDK bug)
-            var localParticipant = ActiveCall.Participants.Single(p => p.SessionId == SessionId);
-            var trackPrefix = localParticipant.TrackLookupPrefix;
-            var trackType = (int)trackKind.ToInternalEnum();
-
-            //StreamTodo: revise that, not sure what's the point of the random number here if the (trackPrefix, trackType) should be a unique pair
-            var randomNumber = UnityEngine.Random.Range(1, 10);
-            var id = $"{trackPrefix}:{trackType}:{randomNumber}";
-            return id;
-        }
-
         /// <summary>
         /// Creating publisher requires active <see cref="IStreamCall"/>
         /// </summary>
@@ -912,7 +899,7 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: Handle default settings -> speaker off, mic off, cam off
             var callSettings = ActiveCall.Settings;
 
-            _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers, MediaStreamIdFactory,
+            _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers,
                 this, _config.Audio.EnableRed);
             _publisher.IceTrickled += OnIceTrickled;
             _publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;

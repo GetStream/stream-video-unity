@@ -42,7 +42,7 @@ namespace StreamVideo.Core.LowLevelClient
         public RTCRtpSender VideoSender { get; private set; }
 
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
-            Func<TrackKind, string> streamIdFactory, IMediaInputProvider mediaInputProvider, bool enableAudioRed = false)
+            IMediaInputProvider mediaInputProvider, bool enableAudioRed = false)
         {
             _mediaInputProvider = mediaInputProvider;
             _peerType = peerType;
@@ -79,15 +79,14 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (_peerType == StreamPeerType.Publisher)
             {
-                var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio, streamIdFactory);
-                var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video, streamIdFactory);
+                var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio);
+                var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video);
 
                 _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
 
                 #region Audio
 
-                var audioStreamId = streamIdFactory(TrackKind.Audio);
-                PublisherAudioMediaStream = new MediaStream(audioStreamId);
+                PublisherAudioMediaStream = new MediaStream();
                 var audioTrack = CreatePublisherAudioTrack();
 
                 PublisherAudioMediaStream.AddTrack(audioTrack);
@@ -102,8 +101,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 #region Video
 
-                var streamId = streamIdFactory(TrackKind.Video);
-                PublisherVideoMediaStream = new MediaStream(streamId);
+                PublisherVideoMediaStream = new MediaStream();
                 var videoTrack = CreatePublisherVideoTrack();
 
                 PublisherVideoMediaStream.AddTrack(videoTrack);
@@ -242,8 +240,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind,
-            Func<TrackKind, string> streamIdFactory)
+        private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind)
         {
             if (type == StreamPeerType.Subscriber)
             {

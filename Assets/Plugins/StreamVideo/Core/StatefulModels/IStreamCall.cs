@@ -104,5 +104,19 @@ namespace StreamVideo.Core.StatefulModels
         Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoUser user);
 
         Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoCallParticipant participant);
+
+        /// <summary>
+        /// Marks the incoming call as accepted.
+        /// This method should be used only for "ringing" call flows.
+        /// <see cref="StreamCall.JoinAsync"/> invokes this method automatically for you when joining a call.
+        /// </summary>
+        Task AcceptAsync();
+
+        /// <summary>
+        /// Marks the incoming call as rejected.
+        /// This method should be used only for "ringing" call flows.
+        /// <see cref="StreamCall.LeaveAsync"/> invokes this method automatically for you when you leave or reject this call.
+        /// </summary>
+        Task RejectAsync();
     }
 }

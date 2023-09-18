@@ -176,7 +176,7 @@ namespace StreamVideo.Core
         /// <param name="permission">Requested permission</param>
         public Task RequestPermissionAsync(OwnCapability permission)
             => Client.RequestPermissionAsync(this, new List<string> { permission.ToString() });
-        
+
         /// <summary>
         /// Request call host to grant you this permission
         /// </summary>
@@ -195,10 +195,11 @@ namespace StreamVideo.Core
 
         public Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoUser user)
             => GrantPermissionsAsync(permissions, user.Id);
-        
-        public Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoCallParticipant participant)
+
+        public Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions,
+            IStreamVideoCallParticipant participant)
             => GrantPermissionsAsync(permissions, participant.UserId);
-        
+
         /// <summary>
         /// Revoke permissions from a user in this call
         /// </summary>
@@ -210,9 +211,11 @@ namespace StreamVideo.Core
 
         public Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoUser user)
             => RevokePermissionsAsync(permissions, user.Id);
-        
-        public Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoCallParticipant participant)
+
+        public Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions,
+            IStreamVideoCallParticipant participant)
             => RevokePermissionsAsync(permissions, participant.UserId);
+
 
         public Task GetOrCreateAsync()
         {
@@ -226,32 +229,22 @@ namespace StreamVideo.Core
    */
         public Task JoinAsync()
         {
-            return Task.CompletedTask;
+            return Task.CompletedTask; //StreamTodo: implement
         }
 
-        /**
-   * Marks the incoming call as accepted.
-   *
-   * This method should be used only for "ringing" call flows.
-   * {@link Call.join} invokes this method automatically for you when joining a call.
-   * Unless you are implementing a custom "ringing" flow, you should not use this method.
-   */
-        public Task AcceptAsync()
-        {
-            return Task.CompletedTask;
-        }
+        /// <summary>
+        /// Marks the incoming call as accepted.
+        /// This method should be used only for "ringing" call flows.
+        /// <see cref="JoinAsync"/> invokes this method automatically for you when joining a call.
+        /// </summary>
+        public Task AcceptAsync() => LowLevelClient.InternalVideoClientApi.AcceptCallAsync(Type, Id);
 
-        /**
-   * Marks the incoming call as rejected.
-   *
-   * This method should be used only for "ringing" call flows.
-   * {@link Call.leave} invokes this method automatically for you when you leave or reject this call.
-   * Unless you are implementing a custom "ringing" flow, you should not use this method.
-   */
-        public Task Reject()
-        {
-            return Task.CompletedTask;
-        }
+        /// <summary>
+        /// Marks the incoming call as rejected.
+        /// This method should be used only for "ringing" call flows.
+        /// <see cref="LeaveAsync"/> invokes this method automatically for you when you leave or reject this call.
+        /// </summary>
+        public Task RejectAsync() => LowLevelClient.InternalVideoClientApi.RejectCallAsync(Type, Id);
 
         public Task LeaveAsync()
         {

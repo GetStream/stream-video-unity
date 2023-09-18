@@ -149,11 +149,31 @@ namespace StreamVideo.Core
         public Task StopRecordingAsync() => Client.StopRecordingAsync(this);
 
         public Task StartHLS() => LowLevelClient.InternalVideoClientApi.StartBroadcastingAsync(Type, Id);
-        
+
         public Task StopHLS() => LowLevelClient.InternalVideoClientApi.StopBroadcastingAsync(Type, Id);
 
         public Task MuteAllUsersAsync(bool audio, bool video, bool screenShare)
             => Client.MuteAllUsersAsync(this, audio, video, screenShare);
+
+        public Task MuteUsersAsync(IEnumerable<string> userIds, bool audio, bool video, bool screenShare)
+        {
+            var body = new MuteUsersRequestInternalDTO
+            {
+                Audio = audio,
+                MuteAllUsers = false,
+                Screenshare = screenShare,
+                UserIds = userIds.ToList(),
+                Video = video
+            };
+            return LowLevelClient.InternalVideoClientApi.MuteUsersAsync(Type, Id, body);
+        }
+
+        public Task MuteUsersAsync(IEnumerable<IStreamVideoUser> users, bool audio, bool video, bool screenShare)
+            => MuteUsersAsync(users.Select(u => u.Id), audio, video, screenShare);
+
+        public Task MuteUsersAsync(IEnumerable<IStreamVideoCallParticipant> participants, bool audio, bool video,
+            bool screenShare)
+            => MuteUsersAsync(participants.Select(u => u.UserId), audio, video, screenShare);
 
         public Task BlockUserAsync(string userId) => Client.BlockUserAsync(this, userId);
 
@@ -230,7 +250,7 @@ namespace StreamVideo.Core
 
         public Task RemoveMembersAsync(IEnumerable<IStreamVideoUser> users)
             => RemoveMembersAsync(users.Select(u => u.Id));
-        
+
         public Task RemoveMembersAsync(IEnumerable<IStreamVideoCallParticipant> participants)
             => RemoveMembersAsync(participants.Select(u => u.UserId));
 

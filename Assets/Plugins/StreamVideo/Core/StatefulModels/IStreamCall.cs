@@ -128,5 +128,11 @@ namespace StreamVideo.Core.StatefulModels
         Task RemoveMembersAsync(IEnumerable<IStreamVideoUser> users);
 
         Task RemoveMembersAsync(IEnumerable<IStreamVideoCallParticipant> participants);
+
+        Task MuteUsersAsync(IEnumerable<string> userIds, bool audio, bool video, bool screenShare);
+
+        Task MuteUsersAsync(IEnumerable<IStreamVideoUser> users, bool audio, bool video, bool screenShare);
+
+        Task MuteUsersAsync(IEnumerable<IStreamVideoCallParticipant> participants, bool audio, bool video, bool screenShare);
     }
 }

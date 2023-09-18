@@ -118,5 +118,9 @@ namespace StreamVideo.Core.StatefulModels
         /// <see cref="StreamCall.LeaveAsync"/> invokes this method automatically for you when you leave or reject this call.
         /// </summary>
         Task RejectAsync();
+
+        Task StartHLS();
+
+        Task StopHLS();
     }
 }

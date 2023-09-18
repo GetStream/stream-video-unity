@@ -147,6 +147,10 @@ namespace StreamVideo.Core
 
         public Task StopRecordingAsync() => Client.StopRecordingAsync(this);
 
+        public Task StartHLS() => LowLevelClient.InternalVideoClientApi.StartBroadcastingAsync(Type, Id);
+        
+        public Task StopHLS() => LowLevelClient.InternalVideoClientApi.StopBroadcastingAsync(Type, Id);
+
         public Task MuteAllUsersAsync(bool audio, bool video, bool screenShare)
             => Client.MuteAllUsersAsync(this, audio, video, screenShare);
 

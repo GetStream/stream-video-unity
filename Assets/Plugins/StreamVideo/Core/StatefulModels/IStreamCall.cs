@@ -64,5 +64,45 @@ namespace StreamVideo.Core.StatefulModels
         Task UnblockUserAsync(IStreamVideoUser user);
 
         Task UnblockUserAsync(IStreamVideoCallParticipant participant);
+
+        /// <summary>
+        /// Check if you currently have this permission
+        /// </summary>
+        /// <param name="permission">Permission to check</param>
+        bool HasPermissions(OwnCapability permission);
+
+        /// <summary>
+        /// Request call host to grant you this permission
+        /// </summary>
+        /// <param name="permission">Requested permission</param>
+        Task RequestPermissionAsync(OwnCapability permission);
+
+        /// <summary>
+        /// Request call host to grant you this permission
+        /// </summary>
+        /// <param name="permissions">Requested permission</param>
+        Task RequestPermissionsAsync(IEnumerable<OwnCapability> permissions);
+
+        /// <summary>
+        /// Grant permissions to a user in this call
+        /// </summary>
+        /// <param name="permissions">Permissions to grant</param>
+        /// <param name="userId">User that will receive permissions</param>
+        Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions, string userId);
+
+        Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoUser user);
+
+        Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoCallParticipant participant);
+
+        /// <summary>
+        /// Revoke permissions from a user in this call
+        /// </summary>
+        /// <param name="permissions">Permissions to revoke</param>
+        /// <param name="userId">User that will have permissions revoked</param>
+        Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, string userId);
+
+        Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoUser user);
+
+        Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoCallParticipant participant);
     }
 }

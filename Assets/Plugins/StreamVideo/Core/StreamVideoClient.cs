@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
 using StreamVideo.Core.Configs;
@@ -6,6 +8,7 @@ using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Models;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs;
@@ -207,6 +210,12 @@ namespace StreamVideo.Core
             await InternalLowLevelClient.InternalVideoClientApi.EndCallAsync(call.Type, call.Id);
             await LeaveCallAsync(call);
         }
+        
+        internal Task StartHLSAsync(IStreamCall call)
+            => InternalLowLevelClient.InternalVideoClientApi.StartBroadcastingAsync(call.Type, call.Id);
+
+        internal Task StopHLSAsync(IStreamCall call)
+            => InternalLowLevelClient.InternalVideoClientApi.StopBroadcastingAsync(call.Type, call.Id);
 
         internal Task GoLiveAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.GoLiveAsync(call.Type, call.Id);
@@ -245,6 +254,22 @@ namespace StreamVideo.Core
             {
                 UserId = userId
             });
+
+        internal Task RequestPermissionAsync(IStreamCall call, List<string> capabilities)
+            => InternalLowLevelClient.InternalVideoClientApi.RequestPermissionAsync(call.Type, call.Id,
+                new RequestPermissionRequestInternalDTO
+                {
+                    Permissions = capabilities
+                });
+        
+        internal Task UpdateUserPermissions(IStreamCall call, string userId, List<string> grantPermissions, List<string> revokePermissions)
+            => InternalLowLevelClient.InternalVideoClientApi.UpdateUserPermissionsAsync(call.Type, call.Id,
+                new UpdateUserPermissionsRequestInternalDTO
+                {
+                    GrantPermissions = grantPermissions,
+                    RevokePermissions = revokePermissions,
+                    UserId = userId
+                });
         
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
@@ -468,5 +493,6 @@ namespace StreamVideo.Core
         {
             // Implement handling logic for CustomVideoEventInternalDTO here
         }
+
     }
 }

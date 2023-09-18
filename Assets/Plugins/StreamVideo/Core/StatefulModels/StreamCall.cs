@@ -142,7 +142,7 @@ namespace StreamVideo.Core
         public Task GoLiveAsync() => Client.LeaveCallAsync(this);
 
         public Task StopLiveAsync() => Client.StopLiveAsync(this);
-        
+
         public Task StartRecordingAsync() => Client.StartRecordingAsync(this);
 
         public Task StopRecordingAsync() => Client.StopRecordingAsync(this);
@@ -151,16 +151,68 @@ namespace StreamVideo.Core
             => Client.MuteAllUsersAsync(this, audio, video, screenShare);
 
         public Task BlockUserAsync(string userId) => Client.BlockUserAsync(this, userId);
-        
+
         public Task BlockUserAsync(IStreamVideoUser user) => Client.BlockUserAsync(this, user.Id);
-        
-        public Task BlockUserAsync(IStreamVideoCallParticipant participant) => Client.BlockUserAsync(this, participant.UserId);
-        
+
+        public Task BlockUserAsync(IStreamVideoCallParticipant participant)
+            => Client.BlockUserAsync(this, participant.UserId);
+
         public Task UnblockUserAsync(string userId) => Client.UnblockUserAsync(this, userId);
-        
+
         public Task UnblockUserAsync(IStreamVideoUser user) => Client.UnblockUserAsync(this, user.Id);
+
+        public Task UnblockUserAsync(IStreamVideoCallParticipant participant)
+            => Client.UnblockUserAsync(this, participant.UserId);
+
+        /// <summary>
+        /// Check if you currently have this permission
+        /// </summary>
+        /// <param name="permission">Permission to check</param>
+        public bool HasPermissions(OwnCapability permission) => OwnCapabilities.Contains(permission);
+
+        /// <summary>
+        /// Request call host to grant you this permission
+        /// </summary>
+        /// <param name="permission">Requested permission</param>
+        public Task RequestPermissionAsync(OwnCapability permission)
+            => Client.RequestPermissionAsync(this, new List<string> { permission.ToString() });
         
-        public Task UnblockUserAsync(IStreamVideoCallParticipant participant) => Client.UnblockUserAsync(this, participant.UserId);
+        /// <summary>
+        /// Request call host to grant you this permission
+        /// </summary>
+        /// <param name="permissions">Requested permission</param>
+        public Task RequestPermissionsAsync(IEnumerable<OwnCapability> permissions)
+            => Client.RequestPermissionAsync(this, permissions.Select(p => p.ToString()).ToList());
+
+        /// <summary>
+        /// Grant permissions to a user in this call
+        /// </summary>
+        /// <param name="permissions">Permissions to grant</param>
+        /// <param name="userId">User that will receive permissions</param>
+        public Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions, string userId)
+            => Client.UpdateUserPermissions(this, userId,
+                grantPermissions: permissions.Select(p => p.ToString()).ToList(), revokePermissions: null);
+
+        public Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoUser user)
+            => GrantPermissionsAsync(permissions, user.Id);
+        
+        public Task GrantPermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoCallParticipant participant)
+            => GrantPermissionsAsync(permissions, participant.UserId);
+        
+        /// <summary>
+        /// Revoke permissions from a user in this call
+        /// </summary>
+        /// <param name="permissions">Permissions to revoke</param>
+        /// <param name="userId">User that will have permissions revoked</param>
+        public Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, string userId)
+            => Client.UpdateUserPermissions(this, userId,
+                grantPermissions: null, revokePermissions: permissions.Select(p => p.ToString()).ToList());
+
+        public Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoUser user)
+            => RevokePermissionsAsync(permissions, user.Id);
+        
+        public Task RevokePermissionsAsync(IEnumerable<OwnCapability> permissions, IStreamVideoCallParticipant participant)
+            => RevokePermissionsAsync(permissions, participant.UserId);
 
         public Task GetOrCreateAsync()
         {

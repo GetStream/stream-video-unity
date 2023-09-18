@@ -122,5 +122,11 @@ namespace StreamVideo.Core.StatefulModels
         Task StartHLS();
 
         Task StopHLS();
+
+        Task RemoveMembersAsync(IEnumerable<string> userIds);
+
+        Task RemoveMembersAsync(IEnumerable<IStreamVideoUser> users);
+
+        Task RemoveMembersAsync(IEnumerable<IStreamVideoCallParticipant> participants);
     }
 }

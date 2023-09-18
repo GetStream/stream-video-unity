@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
+using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models;
@@ -220,6 +221,18 @@ namespace StreamVideo.Core
             IStreamVideoCallParticipant participant)
             => RevokePermissionsAsync(permissions, participant.UserId);
 
+        public Task RemoveMembersAsync(IEnumerable<string> userIds)
+            => LowLevelClient.InternalVideoClientApi.UpdateCallMembersAsync(Type, Id,
+                new UpdateCallMembersRequestInternalDTO
+                {
+                    RemoveMembers = userIds.ToList(),
+                });
+
+        public Task RemoveMembersAsync(IEnumerable<IStreamVideoUser> users)
+            => RemoveMembersAsync(users.Select(u => u.Id));
+        
+        public Task RemoveMembersAsync(IEnumerable<IStreamVideoCallParticipant> participants)
+            => RemoveMembersAsync(participants.Select(u => u.UserId));
 
         public Task GetOrCreateAsync()
         {

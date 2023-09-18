@@ -270,6 +270,17 @@ namespace StreamVideo.Core
                     RevokePermissions = revokePermissions,
                     UserId = userId
                 });
+
+        internal Task RemoveMembersAsync(IStreamCall call, List<string> removeUsers)
+            => InternalLowLevelClient.InternalVideoClientApi.UpdateCallMembersAsync(call.Type, call.Id,
+                new UpdateCallMembersRequestInternalDTO
+                {
+                    RemoveMembers = removeUsers,
+                });
+        
+        private readonly ILogs _logs;
+        private readonly ITimeService _timeService;
+        private readonly ICache _cache;
         
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
@@ -283,14 +294,8 @@ namespace StreamVideo.Core
 
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);
-            InternalLowLevelClient.Connected += InternalLowLevelClientOnConnected;
 
             SubscribeTo(InternalLowLevelClient);
-        }
-
-        private void InternalLowLevelClientOnConnected()
-        {
-            throw new NotImplementedException();
         }
 
         private void SubscribeTo(StreamVideoLowLevelClient lowLevelClient)
@@ -322,6 +327,8 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallUnblockedUserEvent += OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalConnectionErrorEvent += OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent += OnInternalCustomVideoEvent;
+            
+            lowLevelClient.Connected += InternalLowLevelClientOnConnected;
         }
 
         private void UnsubscribeFrom(StreamVideoLowLevelClient lowLevelClient)
@@ -353,11 +360,14 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallUnblockedUserEvent -= OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalConnectionErrorEvent -= OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent -= OnInternalCustomVideoEvent;
+            
+            lowLevelClient.Connected -= InternalLowLevelClientOnConnected;
         }
-
-        private readonly ILogs _logs;
-        private readonly ITimeService _timeService;
-        private readonly ICache _cache;
+        
+        private void InternalLowLevelClientOnConnected()
+        {
+            throw new NotImplementedException();
+        }
 
         private void OnInternalCallCreatedEvent(CallCreatedEventInternalDTO eventData)
         {

@@ -8,6 +8,8 @@ using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.QueryBuilders.Filters;
+using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
@@ -253,6 +255,37 @@ namespace StreamVideo.Core
 
         public Task RemoveMembersAsync(IEnumerable<IStreamVideoCallParticipant> participants)
             => RemoveMembersAsync(participants.Select(u => u.UserId));
+
+        public async Task<QueryMembersResult> QueryMembersAsync(IEnumerable<IFieldFilterRule> filters = null, CallMemberSort sort = null, int limit = 25, string prev = null, string next = null)
+        {
+            var request = new QueryMembersRequestInternalDTO
+            {
+                FilterConditions = filters?.Select(_ => _.GenerateFilterEntry()).ToDictionary(x => x.Key, x => x.Value),
+                Id = Id,
+                Limit = limit,
+                Next = next,
+                Prev = prev,
+                Sort = sort?.ToSortParamRequestList(),
+                Type = Type
+            };
+
+            var response = await LowLevelClient.InternalVideoClientApi.QueryMembersAsync(request);
+            if (response == null || response.Members == null || response.Members.Count == 0)
+            {
+                return new QueryMembersResult();
+            }
+
+            var members = new List<CallMember>();
+            foreach (var memberDto in response.Members)
+            {
+                var domain = new CallMember();
+                var updateable = (IStateLoadableFrom<MemberResponseInternalDTO, CallMember>)domain;
+                updateable.LoadFromDto(memberDto, Cache);
+                members.Add(domain);
+            }
+            
+            return new QueryMembersResult(members, response.Prev, response.Next);
+        }
 
         public Task GetOrCreateAsync()
         {

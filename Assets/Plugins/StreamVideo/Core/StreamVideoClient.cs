@@ -36,9 +36,8 @@ namespace StreamVideo.Core
         public IStreamCall ActiveCall => InternalLowLevelClient.RtcSession.ActiveCall;
 
         /// <summary>
-        /// Use this method to create the main client instance
+        /// Use this method to create the Video Client. You should have only one instance of this class
         /// </summary>
-        /// <param name="authCredentials">Authorization data with ApiKey, UserToken and UserId</param>
         public static IStreamVideoClient CreateDefaultClient(IStreamClientConfig config = default)
         {
             var factory = new StreamDependenciesFactory();
@@ -69,7 +68,6 @@ namespace StreamVideo.Core
             var callData
                 = await InternalLowLevelClient.InternalVideoClientApi.GetCallAsync(callType, callId,
                     new GetOrCreateCallRequestInternalDTO());
-            //StreamTodo: what if null? should we fail?
             return _cache.TryCreateOrUpdate(callData);
         }
 
@@ -118,6 +116,7 @@ namespace StreamVideo.Core
             IStreamCall call;
             if (!create)
             {
+                //StreamTodo: check android SDK if the flow is the same
                 call = await GetCallAsync(callType, callId);
                 if (call == null)
                 {

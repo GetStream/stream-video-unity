@@ -17,6 +17,7 @@ namespace StreamVideo.Core.Models
         /// Custom member response data
         /// </summary>
         public System.Collections.Generic.Dictionary<string, object> Custom { get; private set;}
+        //StreamTodo: Handle Custom data like we do in stateful models
 
         /// <summary>
         /// Date/time of deletion

@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.QueryBuilders.Filters;
+using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
 
 namespace StreamVideo.Core.StatefulModels
@@ -9,7 +11,7 @@ namespace StreamVideo.Core.StatefulModels
     public interface IStreamCall : IStreamStatefulModel
     {
         event ParticipantTrackChangedHandler TrackAdded;
-        
+
         Credentials Credentials { get; }
         IReadOnlyList<IStreamVideoCallParticipant> Participants { get; }
         IReadOnlyList<OwnCapability> OwnCapabilities { get; }
@@ -133,6 +135,19 @@ namespace StreamVideo.Core.StatefulModels
 
         Task MuteUsersAsync(IEnumerable<IStreamVideoUser> users, bool audio, bool video, bool screenShare);
 
-        Task MuteUsersAsync(IEnumerable<IStreamVideoCallParticipant> participants, bool audio, bool video, bool screenShare);
+        Task MuteUsersAsync(IEnumerable<IStreamVideoCallParticipant> participants, bool audio, bool video,
+            bool screenShare);
+
+        /// <summary>
+        /// Query members in this call. The result won't be stored in the call state.
+        /// </summary>
+        /// <param name="filters">[Optional] filters</param>
+        /// <param name="sort">[Optional] sort</param>
+        /// <param name="limit">how many records </param>
+        /// <param name="prev">[Optional]</param>
+        /// <param name="next">[Optional]</param>
+        /// <returns></returns>
+        Task<QueryMembersResult> QueryMembersAsync(IEnumerable<IFieldFilterRule> filters = null,
+            CallMemberSort sort = null, int limit = 25, string prev = null, string next = null);
     }
 }

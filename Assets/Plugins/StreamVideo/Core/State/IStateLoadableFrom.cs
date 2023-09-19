@@ -41,6 +41,7 @@ namespace StreamVideo.Core.State
                 item.LoadFromDto(dto, cache);
             }
         }
+        
         public static void TryReplaceValuesFromDto<TKey, TValue>(this Dictionary<TKey, TValue> target, Dictionary<TKey, TValue> dtos)
         {
             if (dtos == null)

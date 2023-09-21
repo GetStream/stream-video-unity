@@ -8,11 +8,20 @@ namespace StreamVideo.Core
 {
     public interface IStreamVideoClient : IDisposable
     {
+        /// <summary>
+        /// Called when client is connected. Returns local user object of type <see cref="IStreamVideoUser"/>
+        /// </summary>
+        event ConnectHandler Connected;
+
         event CallHandler CallStarted;
         event CallHandler CallEnded;
         IStreamCall ActiveCall { get; }
 
-        Task ConnectUserAsync(AuthCredentials credentials);
+        /// <summary>
+        /// Connect user to Stream server. Returns local user object of type <see cref="IStreamVideoUser"/>
+        /// </summary>
+        /// <param name="credentials">Credentials required to connect user: api_key, user_id, and user_token</param>
+        Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials);
 
         void Update();
 

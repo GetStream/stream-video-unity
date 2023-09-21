@@ -9,6 +9,7 @@ namespace StreamVideo.Core.StatefulModels
 {
     internal class StreamVideoUser : StreamStatefulModelBase<StreamVideoUser>,
         IUpdateableFrom<UserResponseInternalDTO, StreamVideoUser>,
+        IUpdateableFrom<OwnUserResponseInternalDTO, StreamVideoUser>,
         IStreamVideoUser
     {
         #region State 
@@ -62,6 +63,19 @@ namespace StreamVideo.Core.StatefulModels
         #endregion
 
         void IUpdateableFrom<UserResponseInternalDTO, StreamVideoUser>.UpdateFromDto(UserResponseInternalDTO dto, ICache cache)
+        {
+            CreatedAt = GetOrDefault(dto.CreatedAt, CreatedAt);
+            LoadCustomData(dto.Custom);
+            DeletedAt = GetOrDefault(dto.DeletedAt, DeletedAt);
+            Id = GetOrDefault(dto.Id, Id);
+            Image = GetOrDefault(dto.Image, Image);
+            Name = GetOrDefault(dto.Name, Name);
+            Role = GetOrDefault(dto.Role, Role);
+            _teams.TryReplaceValuesFromDto(dto.Teams);
+            UpdatedAt = GetOrDefault(dto.UpdatedAt, UpdatedAt);
+        }
+        
+        void IUpdateableFrom<OwnUserResponseInternalDTO, StreamVideoUser>.UpdateFromDto(OwnUserResponseInternalDTO dto, ICache cache)
         {
             CreatedAt = GetOrDefault(dto.CreatedAt, CreatedAt);
             LoadCustomData(dto.Custom);

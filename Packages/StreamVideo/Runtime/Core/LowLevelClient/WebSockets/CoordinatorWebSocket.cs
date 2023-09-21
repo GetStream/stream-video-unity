@@ -1,10 +1,10 @@
-using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
+using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.Logs;
@@ -14,9 +14,16 @@ using StreamVideo.Libs.Websockets;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
+    /// <summary>
+    /// Coordinator WS.
+    ///
+    /// Connected state is set after we receive the `connection.ok` event from the WS.
+    /// So OnConnectAsync is not only establishing a WS connection but also waiting for the event
+    /// </summary>
     internal class CoordinatorWebSocket : BasePersistentWebSocket
     {
         public string ConnectionId { get; private set; }
+        public OwnUserResponseInternalDTO LocalUserDto { get; private set; }
 
         public CoordinatorWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,
@@ -27,7 +34,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 HandleHealthCheckEvent);
 
             RegisterEventType<ConnectedEventInternalDTO>(CoordinatorEventType.ConnectionOk,
-                HandleConnectionOkEvent);
+                HandleConnectedEvent);
         }
 
         protected override string LogsPrefix { get; set; } = "Coordinator";
@@ -110,13 +117,14 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         private void HandleHealthCheckEvent(HealthCheckEventInternalDTO healthCheckEvent) => OnHealthCheckReceived();
 
-        private void HandleConnectionOkEvent(ConnectedEventInternalDTO connectedEvent)
+        private void HandleConnectedEvent(ConnectedEventInternalDTO connectedEvent)
         {
             ConnectionId = connectedEvent.ConnectionId;
 
             ConnectionState = ConnectionState.Connected;
 
-            //StreamTodo: Handle connectedEvent.Me
+            LocalUserDto = connectedEvent.Me;
+            
             _connectUserTaskSource.SetResult(true);
             _connectUserTaskSource = null;
 

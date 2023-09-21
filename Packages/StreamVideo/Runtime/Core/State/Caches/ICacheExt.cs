@@ -21,6 +21,9 @@ namespace StreamVideo.Core.State.Caches
         public static StreamVideoUser TryCreateOrUpdate(this ICache cache, UserResponseInternalDTO dto)
             => dto == null ? null : cache.Users.CreateOrUpdate<StreamVideoUser, UserResponseInternalDTO>(dto, out _);
         
+        public static StreamVideoUser TryCreateOrUpdate(this ICache cache, OwnUserResponseInternalDTO dto)
+            => dto == null ? null : cache.Users.CreateOrUpdate<StreamVideoUser, OwnUserResponseInternalDTO>(dto, out _);
+        
         public static StreamVideoCallParticipant TryCreateOrUpdate(this ICache cache, Participant dto)
             => dto == null ? null : cache.CallParticipants.CreateOrUpdate<StreamVideoCallParticipant, Participant>(dto, out _);
     }

@@ -7,6 +7,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
     internal interface IPersistentWebSocket : IDisposable
     {
+        event Action Connected;
         event ConnectionStateChangeHandler ConnectionStateChanged;
 
         ConnectionState ConnectionState { get; }

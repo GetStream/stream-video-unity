@@ -26,9 +26,12 @@ using Cache = StreamVideo.Core.State.Caches.Cache;
 namespace StreamVideo.Core
 {
     public delegate void CallHandler(IStreamCall call);
+    public delegate void ConnectHandler(IStreamVideoUser localUser);
 
     public class StreamVideoClient : IStreamVideoClient
     {
+        public event ConnectHandler Connected;
+        
         public event CallHandler CallStarted;
         public event CallHandler CallEnded;
 
@@ -170,8 +173,12 @@ namespace StreamVideo.Core
             InternalLowLevelClient?.Dispose();
         }
 
-        public Task ConnectUserAsync(AuthCredentials credentials)
-            => InternalLowLevelClient.ConnectUserAsync(credentials);
+        public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials)
+        {
+            await InternalLowLevelClient.ConnectUserAsync(credentials);
+            Connected?.Invoke(LocalUser);
+            return LocalUser;
+        }
 
         //StreamTodo: hide this and have it called by hidden runner
         public void Update() => InternalLowLevelClient.Update();
@@ -365,7 +372,7 @@ namespace StreamVideo.Core
         
         private void InternalLowLevelClientOnConnected()
         {
-            throw new NotImplementedException();
+            LocalUser = _cache.TryCreateOrUpdate(InternalLowLevelClient.LocalUserDto);
         }
 
         private void OnInternalCallCreatedEvent(CallCreatedEventInternalDTO eventData)

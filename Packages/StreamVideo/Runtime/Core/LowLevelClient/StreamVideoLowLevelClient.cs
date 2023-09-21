@@ -11,6 +11,7 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
+using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Web;
@@ -37,7 +38,6 @@ using System.Runtime.CompilerServices;
 
 namespace StreamVideo.Core.LowLevelClient
 {
-    //StreamTodo: consider making internal, perhaps use should create only through factory
     /// <summary>
     /// Stream Chat Client - maintains WebSockets connection, executes API calls and exposes Stream events to which you can subscribe.
     /// There should be only one instance of this client in your application.
@@ -46,7 +46,9 @@ namespace StreamVideo.Core.LowLevelClient
     {
         public const string MenuPrefix = "Stream/";
 
-        public event ConnectionHandler Connected; //StreamTodo: never called
+        public event ConnectionHandler Connected;
+        
+        //StreamTodo: investigate if this is needed. Check BasePersistentWebSocket and TaskScheduler
         public event Action Reconnecting;
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
@@ -58,6 +60,11 @@ namespace StreamVideo.Core.LowLevelClient
         /// SDK Version number
         /// </summary>
         public static readonly Version SDKVersion = new Version(0, 1, 0);
+        
+        /// <summary>
+        /// Local user DTO - only available when the coordinator is connected
+        /// </summary>
+        public OwnUserResponseInternalDTO LocalUserDto { get; private set; } 
 
         /// <summary>
         /// Use this method to create the main client instance or use StreamChatClient constructor to create a client instance with custom dependencies
@@ -181,6 +188,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             await _coordinatorWS.ConnectAsync(cancellationToken);
             await UpdateLocationHintAsync();
+            Connected?.Invoke();
         }
 
         public async Task ConnectUserAsync(string apiKey, string userId, ITokenProvider tokenProvider,

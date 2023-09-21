@@ -1,0 +1,83 @@
+---
+title: Client & Authentication
+description: How to setup the client and authenticate
+---
+
+Before joining a call, it is necessary to set up the video client. Here's a basic example:
+
+1. Create the `IStreamVideoClient` instance
+    ```csharp
+    _client = StreamVideoClient.CreateDefaultClient();
+    ```
+2. Connect user to the Stream API
+    ```csharp
+    var authCredentials = new AuthCredentials("api-key", "user-id", "user-token");
+    await _client.ConnectUserAsync(authCredentials);
+    ```
+
+* The **API Key** can be found in your Stream dashboard.
+* The **User** can be either authenticated, anonymous or guest.
+* Note: You can store custom data on the user object, if required.
+
+Here's a complete example of a MonoBehaviour that initiates the client and connects to the Stream API:
+```csharp
+using System;
+using StreamVideo.Core;
+using StreamVideo.Libs.Auth;
+using UnityEngine;
+
+public class VideoClient : MonoBehaviour
+{
+    async void Start()
+    {
+        _client = StreamVideoClient.CreateDefaultClient();
+
+        try
+        {
+            var authCredentials = new AuthCredentials("api-key", "user-id", "user-token");
+            await _client.ConnectUserAsync(authCredentials);
+            
+            // After we awaited the ConnectUserAsync the client is connected
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e.Message);
+        }
+    }
+
+    private IStreamVideoClient _client;
+}
+```
+
+### Generating a token
+
+* Tokens need to be generated server side. You can use our server side SDKs to quickly add support for this.
+Typically you integrate this into the part of your codebase where you login or register users.
+The tokens provide a way to authenticate a user or give access to a specific set of calls.
+
+* Here's a valid user and token to help you get started on the client side, before integrating with your backend API.
+
+<TokenSnippet sampleApp='meeting' displayStyle='credentials'/>
+
+### Client options
+
+Here's a more complete example of the client options:
+
+```csharp
+var config = new StreamClientConfig
+{
+    // Enabling Debug level logging can be helpful during development
+    LogLevel = StreamLogLevel.Debug,
+    Audio =
+    {
+        // Increase audio quality in exchange for higher bandwidth 
+        EnableRed = false,
+        
+        // DTX encodes silence at lower bitrate. This can save bandwidth
+        EnableDtx = false
+    }
+};
+_client = StreamVideoClient.CreateDefaultClient(config);
+```
+
+You can pass additional configuration options through the `StreamClientConfig` instance passed to the `CreateDefaultClient` method.

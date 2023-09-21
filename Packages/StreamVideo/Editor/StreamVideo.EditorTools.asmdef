@@ -4,7 +4,7 @@
     "references": [
         "StreamVideo.Libs",
         "Unity.TextMeshPro",
-        "Stream.Core"
+        "StreamVideo.Core"
     ],
     "includePlatforms": [
         "Editor"

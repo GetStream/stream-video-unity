@@ -1,0 +1,19 @@
+{
+    "name": "StreamVideo.DocsCodeSamples",
+    "rootNamespace": "",
+    "references": [
+        "StreamVideo.Core",
+        "StreamVideo.Libs"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

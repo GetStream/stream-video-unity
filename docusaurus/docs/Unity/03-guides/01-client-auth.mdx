@@ -63,7 +63,7 @@ The tokens provide a way to authenticate a user or give access to a specific set
 
 ### Client options
 
-Here's a more complete example of the client options:
+Here's an example showing how you can pass configuration options through the `StreamClientConfig` instance passed to the `CreateDefaultClient` method:
 
 ```csharp
 var config = new StreamClientConfig
@@ -81,5 +81,3 @@ var config = new StreamClientConfig
 };
 _client = StreamVideoClient.CreateDefaultClient(config);
 ```
-
-You can pass additional configuration options through the `StreamClientConfig` instance passed to the `CreateDefaultClient` method.

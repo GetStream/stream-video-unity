@@ -2,7 +2,7 @@
     "name": "Stream.ExampleProject",
     "rootNamespace": "",
     "references": [
-        "Stream.Core",
+        "StreamVideo.Core",
         "StreamVideo.Libs",
         "Unity.WebRTC",
         "Unity.TextMeshPro"

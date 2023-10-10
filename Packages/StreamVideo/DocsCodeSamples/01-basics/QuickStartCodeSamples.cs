@@ -74,48 +74,53 @@ namespace DocsCodeSamples._01_basics
 
         public async Task HandleTracks()
         {
-var callType = StreamCallType.Default; // Call type affects default permissions
-var callId = "my-call-id";
+            var callType = StreamCallType.Default; // Call type affects default permissions
+            var callId = "my-call-id";
 
-// JoinCall to get a IStreamCall object. You can also call _client.GetOrCreateCallAsync or _client.GetCallAsync
-var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
+            // JoinCall to get a IStreamCall object. You can also call _client.GetOrCreateCallAsync or _client.GetCallAsync
+            var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
 
-foreach (var participant in streamCall.Participants)
-{
-    // Handle currently available tracks
-    foreach (var track in participant.GetTracks())
-    {
-        OnParticipantTrackAdded(participant, track);
-    }
+            // Subscribe for participants change
+            streamCall.ParticipantJoined += OnParticipantJoined;
+            streamCall.ParticipantLeft += OnParticipantLeft;
 
-    // Subscribe to event in case new tracks are added
-    participant.TrackAdded += OnParticipantTrackAdded;
-}
+            // Process current participant
+            foreach (var participant in streamCall.Participants)
+            {
+                // Handle currently available tracks
+                foreach (var track in participant.GetTracks())
+                {
+                    OnParticipantTrackAdded(participant, track);
+                }
+
+                // Subscribe to event in case new tracks are added
+                participant.TrackAdded += OnParticipantTrackAdded;
+            }
         }
 
-private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
-{
-    switch (track)
-    {
-        case StreamAudioTrack streamAudioTrack:
+        private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+        {
+            switch (track)
+            {
+                case StreamAudioTrack streamAudioTrack:
 
-            // This assumes that this gameObject contains the AudioSource component but it's not a requirement. You can obtain the AudioSource reference in your preferred way
-            var audioSource = GetComponent<AudioSource>();
-                
-            // This audio source will receive audio from the participant
-            streamAudioTrack.SetAudioSourceTarget(audioSource);
-            break;
+                    // This assumes that this gameObject contains the AudioSource component but it's not a requirement. You can obtain the AudioSource reference in your preferred way
+                    var audioSource = GetComponent<AudioSource>();
+                        
+                    // This AudioSource will receive audio from the participant
+                    streamAudioTrack.SetAudioSourceTarget(audioSource);
+                    break;
 
-        case StreamVideoTrack streamVideoTrack:
-            
-            // This assumes that this gameObject contains the RawImage component but it's not a requirement. You can obtain the RawImage reference in your preferred way
-            var rawImage = GetComponent<RawImage>();
-                
-            // This RawImage will receive video from the participant
-            streamVideoTrack.SetRenderTarget(rawImage);
-            break;
-    }
-}
+                case StreamVideoTrack streamVideoTrack:
+                    
+                    // This assumes that this gameObject contains the RawImage component but it's not a requirement. You can obtain the RawImage reference in your preferred way
+                    var rawImage = GetComponent<RawImage>();
+                        
+                    // This RawImage will receive video from the participant
+                    streamVideoTrack.SetRenderTarget(rawImage);
+                    break;
+            }
+        }
 
         public void SetAudioInput()
         {

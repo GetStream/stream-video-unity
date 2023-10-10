@@ -8,6 +8,9 @@ namespace DocsCodeSamples._01_basics
 {
     internal class ParticipantView : MonoBehaviour
     {
+        // This is how we'll identify that this view belongs to a specific participant
+        public string SessionId => _participant.SessionId;
+        
         // Call this method to setup view for a participant
         public void Init(IStreamVideoCallParticipant participant)
         {
@@ -57,12 +60,13 @@ namespace DocsCodeSamples._01_basics
             {
                 case StreamAudioTrack streamAudioTrack:
 
-                    _audioSource = gameObject.AddComponent<AudioSource>();
+                    // Set AudioSource component to be the target of the audio track
                     streamAudioTrack.SetAudioSourceTarget(_audioSource);
                     break;
 
                 case StreamVideoTrack streamVideoTrack:
                     
+                    // Set RawImage component to be the target of the video track
                     streamVideoTrack.SetRenderTarget(_video);
                     break;
             }

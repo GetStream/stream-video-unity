@@ -5,7 +5,7 @@ description: For when you're in a hurry and want to quickly get up and running
 
 import { TokenSnippet } from '../../../shared/_tokenSnippet.jsx';
 
-This quickstart gives you a quick overview of how Stream's video SDKs work
+This section will give you a quick overview of how every important step of the integration works.
 
 ## Client setup
 
@@ -189,6 +189,11 @@ var callId = "my-call-id";
 // JoinCall to get a IStreamCall object. You can also call _client.GetOrCreateCallAsync or _client.GetCallAsync
 var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
 
+// Subscribe for participants change
+streamCall.ParticipantJoined += OnParticipantJoined;
+streamCall.ParticipantLeft += OnParticipantLeft;
+
+// Process current participant
 foreach (var participant in streamCall.Participants)
 {
     // Handle currently available tracks
@@ -212,7 +217,7 @@ private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IS
             // This assumes that this gameObject contains the AudioSource component but it's not a requirement. You can obtain the AudioSource reference in your preferred way
             var audioSource = GetComponent<AudioSource>();
                 
-            // This audio source will receive audio from the participant
+            // This AudioSource will receive audio from the participant
             streamAudioTrack.SetAudioSourceTarget(audioSource);
             break;
 
@@ -228,14 +233,87 @@ private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IS
 }
 ```
 
-## Playing received Audio
-
-Once 
-
-
-## Rendering received Video
-
 ## Complete example of handling participants and their tracks
+
+#### Video Manager
+
+An example of script that creates an instance of `IStreamVideoClient`, connects a user to the Stream server and exposes a `JoinCallAsync` method that allows to create and join calls.
+
+Once the call is joined, this script will create a view object for every participant and subscribe to `ParticipantJoined` and the `ParticipantLeft` events in order to create or destroy participant view objects.
+
+```csharp
+public class VideoManager : MonoBehaviour
+{
+    public async Task JoinCallAsync(string callId, StreamCallType callType, bool create, bool ring, bool notify)
+    {
+        var streamCall = await _client.JoinCallAsync(callType, callId, create, ring, notify);
+        
+        // Subscribe to events to get notified that streamCall.Participants collection changed
+        streamCall.ParticipantJoined += OnParticipantJoined;
+        streamCall.ParticipantLeft += OnParticipantLeft;
+        
+        // Iterate through current participants
+        foreach (var participant in streamCall.Participants)
+        {
+            // Handle participant logic. For example: create a view for each participant
+            CreateParticipantView(participant);
+        }
+    }
+
+    private void OnParticipantLeft(string sessionid, string userid)
+    {
+        // Try find view for this participant and destroy it because he left the call
+        var viewInstance = _participantViews.FirstOrDefault(v => v.SessionId == sessionid);
+        if (viewInstance != null)
+        {
+            // If the participant view was found -> destroy it
+            Destroy(viewInstance.gameObject);
+        }
+    }
+
+    private void OnParticipantJoined(IStreamVideoCallParticipant participant)
+    {
+        // Create view whenever new participant joins during the call
+        CreateParticipantView(participant);
+    }
+
+    private void CreateParticipantView(IStreamVideoCallParticipant participant)
+    {
+        // Create new prefab instance for the view. In this example we'll add it as a child of this gameObject
+        var viewInstance = Instantiate(_participantViewPrefab, transform);
+        
+        // Add to list so we can easily destroy it when a participant leaves the call
+        _participantViews.Add(viewInstance);
+        
+        // Call ParticipantView.Init in order to process the participant tracks and subscribe to events
+        viewInstance.Init(participant);
+    }
+
+    // Start() is called automatically by UnityEngine
+    protected async void Start()
+    {
+        _client = StreamVideoClient.CreateDefaultClient();
+
+        try
+        {
+            var authCredentials = new AuthCredentials("api-key", "user-id", "user-token");
+            await _client.ConnectUserAsync(authCredentials);
+        
+            // After we awaited the ConnectUserAsync the client is connected
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e.Message);
+        }
+    }
+    
+    [SerializeField]
+    private ParticipantView _participantViewPrefab;
+    
+    private IStreamVideoClient _client;
+    private readonly List<ParticipantView> _participantViews = new List<ParticipantView>();
+}
+```
 
 #### Participant View
 
@@ -296,12 +374,13 @@ The `OnParticipantTrackAdded` method handles both audio and video tracks and bin
             {
                 case StreamAudioTrack streamAudioTrack:
 
-                    _audioSource = gameObject.AddComponent<AudioSource>();
+                    // Set AudioSource component to be the target of the audio track
                     streamAudioTrack.SetAudioSourceTarget(_audioSource);
                     break;
 
                 case StreamVideoTrack streamVideoTrack:
                     
+                    // Set RawImage component to be the target of the video track
                     streamVideoTrack.SetRenderTarget(_video);
                     break;
             }

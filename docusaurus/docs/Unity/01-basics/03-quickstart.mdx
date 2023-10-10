@@ -47,13 +47,33 @@ For testing purposes you can use the following authorization credentials:
 
 Read more on client authorization and obtaining auth tokens in the [Client & Authentication](./guides/client-auth/) section.
 
-## Creating a call
+## Creating and Joining Calls
+
+Most commonly you will either want to join another call or create a new call and join it immediately.
+
+You can use the `_client.JoinCallAsync` method for both scenarios. If you're joining another call, set the `create` argument to false. If you're creating a new call for others to join, set the `create` argument to true. 
+
+### Create and Join the Call
+```csharp
+var callType = StreamCallType.Default; // Call type affects default permissions
+var callId = "my-call-id";
+
+// Notice that we pass create argument as true - this will create the call if it doesn't already exist
+var streamCall = await _client.JoinCallAsync(callType, callId, create: true, ring: true, notify: false);
+```
+### Join another call
+```csharp
+var callType = StreamCallType.Default; // Call type affects default permissions
+var callId = "my-call-id";
+
+// Notice that we pass create argument as false - if the call doesn't exist the join attempt will fail
+var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
+```
 
 
+## Setting Audio Input
 
-## Using microphone as an audio input
-
-### Bind microphone device to a `AudioSource` component
+#### Bind microphone device to a `AudioSource` component
 
 This code will get the first microphone device from Unity's `Microphone.devices` list and stream it's input into a `AudioSource` component.
 
@@ -76,7 +96,7 @@ inputAudioSource.Play();
 
 Please also note that on mobile platforms you need to request appropriate [User Permissions](https://docs.unity3d.com/ScriptReference/Android.Permission.RequestUserPermission.html) in order to make use of the Microphone and the Camera.
 
-### Set `AudioSource` component as an input source for audio.
+#### Set `AudioSource` component as an Input Source for Audio.
 
 You can provide any `AudioSource` component as an input for audio. All you need to do is call the `_client.SetAudioInputSource(audioSource)` method as in the following example:
 ```csharp
@@ -88,14 +108,14 @@ Now the provided `AudioSource` will be used as an audio input for audio communic
 
 Please note that the `AudioSrouce` does not necessarily need to be associated with a microphone device. This is indeed the most common use case but the `AudioSource` in fact serves as an audio buffer, so you can implement many other use cases with how the audio input is gathered.
 
-## More information
+#### Read more
 
 Please refer to Unity's documentation for more information on how to use Microphone devices:
 * [Microphone.devices](https://docs.unity3d.com/ScriptReference/Microphone-devices.html)
 * [Microphone.Start](https://docs.unity3d.com/ScriptReference/Microphone.Start.html)
 * [Microphone.End](https://docs.unity3d.com/ScriptReference/Microphone.End.html)
 
-## Using camera as a video input
+## Setting Video Input
 
 You can use Unity's [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html) to interact with the camera device.
 
@@ -123,10 +143,170 @@ _client.SetCameraInputSource(activeCamera);
 - For standalone platforms like Windows, macOS, and Linux, you usually want to provide the user with a dropdown menu populated from the `WebCamTexture.devices` so that the user can select the active camera.
 - On mobile platforms like Android or IOS there will usually be two camera devices present in the `WebCamTexture.devices`: The front camera and the back camera. So you may either select the front camera automatically or give user an option to toggle between front and back cameras depending on your use case.
 
-## More information
+#### Read more
 
 Please refer to Unity's documentation for more information on how to use Camera devices:
 * [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html)
 * [WebCamTexture.devices](https://docs.unity3d.com/ScriptReference/WebCamTexture-devices.html)
 * [WebCamTexture.Play](https://docs.unity3d.com/ScriptReference/WebCamTexture.Play.html)
 * [WebCamTexture.Stop](https://docs.unity3d.com/ScriptReference/WebCamTexture.Stop.html)
+
+## Handling participants
+
+Once you obtain a reference to a call object of type `IStreamCall` you can iterate through the current participants and subscribe to events to get notified whenever a participant joins or leaves.
+
+```csharp
+var callType = StreamCallType.Default; // Call type affects default permissions
+var callId = "my-call-id";
+
+var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
+
+// Subscribe to events to get notified that streamCall.Participants collection changed
+streamCall.ParticipantJoined += OnParticipantJoined;
+streamCall.ParticipantLeft += OnParticipantLeft;
+
+// Iterate through current participants, participant is an object of type IStreamVideoCallParticipant
+foreach (var participant in streamCall.Participants)
+{
+    // Handle participant logic. For example: create a view for each participant
+}
+```
+
+## Handling participant tracks
+
+Data streamed by participants is organized in form of "tracks". There are two type of tracks:
+* `StreamAudioTrack` - Audio Track, contains audio sent by a participant
+* `StreamVideoTrack` - Video Track, contains video image sent by a participant
+
+Each participant has its own tracks that can change during the call - for example a participant may decide to turn on/off camera or a microphone during the call. This is why you should not only process the tracks available in the `participant.GetTracks()` but also subscribe to `participant.TrackAdded` in order to get notified whenever a new track is added. 
+If participant decides to turn off camera or microphone during the call the track that you've already received will be paused. Once the participant re-enables the camera or microphone the track will resume automatically. So you always need to process the track once.
+
+Here's an example of how you could process participant tracks:
+```csharp
+var callType = StreamCallType.Default; // Call type affects default permissions
+var callId = "my-call-id";
+
+// JoinCall to get a IStreamCall object. You can also call _client.GetOrCreateCallAsync or _client.GetCallAsync
+var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
+
+foreach (var participant in streamCall.Participants)
+{
+    // Handle currently available tracks
+    foreach (var track in participant.GetTracks())
+    {
+        OnParticipantTrackAdded(participant, track);
+    }
+
+    // Subscribe to event in case new tracks are added
+    participant.TrackAdded += OnParticipantTrackAdded;
+}
+```
+And here's the corresponding `OnParticipantTrackAdded` method:
+```csharp
+private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+{
+    switch (track)
+    {
+        case StreamAudioTrack streamAudioTrack:
+
+            // This assumes that this gameObject contains the AudioSource component but it's not a requirement. You can obtain the AudioSource reference in your preferred way
+            var audioSource = GetComponent<AudioSource>();
+                
+            // This audio source will receive audio from the participant
+            streamAudioTrack.SetAudioSourceTarget(audioSource);
+            break;
+
+        case StreamVideoTrack streamVideoTrack:
+            
+            // This assumes that this gameObject contains the RawImage component but it's not a requirement. You can obtain the RawImage reference in your preferred way
+            var rawImage = GetComponent<RawImage>();
+                
+            // This RawImage will receive video from the participant
+            streamVideoTrack.SetRenderTarget(rawImage);
+            break;
+    }
+}
+```
+
+## Playing received Audio
+
+Once 
+
+
+## Rendering received Video
+
+## Complete example of handling participants and their tracks
+
+#### Participant View
+
+An example of script that you'd attach to a prefab gameObject that you'd spawn and initialize by calling the `Init` method per each participant in the call.
+
+This script, once initialized with a participant object will handle currently available tracks and subscribe to `TrackAdded` event in order to handle tracks added later during the call.
+The `OnParticipantTrackAdded` method handles both audio and video tracks and binds them to an `AudioSource` and the `RawImage` respectively in order to handle received data.
+
+```csharp
+    public class ParticipantView : MonoBehaviour
+    {
+        // Call this method to setup view for a participant
+        public void Init(IStreamVideoCallParticipant participant)
+        {
+            if (_participant != null)
+            {
+                Debug.LogError("Participant view already initialized.");
+                return;
+            }
+
+            _participant = participant ?? throw new ArgumentNullException(nameof(participant));
+
+            // Handle currently available tracks
+            foreach (var track in _participant.GetTracks())
+            {
+                OnParticipantTrackAdded(_participant, track);
+            }
+
+            // Subscribe to event in case new tracks are added
+            _participant.TrackAdded += OnParticipantTrackAdded;
+
+            _name.text = _participant.Name;
+        }
+
+        public void OnDestroy()
+        {
+            // It's a good practice to unsubscribe from events when the object is destroyed
+            if (_participant != null)
+            {
+                _participant.TrackAdded -= OnParticipantTrackAdded;
+            }
+        }
+
+        [SerializeField]
+        private Text _name; // This will show participant name
+
+        [SerializeField]
+        private RawImage _video; // This will show participant video
+        
+        [SerializeField]
+        private AudioSource _audioSource; // This will play participant audio
+
+        private IStreamVideoCallParticipant _participant;
+
+        private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+        {
+            switch (track)
+            {
+                case StreamAudioTrack streamAudioTrack:
+
+                    _audioSource = gameObject.AddComponent<AudioSource>();
+                    streamAudioTrack.SetAudioSourceTarget(_audioSource);
+                    break;
+
+                case StreamVideoTrack streamVideoTrack:
+                    
+                    streamVideoTrack.SetRenderTarget(_video);
+                    break;
+            }
+        }
+    }
+```
+
+You can study the [Sample Project](https://github.com/GetStream/stream-video-unity/tree/main/Assets/Samples/Stream%20Video%20%26%20Audio%20Chat%20SDK/0.0.1/Video%20%26%20Audio%20chat%20sample) in order to get the full image of how you could approach the integration process.

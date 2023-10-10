@@ -35,5 +35,12 @@ namespace StreamVideo.Core
         void SetCameraInputSource(WebCamTexture webCamTexture);
 
         void SetCameraInputSource(Camera sceneCamera);
+
+        /// <summary>
+        /// Will return null if the call doesn't exist
+        /// </summary>
+        Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId);
+
+        Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId);
     }
 }

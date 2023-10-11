@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
@@ -11,6 +12,8 @@ namespace StreamVideo.Core.StatefulModels
     public interface IStreamCall : IStreamStatefulModel
     {
         event ParticipantTrackChangedHandler TrackAdded;
+        event ParticipantJoinedHandler ParticipantJoined;
+        event ParticipantLeftHandler ParticipantLeft;
 
         Credentials Credentials { get; }
         IReadOnlyList<IStreamVideoCallParticipant> Participants { get; }
@@ -31,15 +34,41 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         StreamCallType Type { get; }
 
+        bool IsLocalUserOwner { get; }
+        IEnumerable<CallMember> Members { get; }
+        bool Recording { get; }
+        IEnumerable<IStreamVideoUser> BlockedUsers { get; }
+        CallSettings Settings { get; }
+        bool Backstage { get; }
+
+        /// <summary>
+        /// Date/time of creation
+        /// </summary>
+        DateTimeOffset CreatedAt { get; }
+
+        /// <summary>
+        /// Date/time of the last update
+        /// </summary>
+        DateTimeOffset UpdatedAt { get; }
+
+        /// <summary>
+        /// Date/time when the call will start
+        /// </summary>
+        DateTimeOffset StartsAt { get; }
+
+        /// <summary>
+        /// Date/time when the call ended
+        /// </summary>
+        DateTimeOffset EndedAt { get; }
+
+        string Team { get; }
+
         /// <summary>
         /// The user that created the call
         /// </summary>
         IStreamVideoUser CreatedBy { get; }
 
-        bool IsLocalUserOwner { get; }
-
-        event ParticipantJoinedHandler ParticipantJoined;
-        event ParticipantLeftHandler ParticipantLeft;
+        CallIngress Ingress { get; }
 
         Task LeaveAsync();
 

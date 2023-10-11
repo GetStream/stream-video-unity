@@ -1,0 +1,99 @@
+---
+title: Call & Participant State
+description: How the state is exposed
+---
+
+### Stateful models
+
+Stream's Video SDK for Unity contains several **stateful** models that automatically receive events from the Stream Server and update its inner state. Thanks to this you can always rely on them having the most up-to-date state.
+
+Stateful models:
+* **IStreamCall** - represents a call object
+* **IStreamVideoUser** - represents a user
+* **IStreamVideoCallParticipant** - represents a user that is participating in a call. Note that a single user could join from several devices and show up as multiple participants
+
+### Call State
+
+Here's an example of how you can access the call state:
+
+```csharp
+var callType = StreamCallType.Default; // Call type affects default permissions
+var callId = "my-call-id";
+
+// Get call or create if it doesn't exist
+var streamCall = await _client.GetOrCreateCallAsync(callType, callId);
+```
+
+The following fields are available on the call
+
+| Attribute | Description |
+| --- | --- |
+
+| `Participants` | The list of call participants |
+| `Members` | The list of call members |
+| `Recording` | Boolean if the call is being recorded or not |
+| `BlockedUsers` | The users who are blocked from this call |
+| `Settings` | The settings for this call |
+| `OwnCapabilities` | Which actions you have permission to do |
+| `Backstage` | If a call is in backstage mode or not |
+| `CreatedAt` | When the call was created |
+| `UpdatedAt` | When the call was updated |
+| `StartsAt` | When the call is scheduled to start |
+| `EndedAt` | When the call ended |
+| `Team` | Team that the call is restricted to. Default to null. |
+| `CreatedBy` | Who created the call |
+| `Ingress` | If there is an active ingress session to this call. IE if you're sending RTMP into the call |
+
+The following methods are available on the call
+
+| Attribute | Description |
+| --- | --- |
+
+| `HasPermissions` | method for checking if you have a certain permission |
+
+
+### Participant State
+
+The **Call Participant State** represented by a `IStreamVideoCallParticipant` object is the most essential component used to render a participant in a call. It contains all of the information to render a participant, such as audio & video renderers, availabilities of audio & video, the screen sharing session, reactions, and etc. Here's how you iterate over the participants:
+
+```csharp
+var callType = StreamCallType.Default; // Call type affects default permissions
+var callId = "my-call-id";
+
+// Notice that we pass create argument as true - this will create the call if it doesn't already exist
+var streamCall = await _client.JoinCallAsync(callType, callId, create: true, ring: false, notify: false);
+
+foreach (var participant in streamCall.Participants)
+{
+    // Handle call participant. For example: spawn a prefab that will contain RawImage to show the video and an AudioSource to play the audio
+
+    // Iterate over participant tracks. They can be either of type `StreamVideoTrack` or `StreamAudioTrack`
+    foreach (var track in participant.GetTracks())
+    {
+        
+    }
+    
+    // Subscribe to `TrackAdded` event in order to get notified about new tracks added later
+    participant.TrackAdded += OnParticipantTrackAdded;
+}
+
+// Subscribe to `ParticipantJoined` and `ParticipantLeft` to get notified when a new participant joins the call or a participant left the call
+streamCall.ParticipantJoined += OnParticipantJoined; 
+streamCall.ParticipantLeft += OnParticipantLeft; 
+```
+
+The following fields are available on the participant
+
+| Attribute | Description |
+| --- | --- |
+| `User` | The user object for this participant |
+| `VideoTrack` | The video track object for this participant |
+| `AudioTrack` | The participant's audio track object |
+| `ScreenShareTrack` | The screensharing track object |
+| `JoinedAt` | When this participant joined |
+| `AudioLevel` | How loudly this user is talking. Float |
+| `IsSpeaking` | If the user is speaking |
+| `ConnectionQuality` | The participant's connection quality |
+| `IsDominantSpeaker` | If this participant is the dominant speaker or not |
+
+

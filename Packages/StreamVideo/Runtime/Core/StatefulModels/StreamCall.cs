@@ -61,6 +61,8 @@ namespace StreamVideo.Core
 
         public IReadOnlyList<string> BlockedUserIds => _blockedUserIds;
         public IReadOnlyList<OwnCapability> OwnCapabilities => _ownCapabilities;
+        public IEnumerable<CallMember> Members => _members.Values;
+        public IEnumerable<IStreamVideoUser> BlockedUsers => _blockedUsers;
 
         /// <summary>
         /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)

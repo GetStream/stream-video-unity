@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.State;
 using StreamVideo.Core.StatefulModels.Tracks;
 
@@ -17,6 +19,15 @@ namespace StreamVideo.Core.StatefulModels
         string TrackLookupPrefix { get; }
         string Name { get; }
         bool IsLocalParticipant { get; }
+        IStreamVideoUser User { get; set; }
+        IStreamTrack VideoTrack { get; }
+        IStreamTrack AudioTrack { get; }
+        IStreamTrack ScreenShareTrack { get; }
+        DateTimeOffset JoinedAt { get; }
+        float AudioLevel { get; }
+        bool IsSpeaking { get; }
+        ConnectionQuality ConnectionQuality { get; }
+        bool IsDominantSpeaker { get; }
 
         IEnumerable<IStreamTrack> GetTracks();
     }

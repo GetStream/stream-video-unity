@@ -1,0 +1,30 @@
+---
+title: Call Types
+description: How Call Types control features and permissions
+---
+
+import CallTypesPage from "../../../shared/video/_call-types.md";
+
+When you create a call like this:
+
+```csharp
+var callType = StreamCallType.Default;
+var callId = "my-call-id";
+
+var streamCall = await _client.GetOrCreateCallAsync(callType, callId);
+```
+
+or when you join a call like this:
+
+```csharp
+var callType = StreamCallType.Default;
+var callId = "my-call-id";
+
+var streamCall = await _client.JoinCallAsync(callType, callId, create: true, ring: true, notify: false);
+```
+
+Apart from setting the `callId` you also pick the `StreamCallType`.
+
+There are 4 built-in call types and you can also create your own.
+
+<CallTypesPage />

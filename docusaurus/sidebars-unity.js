@@ -19,6 +19,11 @@ module.exports = {
               id: 'tutorials/video-calling', // document ID
               label: 'Video Call Tutorial', // sidebar label
             },
+             {
+              type: 'doc',
+              id: 'tutorials/audio-room', // document ID
+              label: 'Audio Room Tutorial', // sidebar label
+            },
       ],
     },
 	{

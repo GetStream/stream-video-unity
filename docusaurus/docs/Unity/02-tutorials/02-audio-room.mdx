@@ -34,7 +34,7 @@ After completing this step you should now see "Stream Video & Audio Chat SDK" pa
 2. Create new folder called Scripts in your Assets folder
 3. Inside the Scripts folder, create a new script file and call it AudioRoomsManager.cs
 4. Open AudioRoomsManager.cs in your IDE and replace it with the following script:
-```
+```csharp
 using System;
 using StreamVideo.Core;
 using StreamVideo.Libs.Auth;
@@ -78,7 +78,7 @@ public class AudioRoomsManager : MonoBehaviour
 Let's go through this script step by step to understand what we're doing.
 
 This part defines variables for the **api key**, **user id** and the **user token** . These 3 variables are essential to establish a connection for a user.
-```
+```csharp
     [SerializeField]
     private string _apiKey;
     
@@ -90,15 +90,15 @@ This part defines variables for the **api key**, **user id** and the **user toke
 ```
 
 Here we instantiate a default client for the Stream's Video SDK:
-```
+```csharp
 _client = StreamVideoClient.CreateDefaultClient();
 ```
 Next, we wrap the authorization credentials in a convenient structure:
-```
+```csharp
 var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
 ```
 And finally, we call the ConnectUserAsync that will attempt to establish a connection:
-```
+```csharp
 await _client.ConnectUserAsync(credentials);
 ```
 Please note that we're using .NET's modern async/await syntax, this makes writing asynchronous code that wait for server response very easy.
@@ -109,13 +109,13 @@ Please also note that we've wrapped the asynchronous `ConnectUserAsync` method i
 
 Now go to Scene Hierarchy Window and create an empty game object and call it `AudioRoomsManager`:
 
-![Imported SDK package](../assets/tutorials/audio-room/02.png)
+![Created AudioRoomsManager empty Game Object](../assets/tutorials/audio-room/02.png)
 
 Next, drag in the newly created `AudioRoomsManager.cs` script onto the AudioRoomsManager game object and save the scene.
 
 You should now have a game object with our `AudioRoomsManager.cs` script attached. Once you select this game object you should see `Api Key`, `User Id`, and the User Token fields exposed in the Inspector Window.
 
-![Imported SDK package](../assets/tutorials/audio-room/03.png)
+![GameObject with attached AudioRoomsManager.cs script](../assets/tutorials/audio-room/03.png)
 
 ---
 
@@ -127,17 +127,17 @@ To actually run this script we need a valid user token. The user token is typica
 
 Copy `api key`, `user id`, and the `user token` from the window above and paste them into `AudioRoomsManager` exposed fields:
 
-![Imported SDK package](../assets/tutorials/audio-room/04.png)
+![Filled Credentials](../assets/tutorials/audio-room/04.png)
 
 After you run the project, you should now see a log confirming that the user is connected to the stream server
 
 ---
 
-# Create UI
+# Create UI scripts
 
 1. In Scripts folder create new script and call it AudioRoomsUI.cs
 2. Open this script in your IDE and paste the following content:
-```
+```csharp
 using System;
 using TMPro;
 using UnityEngine;
@@ -202,7 +202,7 @@ Here we've defined fields that will hold references to:
 - Join & Leave buttons
 - Input that we'll use to provide a call ID to connect
 - reference to our AudioRoomsManager
-```
+```csharp
     [SerializeField]
     private TMP_InputField _callIdInput;
 
@@ -217,7 +217,7 @@ Here we've defined fields that will hold references to:
 ```
 
 Here, in Unity's Awake special event method, we subscribe OnJoinButtonClicked callback method to the join button click event and the OnLeaveButtonClicked to the leave button click event:
-```
+```csharp
     private void Awake()
     {
         _joinButton.onClick.AddListener(OnJoinButtonClicked);
@@ -225,8 +225,8 @@ Here, in Unity's Awake special event method, we subscribe OnJoinButtonClicked ca
     }
 ```
 
-The OnJoinButtonClicked triggered when user clicks the Join button checks if the call id is set in the input and if it is it then calls the JoinCallAsync on our AudioRoomsManager :
-```
+The `OnJoinButtonClicked` triggered when user clicks the Join button checks if the call id is set in the input and if it is it then calls the `JoinCallAsync` on our `AudioRoomsManager`:
+```csharp
     private async void OnJoinButtonClicked()
     {
         // Validate input
@@ -247,8 +247,8 @@ The OnJoinButtonClicked triggered when user clicks the Join button checks if the
     }
 ```
 
-The OnLeaveButtonClicked triggered when user clicks the Leave button calls the LeaveCallAsync on our AudioRoomsManager :
-```
+The `OnLeaveButtonClicked` triggered when user clicks the Leave button calls the `LeaveCallAsync` on our `AudioRoomsManager`:
+```csharp
     private async void OnLeaveButtonClicked()
     {
         try
@@ -261,6 +261,64 @@ The OnLeaveButtonClicked triggered when user clicks the Leave button calls the L
         }
     }
 ```
+
+# Create UI scene objects
+
+Go to scene hierarchy window and create the `Canvas` game object. One way to do this is by clicking the `GameObject -> UI -> Canvas` from the top menu.
+
+![Created Canvas GameObject](../assets/tutorials/audio-room/05.png)
+
+Now, create these UI elements as a children of the `Canvas` game object:
+- Button
+ - name the Game Object as `JoinButton`
+ - on the `RectTransform` component set the `Pos X` to `-200` and the `Pos Y` to `25`
+ - click on the inner game object, and on the `TextMeshPro - Text(UI)` component, change the text to `Join`
+- Second Button
+ - name the Game Object as `LeaveButton`
+ - on the `RectTransform` component set the `Pos X` to `-200` and the `Pos Y` to `-25`
+ - click on the inner game object, and on the `TextMeshPro - Text(UI)` component, change the text to `Leave`
+- Input Field 
+ - name the GameObject as `CallIdInput`
+
+One way to do this is to right-click on the `Canvas` object and select those items from the `UI` submenu.
+
+![Created Canvas GameObject](../assets/tutorials/audio-room/06.png)
+
+After completing this step you should see the newly created UI elements when switching over to the `Game` window:
+
+![Created Canvas GameObject](../assets/tutorials/audio-room/07.png)
+
+Now attach the `AudioRoomsUI.cs` script to the `Canvas` game object and in the Inspector window drag references to the:
+* Join Button
+* Leave Button
+* Call Id Input
+* AudioRoomsManager
+
+After completing this step you should now have a `Canvas` object with `AudioRoomsUI` component and all references attached:
+
+![Created Canvas GameObject](../assets/tutorials/audio-room/08.png)
+
+**Save the scene.**
+
+Now, open the `AudioRoomsManager.cs` script again, and add the missing `JoinCallAsync` and the `LeaveCallAsync` methods:
+```csharp
+    public async Task JoinCallAsync(string callId)
+    {
+        _activeCall = await _client.JoinCallAsync(StreamCallType.AudioRoom, callId, create: true, ring: false, notify: false);
+    }
+
+    public async Task LeaveCallAsync()
+    {
+        if (_activeCall == null)
+        {
+            Debug.LogWarning("Leave request ignored. There is no active call to leave.");
+            return;
+        }
+
+        await _activeCall.LeaveAsync();
+    }
+```
+
 
 
 

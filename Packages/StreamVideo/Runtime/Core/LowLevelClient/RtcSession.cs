@@ -662,7 +662,10 @@ namespace StreamVideo.Core.LowLevelClient
      */
         private async void OnPublisherNegotiationNeeded()
         {
+#if STREAM_DEBUG_ENABLED
             Debug.LogWarning("OnPublisherNegotiationNeeded");
+#endif
+            
             try
             {
                 if (_publisher.SignalingState != RTCSignalingState.Stable)
@@ -695,13 +698,11 @@ namespace StreamVideo.Core.LowLevelClient
                 //     await Task.Delay(1);
                 // }
 
-
+#if STREAM_DEBUG_ENABLED
                 _logs.Warning($"[Publisher] LocalDesc (SDP Offer):\n{offer.sdp}");
-
-                var forcedVideoTrackId = ExtractVideoTrackId(offer.sdp);
-                forcedVideoTrackId = forcedVideoTrackId.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
-
-                var tracks = GetPublisherTracks(forcedVideoTrackId);
+#endif
+                
+                var tracks = GetPublisherTracks(offer.sdp);
 
                 //StreamTodo: mangle SDP
                 var request = new SetPublisherRequest
@@ -717,9 +718,11 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
                 var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher));
-
+                
+#if STREAM_DEBUG_ENABLED
                 _logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
-
+#endif
+                
                 await _publisher.SetRemoteDescriptionAsync(new RTCSessionDescription()
                 {
                     type = RTCSdpType.Answer,
@@ -742,10 +745,15 @@ namespace StreamVideo.Core.LowLevelClient
             var lines = sdp.Split("\n");
             var mediaStreamRecord = lines.Single(l => l.StartsWith($"a=msid:{_publisher.PublisherVideoMediaStream.Id}"));
             var parts = mediaStreamRecord.Split(" ");
-            return parts[1];
+            var result = parts[1];
+            
+            // StreamTodo: verify if this is needed
+            result = result.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
+
+            return result;
         }
 
-        private IEnumerable<TrackInfo> GetPublisherTracks(string forcedVideoTrackId)
+        private IEnumerable<TrackInfo> GetPublisherTracks(string sdp)
         {
             //StreamTodo: get resolution from some IMediaDeviceProvider / IMediaSourceProvider
             var captureResolution = (Width: 1920, Height: 1080);
@@ -755,21 +763,18 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: investigate why this return no results
             // var senderTracks = _publisher.GetTransceivers().Where(t
             //     => t.Direction == RTCRtpTransceiverDirection.SendOnly && t.Sender?.Track != null).ToArray();
-
+            
+#if STREAM_DEBUG_ENABLED
             _logs.Warning($"GetPublisherTracks - transceivers: {transceivers?.Count()} ");
+#endif         
 
             //StreamTodo: figure out TrackType, because we rely on transceiver track type mapping we don't support atm screen video/audio share tracks
             //This implementation is based on the Android SDK, perhaps we shouldn't rely on GetTransceivers() but maintain our own TrackType => Transceiver mapping
 
+
             foreach (var t in transceivers)
             {
-                //StreamTodo: remove this. Skip for now due to `invalid SetPublisher request: track c59b906b-96a5-4d3f-8bed-166f16c284ef: audio cannot have simulcast layers` RPC error
-                // if (t.Sender.Track.Kind != TrackKind.Audio)
-                // {
-                //     continue;
-                // }
-
-                var trackId = t.Sender.Track.Kind == TrackKind.Video ? forcedVideoTrackId : t.Sender.Track.Id;
+                var trackId = t.Sender.Track.Kind == TrackKind.Video ? ExtractVideoTrackId(sdp) : t.Sender.Track.Id;
 
                 var trackInfo = new TrackInfo
                 {
@@ -782,8 +787,11 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     var videoLayers = GetVideoLayers(_publisher.VideoSender.GetParameters().encodings, captureResolution);
                     trackInfo.Layers.AddRange(videoLayers);
+                    
+#if STREAM_DEBUG_ENABLED
                     _logs.Warning(
                         $"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
+#endif
                 }
 
                 yield return trackInfo;

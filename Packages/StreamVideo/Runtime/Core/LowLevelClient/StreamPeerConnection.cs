@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using StreamVideo.Core.Configs;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
@@ -42,11 +43,16 @@ namespace StreamVideo.Core.LowLevelClient
         public RTCRtpSender VideoSender { get; private set; }
 
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
-            IMediaInputProvider mediaInputProvider, bool enableAudioRed = false)
+            IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig)
         {
-            _mediaInputProvider = mediaInputProvider;
+            _logs = logs ?? throw new ArgumentNullException(nameof(logs));
+            _mediaInputProvider = mediaInputProvider ?? throw new ArgumentNullException(nameof(mediaInputProvider));
             _peerType = peerType;
-            _logs = logs;
+            _audioConfig = audioConfig ?? throw new ArgumentNullException(nameof(audioConfig));
+            
+            _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
+            _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
+            _mediaInputProvider.VideoInputChanged += OnVideoInputChanged;
 
             var rtcIceServers = new List<RTCIceServer>();
 
@@ -79,41 +85,16 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (_peerType == StreamPeerType.Publisher)
             {
-                var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio);
-                var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video);
-
-                _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
-
-                #region Audio
-
-                PublisherAudioMediaStream = new MediaStream();
-                var audioTrack = CreatePublisherAudioTrack();
-
-                PublisherAudioMediaStream.AddTrack(audioTrack);
-                _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
-
-                if (enableAudioRed)
+                if (mediaInputProvider.AudioInput != null)
                 {
-                    ForceCodec(_audioTransceiver, AudioCodecKeyRed, TrackKind.Audio);
+                    CreatePublisherAudioTransceiver();
                 }
 
-                #endregion
-
-                #region Video
-
-                PublisherVideoMediaStream = new MediaStream();
-                var videoTrack = CreatePublisherVideoTrack();
-
-                PublisherVideoMediaStream.AddTrack(videoTrack);
-                videoTransceiverInit.streams = new[] { PublisherVideoMediaStream };
-
-                _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
-
-                ForceCodec(_videoTransceiver, VideoCodecKeyH264, TrackKind.Video);
-
-                VideoSender = _videoTransceiver.Sender;
-
-                #endregion
+                // StreamTodo: VideoSceneInput is not handled
+                if (mediaInputProvider.VideoInput != null)
+                {
+                    CreatePublisherVideoTransceiver();
+                }
             }
         }
 
@@ -171,6 +152,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void Dispose()
         {
+            _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
+            _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
+            _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
+            
             _peerConnection.OnIceCandidate -= OnIceCandidate;
             _peerConnection.OnIceConnectionChange -= OnIceConnectionChange;
             _peerConnection.OnIceGatheringStateChange -= OnIceGatheringStateChange;
@@ -186,13 +171,16 @@ namespace StreamVideo.Core.LowLevelClient
         private const string AudioCodecKeyRed = "red";
 
         private readonly RTCPeerConnection _peerConnection;
-        private readonly RTCRtpTransceiver _videoTransceiver;
-        private readonly RTCRtpTransceiver _audioTransceiver;
+
         private readonly ILogs _logs;
         private readonly StreamPeerType _peerType;
         private readonly IMediaInputProvider _mediaInputProvider;
+        private readonly IStreamAudioConfig _audioConfig;
 
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
+        
+        private RTCRtpTransceiver _videoTransceiver;
+        private RTCRtpTransceiver _audioTransceiver;
 
         private VideoStreamTrack _videoStreamTrack;
         private RenderTexture _publisherVideoTrackTexture;
@@ -239,6 +227,27 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
         }
+        
+        private void OnAudioInputChanged(AudioSource audio)
+        {
+            if (_mediaInputProvider.AudioInput != null)
+            {
+                CreatePublisherAudioTransceiver();
+            }
+        }
+
+        private void OnVideoSceneInputChanged(Camera camera)
+        {
+            //StreamTodo: Implement OnVideoSceneInputChanged
+        }
+
+        private void OnVideoInputChanged(WebCamTexture webCamTexture)
+        {
+            if (_mediaInputProvider.VideoInput != null)
+            {
+                CreatePublisherVideoTransceiver();
+            }
+        }
 
         private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind)
         {
@@ -257,6 +266,40 @@ namespace StreamVideo.Core.LowLevelClient
                 direction = RTCRtpTransceiverDirection.SendOnly,
                 sendEncodings = encodings,
             };
+        }
+        
+        private void CreatePublisherAudioTransceiver()
+        {
+            var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio);
+            _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
+
+            PublisherAudioMediaStream = new MediaStream();
+            
+            var audioTrack = CreatePublisherAudioTrack();
+
+            PublisherAudioMediaStream.AddTrack(audioTrack);
+            _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
+
+            if (_audioConfig.EnableRed)
+            {
+                ForceCodec(_audioTransceiver, AudioCodecKeyRed, TrackKind.Audio);
+            }
+        }
+
+        private void CreatePublisherVideoTransceiver()
+        {
+            var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video);
+            _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
+
+            PublisherVideoMediaStream = new MediaStream();
+            var videoTrack = CreatePublisherVideoTrack();
+
+            PublisherVideoMediaStream.AddTrack(videoTrack);
+            videoTransceiverInit.streams = new[] { PublisherVideoMediaStream };
+
+            ForceCodec(_videoTransceiver, VideoCodecKeyH264, TrackKind.Video);
+
+            VideoSender = _videoTransceiver.Sender;
         }
 
         private static IEnumerable<RTCRtpEncodingParameters> GetVideoEncodingParameters(TrackKind trackKind)

@@ -71,10 +71,55 @@ namespace StreamVideo.Core.LowLevelClient
 
         #region IInputProvider
 
+        public event Action<AudioSource> AudioInputChanged;
+        public event Action<WebCamTexture> VideoInputChanged;
+        public event Action<Camera> VideoSceneInputChanged;
+
         //StreamTodo: move IInputProvider elsewhere. it's for easy testing only
-        public AudioSource AudioInput { get; set; }
-        public WebCamTexture VideoInput { get; set; }
-        public Camera VideoSceneInput { get; set; }
+        public AudioSource AudioInput
+        {
+            get => _audioInput;
+            set
+            {
+                var prev = _audioInput;
+                _audioInput = value;
+
+                if (prev != _audioInput)
+                {
+                    AudioInputChanged?.Invoke(value);
+                }
+            }
+        }
+
+        public WebCamTexture VideoInput
+        {
+            get => _videoInput;
+            set
+            {
+                var prev = _videoInput;
+                _videoInput = value;
+                
+                if (prev != _videoInput)
+                {
+                    VideoInputChanged?.Invoke(value);
+                }
+            }
+        }
+
+        public Camera VideoSceneInput
+        {
+            get => _videoSceneInput;
+            set
+            {
+                var prev = _videoSceneInput;
+                _videoSceneInput = value;
+                
+                if (prev != _videoSceneInput)
+                {
+                    VideoSceneInputChanged?.Invoke(value);
+                }
+            }
+        }
 
         #endregion
 
@@ -688,6 +733,9 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
+        private AudioSource _audioInput;
+        private WebCamTexture _videoInput;
+        private Camera _videoSceneInput;
 
         private string ExtractVideoTrackId(string sdp)
         {
@@ -875,7 +923,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
             _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers,
-                this);
+                this, _config.Audio);
             _subscriber.IceTrickled += OnIceTrickled;
             _subscriber.StreamAdded += OnSubscriberStreamAdded;
         }
@@ -900,7 +948,7 @@ namespace StreamVideo.Core.LowLevelClient
             var callSettings = ActiveCall.Settings;
 
             _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers,
-                this, _config.Audio.EnableRed);
+                this, _config.Audio);
             _publisher.IceTrickled += OnIceTrickled;
             _publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
         }

@@ -133,6 +133,52 @@ After you run the project, you should now see a log confirming that the user is 
 
 ---
 
+# Add methods to `Join` and `Leave` a call
+
+In this step we'll add methods to `Join` and `Leave` the call. These will be called from our UI when the user clicks on the `Join` and `Leave` buttons.
+
+First, add this field to the `AudioRoomsManager` class:
+```csharp
+private IStreamCall _activeCall;
+```
+
+So the fields part of the class will look like this:
+```csharp
+    [SerializeField]
+    private string _apiKey;
+    
+    [SerializeField]
+    private string _userId;
+    
+    [SerializeField]
+    private string _userToken;
+
+    private IStreamVideoClient _client;
+
+    // highlight-next-line
+    private IStreamCall _activeCall;
+```
+
+Next, add the `JoinCallAsync` and the `LeaveCallAsync` methods to the `AudioRoomsManager` class.
+
+```csharp
+    public async Task JoinCallAsync(string callId)
+    {
+        _activeCall = await _client.JoinCallAsync(StreamCallType.Default, callId, create: true, ring: false, notify: false);
+    }
+    
+    public async Task LeaveCallAsync()
+    {
+        if (_activeCall == null)
+        {
+            Debug.LogWarning("Leave request ignored. There is no active call to leave.");
+            return;
+        }
+
+        await _activeCall.LeaveAsync();
+    }
+```
+
 # Create UI scripts
 
 1. In Scripts folder create new script and call it AudioRoomsUI.cs
@@ -148,8 +194,14 @@ public class AudioRoomsUI : MonoBehaviour
     // Awake is called automatically by Unity Engine
     private void Awake()
     {
+        // Add listeners to when user clicks on the buttons
         _joinButton.onClick.AddListener(OnJoinButtonClicked);
         _leaveButton.onClick.AddListener(OnLeaveButtonClicked);
+        
+        // Remove default option
+        _microphoneDropdown.ClearOptions();
+        // Populate dropdown with available microphone devices
+        _microphoneDropdown.AddOptions(Microphone.devices.ToList());
     }
 
     private async void OnLeaveButtonClicked()
@@ -193,15 +245,24 @@ public class AudioRoomsUI : MonoBehaviour
 
     [SerializeField]
     private AudioRoomsManager _audioRoomsManager;
+    
+    // Microphone will use this AudioSource as an audio buffer
+    private AudioSource _microphoneAudioSource;
+
+    // Currently active microphone device
+    private string _activeMicrophoneDevice;
 }
 ```
 
 Let's break this down.
 
-Here we've defined fields that will hold references to:
+At the very bottom we've defined fields that will hold references to:
 - Join & Leave buttons
 - Input that we'll use to provide a call ID to connect
+- Dropdown that we'll use to pick the active microphone device
 - reference to our AudioRoomsManager
+- reference to an `AudioSource` to which active microphone will send audio input
+- reference to active microphone device name. In Unity, we use the microphone device name to start & stop streaming audio from the microphone.
 ```csharp
     [SerializeField]
     private TMP_InputField _callIdInput;
@@ -211,17 +272,35 @@ Here we've defined fields that will hold references to:
     
     [SerializeField]
     private Button _leaveButton;
+    
+    [SerializeField]
+    private TMP_Dropdown _microphoneDropdown;
 
     [SerializeField]
     private AudioRoomsManager _audioRoomsManager;
+    
+    // Microphone will use this AudioSource as an audio buffer
+    private AudioSource _microphoneAudioSource;
+
+    // Currently active microphone device
+    private string _activeMicrophoneDevice;
 ```
 
-Here, in Unity's Awake special event method, we subscribe OnJoinButtonClicked callback method to the join button click event and the OnLeaveButtonClicked to the leave button click event:
+Here, in Unity's Awake special event method, we:
+* subscribe `OnJoinButtonClicked` callback method to the join button click event and
+* subscribe `OnLeaveButtonClicked` callback to the leave button click event
+* Generate dropdown options based on Unity's `Microphone.devices` array
 ```csharp
     private void Awake()
     {
+        // Add listeners to when user clicks on the buttons
         _joinButton.onClick.AddListener(OnJoinButtonClicked);
         _leaveButton.onClick.AddListener(OnLeaveButtonClicked);
+        
+        // Remove default option
+        _microphoneDropdown.ClearOptions();
+        // Populate dropdown with available microphone devices
+        _microphoneDropdown.AddOptions(Microphone.devices.ToList());
     }
 ```
 
@@ -262,6 +341,81 @@ The `OnLeaveButtonClicked` triggered when user clicks the Leave button calls the
     }
 ```
 
+# Handle microphone
+
+In order to send audio from our microphone we need to add few more things to our `AudioRoomsUI.cs`.
+
+First, add this method to the `AudioRoomsUI` class:
+```csharp
+    private void SetActiveMicrophone(int value)
+    {
+        // Dropdown onValueChanged callback will give us the index of the selected option and we need a device name so we extract it from options
+        _activeMicrophoneDevice = _microphoneDropdown.options[value].text;
+        
+        // If previous microphone device was active -> stop it
+        if (_activeMicrophoneDevice != null)
+        {
+            Microphone.End(_activeMicrophoneDevice);
+        }
+        
+        // Get microphone input 
+        _microphoneAudioSource.clip
+            = Microphone.Start(_activeMicrophoneDevice, true, 3, AudioSettings.outputSampleRate);
+        _microphoneAudioSource.loop = true;
+        _microphoneAudioSource.volume = 0; // Set volume to 0 so we don't hear back our microphone
+        _microphoneAudioSource.Play();
+    }
+```
+The `SetActiveMicrophone` method will be called whenever a user picks a new microphone device from the dropdown. The `int value` parameter will be populated by the dropdown `onValueChanged` event as we'll soon see.
+
+Let's break down this method:
+
+Because the dropdown `onValueChanged` event will provide us the `index` of the selected option, and we need the actual device name to interact with the microphone, we extract the selected device name with:
+```csharp
+_activeMicrophoneDevice = _microphoneDropdown.options[value].text;
+```
+
+If the microphone device gets changed multiple times we must always stop the previous microphone before activating the new one and we achieve this with the following code:
+```csharp
+// If previous microphone device was active -> stop it
+if (_activeMicrophoneDevice != null)
+{
+    Microphone.End(_activeMicrophoneDevice);
+}
+```
+
+Finally, we use Unity's `Microphone.Start` method to start capturing the audio from the microphone device and stream it into `_microphoneAudioSource` AudioSource component that we'll later set as an audio input source for the audio calls.
+
+If your curious about why microphone audio is captured in this way you can refer to [Unity documentation](https://docs.unity3d.com/ScriptReference/Microphone.Start.html) for more information.
+
+Next, add this method to the `AudioRoomsUI` class as well:
+```csharp
+    private void InitMicrophone()
+    {
+        // Create AudioSource
+        _microphoneAudioSource = gameObject.AddComponent<AudioSource>();
+
+        // Set this AudioSource to be used for Audio Input
+        _audioRoomsManager.SetInputAudioSource(_microphoneAudioSource);
+        
+        // Set first microphone device active. User can change active microphone via dropdown
+        SetActiveMicrophone(0);
+    }
+```
+
+In the `InitMicrophone` method we:
+1. Create `AudioSource` component and save its reference in the `_microphoneAudioSource` field.
+2. We pass this `AudioSource` to the `_audioRoomsManager.SetInputAudioSource` method so that we can later pass this reference to the Stream's SDK. We'll create this method in the next step.
+3. Lastly we call `SetActiveMicrophone(0);` in order to enable first microphone device as an active microphone
+
+As the last step in this section, open the `AudioRoomsManager.cs` class and and the following method:
+```csharp
+    public void SetInputAudioSource(AudioSource audioSource)
+    {
+        _inputAudioSource = audioSource;
+    }
+```
+
 # Create UI scene objects
 
 Go to scene hierarchy window and create the `Canvas` game object. One way to do this is by clicking the `GameObject -> UI -> Canvas` from the top menu.
@@ -279,6 +433,9 @@ Now, create these UI elements as a children of the `Canvas` game object:
  - click on the inner game object, and on the `TextMeshPro - Text(UI)` component, change the text to `Leave`
 - Input Field 
  - name the GameObject as `CallIdInput`
+- Dropdown
+ - name the GameObject as `MicrophoneDropdown`
+ - on the `RectTransform` component set the `Pos X` to `250` and the `Width` to `300`
 
 One way to do this is to right-click on the `Canvas` object and select those items from the `UI` submenu.
 
@@ -286,17 +443,18 @@ One way to do this is to right-click on the `Canvas` object and select those ite
 
 After completing this step you should see the newly created UI elements when switching over to the `Game` window:
 
-![Created Canvas GameObject](../assets/tutorials/audio-room/07.png)
+![Created Canvas GameObject](../assets/tutorials/audio-room/07b.png)
 
 Now attach the `AudioRoomsUI.cs` script to the `Canvas` game object and in the Inspector window drag references to the:
 * Join Button
 * Leave Button
 * Call Id Input
+* Microphone Dropdown
 * AudioRoomsManager
 
 After completing this step you should now have a `Canvas` object with `AudioRoomsUI` component and all references attached:
 
-![Created Canvas GameObject](../assets/tutorials/audio-room/08.png)
+![Created Canvas GameObject](../assets/tutorials/audio-room/08b.png)
 
 **Save the scene.**
 
@@ -319,12 +477,136 @@ Now, open the `AudioRoomsManager.cs` script again, and add the missing `JoinCall
     }
 ```
 
+# Handling participants
 
 
 
 
 
 
+
+# Final scripts
+
+Here are the final scripts for reference:
+
+<details><summary>AudioRoomsUI.cs</summary>
+    <p>
+
+```csharp
+using System;
+using System.Linq;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class AudioRoomsUI : MonoBehaviour
+{
+    // Awake is called automatically by Unity Engine
+    private void Awake()
+    {
+        // Add listeners to when user clicks on the buttons
+        _joinButton.onClick.AddListener(OnJoinButtonClicked);
+        _leaveButton.onClick.AddListener(OnLeaveButtonClicked);
+        
+        // Remove default option
+        _microphoneDropdown.ClearOptions();
+        // Populate dropdown with available microphone devices
+        _microphoneDropdown.AddOptions(Microphone.devices.ToList());
+        
+        // Add listener method to when user changes microphone in the dropdown
+        _microphoneDropdown.onValueChanged.AddListener(SetActiveMicrophone);
+
+        InitMicrophone();
+    }
+
+    private void InitMicrophone()
+    {
+        // Create AudioSource
+        _microphoneAudioSource = gameObject.AddComponent<AudioSource>();
+
+        // Set this AudioSource to be used for Audio Input
+        _audioRoomsManager.SetInputAudioSource(_microphoneAudioSource);
+        
+        // Set first microphone device active. User can change active microphone via dropdown
+        SetActiveMicrophone(0);
+    }
+
+    private void SetActiveMicrophone(int value)
+    {
+        // Dropdown onValueChanged callback will give us the index of the selected option and we need a device name so we extract it from options
+        _activeMicrophoneDevice = _microphoneDropdown.options[value].text;
+        
+        // If previous microphone device was active -> stop it
+        if (_activeMicrophoneDevice != null)
+        {
+            Microphone.End(_activeMicrophoneDevice);
+        }
+        
+        // Get microphone input 
+        _microphoneAudioSource.clip
+            = Microphone.Start(_activeMicrophoneDevice, true, 3, AudioSettings.outputSampleRate);
+        _microphoneAudioSource.loop = true;
+        _microphoneAudioSource.volume = 0; // Set volume to 0 so we don't hear back our microphone
+        _microphoneAudioSource.Play();
+    }
+
+    private async void OnLeaveButtonClicked()
+    {
+        try
+        {
+            await _audioRoomsManager.LeaveCallAsync();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+
+    private async void OnJoinButtonClicked()
+    {
+        // Validate input
+        if (string.IsNullOrEmpty(_callIdInput.text))
+        {
+            Debug.LogError("Please provide call ID");
+            return;
+        }
+
+        try
+        {
+            await _audioRoomsManager.JoinCallAsync(_callIdInput.text);
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+    
+    [SerializeField]
+    private TMP_InputField _callIdInput;
+
+    [SerializeField]
+    private Button _joinButton;
+    
+    [SerializeField]
+    private Button _leaveButton;
+    
+    [SerializeField]
+    private TMP_Dropdown _microphoneDropdown;
+
+    [SerializeField]
+    private AudioRoomsManager _audioRoomsManager;
+
+    // Microphone will use this AudioSource as an audio buffer
+    private AudioSource _microphoneAudioSource;
+
+    // Currently active microphone device
+    private string _activeMicrophoneDevice;
+}
+
+```
+
+    </p>
+</details>
 
 
 

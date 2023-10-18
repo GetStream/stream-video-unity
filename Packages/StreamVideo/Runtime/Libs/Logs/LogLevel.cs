@@ -1,8 +1,11 @@
-﻿namespace StreamVideo.Libs.Logs
+﻿using System;
+
+namespace StreamVideo.Libs.Logs
 {
     /// <summary>
     /// Determines what type of logs are being logged by <see cref="ILogs"/>
     /// </summary>
+    [Flags]
     public enum LogLevel
     {
         Disabled = 0,

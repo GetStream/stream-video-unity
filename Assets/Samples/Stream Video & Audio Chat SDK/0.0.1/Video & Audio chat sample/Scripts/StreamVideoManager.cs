@@ -108,13 +108,13 @@ namespace StreamVideo.ExampleProject
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
 
-        private string TryGetCallId(bool create) => create ? Guid.NewGuid().ToString() : _uiManager.JoinCallId;
+        private string GetOrCreateCallId(bool create) => create ? Guid.NewGuid().ToString().Replace("-", "") : _uiManager.JoinCallId;
 
         private async void OnJoinClicked(bool create)
         {
             try
             {
-                var callId = TryGetCallId(create);
+                var callId = GetOrCreateCallId(create);
                 if (string.IsNullOrEmpty(callId))
                 {
                     Debug.LogError($"Failed to get call ID in mode create: {create}.");

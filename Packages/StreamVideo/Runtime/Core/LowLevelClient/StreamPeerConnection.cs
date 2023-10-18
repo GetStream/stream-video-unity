@@ -289,13 +289,16 @@ namespace StreamVideo.Core.LowLevelClient
         private void CreatePublisherVideoTransceiver()
         {
             var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video);
-            _videoTransceiver = _peerConnection.AddTransceiver(TrackKind.Video, videoTransceiverInit);
-
+            
             PublisherVideoMediaStream = new MediaStream();
             var videoTrack = CreatePublisherVideoTrack();
 
             PublisherVideoMediaStream.AddTrack(videoTrack);
+            
+            // Order seems fragile here in order to get correct msid record in local offer with the PublisherVideoMediaStream
             videoTransceiverInit.streams = new[] { PublisherVideoMediaStream };
+
+            _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
 
             ForceCodec(_videoTransceiver, VideoCodecKeyH264, TrackKind.Video);
 

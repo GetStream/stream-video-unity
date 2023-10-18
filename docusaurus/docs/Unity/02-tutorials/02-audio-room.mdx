@@ -408,12 +408,16 @@ In the `InitMicrophone` method we:
 2. We pass this `AudioSource` to the `_audioRoomsManager.SetInputAudioSource` method so that we can later pass this reference to the Stream's SDK. We'll create this method in the next step.
 3. Lastly we call `SetActiveMicrophone(0);` in order to enable first microphone device as an active microphone
 
-As the last step in this section, open the `AudioRoomsManager.cs` class and and the following method:
+As the last step in this section, open the `AudioRoomsManager.cs` class and add the following method:
 ```csharp
     public void SetInputAudioSource(AudioSource audioSource)
     {
         _inputAudioSource = audioSource;
     }
+```
+And the following field to the fields section:
+```csharp
+    private AudioSource _inputAudioSource;
 ```
 
 # Create UI scene objects
@@ -479,135 +483,216 @@ Now, open the `AudioRoomsManager.cs` script again, and add the missing `JoinCall
 
 # Handling participants
 
+Last major part to implement is handling participants and their tracks. Call participants are users who joined through one or multiple devices and tracks represent either Audio or Video data stream from a participant. In this tutorial however, we'll be using audio tracks only.
 
-
-
-
-
-
-# Final scripts
-
-Here are the final scripts for reference:
-
-<details><summary>AudioRoomsUI.cs</summary>
-    <p>
+First let's create a new script `AudioCallParticipant.cs`:
 
 ```csharp
-using System;
-using System.Linq;
-using TMPro;
+using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.StatefulModels.Tracks;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class AudioRoomsUI : MonoBehaviour
+public class AudioCallParticipant : MonoBehaviour
 {
-    // Awake is called automatically by Unity Engine
-    private void Awake()
+    public void Init(IStreamVideoCallParticipant participant)
     {
-        // Add listeners to when user clicks on the buttons
-        _joinButton.onClick.AddListener(OnJoinButtonClicked);
-        _leaveButton.onClick.AddListener(OnLeaveButtonClicked);
+        _participant = participant;
         
-        // Remove default option
-        _microphoneDropdown.ClearOptions();
-        // Populate dropdown with available microphone devices
-        _microphoneDropdown.AddOptions(Microphone.devices.ToList());
-        
-        // Add listener method to when user changes microphone in the dropdown
-        _microphoneDropdown.onValueChanged.AddListener(SetActiveMicrophone);
-
-        InitMicrophone();
-    }
-
-    private void InitMicrophone()
-    {
-        // Create AudioSource
-        _microphoneAudioSource = gameObject.AddComponent<AudioSource>();
-
-        // Set this AudioSource to be used for Audio Input
-        _audioRoomsManager.SetInputAudioSource(_microphoneAudioSource);
-        
-        // Set first microphone device active. User can change active microphone via dropdown
-        SetActiveMicrophone(0);
-    }
-
-    private void SetActiveMicrophone(int value)
-    {
-        // Dropdown onValueChanged callback will give us the index of the selected option and we need a device name so we extract it from options
-        _activeMicrophoneDevice = _microphoneDropdown.options[value].text;
-        
-        // If previous microphone device was active -> stop it
-        if (_activeMicrophoneDevice != null)
+        // Process already available tracks
+        foreach (var track in _participant.GetTracks())
         {
-            Microphone.End(_activeMicrophoneDevice);
+            OnTrackAdded(_participant, track);
         }
         
-        // Get microphone input 
-        _microphoneAudioSource.clip
-            = Microphone.Start(_activeMicrophoneDevice, true, 3, AudioSettings.outputSampleRate);
-        _microphoneAudioSource.loop = true;
-        _microphoneAudioSource.volume = 0; // Set volume to 0 so we don't hear back our microphone
-        _microphoneAudioSource.Play();
+        // Subscribe to TrackAdded - this way we'll handle any track added in the future
+        _participant.TrackAdded += OnTrackAdded;
     }
 
-    private async void OnLeaveButtonClicked()
+    private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
     {
-        try
+        Debug.Log($"Track of type `{track.GetType()}` added for {_participant.Name}");
+        
+        // For this tutorial we only care for audio tracks but video tracks are also possible
+        if (track is StreamAudioTrack streamAudioTrack)
         {
-            await _audioRoomsManager.LeaveCallAsync();
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
+            // Create AudioSource
+            _audioOutputAudioSource = gameObject.AddComponent<AudioSource>();
+            
+            // Set this AudioSource to receive participant's audio stream
+            streamAudioTrack.SetAudioSourceTarget(_audioOutputAudioSource);
         }
     }
 
-    private async void OnJoinButtonClicked()
+    // Unity's special method called when object is destroyed
+    private void OnDestroy()
     {
-        // Validate input
-        if (string.IsNullOrEmpty(_callIdInput.text))
-        {
-            Debug.LogError("Please provide call ID");
-            return;
-        }
-
-        try
-        {
-            await _audioRoomsManager.JoinCallAsync(_callIdInput.text);
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-        }
+        // It's a good practice to always unsubscribe from events
+        _participant.TrackAdded -= OnTrackAdded;
     }
-    
-    [SerializeField]
-    private TMP_InputField _callIdInput;
 
-    [SerializeField]
-    private Button _joinButton;
-    
-    [SerializeField]
-    private Button _leaveButton;
-    
-    [SerializeField]
-    private TMP_Dropdown _microphoneDropdown;
+    // This AudioSource will play the audio received from the participant
+    private AudioSource _audioOutputAudioSource;
 
-    [SerializeField]
-    private AudioRoomsManager _audioRoomsManager;
-
-    // Microphone will use this AudioSource as an audio buffer
-    private AudioSource _microphoneAudioSource;
-
-    // Currently active microphone device
-    private string _activeMicrophoneDevice;
+    // Keep reference so we can unsubscribe from events in OnDestroy
+    private IStreamVideoCallParticipant _participant;
 }
-
 ```
 
-    </p>
-</details>
+This script will represent a single call participant and handle its track. Let's break this down to fully understand what's going on:
 
+The `Init` method:
+```csharp
+    public void Init(IStreamVideoCallParticipant participant)
+    {
+        _participant = participant;
+        
+        // Process already available tracks
+        foreach (var track in _participant.GetTracks())
+        {
+            OnTrackAdded(_participant, track);
+        }
+        
+        // Subscribe to TrackAdded - this way we'll handle any track added in the future
+        _participant.TrackAdded += OnTrackAdded;
+    }
+```
+1. Saves the `IStreamVideoCallParticipant` object in a class field
+2. Loops over currently available tracks and calls `OnTrackAdded` for each available track
+3. Subscribes to `IStreamVideoCallParticipant.TrackAdded` event in order to also handle any tracks that will appear in the future
+
+The `OnTrackAdded` method:
+```csharp
+    private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+    {
+        Debug.Log($"Track of type `{track.GetType()}` added for {_participant.Name}");
+        
+        // For this tutorial we only care for audio tracks but video tracks are also possible
+        if (track is StreamAudioTrack streamAudioTrack)
+        {
+            // Create AudioSource
+            _audioOutputAudioSource = gameObject.AddComponent<AudioSource>();
+            
+            // Set this AudioSource to receive participant's audio stream
+            streamAudioTrack.SetAudioSourceTarget(_audioOutputAudioSource);
+        }
+    }
+```
+
+1. Casts the track to `StreamAudioTrack` type and handles the track if cast succeeds. Again, in this tutorial we're only interested in audio tracks but if you'd be implementing video calls also you'd have to handle the `StreamVideoTrack` here as well.
+2. Create the `AudioSource` component that will receive participant's audio stream
+3. We bind the newly created `AudioSource` to the `StreamAudioTrack` via `streamAudioTrack.SetAudioSourceTarget` method - this is essential so that the `AudioSource` receives audio data from the track
+
+Next, in Unity's `OnDestroy` method that gets automatically called whenever this object is destroyed:
+```csharp
+    private void OnDestroy()
+    {
+        // It's a good practice to always unsubscribe from events
+        _participant.TrackAdded -= OnTrackAdded;
+    }
+```
+we unsubscribe from the `TrackAdded` event.
+
+And lastly:
+```csharp
+    // This AudioSource will play the audio received from the participant
+    private AudioSource _audioOutputAudioSource;
+
+    // Keep reference so we can unsubscribe from events in OnDestroy
+    private IStreamVideoCallParticipant _participant;
+```
+we've defined two fields to keep the `AudioSource` and the participant references.
+
+Next, in the `AudioRoomsManager.cs`:
+
+Add the following field:
+```csharp
+private readonly Dictionary<string, AudioCallParticipant> _callParticipantBySessionId
+        = new Dictionary<string, AudioCallParticipant>();
+```
+
+We'll use this to keep references to `AudioCallParticipant` component that we'll create for every participant. We keep references in the dictionary where a `SessionId` will be the key because this way whenever a participant leaves the call we can easily find the corresponding game object and destroy it.
+
+Next, add this method to the `AudioRoomsManager.cs`:
+```csharp
+private void OnParticipantJoined(IStreamVideoCallParticipant participant)
+{
+    var go = new GameObject();
+    go.name = $"Participant - {participant.Name} ({participant.SessionId})";
+    var callParticipant = go.AddComponent<AudioCallParticipant>();
+    callParticipant.Init(participant);
+    
+    // Save reference by Session ID so we can easily destroy when this participant leaves the call
+    _callParticipantBySessionId.Add(participant.SessionId, callParticipant);
+}
+```
+The `OnParticipantJoined` method will be called for each call participant. Let's go through what's going on here:
+1. We create a new GameObject to which we'll attach the `AudioCallParticipant` component. We created a new GameObject dynamically but in a real project it's usually better to spawn the game object from a prefab.
+2. We name the GameObject to include participant's name and the Session ID. Remember that same user can join multiple times through multiple device so `SessionId` is the unique participant identifier.
+3. We then attach the `AudioCallParticipant` and call `callParticipant.Init` method that will handle participant tracks
+4. Lastly, we store a reference to the `AudioCallParticipant` in the dictionary, so we can easily destroy once the participant leaves the call.
+
+Next, add the `OnParticipantLeft` method to the `AudioRoomsManager.cs`:
+```csharp
+private void OnParticipantLeft(string sessionId, string userid)
+{
+    if (!_callParticipantBySessionId.ContainsKey(sessionId))
+    {
+        // If participant is not found just ignore
+        return;
+    }
+
+    var audioCallParticipant = _callParticipantBySessionId[sessionId];
+    
+    // Remember to destroy the game object and not the component only
+    Destroy(audioCallParticipant.gameObject);
+}
+```
+The `OnParticipantLeft` will be called whenever a participant leaves the call. All we're doing here is trying to find a `AudioCallParticipant` component using participant's `sessionId` in the `_callParticipantBySessionId` dictionary and destroy its game object.
+
+Next, replace the `JoinCallAsync` method with the following code:
+```csharp
+public async Task JoinCallAsync(string callId)
+{
+    _activeCall = await _client.JoinCallAsync(StreamCallType.Default, callId, create: true, ring: false, notify: false);
+
+    // Handle already present participants
+    foreach (var participant in _activeCall.Participants)
+    {
+        OnParticipantJoined(participant);
+    }
+
+    // Subscribe to events in order to react to participant joining or leaving the call
+    _activeCall.ParticipantJoined += OnParticipantJoined;
+    _activeCall.ParticipantLeft += OnParticipantLeft;
+}
+```
+
+We've added:
+1. Calling `OnParticipantJoined` for each participant that's already present on the call
+2. Subscribing to `ParticipantJoined` and `ParticipantLeft` events so we get notified whenever a participant joins or leaves the call
+
+Lastly, replace the `LeaveCallAsync` method with:
+```csharp
+public async Task LeaveCallAsync()
+{
+    if (_activeCall == null)
+    {
+        Debug.LogWarning("Leave request ignored. There is no active call to leave.");
+        return;
+    }
+    
+    // Unsubscribe from events
+    _activeCall.ParticipantJoined -= OnParticipantJoined;
+    _activeCall.ParticipantLeft -= OnParticipantLeft;
+
+    await _activeCall.LeaveAsync();
+}
+```
+We've just added unsubscribing from the `ParticipantJoined` and `ParticipantLeft` events.
+
+# Test
+
+We're now ready to test the app! In order to test we need 2 instances of the app.
 
 
 

@@ -63,8 +63,10 @@ namespace StreamVideo.Core.Models
 
         void IStateLoadableFrom<SfuCallState, CallSession>.LoadFromDto(SfuCallState dto, ICache cache)
         {
-            //StreamTOdo: does StartedAt always have value?
-            StartedAt = dto.StartedAt.ToDateTimeOffset();
+            if (dto.StartedAt != null)
+            {
+                StartedAt = dto.StartedAt.ToDateTimeOffset();
+            }
 
             // dto.CallState.Participants may not contain all of the participants
             UpdateExtensions<StreamVideoCallParticipant, SfuParticipant>.TryAddUniqueTrackedObjects(_participants,

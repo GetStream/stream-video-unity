@@ -200,10 +200,10 @@ namespace StreamVideo.ExampleProject
                 return;
             }
 
-            //StreamTodo: should the volume be 0 so we never hear input from our own microphone?
             _inputAudioSource.clip
                 = Microphone.Start(_activeMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
             _inputAudioSource.loop = true;
+            _inputAudioSource.volume = 0; // Set volume to 0 so we don't hear our own microphone
             _inputAudioSource.Play();
 
             Debug.Log("Audio recording started. Device name: " + _activeMicrophoneDeviceName);

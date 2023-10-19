@@ -3,14 +3,15 @@ title: Android platform
 description: Building for Android platform
 ---
 
-# Prerequisites
+#### Prerequisites
 - Install Android Module in Unity HUB (if needed)
 - Switch the project to Android platform (File -> Build Settings -> Platform)
 
-# Build Settings requirements (File -> Build Settings -> Player Settings)
+#### Build Settings requirements
+Go to "File -> Build Settings -> Player Settings"
 - Set Scripting Backend to IL2CPP (Other Settings -> Scripting Backend)
 - Set Target Architectures to **ARM64** and disable **ARMv7** (Other Settings -> Target Architectures)
-- Choose **Require** for the **Internet Access** option
+- Set **Require** for the **Internet Access** option
 - Set the **Android API Level** to **23 or higher** (Other Settings -> Identification -> Minimum API Level)
 
 Stream's Video SDK uses Unity's webRTC library internally and therefore follows the same requirements and limitations. For more information please refer to Unity's [webRTC package documentation](https://docs.unity3d.com/Packages/com.unity.webrtc@3.0/manual/requirements.html).

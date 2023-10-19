@@ -1,0 +1,8 @@
+<linker>
+  <assembly fullname="StreamVideo.Core">
+	<namespace fullname="StreamVideo.Core.InternalDTO.Events" preserve="all"/>
+	<namespace fullname="StreamVideo.Core.InternalDTO.Models" preserve="all"/>
+	<namespace fullname="StreamVideo.Core.InternalDTO.Requests" preserve="all"/>
+	<namespace fullname="StreamVideo.Core.InternalDTO.Responses" preserve="all"/>
+  </assembly>
+</linker>

@@ -44,6 +44,7 @@ Please refer to Unity's documentation for more information on how to use **Micro
 - For standalone platforms like **Windows** or **macOS** you'd usually implement a dropdown menu populated with `Microphone.devices` so that the user can pick which microphone device should be used. The reason for this is that on standalone platforms there can be multiple microphone devices plugged in.
 - For mobile platforms like **Android** or **iOS** microphone devices are handled by the OS, so you usually just pick the first device.
 - You should handle the case where user does not have a microphone device at all and the `Microphone.devices` array is empty.
+- For mobile platforms like **Android** or **iOS** it's best to request a permission to access the microphone and handle the case where user did not grant the permission to use it. Read more in [Unity's docs](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html)
 
 ### Send Video
 
@@ -86,3 +87,4 @@ Please refer to Unity's documentation for more information on how to use **Camer
 - For standalone platforms like **Windows** or **macOS** you'd usually implement a dropdown menu populated with `WebCamTexture.devices` so that the user can pick which camera device should be used.
 - For mobile platforms like **Android** or **iOS** there are usually two cameras available: `Front` and `Back` cameras. Depending on your use case you may either want to automatically select the `Front` camera or allow user to toggle between the `Front` and the `Back` cameras.
 - You should handle the case where user does not have a camera device at all and the `WebCamTexture.devices` array is empty.
+- For mobile platforms like **Android** or **iOS** it's best to request a permission to access the camera and handle the case where user did not grant the permission to use it. Read more in [Unity's docs](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html)

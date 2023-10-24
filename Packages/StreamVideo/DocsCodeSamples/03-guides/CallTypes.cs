@@ -2,6 +2,9 @@
 
 namespace DocsCodeSamples._03_guides
 {
+    /// <summary>
+    /// Code examples for guides/call-types/ page
+    /// </summary>
     internal class CallTypes
     {
         public async void GetOrCreateCall()

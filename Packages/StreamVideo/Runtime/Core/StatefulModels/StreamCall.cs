@@ -213,6 +213,7 @@ namespace StreamVideo.Core
         public Task RequestPermissionsAsync(IEnumerable<OwnCapability> permissions)
             => Client.RequestPermissionAsync(this, permissions.Select(p => p.ToString()).ToList());
 
+        //StreamTodo: p.ToString() will not work, we need to convert OwnCapability to string value defined in OwnCapabilityInternalEnum
         /// <summary>
         /// Grant permissions to a user in this call
         /// </summary>

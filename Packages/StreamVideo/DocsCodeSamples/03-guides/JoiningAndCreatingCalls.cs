@@ -6,6 +6,9 @@ using StreamVideo.Core.QueryBuilders.Sort;
 
 namespace DocsCodeSamples._03_guides
 {
+    /// <summary>
+    /// Code examples for guides/joining-creating-calls/ page
+    /// </summary>
     internal class JoiningAndCreatingCalls
     {
         public async void GetCall()

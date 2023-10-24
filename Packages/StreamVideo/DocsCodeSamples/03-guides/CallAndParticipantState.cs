@@ -4,6 +4,9 @@ using StreamVideo.Core.StatefulModels.Tracks;
 
 namespace DocsCodeSamples._03_guides
 {
+    /// <summary>
+    /// Code examples for guides/call-and-participant-state/ page
+    /// </summary>
     internal class CallAndParticipantState
     {
         public async void GetOrCreateCall()

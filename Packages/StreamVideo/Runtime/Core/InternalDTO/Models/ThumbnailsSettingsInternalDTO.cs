@@ -16,23 +16,10 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    internal enum RecordSettingsRequestQualityInternalEnum
+    internal partial class ThumbnailsSettingsInternalDTO
     {
-
-        [System.Runtime.Serialization.EnumMember(Value = @"360p")]
-        _360p = 0,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"480p")]
-        _480p = 1,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"720p")]
-        _720p = 2,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"1080p")]
-        _1080p = 3,
-
-        [System.Runtime.Serialization.EnumMember(Value = @"1440p")]
-        _1440p = 4,
+        [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Always)]
+        public bool Enabled { get; set; } = default!;
 
     }
 

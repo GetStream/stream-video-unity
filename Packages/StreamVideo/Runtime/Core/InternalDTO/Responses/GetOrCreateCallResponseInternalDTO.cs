@@ -18,9 +18,6 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class GetOrCreateCallResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("blocked_users", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.List<UserResponseInternalDTO> BlockedUsers { get; set; } = new System.Collections.Generic.List<UserResponseInternalDTO>();
-
         [Newtonsoft.Json.JsonProperty("call", Required = Newtonsoft.Json.Required.Always)]
         public CallResponseInternalDTO Call { get; set; } = new CallResponseInternalDTO();
 

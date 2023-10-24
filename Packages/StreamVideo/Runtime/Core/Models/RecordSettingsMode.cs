@@ -35,5 +35,17 @@ namespace StreamVideo.Core.Models
                     throw new ArgumentOutOfRangeException(nameof(internalValue), internalValue, null);
             }
         }
+        
+        public static RecordSettingsMode ParseToPublicEnum(string internalValue)
+        {
+            switch (internalValue)
+            {
+                case "available": return RecordSettingsMode.Available;
+                case "disabled": return RecordSettingsMode.Disabled;
+                case "auto-on": return RecordSettingsMode.AutoOn;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(internalValue), internalValue, $"Failed to parse `{internalValue}` to {typeof(RecordSettingsMode)}");
+            }
+        }
     }
 }

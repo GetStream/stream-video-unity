@@ -90,6 +90,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("team", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Team { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("thumbnails", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public ThumbnailResponseInternalDTO Thumbnails { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("transcribing", Required = Newtonsoft.Json.Required.Always)]
         public bool Transcribing { get; set; } = default!;
 

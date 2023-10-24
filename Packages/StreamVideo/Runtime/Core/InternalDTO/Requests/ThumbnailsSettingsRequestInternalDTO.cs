@@ -16,19 +16,10 @@ namespace StreamVideo.Core.InternalDTO.Requests
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    internal partial class HLSSettingsRequestInternalDTO
+    internal partial class ThumbnailsSettingsRequestInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("auto_on", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public bool AutoOn { get; set; } = default!;
-
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Enabled { get; set; } = default!;
-
-        [Newtonsoft.Json.JsonProperty("layout", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public LayoutSettingsRequestInternalDTO Layout { get; set; } = default!;
-
-        [Newtonsoft.Json.JsonProperty("quality_tracks", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.List<string> QualityTracks { get; set; } = default!;
 
     }
 

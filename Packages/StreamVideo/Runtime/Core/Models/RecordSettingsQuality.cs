@@ -20,7 +20,7 @@ namespace StreamVideo.Core.Models
             switch (internalValue)
             {
                 case RecordSettingsQualityInternalEnum.AudioOnly: return RecordSettingsQuality.AudioOnly;
-                case RecordSettingsQualityInternalEnum._360p:
+                case RecordSettingsQualityInternalEnum._360p: return RecordSettingsQuality._360p;
                 case RecordSettingsQualityInternalEnum._480p: return RecordSettingsQuality._480p;
                 case RecordSettingsQualityInternalEnum._720p: return RecordSettingsQuality._720p;
                 case RecordSettingsQualityInternalEnum._1080p: return RecordSettingsQuality._1080p;
@@ -44,5 +44,21 @@ namespace StreamVideo.Core.Models
                     throw new ArgumentOutOfRangeException(nameof(publicValue), publicValue, null);
             }
         }
+        
+        public static RecordSettingsQuality ParseToPublicEnum(string internalValue)
+        {
+            switch (internalValue)
+            {
+                case "audio-only": return RecordSettingsQuality.AudioOnly;
+                case "360p": return RecordSettingsQuality._360p;
+                case "480p": return RecordSettingsQuality._480p;
+                case "720p": return RecordSettingsQuality._720p;
+                case "1080p": return RecordSettingsQuality._1080p;
+                case "1440p": return RecordSettingsQuality._1440p;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(internalValue), internalValue, null);
+            }
+        }
+        
     }
 }

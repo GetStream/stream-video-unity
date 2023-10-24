@@ -16,23 +16,23 @@ namespace StreamVideo.Core.InternalDTO.Models
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    internal enum RecordSettingsRequestQualityInternalEnum
+    internal enum LayoutSettingsRequestNameInternalEnum
     {
 
-        [System.Runtime.Serialization.EnumMember(Value = @"360p")]
-        _360p = 0,
+        [System.Runtime.Serialization.EnumMember(Value = @"spotlight")]
+        Spotlight = 0,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"480p")]
-        _480p = 1,
+        [System.Runtime.Serialization.EnumMember(Value = @"grid")]
+        Grid = 1,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"720p")]
-        _720p = 2,
+        [System.Runtime.Serialization.EnumMember(Value = @"single-participant")]
+        SingleParticipant = 2,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"1080p")]
-        _1080p = 3,
+        [System.Runtime.Serialization.EnumMember(Value = @"mobile")]
+        Mobile = 3,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"1440p")]
-        _1440p = 4,
+        [System.Runtime.Serialization.EnumMember(Value = @"custom")]
+        Custom = 4,
 
     }
 

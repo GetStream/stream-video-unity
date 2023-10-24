@@ -25,19 +25,22 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public BackstageSettingsInternalDTO Backstage { get; set; } = new BackstageSettingsInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Always)]
-        public BroadcastSettingsInternalDTO Broadcasting { get; set; } = new BroadcastSettingsInternalDTO();
+        public BroadcastSettingsResponseInternalDTO Broadcasting { get; set; } = new BroadcastSettingsResponseInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("geofencing", Required = Newtonsoft.Json.Required.Always)]
         public GeofenceSettingsInternalDTO Geofencing { get; set; } = new GeofenceSettingsInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.Always)]
-        public RecordSettingsInternalDTO Recording { get; set; } = new RecordSettingsInternalDTO();
+        public RecordSettingsResponseInternalDTO Recording { get; set; } = new RecordSettingsResponseInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("ring", Required = Newtonsoft.Json.Required.Always)]
         public RingSettingsInternalDTO Ring { get; set; } = new RingSettingsInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("screensharing", Required = Newtonsoft.Json.Required.Always)]
         public ScreensharingSettingsInternalDTO Screensharing { get; set; } = new ScreensharingSettingsInternalDTO();
+
+        [Newtonsoft.Json.JsonProperty("thumbnails", Required = Newtonsoft.Json.Required.Always)]
+        public ThumbnailsSettingsInternalDTO Thumbnails { get; set; } = new ThumbnailsSettingsInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("transcription", Required = Newtonsoft.Json.Required.Always)]
         public TranscriptionSettingsInternalDTO Transcription { get; set; } = new TranscriptionSettingsInternalDTO();

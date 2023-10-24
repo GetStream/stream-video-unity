@@ -39,6 +39,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("screensharing", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public ScreensharingSettingsRequestInternalDTO Screensharing { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("thumbnails", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public ThumbnailsSettingsRequestInternalDTO Thumbnails { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("transcription", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public TranscriptionSettingsRequestInternalDTO Transcription { get; set; } = default!;
 

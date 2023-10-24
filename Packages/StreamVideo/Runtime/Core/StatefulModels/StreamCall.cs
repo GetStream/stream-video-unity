@@ -355,7 +355,6 @@ namespace StreamVideo.Core
         {
             ((IUpdateableFrom<CallResponseInternalDTO, StreamCall>)this).UpdateFromDto(dto.Call, cache);
 
-            _blockedUsers.TryReplaceTrackedObjects(dto.BlockedUsers, cache.Users);
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
             _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
@@ -367,7 +366,6 @@ namespace StreamVideo.Core
         {
             ((IUpdateableFrom<CallResponseInternalDTO, StreamCall>)this).UpdateFromDto(dto.Call, cache);
 
-            _blockedUsers.TryReplaceTrackedObjects(dto.BlockedUsers, cache.Users);
             Created = dto.Created;
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
@@ -380,7 +378,6 @@ namespace StreamVideo.Core
         {
             ((IUpdateableFrom<CallResponseInternalDTO, StreamCall>)this).UpdateFromDto(dto.Call, cache);
 
-            _blockedUsers.TryReplaceTrackedObjects(dto.BlockedUsers, cache.Users);
             Created = dto.Created;
             Credentials = cache.TryUpdateOrCreateFromDto(Credentials, dto.Credentials);
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
@@ -388,6 +385,8 @@ namespace StreamVideo.Core
             _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
                 cache);
         }
+        
+        //StreamTodo: handle state update from events, check Android CallState.kt handleEvent()
 
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(JoinResponse joinResponse)
@@ -435,6 +434,8 @@ namespace StreamVideo.Core
 
         private readonly Dictionary<string, CallMember> _members = new Dictionary<string, CallMember>();
         private readonly List<OwnCapability> _ownCapabilities = new List<OwnCapability>();
+        
+        //StreamTodo: update this from BlockedUserEvent & UnblockedUserEvent + what about the initial state when we join? We only receive _blockedUserIds
         private readonly List<StreamVideoUser> _blockedUsers = new List<StreamVideoUser>();
 
         #endregion

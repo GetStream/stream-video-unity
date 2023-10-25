@@ -66,8 +66,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
 
         Task<QueryMembersResponseInternalDTO> QueryMembersAsync(QueryMembersRequestInternalDTO queryMembersRequest);
 
-        Task<QueryCallsResponseInternalDTO> QueryCallsAsync(StreamCallType callType, string callId,
-            QueryCallsRequestInternalDTO queryCallsRequest);
+        Task<QueryCallsResponseInternalDTO> QueryCallsAsync(QueryCallsRequestInternalDTO queryCallsRequest);
 
         Task<ResponseInternalDTO> DeleteDeviceAsync(string deviceId, string userId);
 

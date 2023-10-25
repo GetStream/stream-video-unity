@@ -1,7 +1,9 @@
-﻿namespace StreamVideo.Core.QueryBuilders.Sort
+﻿using StreamVideo.Core.StatefulModels;
+
+namespace StreamVideo.Core.QueryBuilders.Sort
 {
     /// <summary>
-    /// Sort object for <see cref="IStreamUser"/> query: <see cref="IStreamChatClient.QueryUsersAsync"/>
+    /// Sort object for <see cref="IStreamVideoUser"/> query: <see cref="IStreamCall.QueryMembersAsync"/>
     /// </summary>
     public sealed class CallMemberSort : QuerySortBase<CallMemberSort, CallMemberSortField>
     {

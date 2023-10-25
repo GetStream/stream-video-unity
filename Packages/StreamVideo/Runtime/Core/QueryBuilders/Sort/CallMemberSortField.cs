@@ -1,9 +1,10 @@
 ﻿using StreamVideo.Core.Models;
+using StreamVideo.Core.StatefulModels;
 
 namespace StreamVideo.Core.QueryBuilders.Sort
 {
     /// <summary>
-    /// Fields that you can use to sort <see cref="IStreamUser"/> query results when using <see cref="IStreamChatClient.QueryUsersAsync"/>
+    /// Fields that you can use to sort <see cref="IStreamVideoUser"/> query results when using <see cref="IStreamCall.QueryMembersAsync"/>
     /// </summary>
     public readonly struct CallMemberSortField
     {

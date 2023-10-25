@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Core.QueryBuilders.Sort.Calls;
 using Stream.Video.v1.Sfu.Events;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs;
@@ -199,6 +202,33 @@ namespace StreamVideo.Core
             InternalLowLevelClient.RtcSession.VideoSceneInput = sceneCamera;
         }
 
+        public async Task<QueryCallsResult> QueryCallsAsync(IEnumerable<IFieldFilterRule> filters = null, CallSort sort = null, int limit = 25, string prev = null, string next = null, bool watch = false)
+        {
+            var request = new QueryCallsRequestInternalDTO
+            {
+                FilterConditions = filters?.Select(_ => _.GenerateFilterEntry()).ToDictionary(x => x.Key, x => x.Value),
+                Limit = limit,
+                Next = next,
+                Prev = prev,
+                Sort = sort?.ToSortParamRequestList(),
+                Watch = watch
+            };
+
+            var response = await InternalLowLevelClient.InternalVideoClientApi.QueryCallsAsync(request);
+            if (response == null || response.Calls == null || response.Calls.Count == 0)
+            {
+                return new QueryCallsResult();
+            }
+
+            var calls = new List<IStreamCall>();
+            foreach (var callDto in response.Calls)
+            {
+                _cache.TryCreateOrUpdate(callDto);
+            }
+            
+            return new QueryCallsResult(calls, response.Prev, response.Next);
+        }
+
         internal StreamVideoLowLevelClient InternalLowLevelClient { get; private set; }
 
         internal async Task LeaveCallAsync(IStreamCall call)
@@ -281,7 +311,7 @@ namespace StreamVideo.Core
                 {
                     RemoveMembers = removeUsers,
                 });
-        
+
         private readonly ILogs _logs;
         private readonly ITimeService _timeService;
         private readonly ICache _cache;

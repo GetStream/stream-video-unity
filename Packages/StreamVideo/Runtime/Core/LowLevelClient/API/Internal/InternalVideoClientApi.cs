@@ -108,8 +108,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         public Task<QueryMembersResponseInternalDTO> QueryMembersAsync(QueryMembersRequestInternalDTO queryMembersRequest)
             => Post<QueryMembersRequestInternalDTO, QueryMembersResponseInternalDTO>($"/call/members", queryMembersRequest);
 
-        public Task<QueryCallsResponseInternalDTO> QueryCallsAsync(StreamCallType callType, string callId,
-            QueryCallsRequestInternalDTO queryCallsRequest)
+        public Task<QueryCallsResponseInternalDTO> QueryCallsAsync(QueryCallsRequestInternalDTO queryCallsRequest)
             => Post<QueryCallsRequestInternalDTO, QueryCallsResponseInternalDTO>($"/calls", queryCallsRequest);
 
         public Task<ResponseInternalDTO> DeleteDeviceAsync(string deviceId, string userId)

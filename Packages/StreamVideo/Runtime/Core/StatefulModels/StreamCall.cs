@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
+using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
@@ -26,6 +27,7 @@ namespace StreamVideo.Core
         IUpdateableFrom<GetCallResponseInternalDTO, StreamCall>,
         IUpdateableFrom<GetOrCreateCallResponseInternalDTO, StreamCall>,
         IUpdateableFrom<JoinCallResponseInternalDTO, StreamCall>,
+        IUpdateableFrom<CallStateResponseFieldsInternalDTO, StreamCall>,
         IStreamCall
     {
         //StreamTodo: add sorted participants
@@ -403,6 +405,16 @@ namespace StreamVideo.Core
 
             Created = dto.Created;
             Credentials = cache.TryUpdateOrCreateFromDto(Credentials, dto.Credentials);
+            _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
+            Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
+            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
+                cache);
+        }
+
+        void IUpdateableFrom<CallStateResponseFieldsInternalDTO, StreamCall>.UpdateFromDto(CallStateResponseFieldsInternalDTO dto, ICache cache)
+        {
+            ((IUpdateableFrom<CallResponseInternalDTO, StreamCall>)this).UpdateFromDto(dto.Call, cache);
+
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
             _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,

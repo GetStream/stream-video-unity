@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Core.QueryBuilders.Sort.Calls;
+using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
 using UnityEngine;
@@ -42,5 +45,16 @@ namespace StreamVideo.Core
         Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId);
 
         Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId);
+
+        /// <summary>
+        /// Query calls
+        /// </summary>
+        /// <param name="filters"></param>
+        /// <param name="sort"></param>
+        /// <param name="limit"></param>
+        /// <param name="prev"></param>
+        /// <param name="next"></param>
+        /// <param name="watch">Start receiving updates. If false, the returned <see cref="IStreamCall"/> objects will not be updated</param>
+        Task<QueryCallsResult> QueryCallsAsync(IEnumerable<IFieldFilterRule> filters = null, CallSort sort = null, int limit = 25, string prev = null, string next = null, bool watch = false);
     }
 }

@@ -1,0 +1,37 @@
+---
+title: Reactions & Custom Events
+description: How reactions and custom events work
+---
+
+You can send reactions to your call very easily with the code below:
+
+```csharp
+await streamCall.SendReactionAsync("like");
+```
+
+You can also add custom data to the reaction or specify a specific emoji.
+
+```csharp
+await streamCall.SendReactionAsync(type: "like", emojiCode: ":like:",
+    customData: new Dictionary<string, object>()
+    {
+        // Put any parameters you want
+        { "position", new Vector2(100, 200) }
+    });
+```
+
+Custom data is of type `Dictionary<string, object>` meaning that you can pass any amount of parameters of your type. As long as it can be serialized to JSON string.
+
+### Custom Events
+
+You can also send custom events to which you can implement your own handlers.
+
+```csharp
+await streamCall.SendCustomEventAsync(new Dictionary<string, object>
+{
+    // Put any parameters you want
+    { "type", "epic_event" },
+    { "some_number", 50 },
+    { "tags", new string[] { "ninja", "cat" } }
+});
+```

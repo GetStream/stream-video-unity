@@ -178,5 +178,11 @@ namespace StreamVideo.Core.StatefulModels
         /// <returns></returns>
         Task<QueryMembersResult> QueryMembersAsync(IEnumerable<IFieldFilterRule> filters = null,
             CallMemberSort sort = null, int limit = 25, string prev = null, string next = null);
+
+        Task SendReactionAsync(string type);
+
+        Task SendReactionAsync(string type, string emojiCode, Dictionary<string, object> customData = null);
+
+        Task SendCustomEventAsync(Dictionary<string, object> eventData);
     }
 }

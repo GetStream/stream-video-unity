@@ -289,21 +289,43 @@ namespace StreamVideo.Core
             
             return new QueryMembersResult(members, response.Prev, response.Next);
         }
+        
+        public Task SendReactionAsync(string type)
+            => LowLevelClient.InternalVideoClientApi.SendVideoReactionAsync(Type, Id,
+                new SendReactionRequestInternalDTO
+                {
+                    Type = type
+                });
+        
+        public Task SendReactionAsync(string type, string emojiCode, Dictionary<string, object> customData = null)
+            => LowLevelClient.InternalVideoClientApi.SendVideoReactionAsync(Type, Id,
+                new SendReactionRequestInternalDTO
+                {
+                    Custom = customData,
+                    EmojiCode = emojiCode,
+                    Type = type
+                });
 
-        public Task GetOrCreateAsync()
-        {
-            return Task.CompletedTask;
-        }
+        public Task SendCustomEventAsync(Dictionary<string, object> eventData)
+            => LowLevelClient.InternalVideoClientApi.SendEventAsync(Type, Id, new SendEventRequestInternalDTO
+            {
+                Custom = eventData
+            });
+
+        // public Task GetOrCreateAsync()
+        // {
+        //     return Task.CompletedTask;
+        // }
 
         /**
    * Will start to watch for call related WebSocket events and initiate a call session with the server.
    *
    * @returns a promise which resolves once the call join-flow has finished.
    */
-        public Task JoinAsync()
-        {
-            return Task.CompletedTask; //StreamTodo: implement
-        }
+        // public Task JoinAsync()
+        // {
+        //     return Task.CompletedTask; //StreamTodo: implement
+        // }
 
         /// <summary>
         /// Marks the incoming call as accepted.

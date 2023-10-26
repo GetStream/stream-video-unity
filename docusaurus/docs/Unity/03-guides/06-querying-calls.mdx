@@ -1,0 +1,96 @@
+---
+title: Querying Calls
+description: How to query calls
+---
+
+For many video calling, livestream or audio rooms apps you'll want to show:
+
+* Upcoming calls
+* Calls that are currently live
+* Popular livestreams/audio rooms with a link to the recording
+
+The SDK makes it easy to query calls
+
+### Example Queries
+
+**Calls that are about to start**
+
+```csharp
+// Filter calls that will start in 3 hours and include me
+var filters = new List<IFieldFilterRule>
+{
+    CallFilter.StartsAt.LessThanOrEquals(DateTime.Now.AddHours(3)),
+    CallFilter.Members.EqualsTo(_client.LocalUser)
+};
+
+// Order them by how soon they start
+var result = await _client.QueryCallsAsync(filters, CallSort.OrderByAscending(CallSortField.StartsAt), limit: 25);
+```
+
+**Calls filters on a custom property**
+
+```csharp
+// Filter calls by custom property. For example you can attach a "tag" property to a call and get calls that contain any of the provided tags 
+var filters = new List<IFieldFilterRule>
+{
+    CallFilter.Custom("tag").In("xbox", "ps", "switch"),
+};
+
+// Order them by how soon they start
+var sort = CallSort.OrderByAscending(CallSortField.StartsAt);
+
+var result = await _client.QueryCallsAsync(filters, sort, limit: 25);
+```
+
+**Pagination**
+The query response is paginated and the maximum count of items is defined by the `limit` parameter.
+Use the `prev` and `next` parameters from the last response as parameters for requesting the next page.
+
+```csharp
+var filters = new List<IFieldFilterRule>
+{
+    CallFilter.CreatedAt.GreaterThan(DateTime.Now.AddHours(-24))
+};
+
+var result = await _client.QueryCallsAsync(filters, CallSort.OrderByDescending(CallSortField.CreatedAt), limit: 25);
+
+// queried calls, depending on how many calls satisfy the filter this can be only a subset or a single "page" of results
+var members = result.Calls;
+
+// In order to get the next "page" of results, use this token as a "next" argument in the QueryCallsAsync method
+var next = result.Next;
+
+// In order to get the previous "page" of results, use this token as a "prev" argument in the QueryCallsAsync method
+var prev = result.Prev;
+```
+
+### Fields for Query Calls
+
+You can filter on the following fields
+
+| Option | Description |
+| --- | --- |
+| `type` | The call type. Typically default, livestream etc |
+| `id` | The id for this call |
+| `cid` | The cid for this call. IE default:123 |
+| `created_by_user_id` | The user id who created the call |
+| `created_at` | When the call was created |
+| `updated_at` | When the call was updated |
+| `starts_at` | When the call starts at |
+| `ended_at` | When the call ended |
+| `backstage` | If the call is in backstage mode or not |
+| `members` | Check if you are a member of this call |
+| `custom` | You can query custom data using the "custom.myfield" syntax |
+
+Sorting is supported on these fields below:
+
+* `starts_at`
+* `created_at`
+* `updated_at`
+* `ended_at`
+* `type`
+* `id`
+* `cid`
+
+If you specify `watch` the SDK will automatically keep the data about these calls updated.
+This allows you to show a live preview of who's in the call.

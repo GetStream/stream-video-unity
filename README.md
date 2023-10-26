@@ -1,3 +1,7 @@
+<p align="center">
+  <img alt="Stream Video SDK for Unity" src="ReadmeAssets/stream_unity_logo.png"/>
+</p>
+
 # Official Unity SDK for [Stream Video](https://getstream.io/video/docs/)
 
 This is the official Unity SDK for [Stream Video](https://getstream.io/video), a service for building video calls, audio rooms, and live-streaming applications. This library includes a stateful video client which means it is automatically synchronizing its internal state according to events received from the Stream API.
@@ -11,22 +15,20 @@ This greatly reduces the integration complexity because most of the implementati
 
 Stream allows developers to rapidly deploy scalable feeds, chat messaging and video with an industry leading 99.999% uptime SLA guarantee.
 
-Stream provides UI components and state handling that make it easy to build video calling for your app. All calls run on Stream's network of edge servers around the world, ensuring optimal latency and reliability.
+Stream provides state handling that make it easy to build video calling for your app. All calls run on Stream's network of edge servers around the world, ensuring optimal latency and reliability.
 
 ## 📕 Tutorials
 
 With Stream's video components, you can use their SDK to build in-app video calling, audio rooms, audio calls, or live streaming. The best place to get started is with their tutorials:
 
-- **[Video & Audio Calling Tutorial](https://getstream.io/video/docs/android/tutorials/video-calling/)**
-- **[Audio Rooms Tutorial](https://getstream.io/video/docs/android/tutorials/audio-room/)**
-
-## 📱 Previews
-
-
+- **[Video & Audio Calling Tutorial](https://getstream.io/video/docs/unity/tutorials/video-calling/)**
+- **[Audio Rooms Tutorial](https://getstream.io/video/docs/unity/tutorials/audio-room/)**
 
 ## 👔 Sample Project
 
+Our SDK includes a sample project showing how to build a simple video streaming app between multiple participants.
 
+Read **[here](https://getstream.io/video/docs/unity/basics/example-project/)** on how to import the sample project.
 
 ## 👩‍💻 Free for Makers 👨‍💻
 
@@ -60,7 +62,7 @@ Here are some of the features we support:
 
 ### Dynascale 2.0
 
-- currently we support selecting which of the 3 layers you want to send: f, h and q.
+- currently we support selecting which of the 3 video quality layers you want to send: f, h and q.
 
 ## 💼 We are hiring!
 

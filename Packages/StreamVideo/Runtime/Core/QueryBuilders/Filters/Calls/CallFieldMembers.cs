@@ -17,6 +17,11 @@ namespace Core.QueryBuilders.Filters.Calls
         /// Return only calls where <see cref="IStreamCall.Members"/> contains a user with provided user ID
         /// </summary>
         public FieldFilterRule EqualsTo(string userId) => InternalEqualsTo(userId);
+        
+        /// <summary>
+        /// Return only calls where <see cref="IStreamCall.Members"/> contains a provided user
+        /// </summary>
+        public FieldFilterRule EqualsTo(IStreamVideoUser user) => InternalEqualsTo(user.Id);
 
         /// <summary>
         /// Return only calls where <see cref="IStreamCall.Members"/> contain any of the users with provided user IDs

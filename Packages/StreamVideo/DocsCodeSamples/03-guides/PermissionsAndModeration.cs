@@ -51,7 +51,7 @@ namespace DocsCodeSamples._03_guides
             await streamCall.GrantPermissionsAsync(new[] { OwnCapability.SendAudio }, participant);
         }
 
-        public async Task GrantRequestedPermissions()
+        public Task GrantRequestedPermissions()
         {
             //StreamTodo: implement streamCall.PermissionRequests
             /*
@@ -61,6 +61,7 @@ namespace DocsCodeSamples._03_guides
                 }
              * 
              */
+            return Task.CompletedTask;
         }
 
         public async Task BlockUser()
@@ -122,16 +123,13 @@ namespace DocsCodeSamples._03_guides
             // Mute user in a call using their instance of IStreamVideoCallParticipant and choose which of their tracks you want to mute: audio, video, or screenShare
             await streamCall.MuteUsersAsync(new[] { participant }, audio: true, video: true, screenShare: true);
         }
-        
+
         public async Task MuteAllUsers()
         {
             var callType = StreamCallType.Default; // Call type affects default permissions
             var callId = "my-call-id";
 
             var streamCall = await _client.JoinCallAsync(callType, callId, create: true, ring: false, notify: false);
-
-            IStreamVideoUser user = null;
-            IStreamVideoCallParticipant participant = null;
 
             // Mute all user in a call and choose which of their tracks you want to mute: audio, video, or screenShare
             await streamCall.MuteAllUsersAsync(audio: true, video: true, screenShare: true);

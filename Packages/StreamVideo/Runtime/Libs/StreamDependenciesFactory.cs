@@ -48,11 +48,11 @@ namespace StreamVideo.Libs
         
         public virtual ITokenProvider CreateTokenProvider(TokenProvider.TokenUriHandler urlFactory) => new TokenProvider(CreateHttpClient(), urlFactory);
 
-        public virtual IStreamVideoClientRunner CreateChatClientRunner()
+        public virtual IStreamVideoClientRunner CreateClientRunner()
         {
             var go = new GameObject
             {
-                name = "Stream Chat Client Runner",
+                name = "Stream Client Runner",
 #if !STREAM_DEBUG_ENABLED
                 hideFlags = HideFlags.DontSaveInEditor | HideFlags.HideAndDontSave
 #endif

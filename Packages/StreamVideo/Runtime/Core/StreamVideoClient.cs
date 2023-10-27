@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,7 +21,9 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.NetworkMonitors;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
+using StreamVideo.Libs.VideoClientInstanceRunner;
 using StreamVideo.Libs.Websockets;
+using Unity.WebRTC;
 using UnityEngine;
 using Cache = StreamVideo.Core.State.Caches.Cache;
 
@@ -57,9 +60,14 @@ namespace StreamVideo.Core
             var serializer = factory.CreateSerializer();
             var timeService = factory.CreateTimeService();
             var networkMonitor = factory.CreateNetworkMonitor();
+            var gameObjectRunner = factory.CreateClientRunner();
 
-            return new StreamVideoClient(coordinatorWebSocket, sfuWebSocket, httpClient,
+            var client = new StreamVideoClient(coordinatorWebSocket, sfuWebSocket, httpClient,
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
+            
+            gameObjectRunner?.RunClientInstance(client);
+            
+            return client;
         }
 
         /// <summary>
@@ -172,6 +180,7 @@ namespace StreamVideo.Core
         {
             UnsubscribeFrom(InternalLowLevelClient);
             InternalLowLevelClient?.Dispose();
+            Destroyed?.Invoke();
         }
 
         public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials)
@@ -181,8 +190,9 @@ namespace StreamVideo.Core
             return LocalUser;
         }
 
-        //StreamTodo: hide this and have it called by hidden runner
         public void Update() => InternalLowLevelClient.Update();
+
+        public IEnumerator WebRTCUpdateCoroutine() => WebRTC.Update();
 
         public Task DisconnectAsync() => InternalLowLevelClient.DisconnectAsync();
 
@@ -228,6 +238,31 @@ namespace StreamVideo.Core
             
             return new QueryCallsResult(calls, response.Prev, response.Next);
         }
+        
+        #region IStreamVideoClientEventsListener
+        
+        event Action IStreamVideoClientEventsListener.Destroyed
+        {
+            add => this.Destroyed += value;
+            remove => this.Destroyed -= value;
+        }
+
+        void IStreamVideoClientEventsListener.Destroy()
+        {
+            //StreamTodo: we should probably check: if waiting for connection -> cancel, if connected -> disconnect, etc
+            DisconnectAsync().ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    _logs.Exception(t.Exception);
+                    return;
+                }
+
+                Dispose();
+            });
+        }
+        
+        #endregion
 
         internal StreamVideoLowLevelClient InternalLowLevelClient { get; private set; }
 
@@ -312,15 +347,15 @@ namespace StreamVideo.Core
                     RemoveMembers = removeUsers,
                 });
 
+        private event Action Destroyed;
+        
         private readonly ILogs _logs;
-        private readonly ITimeService _timeService;
         private readonly ICache _cache;
         
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
         {
-            _timeService = timeService ?? throw new ArgumentNullException(nameof(timeService));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
 
             InternalLowLevelClient = new StreamVideoLowLevelClient(coordinatorWebSocket, sfuWebSocket, httpClient,

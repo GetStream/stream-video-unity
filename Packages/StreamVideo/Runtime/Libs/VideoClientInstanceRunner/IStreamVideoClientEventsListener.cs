@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 
 namespace StreamVideo.Libs.VideoClientInstanceRunner
 {
@@ -9,9 +10,9 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
     public interface IStreamVideoClientEventsListener
     {
         /// <summary>
-        /// Event fired when the client is disposed
+        /// Event fired when the client is destroyed
         /// </summary>
-        event Action Disposed;
+        event Action Destroyed;
 
         /// <summary>
         /// Call when application is being destroyed.
@@ -24,5 +25,10 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
         /// E.g. for Unity call when MonoBehaviour.Update is called by the engine or call from coroutine.
         /// </summary>
         void Update();
+
+        /// <summary>
+        /// This method exposes the WebRTC.Update(). In Unity, call it once with StartCoroutine(instance.WebRTCUpdateCoroutine());
+        /// </summary>
+        IEnumerator WebRTCUpdateCoroutine();
     }
 }

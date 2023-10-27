@@ -10,23 +10,26 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
     public sealed class StreamMonoBehaviourWrapper
     {
         /// <summary>
-        /// This is a MonoBehaviour wrapper that will pass Unity Engine callbacks to the Stream Chat Client
+        /// This is a MonoBehaviour wrapper that will pass Unity Engine callbacks to the Stream Video Client
         /// </summary>
         public sealed class UnityStreamVideoClientRunner : MonoBehaviour, IStreamVideoClientRunner
         {
-            public void RunChatInstance(IStreamVideoClientEventsListener streamVideoInstance)
+            public void RunClientInstance(IStreamVideoClientEventsListener streamVideoInstance)
             {
                 if (!Application.isPlaying)
                 {
                     Debug.LogWarning($"Application is not playing. The MonoBehaviour {nameof(UnityStreamVideoClientRunner)} wrapper will not execute." +
-                              $" You need to call Stream Chat Client's {nameof(IStreamVideoClientEventsListener.Update)} and {nameof(IStreamVideoClientEventsListener.Destroy)} by yourself");
+                              $" You need to call Stream Video Client's {nameof(IStreamVideoClientEventsListener.Update)} and {nameof(IStreamVideoClientEventsListener.Destroy)} by yourself");
                     DestroyImmediate(gameObject);
                     return;
                 }
                 
                 _streamVideoInstance = streamVideoInstance ?? throw new ArgumentNullException(nameof(streamVideoInstance));
-                _streamVideoInstance.Disposed += OnStreamVideoInstanceDisposed;
+                _streamVideoInstance.Destroyed += OnStreamVideoInstanceDestroyed;
                 StartCoroutine(UpdateCoroutine());
+                
+                //StreamTodo: should not be needed in the future thanks to this PR: https://github.com/Unity-Technologies/com.unity.webrtc/pull/977
+                StartCoroutine(streamVideoInstance.WebRTCUpdateCoroutine());
             }
 
             private IStreamVideoClientEventsListener _streamVideoInstance;
@@ -45,7 +48,7 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
                     return;
                 }
 
-                _streamVideoInstance.Disposed -= OnStreamVideoInstanceDisposed;
+                _streamVideoInstance.Destroyed -= OnStreamVideoInstanceDestroyed;
                 StopCoroutine(UpdateCoroutine());
                 _streamVideoInstance.Destroy();
                 _streamVideoInstance = null;
@@ -60,19 +63,19 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
                 }
             }
 
-            private void OnStreamVideoInstanceDisposed()
+            private void OnStreamVideoInstanceDestroyed()
             {
                 if (_streamVideoInstance == null)
                 {
                     return;
                 }
 
-                _streamVideoInstance.Disposed -= OnStreamVideoInstanceDisposed;
+                _streamVideoInstance.Destroyed -= OnStreamVideoInstanceDestroyed;
                 _streamVideoInstance = null;
                 StopCoroutine(UpdateCoroutine());
 
 #if STREAM_DEBUG_ENABLED
-                Debug.Log($"Stream Chat Client Disposed - destroy {nameof(UnityStreamVideoClientRunner)} instance");
+                Debug.Log($"Stream Video Client Disposed - destroy {nameof(UnityStreamVideoClientRunner)} instance");
 #endif
                 Destroy(gameObject);
             }

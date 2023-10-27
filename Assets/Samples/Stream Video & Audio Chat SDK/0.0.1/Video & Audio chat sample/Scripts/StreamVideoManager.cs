@@ -7,7 +7,6 @@ using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
-using Unity.WebRTC;
 using UnityEngine;
 
 namespace StreamVideo.ExampleProject
@@ -47,12 +46,7 @@ namespace StreamVideo.ExampleProject
             _client.CallEnded += OnCallEnded;
 
             ConnectToStreamAsync(credentials).LogIfFailed();
-
-            //StreamTodo: handle by SDK
-            StartCoroutine(WebRTC.Update());
         }
-
-        protected void Update() => _client?.Update();
 
         protected async void OnDestroy()
         {
@@ -128,8 +122,6 @@ namespace StreamVideo.ExampleProject
                 Debug.Log($"Join clicked, create: {create}, callId: {callId}");
 
                 var streamCall = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
-                
-
             }
             catch (Exception e)
             {

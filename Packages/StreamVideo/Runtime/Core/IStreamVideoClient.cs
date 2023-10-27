@@ -5,11 +5,12 @@ using Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
+using StreamVideo.Libs.VideoClientInstanceRunner;
 using UnityEngine;
 
 namespace StreamVideo.Core
 {
-    public interface IStreamVideoClient : IDisposable
+    public interface IStreamVideoClient : IStreamVideoClientEventsListener, IDisposable
     {
         /// <summary>
         /// Called when client is connected. Returns local user object of type <see cref="IStreamVideoUser"/>

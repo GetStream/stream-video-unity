@@ -26,14 +26,20 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
                 
                 _streamVideoInstance = streamVideoInstance ?? throw new ArgumentNullException(nameof(streamVideoInstance));
                 _streamVideoInstance.Destroyed += OnStreamVideoInstanceDestroyed;
-                StartCoroutine(UpdateCoroutine());
+                _updateCoroutine = StartCoroutine(UpdateCoroutine());
+                
+#if STREAM_DEBUG_ENABLED
+                Debug.Log($"Run Stream Video Client Disposed - coroutines started");
+#endif
                 
                 //StreamTodo: should not be needed in the future thanks to this PR: https://github.com/Unity-Technologies/com.unity.webrtc/pull/977
-                StartCoroutine(streamVideoInstance.WebRTCUpdateCoroutine());
+                _webRtcUpdateCoroutine = StartCoroutine(streamVideoInstance.WebRTCUpdateCoroutine());
             }
 
             private IStreamVideoClientEventsListener _streamVideoInstance;
-            
+            private Coroutine _updateCoroutine;
+            private Coroutine _webRtcUpdateCoroutine;
+
             // Called by Unity
             private void Awake()
             {
@@ -72,7 +78,9 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
 
                 _streamVideoInstance.Destroyed -= OnStreamVideoInstanceDestroyed;
                 _streamVideoInstance = null;
-                StopCoroutine(UpdateCoroutine());
+                
+                StopCoroutine(_updateCoroutine);
+                StopCoroutine(_webRtcUpdateCoroutine);
 
 #if STREAM_DEBUG_ENABLED
                 Debug.Log($"Stream Video Client Disposed - destroy {nameof(UnityStreamVideoClientRunner)} instance");

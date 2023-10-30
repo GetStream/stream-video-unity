@@ -29,7 +29,7 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
                 _updateCoroutine = StartCoroutine(UpdateCoroutine());
                 
 #if STREAM_DEBUG_ENABLED
-                Debug.Log($"Run Stream Video Client Disposed - coroutines started");
+                Debug.Log($"Run Stream Video Client - coroutines started");
 #endif
                 
                 //StreamTodo: should not be needed in the future thanks to this PR: https://github.com/Unity-Technologies/com.unity.webrtc/pull/977

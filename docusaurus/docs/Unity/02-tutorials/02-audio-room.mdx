@@ -29,9 +29,9 @@ After completing this step you should now see "Stream Video & Audio Chat SDK" pa
 # Initialize StreamVideoClient
 
 1. Go to Project window
-2. Create new folder called Scripts in your Assets folder
-3. Inside the Scripts folder, create a new script file and call it AudioRoomsManager.cs
-4. Open AudioRoomsManager.cs in your IDE and replace it with the following script:
+2. In the **Assets** folder, create a new folder called **Scripts**
+3. Inside the **Scripts** folder, create a new script file and call it `AudioRoomsManager.cs`
+4. Open `AudioRoomsManager.cs` in your IDE (code editor) and replace it with the following script:
 ```csharp
 using System;
 using StreamVideo.Core;
@@ -103,7 +103,7 @@ Please note that we're using .NET's modern async/await syntax, this makes writin
 
 After the `await` completes, we should now be connected to the stream server.
 
-Please also note that we've wrapped the asynchronous `ConnectUserAsync` method in a try/catch block. Unless you're proficient with .NET's async/await syntax and understand how to properly handle exceptions for asynchronous methods, we advise you to always wrap awaited methods in a try/catch block in order to catch any thrown exceptions and therefore be notified about any errors that occured during async operation.
+Also note, that we've wrapped the asynchronous `ConnectUserAsync` method in a try/catch block. Unless you're proficient with .NET's async/await syntax and understand how to properly handle exceptions for asynchronous methods, we advise you to always wrap awaited methods in a try/catch block in order to catch any thrown exceptions and therefore be notified about any errors that occured during async operation.
 
 Now go to Scene Hierarchy Window and create an empty game object and call it `AudioRoomsManager`:
 

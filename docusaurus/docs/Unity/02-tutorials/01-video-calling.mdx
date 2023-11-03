@@ -391,7 +391,530 @@ Next, we'll add handling call participants. Call participants are usually other 
 
 Open `VideoManager.cs` in your code editor.
 
+First, add 2 events to the `VideoManager` class:
+```csharp
+    public Action<IStreamVideoCallParticipant> ParticipantJoined;
+    public Action<string> ParticipantLeft;
+```
 
+Next, add those 2 methods:
+```csharp
+    private void OnParticipantJoined(IStreamVideoCallParticipant participant)
+    {
+        ParticipantJoined?.Invoke(participant);
+    }
+
+    private void OnParticipantLeft(string sessionId, string userid)
+    {
+        ParticipantLeft?.Invoke(sessionId);
+    }
+```
+
+Next, replace the `JoinCallAsync` method with the following code:
+```csharp
+    public async Task JoinCallAsync()
+    {
+        _activeCall = await _client.JoinCallAsync(StreamCallType.Default, _joinCallId, create: true, ring: true, notify: false);
+        Debug.Log($"Joined call with ID: {_activeCall.Id}");
+        
+        // Subscribe to events in order to get notified when participants joins or leaves the call
+        _activeCall.ParticipantJoined += OnParticipantJoined;
+        _activeCall.ParticipantLeft += OnParticipantLeft;
+        
+        // Process already present participants
+        foreach (var participant in _activeCall.Participants)
+        {
+            // Skip local user
+            if (participant.IsLocalParticipant)
+            {
+                continue;
+            }
+            
+            OnParticipantJoined(participant);
+        }
+    }
+```
+
+What we do here is:
+* Process `call.Participants` array that contains participants already present in the call when we joined. We skip the participant representing the local user because usually we want to see other participants of the call and not ourselves.
+* Subscribe to and handle the `call.ParticipantJoined` event - triggered whenever a new participant joins the call
+* Subscribe to and handle the `call.ParticipantLeft` event - triggered whenever a participant leaves the call
+
+This class only propagates the events further so that in the next step we can subscribe to those events from our UI layer and spawn appropriate UI elements.
+
+And finally, replace the `LeaveCallAsync` method with the following code:
+```csharp
+    public async Task LeaveCallAsync()
+    {
+        if (_activeCall == null)
+        {
+            Debug.LogWarning("Leave request ignored. There is no active call to leave.");
+            return;
+        }
+        
+        // Unsubscribe from events 
+        _activeCall.ParticipantJoined -= OnParticipantJoined;
+        _activeCall.ParticipantLeft -= OnParticipantLeft;
+        
+        await _activeCall.LeaveAsync();
+    }
+```
+
+# Step 10 - Setup the **ParticipantPanel**
+
+Now let's prepare the logic that will handle a single call participant and their tracks. Participant tracks represent either video or audio data they're streaming during the call.
+
+Open the `ParticipantPanel.cs` in your code editor and replace it with the following code:
+```csharp
+using System;
+using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.StatefulModels.Tracks;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class ParticipantPanel : MonoBehaviour
+{
+    public void Init(IStreamVideoCallParticipant participant)
+    {
+        _participant = participant;
+
+        // Process already present tracks
+        foreach (var track in _participant.GetTracks())
+        {
+            OnTrackAdded(_participant, track);
+        }
+        
+        // Subscribe to TrackAdded event to get notified whenever a new track is added during the call
+        _participant.TrackAdded += OnTrackAdded;
+    }
+
+    private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+    {
+        // Switch based on track type
+        switch (track)
+        {
+            case StreamAudioTrack streamAudioTrack:
+
+                var audioSource = GetComponent<AudioSource>();
+                
+                // Set audioSource as target - now this AudioSource object will receive audio data from the participant
+                streamAudioTrack.SetAudioSourceTarget(audioSource);
+                
+                break;
+            case StreamVideoTrack streamVideoTrack:
+
+                var rawImage = GetComponent<RawImage>();
+                
+                // Set rawImage as target - now this RawImage object will receive video data from the participant
+                streamVideoTrack.SetRenderTarget(rawImage);
+                
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(track));
+        }
+    }
+
+    // OnDestroy is called by Unity Engine when object is being destroyed
+    private void OnDestroy()
+    {
+        if (_participant == null)
+        {
+            return;
+        }
+        
+        // Unsubscribe from event when panel is being destroyed
+        _participant.TrackAdded -= OnTrackAdded;
+    }
+
+    private IStreamVideoCallParticipant _participant;
+}
+```
+
+Now let's go through what's going on here.
+
+First, we expose the public `Init` method. We'll call it after we spawn the participant panel prefab and call this method to initialize it.
+
+The key parts are:
+* Process all currently available tracks. We call `OnTrackAdded` method for each track. This method will handle receiving video or audio data.
+* Subscribe to the `TrackAdded` event. This way we'll process any tracks added in the future.
+
+```csharp
+    public void Init(IStreamVideoCallParticipant participant)
+    {
+        _participant = participant;
+
+        // Process already present tracks
+        foreach (var track in _participant.GetTracks())
+        {
+            OnTrackAdded(_participant, track);
+        }
+        
+        // Subscribe to TrackAdded event to get notified whenever a new track is added during the call
+        _participant.TrackAdded += OnTrackAdded;
+    }
+```
+
+Next, the `OnTrackAdded` method is called to finally process the track:
+* If the track is of type `StreamAudioTrack` we get the `AudioSource` reference and call `streamAudioTrack.SetAudioSourceTarget(audioSource);` in order to start receiving audio data into this `AudioSource` component.
+* If the track is of type `StreamVideoTrack` we get the `RawImage` reference and call `streamVideoTrack.SetRenderTarget(rawImage);` in order to start receiving video data into this `RawImage` component.
+
+```csharp
+    private void OnTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+    {
+        // Switch based on track type
+        switch (track)
+        {
+            case StreamAudioTrack streamAudioTrack:
+
+                var audioSource = GetComponent<AudioSource>();
+                
+                // Set audioSource as target - now this AudioSource object will receive audio data from the participant
+                streamAudioTrack.SetAudioSourceTarget(audioSource);
+                
+                break;
+            case StreamVideoTrack streamVideoTrack:
+
+                var rawImage = GetComponent<RawImage>();
+                
+                // Set rawImage as target - now this RawImage object will receive video data from the participant
+                streamVideoTrack.SetRenderTarget(rawImage);
+                
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(track));
+        }
+    }
+```
+
+Lastly, we define the `OnDestroy` method and unsubscribe from the `TrackAdded` event. The `OnDestroy` is a special method called by Unity Engine when the object is about to get destroyed.
+
+```csharp
+    // OnDestroy is called by Unity Engine when object is being destroyed
+    private void OnDestroy()
+    {
+        if (_participant == null)
+        {
+            return;
+        }
+        
+        // Unsubscribe from event when panel is being destroyed
+        _participant.TrackAdded -= OnTrackAdded;
+    }
+```
+
+# Step 11 - Add UI layer handling call participants
+
+Open the `UIManager.cs` in your code editor and make the following changes:
+
+Add this field to the class:
+```csharp
+    // Store references to participants panels using their Session ID as the dictionary key
+    private readonly Dictionary<string, ParticipantPanel> _participantPanels = new Dictionary<string, ParticipantPanel>();
+```
+
+We'll use it to store spawned participant panel. We use dictionary, so we can store the panel using participant's **Session ID** as dictionary key. The reason for this is that whenever a participant the call, the `ParticipantLeft` event will tell us the **Session ID** of this participant and thanks to dictionary it'll be easy to retrieve the corresponding participant panel.
+
+Next, add the following `OnParticipantJoined` method to the class:
+```csharp
+    private void OnParticipantJoined(IStreamVideoCallParticipant participant)
+    {
+        var panel = Instantiate(_participantPrefab, _participantsContainer);
+
+        // Call Init to process tracks and subscribe to TrackAdded event
+        panel.Init(participant);
+
+        // Save panel reference in dictionary using participant SessionId so we can easily destroy it when participant leaves the call
+        _participantPanels.Add(participant.SessionId, panel);
+    }
+```
+
+This method will be called for every call participant. It does 3 things:
+* Spawn a new instance of `ParticipantPanel` from a prefab
+* Call the `ParticipantPanel.Init` method and pass the instance of `IStreamVideoCallParticipant` object
+* Add the newly spawned panel to the `_participantPanels` dictionary using the participant's **SessionId** as key
+
+Next, add the following `OnParticipantLeft` method to the class:
+```csharp
+    private void OnParticipantLeft(string sessionId)
+    {
+        // If we have a panel for this participant -> destroy it
+        if (_participantPanels.TryGetValue(sessionId, out var participantPanel))
+        {
+            Destroy(participantPanel.gameObject);
+        }
+    }
+```
+
+This method will be triggered whenever a participant leaves the call. It will retrieve the `ParticipantPanel` object that corresponds to the participant that left the call and destroy it.
+
+Next, append these 2 lines to the `Awake` method:
+```csharp
+        // Subscribe to events so we can react to changing participants in the call
+        _videoManager.ParticipantJoined += OnParticipantJoined;
+        _videoManager.ParticipantLeft += OnParticipantLeft;
+```
+This will subscribe to the `VideoManager` events that we've exposed earlier and trigger the logic to handle participant joining or leaving the call.
+
+Lastly, replace the `OnLeaveButtonClickedAsync` with the following code:
+```csharp
+    private async void OnLeaveButtonClickedAsync()
+    {
+        // Because this is async void method we need to wrap asynchronous call in a try/catch block
+        try
+        {
+            await _videoManager.LeaveCallAsync();
+
+            // When await is finished we have left the call. We can now show the `join` button again and hide the `leave` button
+            _joinButton.gameObject.SetActive(true);
+            _leaveButton.gameObject.SetActive(false);
+
+            foreach (var panel in _participantPanels.Values)
+            {
+                Destroy(panel.gameObject);
+            }
+
+            _participantPanels.Clear();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+```
+
+What we've added is this part:
+```csharp
+foreach (var panel in _participantPanels.Values)
+{
+    Destroy(panel.gameObject);
+}
+
+_participantPanels.Clear();
+```
+
+This will destroy all participant panels after we leave the call and clear the dictionary.
+
+# Step 12 - Setup Camera and Microphone
+
+We're finally able to receive video & audio streamed by others. The last piece that we're missing is being able to send video & audio from our own device.
+
+To do so, we must set the appropriate device as an input source.
+
+* On standalone platforms (Windows, macOS, Linux) you usually want to show a dropdown with all available devices from which the user will pick which one to use
+* On mobile platforms (Android, IOS), the OS controls the camera & microphone devices so you most often just want to pick the default device. Alternatively, for video, you may want to give user a choice to toggle between the front and back cameras.
+
+Let's proceed with the implementation, open the `VideoManager.cs` script in your code editor and add the following code:
+```csharp
+    public void SetAudioInputSource(AudioSource audioSource)
+    {
+        // If client is not available yet -> cache audio source
+        if (_client == null)
+        {
+            _inputAudio = audioSource;
+            return;
+        }
+        _client.SetAudioInputSource(audioSource);
+    }
+
+    public void SetCameraInputSource(WebCamTexture webCamTexture)
+    {
+        // If client is not available yet -> cache video source
+        if (_client == null)
+        {
+            _inputVideo = webCamTexture;
+            return;
+        }
+        
+        _client.SetCameraInputSource(webCamTexture);
+    }
+    
+    private AudioSource _inputAudio;
+    private WebCamTexture _inputVideo;
+```
+
+The `SetAudioInputSource` and `SetCameraInputSource` will be called by the UI layer to set the source components for audio & video input respectively. We want to set the input sources on the client instance but it's possible that the client is not setup yet therefore we cache the components if the client is null.
+
+Now replace the `Start` method with the following code:
+```csharp
+    private async void Start()
+    {
+        // Create Client instance
+        _client = StreamVideoClient.CreateDefaultClient();
+
+        if (_inputAudio != null)
+        {
+            _client.SetAudioInputSource(_inputAudio);
+        }
+        
+        if (_inputVideo != null)
+        {
+            _client.SetCameraInputSource(_inputVideo);
+        }
+
+        var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
+
+        try
+        {
+            // Connect user to Stream server
+            await _client.ConnectUserAsync(credentials);
+            Debug.Log($"User `{_userId}` is connected to Stream server");
+        }
+        catch (Exception e)
+        {
+            // Log potential issues that occured during trying to connect
+            Debug.LogException(e);
+        }
+    }
+```
+
+We've added this part:
+```csharp
+        if (_inputAudio != null)
+        {
+            _client.SetAudioInputSource(_inputAudio);
+        }
+        
+        if (_inputVideo != null)
+        {
+            _client.SetCameraInputSource(_inputVideo);
+        }
+```
+to set the input sources if during the client initialization the audio or video input source components were already set.
+
+Now, open the `UIManager.cs` script in the code editor.
+
+First, add those 3 fields to the class:
+```csharp
+    private AudioSource _inputAudioSource;
+    
+    private string _activeMicrophoneDeviceName;
+    private WebCamTexture _activeCamera;
+```
+
+* `_inputAudioSource` - this will hold a reference to `AudioSource` component that will receive audio input from the active microphone device
+* `_activeMicrophoneDeviceName` - this string will hold the name of the currently active microphone device
+* `_activeCamera` - this will hold reference to the `WebCamTexture` component that will receive video input from the active camera device
+
+Next, add the following method to the class:
+```csharp
+    private void OnMicrophoneDeviceChanged(int deviceIndex)
+    {
+        // If another device was already active -> stop it
+        if (!string.IsNullOrEmpty(_activeMicrophoneDeviceName))
+        {
+            Microphone.End(_activeMicrophoneDeviceName);
+        }
+        
+        // Save name of the active microphone device
+        _activeMicrophoneDeviceName = _microphoneDropdown.options[deviceIndex].text;
+        
+        // Stream microphone input into AudioSource component
+        _inputAudioSource.clip
+            = Microphone.Start(_activeMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
+        _inputAudioSource.loop = true;
+        _inputAudioSource.Play();
+    }
+```
+
+This method will start capturing the microphone input from a selected microphone device. The `deviceIndex` argument will be provided by Unity's dropdown `onValueChanged` event and will represent the index of the dropdown option that was selected.
+
+Next, add a similar method that will handle the camera device:
+```csharp
+    private void OnCameraDeviceChanged(int deviceIndex)
+    {
+        // Stop previous camera device
+        if (_activeCamera != null && _activeCamera.isPlaying)
+        {
+            _activeCamera.Stop();
+            _activeCamera = null;
+        }
+        
+        var cameraDeviceName = _cameraDropdown.options[deviceIndex].text;
+        
+        // Stream camera input into WebCamTexture component 
+        _activeCamera = new WebCamTexture(cameraDeviceName, 1920, 1080, 30);
+        _activeCamera.Play();
+        
+        // Set this WebCamTexture to be the input for our local user video
+        _videoManager.SetCameraInputSource(_activeCamera);
+    }
+```
+
+This method will start capturing the camera input from a selected camera device. Likewise, the `deviceIndex` will be provided by Unity's dropdown `onValueChanged` event.
+
+Lastly, append this code to the `Awake` method:
+```csharp
+        // Add AudioSource that will buffer audio data from the Microphone
+        _inputAudioSource = gameObject.AddComponent<AudioSource>();
+        
+        // Set this AudioSource to be the input for our local user audio
+        _videoManager.SetAudioInputSource(_inputAudioSource);
+        
+        // Subscribe to dropdown onValueChanged events to react when user changes the active device
+        _microphoneDropdown.onValueChanged.AddListener(OnMicrophoneDeviceChanged);
+        _cameraDropdown.onValueChanged.AddListener(OnCameraDeviceChanged);
+
+        // Start capturing audio & video from the default device that is first on the list
+        OnMicrophoneDeviceChanged(0);
+        OnCameraDeviceChanged(0);
+```
+
+Let's go through what's going on here.
+
+First, we create an `AudioSource` component that will receive audio input from the microphone device and save the component reference in a variable:
+```csharp
+_inputAudioSource = gameObject.AddComponent<AudioSource>();
+```
+
+We then set the `AudioSource` to be the input source for our local user in a call:
+```csharp
+        // Set this AudioSource to be the input for our local user audio
+        _videoManager.SetAudioInputSource(_inputAudioSource);
+```
+
+Next, we subscribe to dropdown `onValueChanged` events in order to switch the active microphone or camera device when user picks a different device from a dropdown menu:
+```csharp
+        // Subscribe to dropdown onValueChanged events to react when user changes the active device
+        _microphoneDropdown.onValueChanged.AddListener(OnMicrophoneDeviceChanged);
+        _cameraDropdown.onValueChanged.AddListener(OnCameraDeviceChanged);
+```
+
+Lastly, we call the `OnMicrophoneDeviceChanged` & `OnCameraDeviceChanged` methods providing `0` as a `deviceIndex` argument so that we start capturing the input from the first device from the list. This is reasonable default behaviour:
+```csharp
+        // Start capturing audio & video from the default device that is first on the list
+        OnMicrophoneDeviceChanged(0);
+        OnCameraDeviceChanged(0);
+```
+
+# Step 13 - Test
+
+We're all set to join a call and receive video & audio from other participants as well as send our own video & audio input from our microphone and camera device.
+
+You can press the `Join` button in the box below in order to join the call from a web browser, and then join the same call from our Unity Editor.
+
+<TokenSnippet sampleApp='meeting' />
+
+Congrats! You should now be able to share the call between multiple participants. You can join the same call from as many devices you like (standalone & mobile) using the `Join` button in the box above.
+
+## Troubleshooting
+
+In order for this tutorial app to work, Unity needs to be able to access the microphone and the camera devices.
+
+If you're noticing cryptic errors like below:
+![Unity not being able to access microphone or camera](../assets/tutorials/video-calls/12.png)
+
+This means that Unity is not able to access the selected devices. In such case, you need to ensure that no other application is using the devices and try again.
+
+### Recap
+
+Please do let us know if you ran into any issues while building an video calling app with Kotlin.
+Our team is also happy to review your UI designs and offer recommendations on how to achieve it with Stream.
+
+We've used Stream's [Video Calling API](https://getstream.io/video/), which means calls run on a global edge network of video servers.
+By being closer to your users the latency and reliability of calls are better.
+The Unity SDK enables you to build in-app video calling, audio rooms and livestreaming very easily.
+
+We hope you've enjoyed this tutorial and please do feel free to reach out if you have any suggestions or questions.
 
 
 

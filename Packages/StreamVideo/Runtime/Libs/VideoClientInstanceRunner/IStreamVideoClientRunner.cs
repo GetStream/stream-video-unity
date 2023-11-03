@@ -8,6 +8,6 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
         /// <summary>
         /// Pass environment callbacks to the <see cref="IStreamVideoClientEventsListener"/> and react to its events
         /// </summary>
-        void RunChatInstance(IStreamVideoClientEventsListener streamVideoInstance);
+        void RunClientInstance(IStreamVideoClientEventsListener streamVideoInstance);
     }
 }

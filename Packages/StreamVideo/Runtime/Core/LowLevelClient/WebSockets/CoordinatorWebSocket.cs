@@ -71,7 +71,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             //StreamTodo: Add cancel token support to WS
             await WebsocketClient.ConnectAsync(uri);
 
-            Logs.Info("WS connected! Let's send the connect message");
+#if STREAM_DEBUG_ENABLED
+            Logs.Info("Coordinator connected! Let's send the connect message");
+#endif
 
             //StreamTodo: handle TokenProvider
             var authMessage = new WSAuthMessageRequestInternalDTO()
@@ -88,6 +90,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             var serializedAuthMsg = Serializer.Serialize(authMessage);
 
+#if STREAM_DEBUG_ENABLED
+            Logs.Info($"Coordinator auth message: {serializedAuthMsg}");
+#endif
+            
             WebsocketClient.Send(serializedAuthMsg);
 
             await _connectUserTaskSource.Task;

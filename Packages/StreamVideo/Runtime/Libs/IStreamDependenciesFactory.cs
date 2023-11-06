@@ -26,7 +26,7 @@ namespace StreamVideo.Libs
 
         ITokenProvider CreateTokenProvider(TokenProvider.TokenUriHandler urlFactory);
 
-        IStreamVideoClientRunner CreateChatClientRunner();
+        IStreamVideoClientRunner CreateClientRunner();
 
         INetworkMonitor CreateNetworkMonitor();
     }

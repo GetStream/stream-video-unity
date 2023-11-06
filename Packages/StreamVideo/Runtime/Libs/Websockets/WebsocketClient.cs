@@ -343,7 +343,6 @@ namespace StreamVideo.Libs.Websockets
                     case WebSocketMessageType.Text:
                     case WebSocketMessageType.Binary:
                         return ms.ToArray();
-                        break;
                     case WebSocketMessageType.Close:
                         // Handled above
                         break;

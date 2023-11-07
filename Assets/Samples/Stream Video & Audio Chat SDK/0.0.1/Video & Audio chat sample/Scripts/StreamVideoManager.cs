@@ -83,18 +83,21 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private UIManager _uiManager;
 
-        [Header("The Join Call ID from UI's Input will override this value")]
+        [Header("The Join Call ID from UI Input will override this value")]
         [SerializeField]
-        private string _joinCallId = "3TK1d0wL2we0";
+        private string _joinCallId = "";
 
         [Space(50)]
         [Header("Authorization Credentials")]
+        [Header("You can find the API KEY in Stream Dashboard")]
         [SerializeField]
         private string _apiKey = "";
 
         [SerializeField]
         private string _userId = "";
 
+        [Header("For testing - you can use token generator on our website")]
+        [Header("For production - generate tokens with your backend using your Stream App Secret")]
         [SerializeField]
         private string _userToken = "";
 
@@ -141,19 +144,34 @@ namespace StreamVideo.ExampleProject
         
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {
-            var token = await GetTokenAsync();
-            Debug.Log($"Try to get token: {token != null}");
+            var credentialsEmpty = string.IsNullOrEmpty(credentials.ApiKey) && string.IsNullOrEmpty(credentials.UserId);
+            if (credentialsEmpty)
+            {
+                // If user didn't provide credentials - use the demo credentials
+                _apiKey = "hd8szvscpxvd";
+                _userId = "daniel_sierpinski";
+                
+                // Request demo user token
+                var token = await GetTokenAsync();
+                
+                // Create demo credentials
+                credentials = new AuthCredentials(_apiKey, _userId, token);
+            }
 
-            await _client.ConnectUserAsync(credentials.CreateWithNewUserToken(token));
+            await _client.ConnectUserAsync(credentials);
         }
 
-        //StreamTodo: remove
+        /// <summary>
+        /// Example of how to get authentication token from the backend endpoint.
+        /// This is a demo token provider with short-lived token with limited privileges.
+        /// In your own project, you should setup an endpoint that will authorize users and generate tokens for them using your own app secret key that you get from the Stream's Dashboard
+        /// </summary>
         private async Task<string> GetTokenAsync()
         {
             var httpClient = new HttpClient();
             var uriBuilder = new UriBuilder()
             {
-                Host = "stream-calls-dogfood.vercel.app",
+                Host = "pronto.getstream.io",
                 Path = "/api/auth/create-token",
                 Query = $"api_key={_apiKey}&user_id={_userId}&exp=14400",
                 Scheme = "https",

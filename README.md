@@ -17,7 +17,7 @@ Stream allows developers to rapidly deploy scalable feeds, chat messaging and vi
 
 Stream provides state handling that make it easy to build video calling for your app. All calls run on Stream's network of edge servers around the world, ensuring optimal latency and reliability.
 
-## >&#11088; Cross-platform support
+## &#11088; Cross-platform support
 
 Stream's Video SDK for Unity allows you to easily build any type of video or audio streaming experience that works cross-platform - you can check out supported platforms [here](https://getstream.io/video/docs/unity/platforms/overview/).
 

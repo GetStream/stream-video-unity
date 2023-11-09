@@ -14,6 +14,8 @@ namespace StreamVideo.Core.StatefulModels
         event ParticipantTrackChangedHandler TrackAdded;
         event ParticipantJoinedHandler ParticipantJoined;
         event ParticipantLeftHandler ParticipantLeft;
+        
+        event DominantSpeakerChangedHandler DominantSpeakerChanged;
 
         Credentials Credentials { get; }
         IReadOnlyList<IStreamVideoCallParticipant> Participants { get; }
@@ -69,6 +71,8 @@ namespace StreamVideo.Core.StatefulModels
         IStreamVideoUser CreatedBy { get; }
 
         CallIngress Ingress { get; }
+        IStreamVideoCallParticipant DominantSpeaker { get; }
+        IStreamVideoCallParticipant PreviousDominantSpeaker { get; }
 
         Task LeaveAsync();
 

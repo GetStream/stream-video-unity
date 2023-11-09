@@ -19,6 +19,8 @@ using StreamVideo.Core.Utils;
 
 namespace StreamVideo.Core
 {
+    public delegate void DominantSpeakerChangedHandler(IStreamVideoCallParticipant currentDominantSpeaker, IStreamVideoCallParticipant previousDominantSpeaker);
+
     /// <summary>
     /// Represents a call during which participants can share: audio, video, screen
     /// </summary>
@@ -45,6 +47,8 @@ namespace StreamVideo.Core
 
         public event ParticipantJoinedHandler ParticipantJoined;
         public event ParticipantLeftHandler ParticipantLeft;
+        
+        public event DominantSpeakerChangedHandler DominantSpeakerChanged;
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
 
@@ -56,6 +60,24 @@ namespace StreamVideo.Core
                 return CreatedBy.Id == localParticipant?.UserId;
             }
         }
+        
+        public IStreamVideoCallParticipant DominantSpeaker
+        {
+            get => _dominantSpeaker;
+            private set
+            {
+                var prev = _dominantSpeaker;
+                _dominantSpeaker = value;
+
+                if (prev != value)
+                {
+                    PreviousDominantSpeaker = prev;
+                    DominantSpeakerChanged?.Invoke(value, prev);
+                }
+            }
+        }
+        
+        public IStreamVideoCallParticipant PreviousDominantSpeaker { get; private set; }
 
         #region State
 
@@ -442,6 +464,11 @@ namespace StreamVideo.Core
             //StreamTodo: if we delete the participant from cache we should then pass SessionId and UserId
             ParticipantLeft?.Invoke(participant.sessionId, participant.userId);
         }
+        
+        internal void UpdateFromSfu(DominantSpeakerChanged dominantSpeakerChanged, ICache cache)
+        {
+            DominantSpeaker = Participants.FirstOrDefault(p => p.SessionId == dominantSpeakerChanged.SessionId);
+        }
 
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
             => TrackAdded?.Invoke(participant, track);
@@ -478,5 +505,6 @@ namespace StreamVideo.Core
         private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
         private string _id;
+        private IStreamVideoCallParticipant _dominantSpeaker;
     }
 }

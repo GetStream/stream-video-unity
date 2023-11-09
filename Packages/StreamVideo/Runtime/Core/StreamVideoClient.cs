@@ -102,29 +102,6 @@ namespace StreamVideo.Core
         {
             //StreamTodo: check if we're already in a call?
 
-            var dto = new CallResponseInternalDTO
-            {
-                Backstage = false,
-                BlockedUserIds = null,
-                Cid = $"{callType}:{callId}",
-                CreatedAt = default,
-                CreatedBy = null,
-                CurrentSessionId = null,
-                Custom = null,
-                Egress = null,
-                EndedAt = default,
-                Id = callId,
-                Ingress = null,
-                Recording = false,
-                Session = null,
-                Settings = null,
-                StartsAt = default,
-                Team = null,
-                Transcribing = false,
-                Type = callType,
-                UpdatedAt = default
-            };
-
             IStreamCall call;
             if (!create)
             {

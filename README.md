@@ -17,6 +17,14 @@ Stream allows developers to rapidly deploy scalable feeds, chat messaging and vi
 
 Stream provides state handling that make it easy to build video calling for your app. All calls run on Stream's network of edge servers around the world, ensuring optimal latency and reliability.
 
+## >&#11088; Cross-platform support
+
+Stream's Video SDK for Unity allows you to easily build any type of video or audio streaming experience that works cross-platform - you can check out supported platforms [here](https://getstream.io/video/docs/unity/platforms/overview/).
+
+<p align="center">
+  <img alt="Cross-platform support" src="ReadmeAssets/stream_unity_cross_platform.jpg"/>
+</p>
+
 ## 📕 Tutorials
 
 With Stream's video components, you can use their SDK to build in-app video calling, audio rooms, audio calls, or live streaming. The best place to get started is with their tutorials:
@@ -35,7 +43,7 @@ Read **[here](https://getstream.io/video/docs/unity/basics/example-project/)** o
 Stream is free for most side and hobby projects. To qualify, your project/company needs to have < 5 team members and < $10k in monthly revenue. Makers get $100 in monthly credit for video for free.
 For more details, check out the [Maker Account](https://getstream.io/maker-account?utm_source=Github&utm_medium=Github_Repo_Content_Ad&utm_content=Developer&utm_campaign=Github_Android_Video_SDK&utm_term=DevRelOss).
 
-## 💡Supported Features💡
+## 💡 Supported Features 💡
 
 Here are some of the features we support:
 

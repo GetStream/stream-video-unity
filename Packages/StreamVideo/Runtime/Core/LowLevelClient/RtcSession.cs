@@ -37,7 +37,7 @@ namespace StreamVideo.Core.LowLevelClient
     public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
 
     public delegate void ParticipantLeftHandler(string sessionId, string userId);
-
+    
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
 
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
@@ -143,6 +143,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
             _sfuWebSocket.ParticipantJoined += OnSfuParticipantJoined;
             _sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
+            _sfuWebSocket.DominantSpeakerChanged += OnSfuDominantSpeakerChanged;
             _sfuWebSocket.Error += SfuWebSocketOnError;
         }
 
@@ -157,6 +158,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
             _sfuWebSocket.ParticipantJoined -= OnSfuParticipantJoined;
             _sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
+            _sfuWebSocket.DominantSpeakerChanged -= OnSfuDominantSpeakerChanged;
             _sfuWebSocket.Error -= SfuWebSocketOnError;
             _sfuWebSocket.Dispose();
 
@@ -505,6 +507,8 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 streamParticipant.UpdateFromSfu(participant);
             }
+            
+            //StreamTodo: raise an event so user can react to track unpublished? Otherwise the video will just freeze
         }
 
         private void OnSfuTrackPublished(TrackPublished trackPublished)
@@ -578,6 +582,11 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Info($"Participant: {id} left");
 
             QueueTracksSubscriptionRequest();
+        }
+        
+        private void OnSfuDominantSpeakerChanged(DominantSpeakerChanged dominantSpeakerChanged)
+        {
+            ActiveCall.UpdateFromSfu(dominantSpeakerChanged, _cache);
         }
         
         private void SfuWebSocketOnError(Error obj)

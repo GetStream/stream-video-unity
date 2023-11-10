@@ -4,9 +4,8 @@
   "displayName": "Stream Video & Audio Chat SDK",
   "description": "This SDK allows you to very easily add audio and/or video communication to your project.  Supported platorms: Android, IOS, Windows, MacOS.",
   "unity": "2020.3",
-  "documentationUrl": "https://example.com/",
-  "changelogUrl": "https://example.com/changelog.html",
-  "licensesUrl": "https://example.com/licensing.html",
+  "documentationUrl": "https://getstream.io/video/docs/unity/",
+  "licensesUrl": "https://github.com/GetStream/stream-video-unity/blob/main/LICENSE",
   "dependencies": {
     "com.unity.webrtc": "3.0.0-pre.6",
     "com.unity.nuget.newtonsoft-json": "3.2.0"

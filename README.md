@@ -25,6 +25,18 @@ Stream's Video SDK for Unity allows you to easily build any type of video or aud
   <img alt="Cross-platform support" src="ReadmeAssets/stream_unity_cross_platform.jpg"/>
 </p>
 
+## &#9889; How to install
+
+1. Open Unity's Package Manager (Unity Editor Top Bar -> Window -> Package Manager)
+2. Click the "+" button in the top left corner of the Package Manager
+3. Select `Add package from git URL...`
+4. Paste in the following url and click the `Add` button:
+```
+https://github.com/GetStream/stream-video-unity.git?path=/Packages/StreamVideo
+```
+
+More information [here](https://getstream.io/video/docs/unity/basics/installation/).
+
 ## 📕 Tutorials
 
 With Stream's video components, you can use their SDK to build in-app video calling, audio rooms, audio calls, or live streaming. The best place to get started is with their tutorials:

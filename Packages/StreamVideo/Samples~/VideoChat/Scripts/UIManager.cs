@@ -37,6 +37,12 @@ namespace StreamVideo.ExampleProject
             var view = Instantiate(_participantViewPrefab, _participantsContainer);
             view.Init(participant);
             _participantSessionIdToView.Add(participant.SessionId, view);
+
+            if (participant.IsLocalParticipant)
+            {
+                // Set input camera as a video source for local participant - we won't receive OnTrack event for local participant
+                view.SetLocalCameraSource(InputCameraSource);
+            }
         }
 
         public void RemoveParticipant(string sessionId, string userId)

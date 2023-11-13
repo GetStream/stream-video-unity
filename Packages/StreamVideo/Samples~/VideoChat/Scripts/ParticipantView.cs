@@ -43,7 +43,39 @@ namespace StreamVideo.ExampleProject
             _videoFrame.color = frameColor;
         }
 
-        public void OnDestroy()
+        /// <summary>
+        /// Call this for local participant only. We use this because we will not receive the `Participant.TrackAdded` event for the local participant.
+        /// So if we want to show stream from a local camera we need to hook it up separately
+        /// </summary>
+        public void SetLocalCameraSource(WebCamTexture localWebCamTexture)
+        {
+            _localWebCamTexture = localWebCamTexture;
+            
+            if (_localParticipantRenderTexture != null)
+            {
+                // Dispose previous texture 
+                _localParticipantRenderTexture.Release();
+                _localParticipantRenderTexture = null;
+            }
+            
+            _localParticipantRenderTexture = new RenderTexture(localWebCamTexture.width, localWebCamTexture.height, 0, RenderTextureFormat.Default);
+            _localParticipantRenderTexture.Create();
+
+            // we set RenderTexture a a RawImage.texture because the RenderTexture will receive video stream from the local camera
+            _video.texture = _localParticipantRenderTexture;
+        }
+
+        // Called by Unity Engine
+        protected void Update()
+        {
+            if (_localWebCamTexture != null)
+            {
+                Graphics.Blit(_localWebCamTexture, _localParticipantRenderTexture);
+            }
+        }
+
+        // Called by Unity Engine
+        protected void OnDestroy()
         {
             if (Participant != null)
             {
@@ -67,6 +99,8 @@ namespace StreamVideo.ExampleProject
         private Color32 _defaultSpeakerFrameColor;
 
         private AudioSource _audioSource;
+        private RenderTexture _localParticipantRenderTexture;
+        private WebCamTexture _localWebCamTexture;
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {

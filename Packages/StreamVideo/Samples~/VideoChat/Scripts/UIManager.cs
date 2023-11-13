@@ -50,6 +50,17 @@ namespace StreamVideo.ExampleProject
             _participantSessionIdToView.Remove(sessionId);
             Destroy(view.gameObject);
         }
+        
+        public void DominantSpeakerChanged(IStreamVideoCallParticipant currentDominantSpeaker, IStreamVideoCallParticipant previousDominantSpeaker)
+        {
+            Debug.Log($"Dominant speaker changed from {currentDominantSpeaker.Name} to {previousDominantSpeaker?.Name}");
+
+            foreach (var participantView in _participantSessionIdToView.Values)
+            {
+                var isDominantSpeaker = participantView.Participant == currentDominantSpeaker;
+                participantView.UpdateIsDominantSpeaker(isDominantSpeaker);
+            }
+        }
 
         public void SetJoinCallId(string joinCallId) => _joinCallIdInput.text = joinCallId;
 

@@ -53,7 +53,7 @@ namespace StreamVideo.ExampleProject
         
         public void DominantSpeakerChanged(IStreamVideoCallParticipant currentDominantSpeaker, IStreamVideoCallParticipant previousDominantSpeaker)
         {
-            Debug.Log($"Dominant speaker changed from {currentDominantSpeaker.Name} to {previousDominantSpeaker.Name}");
+            Debug.Log($"Dominant speaker changed from {currentDominantSpeaker.Name} to {previousDominantSpeaker?.Name}");
 
             foreach (var participantView in _participantSessionIdToView.Values)
             {

@@ -9,37 +9,45 @@ namespace StreamVideo.ExampleProject
 {
     public class ParticipantView : MonoBehaviour
     {
+        public IStreamVideoCallParticipant Participant { get; private set; }
+
         public void Init(IStreamVideoCallParticipant participant)
         {
-            if (_participant != null)
+            if (Participant != null)
             {
                 throw new NotSupportedException("reusing participant view for new participant is not supported yet");
             }
 
-            _participant = participant ?? throw new ArgumentNullException(nameof(participant));
+            Participant = participant ?? throw new ArgumentNullException(nameof(participant));
 
-            foreach (var track in _participant.GetTracks())
+            foreach (var track in Participant.GetTracks())
             {
-                OnParticipantTrackAdded(_participant, track);
+                OnParticipantTrackAdded(Participant, track);
             }
             
-            _participant.TrackAdded += OnParticipantTrackAdded;
+            Participant.TrackAdded += OnParticipantTrackAdded;
 
-            _name.text = _participant.Name;
+            _name.text = Participant.Name;
 
-            if (_participant.IsLocalParticipant)
+            if (Participant.IsLocalParticipant)
             {
                 _name.text += " (local)";
             }
             
-            _name.text += $"<br>{_participant.SessionId}";
+            _name.text += $"<br>{Participant.SessionId}";
+        }
+
+        public void UpdateIsDominantSpeaker(bool isDominantSpeaker)
+        {
+            var frameColor = isDominantSpeaker ? _dominantSpeakerFrameColor : _defaultSpeakerFrameColor;
+            _videoFrame.color = frameColor;
         }
 
         public void OnDestroy()
         {
-            if (_participant != null)
+            if (Participant != null)
             {
-                _participant.TrackAdded -= OnParticipantTrackAdded;
+                Participant.TrackAdded -= OnParticipantTrackAdded;
             }
         }
 
@@ -48,8 +56,16 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private RawImage _video;
+        
+        [SerializeField]
+        private RawImage _videoFrame;
+        
+        [SerializeField]
+        private Color32 _dominantSpeakerFrameColor;
+        
+        [SerializeField]
+        private Color32 _defaultSpeakerFrameColor;
 
-        private IStreamVideoCallParticipant _participant;
         private AudioSource _audioSource;
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)

@@ -91,7 +91,7 @@ namespace StreamVideo.ExampleProject
 
         [Header("The Join Call ID from UI's Input will override this value")]
         [SerializeField]
-        private string _joinCallId = "3TK1d0wL2we0";
+        private string _joinCallId = "";
 
         [Space(50)]
         [Header("Authorization Credentials")]
@@ -128,7 +128,6 @@ namespace StreamVideo.ExampleProject
                 Debug.Log($"Join clicked, create: {create}, callId: {callId}");
 
                 var streamCall = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
-                
 
             }
             catch (Exception e)
@@ -156,12 +155,13 @@ namespace StreamVideo.ExampleProject
         }
 
         //StreamTodo: remove
+
         private async Task<string> GetTokenAsync()
         {
             var httpClient = new HttpClient();
             var uriBuilder = new UriBuilder()
             {
-                Host = "stream-calls-dogfood.vercel.app",
+                Host = "pronto.getstream.io",
                 Path = "/api/auth/create-token",
                 Query = $"api_key={_apiKey}&user_id={_userId}&exp=14400",
                 Scheme = "https",
@@ -180,16 +180,6 @@ namespace StreamVideo.ExampleProject
 
             return tokenResponse.token;
         }
-        
-        private void OnCallEnded(IStreamCall call)
-        {
-            _activeCall.ParticipantJoined -= _uiManager.AddParticipant;
-            _activeCall.ParticipantLeft -= _uiManager.RemoveParticipant;
-            _activeCall = null; 
-            
-            _uiManager.SetJoinCallId(string.Empty);
-            _uiManager.SetActiveCall(null);
-        }
 
         private void OnCallStarted(IStreamCall call)
         {
@@ -201,11 +191,23 @@ namespace StreamVideo.ExampleProject
                 
             _activeCall.ParticipantJoined += _uiManager.AddParticipant;
             _activeCall.ParticipantLeft += _uiManager.RemoveParticipant;
+            _activeCall.DominantSpeakerChanged += _uiManager.DominantSpeakerChanged;
             
             _uiManager.SetJoinCallId(call.Id);
             _uiManager.SetActiveCall(call);
         }
-        
+
+        private void OnCallEnded(IStreamCall call)
+        {
+            _activeCall.ParticipantJoined -= _uiManager.AddParticipant;
+            _activeCall.ParticipantLeft -= _uiManager.RemoveParticipant;
+            _activeCall.DominantSpeakerChanged -= _uiManager.DominantSpeakerChanged;
+            _activeCall = null; 
+            
+            _uiManager.SetJoinCallId(string.Empty);
+            _uiManager.SetActiveCall(null);
+        }
+
         private void OnEndCallClicked()
         {
             _activeCall.EndAsync().LogIfFailed();

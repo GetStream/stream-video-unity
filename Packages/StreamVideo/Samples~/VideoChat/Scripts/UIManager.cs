@@ -37,6 +37,12 @@ namespace StreamVideo.ExampleProject
             var view = Instantiate(_participantViewPrefab, _participantsContainer);
             view.Init(participant);
             _participantSessionIdToView.Add(participant.SessionId, view);
+
+            if (participant.IsLocalParticipant)
+            {
+                // Set input camera as a video source for local participant - we won't receive OnTrack event for local participant
+                view.SetLocalCameraSource(InputCameraSource);
+            }
         }
 
         public void RemoveParticipant(string sessionId, string userId)
@@ -49,6 +55,17 @@ namespace StreamVideo.ExampleProject
 
             _participantSessionIdToView.Remove(sessionId);
             Destroy(view.gameObject);
+        }
+        
+        public void DominantSpeakerChanged(IStreamVideoCallParticipant currentDominantSpeaker, IStreamVideoCallParticipant previousDominantSpeaker)
+        {
+            Debug.Log($"Dominant speaker changed from {currentDominantSpeaker.Name} to {previousDominantSpeaker?.Name}");
+
+            foreach (var participantView in _participantSessionIdToView.Values)
+            {
+                var isDominantSpeaker = participantView.Participant == currentDominantSpeaker;
+                participantView.UpdateIsDominantSpeaker(isDominantSpeaker);
+            }
         }
 
         public void SetJoinCallId(string joinCallId) => _joinCallIdInput.text = joinCallId;

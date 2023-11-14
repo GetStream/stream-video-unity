@@ -1,6 +1,6 @@
 ---
-title: How to Build an Unity Video Calling App
-description: How to build a video call similar to Zoom or facebook messenger
+title: How to Build a Video Calling App in Unity
+description: How to build a video call similar to Zoom or Facebook messenger
 ---
 
 import { TokenSnippet } from '../../../shared/_tokenSnippet.jsx';
@@ -12,37 +12,37 @@ This tutorial teaches you how to build Zoom/Whatsapp style video calling for you
 * Video quality and codecs are automatically optimized.
 * Powered by Stream's [Video Calling API](https://getstream.io/video/).
 
-### Step 0 - Prepare your environment
+### Step 0 - Prerequisites
 
 To follow this tutorial you'll need to have a Unity Editor installed. We'll be using the `2021.3.2f1` LTS version, but any supported Unity version will do just fine. You can check the full list of supported Unity Editor versions [here](https://getstream.io/video/docs/unity/).
 
 ### Step 1 - Download Starting Project
 
-To speed you up, we've prepared a starting Unity project that you can download [here](https://github.com/GetStream/stream-unity-video-calling-tutorial).
+To speed you up, we've prepared a starting **Unity Project** that you can download from [this](https://github.com/GetStream/stream-unity-video-calling-tutorial) GitHub repository. You can just click [here](https://github.com/GetStream/stream-unity-video-calling-tutorial/archive/refs/heads/main.zip) to download the project in a zip file.
 
-Download the project, open it in Unity Editor, and open the `VideoCallingTutorial` scene.
+Unpack the downloaded project, and open it in Unity Editor.
 
-If you're new to `GitHub`, you can just download [here](https://github.com/GetStream/stream-unity-video-calling-tutorial/archive/refs/heads/main.zip) to download the project in a zip file.
+The starting project contains the following UGUI UI elements:
+* A **scrollable list** to show **call participants**
+* **Dropdowns** to select active **microphone** and **camera** device (not needed if you're targeting Android or IOS)
+* A **Join** button
 
-The starting project contains Unity's UGUI UI components:
-* A scrollable list of the call participants
-* Dropdowns to pick microphone and camera device (not needed if you're targeting Android or IOS)
-* A `Join` button
+Now open the `VideoCallingTutorial` scene located in the `Scenes` folder.
 
 ### Step 2 - Add Stream's Video SDK for Unity
 
-Please follow the [installation section](../01-basics/02-installation.mdx) to see how to import Stream's Video SDK into a Unity Project.
+Please follow the [installation section](../01-basics/02-installation.mdx) to import **Stream's Video SDK** into a Unity Project.
 
-After completing this step you should now see "Stream Video & Audio Chat SDK" package in Project->Packages
+After completing this step you should now see `Stream Video & Audio Chat SDK` package in the **Project->Packages** window:
 
 ![Imported SDK package](../assets/tutorials/audio-room/01.png)
 
 ### Step 3 - Setup Video Manager
 
 1. Go to the **Project** window
-2. In the **Assets** folder, create a new folder called **Scripts**
-3. Inside the **Scripts** folder, create a new script file and call it `VideoManager.cs`
-4. Open `VideoManager.cs` in your IDE (code editor) and replace it with the following script:
+2. Navigate to **Assets -> Scripts ** folder
+3. Create a new script file, and call it `VideoManager.cs`
+4. Open the `VideoManager.cs` in your code editor, and replace it with the following script:
 
 ```csharp
 using System;
@@ -90,56 +90,58 @@ public class VideoManager : MonoBehaviour
 }
 ```
 
-Let's go through this script step by step to understand what we're doing.
+Let's go through this script step by step to understand what's going on.
 
-This part defines variables for the **api key**, **user id** and the **user token** . These 3 variables are essential to establish a connection for a user.
+This part defines variables for the **api key**, **user id** and the **user token** - these 3 variables are essential to establish a connection with the **Stream Service**.
 ```csharp
-    [SerializeField]
-    private string _apiKey;
-    
-    [SerializeField]
-    private string _userId;
-    
-    [SerializeField]
-    private string _userToken;
+[SerializeField]
+private string _apiKey;
+
+[SerializeField]
+private string _userId;
+
+[SerializeField]
+private string _userToken;
 ```
 
 The `_joinCallId` variable will be used to provide the **id** of the call that we'll be joining. 
 
 ```csharp
-    [SerializeField]
-    private string _joinCallId;
+[SerializeField]
+private string _joinCallId;
 ```
 
 Here we instantiate a default client for the Stream's Video SDK:
 ```csharp
 _client = StreamVideoClient.CreateDefaultClient();
 ```
-Next, we wrap the authorization credentials in a convenient structure:
+Next, we wrap the authorization credentials in a convenient struct:
 ```csharp
 var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
 ```
-And finally, we call the ConnectUserAsync that will attempt to establish a connection:
+And finally, we call the `ConnectUserAsync` method that will attempt to establish a connection:
 ```csharp
 await _client.ConnectUserAsync(credentials);
 ```
-Please note that we're using .NET's modern async/await syntax, this makes writing asynchronous code that wait for server response very easy.
+It's worth noting that we're using .NET's modern **async/await syntax** - this makes writing asynchronous code that waits for the server response very clean & concise.
 
-After the `await` completes, we should now be connected to the stream server.
+After the `await` completes, we should now be connected to the Stream server.
 
-Also note, that we've wrapped the asynchronous `ConnectUserAsync` method in a try/catch block. Unless you're proficient with .NET's async/await syntax and understand how to properly handle exceptions for asynchronous methods, we advise you to always wrap awaited methods in a try/catch block in order to catch any thrown exceptions and therefore be notified about any errors that occured during async operation.
+We've wrapped the asynchronous `ConnectUserAsync` method in a **try/catch** block. In case you're not familiar with handling exceptions in asynchronous methods, we advise you to always wrap awaited methods in a try/catch block to catch any thrown exceptions and therefore never miss any errors that can potentially occur during async operations.
 
-Now go to Scene Hierarchy Window and create an empty game object and call it `VideoManager`:
+---
 
-![Created AudioRoomsManager empty Game Object](../assets/tutorials/audio-room/02.png)
+Now go to Scene's **Hierarchy** Window (Make sure the `VideoCallingTutorial` scene is opened), create an empty **game object** and call it `VideoManager`:
+
+![Created AudioRoomsManager empty Game Object](../assets/tutorials/video-calls/02.png)
 
 Next, drag in the newly created `VideoManager.cs` script onto the `VideoManager` game object and save the scene.
 
-You should now have a game object with our `VideoManager.cs` script attached.
+You should now have a game object with the `VideoManager.cs` script attached.
 
 ![GameObject with attached AudioRoomsManager.cs script](../assets/tutorials/video-calls/03.png)
 
-Once you select this game object you should see `Api Key`, `User Id`, and the User Token fields exposed in the Inspector Window.
+Once you select this game object you should see `Api Key`, `User Id`, and the `User Token` fields visible in the **Inspector** Window (Make sure the `VideoManager` game object is selected).
 
 ![GameObject with attached AudioRoomsManager.cs script](../assets/tutorials/video-calls/04.png)
 
@@ -147,21 +149,23 @@ Once you select this game object you should see `Api Key`, `User Id`, and the Us
 
 ### Step 4 - Connect a user to Stream server
 
-To actually run this script we need a valid user token. The user token is typically generated by your server side API. When a user logs in to your app you return the user token that gives them access to the call. To make this tutorial easier to follow we'll generate a user token for you:
+To run this script we need a valid **User Token**. A **User Token** is typically generated by your backend service. When a user logs in to your app you authorize them and return the **user token** that allows them to join call. This way, you have full control over who can access a call. For the sake of this tutorial we'll generate a **User Token** for you:
 
 <TokenSnippet sampleApp='meeting' />
 
-Copy `api key`, `user id`, and the `user token` from the window above and paste them into `VideoManager` exposed fields:
+Copy `api key`, `user id`, and the `user token` from the window above and paste them into the corresponding fields in the `VideoManager` game object:
 
 ![Filled Credentials](../assets/tutorials/video-calls/05.png)
 
-After you run the project, you should now see a log confirming that the user is connected to the stream server
+You can run the project by pressing **Play** in the Unity Editor, you should now see a log in Unity Console confirming that the user is connected to the stream server:
+
+![Filled Credentials](../assets/tutorials/video-calls/05-connected-log.png)
 
 ---
 
 ### Step 5 - Add methods to `Join` and `Leave` a call
 
-In this step we'll add methods to `Join` and `Leave` the call. These will be called from our UI when the user clicks on the `Join` and `Leave` buttons.
+In this step, we'll add methods to `Join` and `Leave` the call - these will be called from our UI when the user clicks on the `Join` and `Leave` buttons.
 
 Open the `VideoManager.cs` script and apply the following changes:
 
@@ -170,56 +174,59 @@ First, add the `_activeCall` field to the class:
 private IStreamCall _activeCall;
 ```
 
-The fields part of the class should look like this:
+The fields part of the class should now look like this:
 ```csharp
-    [SerializeField]
-    private string _apiKey;
-    
-    [SerializeField]
-    private string _userId;
-    
-    [SerializeField]
-    private string _userToken;
-    
-    [SerializeField]
-    private string _joinCallId;
+[SerializeField]
+private string _apiKey;
 
-    private IStreamVideoClient _client;
-    
-    // highlight-next-line
-    private IStreamCall _activeCall;
+[SerializeField]
+private string _userId;
+
+[SerializeField]
+private string _userToken;
+
+[SerializeField]
+private string _joinCallId;
+
+private IStreamVideoClient _client;
+
+// highlight-next-line
+private IStreamCall _activeCall;
 ```
 
-Next, add the `JoinCallAsync` and the `LeaveCallAsync` methods to the `AudioRoomsManager` class.
+Next, add the `JoinCallAsync` and the `LeaveCallAsync` methods to the `VideoManager` class.
 
 ```csharp
-    public async Task JoinCallAsync()
-    {
-        _activeCall = await _client.JoinCallAsync(StreamCallType.Default, _joinCallId, create: true, ring: true, notify: false);
-        Debug.Log($"Joined call with ID: {_activeCall.Id}");
-    }
-    
-    public async Task LeaveCallAsync()
-    {
-        if (_activeCall == null)
-        {
-            Debug.LogWarning("Leave request ignored. There is no active call to leave.");
-            return;
-        }
+public async Task JoinCallAsync()
+{
+    _activeCall = await _client.JoinCallAsync(StreamCallType.Default, _joinCallId, create: true, ring: true, notify: false);
+    Debug.Log($"Joined call with ID: {_activeCall.Id}");
+}
 
-        await _activeCall.LeaveAsync();
+public async Task LeaveCallAsync()
+{
+    if (_activeCall == null)
+    {
+        Debug.LogWarning("Leave request ignored. There is no active call to leave.");
+        return;
     }
+
+    await _activeCall.LeaveAsync();
+}
 ```
 
 ---
 
 ### Step 6 - Create UI Manager script
 
-Next, we'll add a UI manager script that will keep references to all of our interactable UI elements and will handle user interaction.
+Next, we'll add a UI manager script that will keep references to all of the interactable UI elements and will handle user interactions.
 
-1. Go to Scripts folder, create new C# script nad call it `UIManager.cs`
+1. Go to the **Scripts** folder, create a new C# script, and call it `UIManager.cs`
 2. Open the script in your code editor and paste the following content:
 ```csharp
+using System;
+using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -247,101 +254,110 @@ public class UIManager : MonoBehaviour
     private VideoManager _videoManager;
 }
 ```
-3. In Unity Editor, go to scene's **Hierarchy** window, create new empty game object, and call it `UIManager`.
-4. Select the `UIManager` game object and attach the `UIManager.cs` script onto it.
-5. Save scene
+3. In Unity Editor, go to the **Hierarchy** window, create a new empty game object, and call it `UIManager`.
+4. Select the `UIManager` game object and attach the `UIManager.cs` script to it.
+5. Save the scene
 
 You should now have a `UIManager` game object with `UIManager.cs` script attach to it:
 ![UI Manager](../assets/tutorials/video-calls/06.png)
 
 ### Step 7 - Setup `UIManager` references in the inspector
 
-Attach references in the following way:
-* `Participants Container` - Hierarchy window -> `Content` game object (a child of ParticipantsPanel's **ScrollView**)
-* `Participant Prefab` - Project window -> Prefabs -> `ParticipantPanel` prefab
-* `Microphone Dropdown` - Hierarchy window ->
-* `Camera Dropdown` - Hierarchy window ->
-* `Join Button` - Hierarchy window ->
-* `Leave Button` - Hierarchy window -> `LeaveButton` game object
-* `Video Manager` - Hierarchy window -> `VideoManager` game object
+Now we need attach game objects to `UIManager` script component.
 
-After attaching the references your `UIManager` game object should look like this in the inspector:
+In case you're wondering how to do this efficiently you can follow these steps:
+1. Select the `UIManager` game object in the **Hierarchy** window and **lock** the window (Read [Unity Docs](https://docs.unity3d.com/Manual/InspectorOptions.html) on how to lock **Inspector** window)
+2. Use the **Hierarchy's** window search input to search for each game object by name, and drag it into the corresponding field in the locked **Inspector** window.
+3. Unlock the **Inspector** window
+
+Here's a full list of `UIManager` fields and the corresponding game objects that we want to attach:
+* `Participants Container` - Search for `ParticipantsContainer` in the **Hierarchy** window
+* `Participant Prefab` - This is the only one that we'll drag in from the **Project** window, drag in the **Prefabs/ParticipantPanel** prefab file
+* `Microphone Dropdown` - Search for the `MicrophoneDropdown` in the **Hierarchy** window
+* `Camera Dropdown` - Search for the `CameraDropdown` in the **Hierarchy** window
+* `Join Button` - Search for the `JoinButton` in the **Hierarchy** window
+* `Leave Button` - Search for the `LeaveButton` in the **Hierarchy** window
+* `Video Manager` - Search for the `VideoManager` in the **Hierarchy** window
+
+These are the game objects, from the Scene Hierarchy, that should be attached to the `UIManager` script:
+![References Scene Hierarchy Game Object](../assets/tutorials/video-calls/08.png)
+
+And on to of the hierarchy game objects, we attach the `Prefabs/ParticipantPanel` prefab file from the Project window.
+
+After completing this step, your `UIManager` game object should look as below:
 ![UI Manager](../assets/tutorials/video-calls/07.png)
-
-Here you can witch game object from the scene hierarchy should get references by the `UIManager` script:
-![References Scene Hierarchy Game Object](../assets/tutorials/video-calls/09.png)
 
 ### Step 8 - Add `UIManager` logic
 
-Next, add those 2 methods to the `UIManager.cs` script:
+Next, add the following code to the `UIManager.cs` script:
 
 ```csharp
-    private async void OnJoinButtonClickedAsync()
+private async void OnJoinButtonClickedAsync()
+{
+    // Because this is async void method we need to wrap asynchronous call in a try/catch block
+    try
     {
-        // Because this is async void method we need to wrap asynchronous call in a try/catch block
-        try
-        {
-            await _videoManager.JoinCallAsync();
-            
-            // When await is finished we have joined the call. We can now hide the `join` button and show the `leave` button
-            _joinButton.gameObject.SetActive(false);
-            _leaveButton.gameObject.SetActive(true);
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-        }
+        await _videoManager.JoinCallAsync();
+        
+        // When await is finished we have joined the call. We can now hide the `join` button and show the `leave` button
+        _joinButton.gameObject.SetActive(false);
+        _leaveButton.gameObject.SetActive(true);
     }
-    
-    private async void OnLeaveButtonClickedAsync()
+    catch (Exception e)
     {
-        // Because this is async void method we need to wrap asynchronous call in a try/catch block
-        try
-        {
-            await _videoManager.LeaveCallAsync();
-            
-            // When await is finished we have left the call. We can now show the `join` button again and hide the `leave` button
-            _joinButton.gameObject.SetActive(true);
-            _leaveButton.gameObject.SetActive(false);
-        }
-        catch (Exception e)
-        {
-            Debug.LogException(e);
-        }
+        Debug.LogException(e);
     }
-```
+}
 
-The `OnJoinButtonClickedAsync` method will call and await the `JoinCallAsync` method on the `VideoManager` script. Once the `JoinCallAsync` method is awaited, it means that we have joined a call. Therefore, we hide the **join* button and show the **leave** button.
-
-The `OnLeaveButtonClickedAsync` on the other hand, will call and await the `LeaveCallAsync` method on the `VideoManager` script and once its awaited, it will again show the **join** button and hide the **leave** button.
-
-Next, add the following `Awake` method:
-```csharp
-    private void Awake()
+private async void OnLeaveButtonClickedAsync()
+{
+    // Because this is async void method we need to wrap asynchronous call in a try/catch block
+    try
     {
-        // Replace microphone dropdown options with device names from Microphone.devices
-        _microphoneDropdown.ClearOptions();
-        _microphoneDropdown.AddOptions(Microphone.devices.ToList());
+        await _videoManager.LeaveCallAsync();
         
-        // Replace camera dropdown options with device names from WebCamTexture.devices
-        _cameraDropdown.ClearOptions();
-        _cameraDropdown.AddOptions(WebCamTexture.devices.Select(d => d.name).ToList());
-        
-        // Subscribe to join & leave buttons onClick event
-        _joinButton.onClick.AddListener(OnJoinButtonClickedAsync);
-        _leaveButton.onClick.AddListener(OnLeaveButtonClickedAsync);
-        
-        // Hide leave button - we'll show it once we join a call
+        // When await is finished we have left the call. We can now show the `join` button again and hide the `leave` button
+        _joinButton.gameObject.SetActive(true);
         _leaveButton.gameObject.SetActive(false);
     }
+    catch (Exception e)
+    {
+        Debug.LogException(e);
+    }
+}
 ```
 
-Let's quickly go through what's going on.
+The `OnJoinButtonClickedAsync` method calls the **VideoManager's** `JoinCallAsync` method. Once the `JoinCallAsync` method is awaited, it means that we have joined a call. We then update the UI to reflect this state -> hide the **join* button and show the **leave** button.
 
-The following part clears the default options in the microphone dropdown and adds new options based on Unity's `Microphone.devices` array. This array contains the list of available microphone devices names.
+The `OnLeaveButtonClickedAsync` method calls the **VideoManager's** `LeaveCallAsync` method and once it's awaited, it will also update the UI and show the **join** button and hide the **leave** button.
+
+Next, add the following `Awake` method to the `UIManager.cs` script:
 ```csharp
-        _microphoneDropdown.ClearOptions();
-        _microphoneDropdown.AddOptions(Microphone.devices.ToList());
+private void Awake()
+{
+    // Replace microphone dropdown options with device names from Microphone.devices
+    _microphoneDropdown.ClearOptions();
+    _microphoneDropdown.AddOptions(Microphone.devices.ToList());
+    
+    // Replace camera dropdown options with device names from WebCamTexture.devices
+    _cameraDropdown.ClearOptions();
+    _cameraDropdown.AddOptions(WebCamTexture.devices.Select(d => d.name).ToList());
+    
+    // Subscribe to join & leave buttons onClick event
+    _joinButton.onClick.AddListener(OnJoinButtonClickedAsync);
+    _leaveButton.onClick.AddListener(OnLeaveButtonClickedAsync);
+    
+    // Hide leave button - we'll show it once we join a call
+    _leaveButton.gameObject.SetActive(false);
+}
+```
+
+Let's quickly go through the recently added code changes.
+
+The following part clears the default options in the microphone dropdown and adds new options based on Unity's `Microphone.devices` array. This array contains the list of available microphone device names.
+```csharp
+_microphoneDropdown.ClearOptions();
+_microphoneDropdown.AddOptions(Microphone.devices.ToList());
 ```
 
 :::warning
@@ -350,22 +366,22 @@ You need to have at least 1 microphone device available. Otherwise, the `Microph
 
 :::
 
-Next, we do the same for camera dropdown. We clear the default options and repopulate the list based on Unity's `WebCamTexture.devices`. It's worth that `Microphone.devices` is an array of strings representing microphone devices names whereas the `WebCamTexture.devices` is an array of [WebCamDevice](https://docs.unity3d.com/ScriptReference/WebCamDevice.html). Therefore, we grab the actual device names with LINQ `WebCamTexture.devices.Select(d => d.name)`.
+Next, we do the same for the camera dropdown. We clear the default options and repopulate the list based on Unity's `WebCamTexture.devices`. It's worth noting that `Microphone.devices` is an array of strings representing microphone device names whereas the `WebCamTexture.devices` is an array of [WebCamDevice](https://docs.unity3d.com/ScriptReference/WebCamDevice.html) objects. Therefore, we grab the actual device names with LINQ `WebCamTexture.devices.Select(d => d.name)`.
 ```csharp
-        _cameraDropdown.ClearOptions();
-        _cameraDropdown.AddOptions(WebCamTexture.devices.Select(d => d.name).ToList());
+_cameraDropdown.ClearOptions();
+_cameraDropdown.AddOptions(WebCamTexture.devices.Select(d => d.name).ToList());
 ```
 
 :::warning
 
-You need to have at least 1 camera device available. Otherwise, the `WebCamTexture.devices` array will be empty and our project will not work.
+You need to have at least 1 camera device available. Otherwise, the `WebCamTexture.devices` array will be empty and our code will not work.
 
 :::
 
 Next, we subscribe to buttons **onClick** event:
 ```csharp
-        _joinButton.onClick.AddListener(OnJoinButtonClickedAsync);
-        _leaveButton.onClick.AddListener(OnLeaveButtonClickedAsync);
+_joinButton.onClick.AddListener(OnJoinButtonClickedAsync);
+_leaveButton.onClick.AddListener(OnLeaveButtonClickedAsync);
 ```
 
 And finally, we set the **leave** button to be hidden by default. We'll show it once we're connected to a **call**.

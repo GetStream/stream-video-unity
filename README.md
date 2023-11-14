@@ -4,8 +4,8 @@
 
 # Official [Stream Video](https://getstream.io/video/docs/) SDK for Unity Engine
 
-This is the official [Stream Video](https://getstream.io/video) SDK for Unity, a service for building video calls, audio rooms, and live-streaming applications. This library includes a stateful video client which means it is automatically synchronizing its internal state according to events received from the Stream API.
-This greatly reduces the integration complexity because most of the implementation details are handled under the hood.
+This is the official [Stream Video](https://getstream.io/video) SDK for Unity, a service for building **video calls**, **audio rooms**, and **live-streaming** inside a Unity Project. This library includes a stateful video client that is automatically synchronized with Stream servers.
+This greatly reduces the integration complexity and allows you to build any kind of Video & Audio streaming experience in a matter of days.
 
 <a href="https://getstream.io">
 <img src="https://user-images.githubusercontent.com/24237865/138428440-b92e5fb7-89f8-41aa-96b1-71a5486c5849.png" align="right" width="12%"/>

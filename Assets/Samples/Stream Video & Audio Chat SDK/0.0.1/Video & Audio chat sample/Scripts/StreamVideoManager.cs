@@ -7,6 +7,7 @@ using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
+using Unity.WebRTC;
 using UnityEngine;
 
 namespace StreamVideo.ExampleProject
@@ -46,7 +47,12 @@ namespace StreamVideo.ExampleProject
             _client.CallEnded += OnCallEnded;
 
             ConnectToStreamAsync(credentials).LogIfFailed();
+
+            //StreamTodo: handle by SDK
+            StartCoroutine(WebRTC.Update());
         }
+
+        protected void Update() => _client?.Update();
 
         protected async void OnDestroy()
         {
@@ -83,21 +89,18 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private UIManager _uiManager;
 
-        [Header("The Join Call ID from UI Input will override this value")]
+        [Header("The Join Call ID from UI's Input will override this value")]
         [SerializeField]
         private string _joinCallId = "";
 
         [Space(50)]
         [Header("Authorization Credentials")]
-        [Header("You can find the API KEY in Stream Dashboard")]
         [SerializeField]
         private string _apiKey = "";
 
         [SerializeField]
         private string _userId = "";
 
-        [Header("For testing - you can use token generator on our website")]
-        [Header("For production - generate tokens with your backend using your Stream App Secret")]
         [SerializeField]
         private string _userToken = "";
 
@@ -105,13 +108,13 @@ namespace StreamVideo.ExampleProject
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
 
-        private string GetOrCreateCallId(bool create) => create ? Guid.NewGuid().ToString().Replace("-", "") : _uiManager.JoinCallId;
+        private string TryGetCallId(bool create) => create ? Guid.NewGuid().ToString() : _uiManager.JoinCallId;
 
         private async void OnJoinClicked(bool create)
         {
             try
             {
-                var callId = GetOrCreateCallId(create);
+                var callId = TryGetCallId(create);
                 if (string.IsNullOrEmpty(callId))
                 {
                     Debug.LogError($"Failed to get call ID in mode create: {create}.");
@@ -125,6 +128,7 @@ namespace StreamVideo.ExampleProject
                 Debug.Log($"Join clicked, create: {create}, callId: {callId}");
 
                 var streamCall = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
+
             }
             catch (Exception e)
             {
@@ -144,28 +148,14 @@ namespace StreamVideo.ExampleProject
         
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {
-            var credentialsEmpty = string.IsNullOrEmpty(credentials.ApiKey) && string.IsNullOrEmpty(credentials.UserId);
-            if (credentialsEmpty)
-            {
-                // If user didn't provide credentials - use the demo credentials
-                _apiKey = "hd8szvscpxvd";
-                _userId = "daniel_sierpinski";
-                
-                // Request demo user token
-                var token = await GetTokenAsync();
-                
-                // Create demo credentials
-                credentials = new AuthCredentials(_apiKey, _userId, token);
-            }
+            var token = await GetTokenAsync();
+            Debug.Log($"Try to get token: {token != null}");
 
-            await _client.ConnectUserAsync(credentials);
+            await _client.ConnectUserAsync(credentials.CreateWithNewUserToken(token));
         }
 
-        /// <summary>
-        /// Example of how to get authentication token from the backend endpoint.
-        /// This is a demo token provider with short-lived token with limited privileges.
-        /// In your own project, you should setup an endpoint that will authorize users and generate tokens for them using your own app secret key that you get from the Stream's Dashboard
-        /// </summary>
+        //StreamTodo: remove
+
         private async Task<string> GetTokenAsync()
         {
             var httpClient = new HttpClient();
@@ -190,16 +180,6 @@ namespace StreamVideo.ExampleProject
 
             return tokenResponse.token;
         }
-        
-        private void OnCallEnded(IStreamCall call)
-        {
-            _activeCall.ParticipantJoined -= _uiManager.AddParticipant;
-            _activeCall.ParticipantLeft -= _uiManager.RemoveParticipant;
-            _activeCall = null; 
-            
-            _uiManager.SetJoinCallId(string.Empty);
-            _uiManager.SetActiveCall(null);
-        }
 
         private void OnCallStarted(IStreamCall call)
         {
@@ -211,11 +191,23 @@ namespace StreamVideo.ExampleProject
                 
             _activeCall.ParticipantJoined += _uiManager.AddParticipant;
             _activeCall.ParticipantLeft += _uiManager.RemoveParticipant;
+            _activeCall.DominantSpeakerChanged += _uiManager.DominantSpeakerChanged;
             
             _uiManager.SetJoinCallId(call.Id);
             _uiManager.SetActiveCall(call);
         }
-        
+
+        private void OnCallEnded(IStreamCall call)
+        {
+            _activeCall.ParticipantJoined -= _uiManager.AddParticipant;
+            _activeCall.ParticipantLeft -= _uiManager.RemoveParticipant;
+            _activeCall.DominantSpeakerChanged -= _uiManager.DominantSpeakerChanged;
+            _activeCall = null; 
+            
+            _uiManager.SetJoinCallId(string.Empty);
+            _uiManager.SetActiveCall(null);
+        }
+
         private void OnEndCallClicked()
         {
             _activeCall.EndAsync().LogIfFailed();

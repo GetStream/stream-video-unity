@@ -729,31 +729,31 @@ In this tutorial, we'll go with the dropdowns.
 
 Let's proceed with the implementation, open the `VideoManager.cs` script in your code editor and add the following code:
 ```csharp
-    public void SetAudioInputSource(AudioSource audioSource)
+public void SetAudioInputSource(AudioSource audioSource)
+{
+    // If client is not available yet -> cache audio source
+    if (_client == null)
     {
-        // If client is not available yet -> cache audio source
-        if (_client == null)
-        {
-            _inputAudio = audioSource;
-            return;
-        }
-        _client.SetAudioInputSource(audioSource);
+        _inputAudio = audioSource;
+        return;
     }
+    _client.SetAudioInputSource(audioSource);
+}
 
-    public void SetCameraInputSource(WebCamTexture webCamTexture)
+public void SetCameraInputSource(WebCamTexture webCamTexture)
+{
+    // If client is not available yet -> cache video source
+    if (_client == null)
     {
-        // If client is not available yet -> cache video source
-        if (_client == null)
-        {
-            _inputVideo = webCamTexture;
-            return;
-        }
-        
-        _client.SetCameraInputSource(webCamTexture);
+        _inputVideo = webCamTexture;
+        return;
     }
     
-    private AudioSource _inputAudio;
-    private WebCamTexture _inputVideo;
+    _client.SetCameraInputSource(webCamTexture);
+}
+
+private AudioSource _inputAudio;
+private WebCamTexture _inputVideo;
 ```
 
 The `SetAudioInputSource` and `SetCameraInputSource` methods will be called by the UI layer.
@@ -913,22 +913,30 @@ OnCameraDeviceChanged(0);
 
 ### Step 13 - Test
 
-We're all set to join a call and receive video & audio from other participants as well as send our own video & audio input from our microphone and camera device.
+That's it! We're now ready to test our app.
 
-You can press the `Join` button in the box below in order to join the call from a web browser, and then join the same call from our Unity Editor.
+It's best to test the video call using multiple devices. Otherwise, you may run into conflict when multiple applications will try to use the same camera device.
+
+Easy way to setup the testing:
+1. Right-click on the **Join Call** button in the box below and copy the URL.
+2. Send this URL to any other device you have e.g. your smartphone. You can send it to multiple devices if you want.
+3. Run the project in the Unity Editor and click **Join** button to join the call.
+4. Open the **Join Call URL** that you've sent to other devices and join the call as well.
 
 <TokenSnippet sampleApp='meeting' />
 
-Congrats! You should now be able to share the call between multiple participants. You can join the same call from as many devices you like (standalone & mobile) using the `Join` button in the box above.
+Congrats! You should now be able to join the video call from multiple devices.
+
+Please note the the **authorization credentials** and the **Call ID** are dynamically generated so if you'd simply open this page on multiple devices the **Call ID** would be most likely different and you wouldn't join the same call.
 
 ### Troubleshooting
 
 In order for this tutorial app to work, Unity needs to be able to access the microphone and the camera devices.
 
-If you're noticing cryptic errors like below:
+If you're noticing cryptic errors as below:
 ![Unity not being able to access microphone or camera](../assets/tutorials/video-calls/12.png)
 
-This means that Unity is not able to access the selected devices. In such case, you need to ensure that no other application is using the devices and try again.
+This means that Unity is not able to access the selected camera or microphone devices. In such case, you need to ensure that no other application is using the devices and try again.
 
 ### Recap
 

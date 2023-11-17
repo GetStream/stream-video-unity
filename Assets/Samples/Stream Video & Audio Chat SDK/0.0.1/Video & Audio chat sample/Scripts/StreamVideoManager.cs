@@ -47,12 +47,7 @@ namespace StreamVideo.ExampleProject
             _client.CallEnded += OnCallEnded;
 
             ConnectToStreamAsync(credentials).LogIfFailed();
-
-            //StreamTodo: handle by SDK
-            StartCoroutine(WebRTC.Update());
         }
-
-        protected void Update() => _client?.Update();
 
         protected async void OnDestroy()
         {

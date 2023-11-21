@@ -126,7 +126,12 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void SetTrack(TrackType type, MediaStreamTrack mediaStreamTrack, out IStreamTrack streamTrack)
         {
-            Debug.LogWarning($"[Participant] Local: {IsLocalParticipant} Session ID: {SessionId} set track of type {type}");
+            
+#if STREAM_DEBUG_ENABLED
+            Debug.LogWarning(
+                $"[Participant] Local: {IsLocalParticipant} Session ID: {SessionId} set track of type {type}");
+#endif
+
             switch (type)
             {
                 case TrackType.Unspecified:
@@ -158,7 +163,7 @@ namespace StreamVideo.Core.StatefulModels
                 // Not an error, sometimes we receive tracks info from the API before webRTC triggers onTrack event
                 return;
             }
-            
+
             streamTrack.SetEnabled(enabled);
 
             //StreamTodo: we should trigger some event that track status changed
@@ -187,7 +192,7 @@ namespace StreamVideo.Core.StatefulModels
         private readonly List<string> _roles = new List<string>();
 
         #endregion
-        
+
         private BaseStreamTrack GetStreamTrack(TrackType type)
         {
             switch (type)

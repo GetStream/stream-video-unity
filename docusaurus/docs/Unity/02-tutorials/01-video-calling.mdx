@@ -5,6 +5,8 @@ description: How to build a video call similar to Zoom or Facebook messenger
 
 import { TokenSnippet } from '../../../shared/_tokenSnippet.jsx';
 
+### Introduction
+
 This tutorial teaches you how to build Zoom/Whatsapp style video calling for your app.
 
 * Calls run on Stream's global edge network for optimal latency & reliability.
@@ -12,28 +14,25 @@ This tutorial teaches you how to build Zoom/Whatsapp style video calling for you
 * Video quality and codecs are automatically optimized.
 * Powered by Stream's [Video Calling API](https://getstream.io/video/).
 
-### Step 0 - Prerequisites
+### Prerequisites
 
-To follow this tutorial you'll need to have a Unity Editor installed. We'll be using the `2021.3.2f1` LTS version, but any supported Unity version will do just fine. You can check the full list of supported Unity Editor versions [here](https://getstream.io/video/docs/unity/).
+To follow this tutorial, you must install a Unity Editor. We'll use the `2021.3.2f1` LTS version, but any supported Unity version will do just fine. You can check the complete list of supported Unity Editor versions [here](https://getstream.io/video/docs/unity/).
 
 ### Step 1 - Download Starting Project
 
-To speed you up, we've prepared a starting **Unity Project** that you can download from [this](https://github.com/GetStream/stream-unity-video-calling-tutorial) GitHub repository. You can just click [here](https://github.com/GetStream/stream-unity-video-calling-tutorial/archive/refs/heads/main.zip) to download the project in a zip file.
+To speed you up, we've prepared a starting **Unity Project** that you can download from our [GitHub repository](https://github.com/GetStream/stream-unity-video-calling-tutorial). You can download it using **git** or [click here](https://github.com/GetStream/stream-unity-video-calling-tutorial/archive/refs/heads/main.zip) to download the project in a zip file.
 
-Unpack the downloaded project, and open it in Unity Editor.
+Download the project and open it in Unity Editor.
 
-The starting project contains the following UGUI UI elements:
-* A **scrollable list** to show **call participants**
-* **Dropdowns** to select active **microphone** and **camera** device (not needed if you're targeting Android or IOS)
-* A **Join** button
+The starting project contains the UI that we will use during this tutorial.
 
-Now open the `VideoCallingTutorial` scene located in the `Scenes` folder.
+Once you open the project, open the `VideoCallingTutorial` scene in the `Scenes` folder.
 
-### Step 2 - Add Stream's Video SDK for Unity
+### Step 1 - Add Stream's Video SDK for Unity
 
-Please follow the [installation section](../01-basics/02-installation.mdx) to import **Stream's Video SDK** into a Unity Project.
+Follow the [installation section](../01-basics/02-installation.mdx) to see how to import Stream's Video SDK into a Unity Project.
 
-After completing this step you should now see `Stream Video & Audio Chat SDK` package in the **Project->Packages** window:
+After completing this step, you should see the **Stream Video & Audio Chat SDK** package under **Packages** in the **Project** window.
 
 ![Imported SDK package](../assets/tutorials/audio-room/01.png)
 
@@ -162,7 +161,7 @@ Copy the `api key`, `user id`, and the `user token` from the window above and pa
 
 ![Filled Credentials](../assets/tutorials/video-calls/05.png)
 
-You can run the project by pressing **Play** in the Unity Editor, you should now see a log in Unity Console confirming that the user is connected to the stream server:
+Once you run the project (Press the **Play** button in Unity Editor), you should see a log in Unity Console confirming that the user is connected to the stream server:
 
 ![Filled Credentials](../assets/tutorials/video-calls/05-connected-log.png)
 
@@ -270,11 +269,11 @@ You should now have a `UIManager` game object with `UIManager.cs` script attach 
 
 ### Step 7 - Setup `UIManager` references in the inspector
 
-Now we need attach game objects to `UIManager` script component.
+The `UIManager` will interact with UI elements and the prefab asset. Therefore, we must attach all references visible in the inspector window when you select the `UIManager` game object.
 
-In case you're wondering how to do this efficiently you can follow these steps:
+In case you're wondering how to do this swiftly, you can follow these steps:
 1. Select the `UIManager` game object in the **Hierarchy** window and **lock** the window (Read [Unity Docs](https://docs.unity3d.com/Manual/InspectorOptions.html) on how to lock **Inspector** window)
-2. Use the **Hierarchy's** window search input to search for each game object by name, and drag it into the corresponding field in the locked **Inspector** window.
+2. Use the **Hierarchy's** window search input to search for each game object by name and drag it into the corresponding field in the locked **Inspector** window.
 3. Unlock the **Inspector** window
 
 Here's a full list of `UIManager` fields and the corresponding game objects that we want to attach:
@@ -639,7 +638,7 @@ Add this field to the class:
 private readonly Dictionary<string, ParticipantPanel> _participantPanels = new Dictionary<string, ParticipantPanel>();
 ```
 
-It'll be used to store spawned participant UI panels. We've used dictionary because whenever a participant leaves the call, we can easily retrieve a corresponding UI panel in order to destroy it. We'll use **Session ID** as the key because this is the unique identifier of each participant in a call
+It'll be used to store spawned participant UI panels. We've used dictionary because whenever a participant leaves the call, we can easily retrieve a corresponding UI panel in order to destroy it. We'll use **Session ID** as the key because this is the unique identifier of each participant in a call.
 
 Next, add the following `OnParticipantJoined` method:
 ```csharp
@@ -656,9 +655,9 @@ private void OnParticipantJoined(IStreamVideoCallParticipant participant)
 ```
 
 This method will be called for every participant in the call. It does 3 things:
-* Spawns a new instance of the `ParticipantPanel` prefab
-* Calls the `ParticipantPanel.Init` method and passes the `IStreamVideoCallParticipant` object
-* Adds the newly spawned panel to the `_participantPanels` dictionary using the participant's **SessionId** as key
+* Spawns a new instance of the `ParticipantPanel` prefab.
+* Calls the `ParticipantPanel.Init` method and passes the `IStreamVideoCallParticipant` object.
+* Adds the newly spawned panel to the `_participantPanels` dictionary using the participant's **SessionId** as key.
 
 Next, add the following `OnParticipantLeft` method:
 ```csharp

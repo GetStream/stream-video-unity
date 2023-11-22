@@ -13,11 +13,23 @@ This is exactly what we'll be doing in this tutorial - we'll setup Audio Rooms t
 
 ---
 
+### Prerequisites
+
+To follow this tutorial, you must install a Unity Editor. We'll use the `2021.3.2f1` LTS version, but any supported Unity version will do just fine. You can check the complete list of supported Unity Editor versions [here](https://getstream.io/video/docs/unity/).
+
+### Step 1 - Download Starting Project
+
+To speed you up, we've prepared a starting **Unity Project** that you can download from our [GitHub repository](https://github.com/GetStream/stream-unity-audio-rooms-tutorial). You can download it using **git** or [click here](https://github.com/GetStream/stream-unity-audio-rooms-tutorial/archive/refs/heads/main.zip) to download the project in a zip file.
+
+Download the project and open it in Unity Editor.
+
+The starting project contains the UI that we will use during this tutorial.
+
+Once you open the project, open the `AudioRoomsTutorial` scene in the `Scenes` folder.
+
 ### Step 1 - Add Stream's Video SDK for Unity
 
-Create a new Unity Project. We'll use the **2021.3.21f1** LTS version for this tutorial, but any supported version should also work fine.
-
-Please follow the [installation section](../01-basics/02-installation.mdx) to see how to import Stream's Video SDK into a Unity Project.
+Follow the [installation section](../01-basics/02-installation.mdx) to see how to import Stream's Video SDK into a Unity Project.
 
 After completing this step, you should see the **Stream Video & Audio Chat SDK** package under **Packages** in the **Project** window.
 
@@ -129,13 +141,11 @@ To run this script, we need a valid **User Token**. A **User Token** is typicall
 
 <TokenSnippet sampleApp='audio-rooms' />
 
-Copy the `api key`, `user id`, and the `user token` from the window above and paste them into the corresponding fields in the `AudioRoomsManager` game object:
+Copy the `api key`, `user id`, and the `user token` from the window above and paste them into the corresponding fields in the `AudioRoomsManager` game object.
+
+Once you run the project (Press the **Play** button in Unity Editor), you should see a log in Unity Console confirming that the user is connected to the stream server:
 
 ![Filled Credentials](../assets/tutorials/audio-room/04.png)
-
-You can run the project by pressing **Play** in the Unity Editor, you should now see a log in Unity Console confirming that the user is connected to the stream server:
-
-![Filled Credentials](../assets/tutorials/video-calls/05-connected-log.png)
 
 ---
 
@@ -191,18 +201,21 @@ public async Task LeaveCallAsync()
 
 Next, we'll create the **UI Manager** script to reference all UI elements and handle user interactions.
 
-1. In the **Scripts** folder, create a new script and call it `AudioRoomsUI.cs`
+1. In the **Scripts** folder, create a new script and call it `UIManager.cs`
 2. Open this script in your code editor and paste the following content:
 ```csharp
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class AudioRoomsUI : MonoBehaviour
+public class UIManager : MonoBehaviour
 {
     // Awake is called automatically by Unity Engine
     private void Awake()
@@ -246,6 +259,12 @@ public class AudioRoomsUI : MonoBehaviour
             Debug.LogException(e);
         }
     }
+    
+    [SerializeField]
+    private ParticipantPanel _participantPanelPrefab;
+    
+    [SerializeField]
+    private Transform _participantsContainer;
     
     [SerializeField]
     private TMP_InputField _callIdInput;
@@ -361,7 +380,7 @@ private async void OnLeaveButtonClicked()
 
 Now, let's add sending audio input captured from our microphone device.
 
-Open the `AudioRoomsUI.cs` in the code editor and add the following method to the class:
+Open the `UIManager.cs` in the code editor and add the following method to the class:
 ```csharp
 private void SetActiveMicrophone(int optionIndex)
 {
@@ -408,7 +427,7 @@ Please refer to [Unity documentation](https://docs.unity3d.com/ScriptReference/M
 
 :::
 
-Next, add this method to the `AudioRoomsUI` class:
+Next, add this method to the `UIManager` class:
 ```csharp
 private void InitMicrophone()
 {
@@ -428,7 +447,7 @@ The code above:
 2. Passes the `AudioSource` to the `_audioRoomsManager.SetInputAudioSource` method. We'll create this method in the next step.
 3. Calls the `SetActiveMicrophone(0);` to capture audio from the first microphone in the dropdown.
 
-Next, add these lines to the end of the `Awake` method in the `AudioRoomsUI` class:
+Next, add these lines to the end of the `Awake` method in the `UIManager` class:
 ```csharp
 // SetActiveMicrophone will be called when a microphone is picked in the dropdown menu
 _microphoneDropdown.onValueChanged.AddListener(SetActiveMicrophone);
@@ -490,55 +509,35 @@ private async void Start()
 
 What changed is that we've added the part highlighted above. It will set the **Audio Input Source** if case when `SetInputAudioSource` was called before the client was created.
 
-### Step 7 - Create UI scene objects
+### Step 7 - Setup `UIManager` references in the inspector
 
-Go to the scene Hierarchy window and create the `Canvas` game object. One way to do this is by selecting the `GameObject -> UI -> Canvas` from the top menu.
+The `UIManager` will interact with UI elements and the prefab asset. Therefore, we must attach all references visible in the inspector window when you select the `UIManager` game object.
 
-![Created Canvas GameObject](../assets/tutorials/audio-room/05.png)
+In case you're wondering how to do this swiftly, you can follow these steps:
+1. Select the `UIManager` game object in the **Hierarchy** window and **lock** the window (Read [Unity Docs](https://docs.unity3d.com/Manual/InspectorOptions.html) on how to lock **Inspector** window)
+2. Use the **Hierarchy's** window search input to search for each game object by name and drag it into the corresponding field in the locked **Inspector** window.
+3. Unlock the **Inspector** window
 
-Now, create these UI elements as child objects of the `Canvas` game object:
+Here's a full list of `UIManager` fields and the corresponding game objects that we want to attach:
+* `Participant Prefab` - This is the only one that we'll drag in from the **Project** window, drag in the **Prefabs/ParticipantPanel** prefab file
+* `Participants Container` - Search for `ParticipantsContainer` in the **Hierarchy** window
+* `Call Id Input` - Search for `CallIdInput` in the **Hierarchy** window
+* `Microphone Dropdown` - Search for the `MicrophoneDropdown` in the **Hierarchy** window
+* `Join Button` - Search for the `JoinButton` in the **Hierarchy** window
+* `Leave Button` - Search for the `LeaveButton` in the **Hierarchy** window
+* `Video Manager` - Search for the `VideoManager` in the **Hierarchy** window
 
-#### Join Button
-1. Right click on **Canvas -> UI -> Button - TextMeshPro**
-2. Rename the button Game Object to `JoinButton`
-3. Select the `JoinButton` Game Object and in the `RectTransform` component set the `Pos X` to `-200` and the `Pos Y` to `25`
-4. Click on child Game Object of the `JoinButton`, and on the `TextMeshPro - Text(UI)` component, change the text to `Join`
+These are the game objects, from the Scene Hierarchy, that should be attached to the `UIManager` script:
+![Game Objects to reference in the scene hierarchy](../assets/tutorials/audio-rooms/07.png)
 
-#### Leave Button
-1. Right click on **Canvas -> UI -> Button - TextMeshPro**
-2. Name the Game Object as `LeaveButton`
-3. In the `RectTransform` component set the `Pos X` to `-200` and the `Pos Y` to `-25`
-4. Click on child Game Object of the `LeaveButton`, and on the `TextMeshPro - Text(UI)` component, change the text to `Leave`
+And on to of the hierarchy game objects, we attach the `Prefabs/ParticipantPanel` prefab file from the Project window.
 
-#### Call ID Input
-1. Right click on **Canvas -> UI -> Input Field - TextMeshPro**
-2. Name the GameObject as `CallIdInput`
-
-#### Microphone Dropdown
-1. Right click on **Canvas -> UI -> Dropdown - TextMeshPro**
-2. Name the GameObject as `MicrophoneDropdown`
-3. In the `RectTransform` component set the `Pos X` to `250` and the `Width` to `300`
-
-![Created Canvas GameObject](../assets/tutorials/audio-room/06.png)
-
-After completing this step you should see the newly created UI elements when switching over to the `Game` window:
-
-![Created Canvas GameObject](../assets/tutorials/audio-room/07b.png)
-
-Now attach the `AudioRoomsUI.cs` script to the `Canvas` game object and in the Inspector window drag references to the:
-* Join Button
-* Leave Button
-* Call Id Input
-* Microphone Dropdown
-* AudioRoomsManager
-
-After completing this step you should now have a `Canvas` object with `AudioRoomsUI` component and all references attached:
-
-![Created Canvas GameObject](../assets/tutorials/audio-room/08b.png)
+After completing this step, your `UIManager` game object should look as below:
+![All references attached in the UIManager script](../assets/tutorials/audio-room/08.png)
 
 **Save the scene.**
 
-Epen the `AudioRoomsManager.cs` script, and add the `JoinCallAsync` and the `LeaveCallAsync` methods:
+Open the `AudioRoomsManager.cs` script, and add the `JoinCallAsync` and the `LeaveCallAsync` methods:
 ```csharp
 public async Task JoinCallAsync(string callId)
 {
@@ -561,18 +560,21 @@ public async Task LeaveCallAsync()
 
 The last important feature to implement is handling **participants** and their **tracks**. Call **participants** are users who joined through one or multiple devices. **Tracks** represent either **Audio** or **Video** data received from a **participant**. In this tutorial, we'll be using audio tracks only.
 
-Let's create a new script, `AudioCallParticipant.cs`:
+Open the `ParticipantPanel.cs` script, located in the **Scripts** folder, and replace it with the following code:
 
 ```csharp
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using UnityEngine;
 
-public class AudioCallParticipant : MonoBehaviour
+public class ParticipantPanel : MonoBehaviour
 {
     public void Init(IStreamVideoCallParticipant participant)
     {
         _participant = participant;
+        
+        // Add debug name so we can see in the Unity Editor which participant this game object represents.
+        gameObject.name = $"Participant - {participant.Name} ({participant.SessionId})";
         
         // Process already available tracks
         foreach (var track in _participant.GetTracks())
@@ -682,30 +684,27 @@ private IStreamVideoCallParticipant _participant;
 
 Next, add the following field to the `AudioRoomsManager` class:
 ```csharp
-private readonly Dictionary<string, AudioCallParticipant> _callParticipantBySessionId
-        = new Dictionary<string, AudioCallParticipant>();
+private readonly Dictionary<string, ParticipantPanel> _callParticipantBySessionId
+        = new Dictionary<string, ParticipantPanel>();
 ```
 
-We'll use this to reference the `AudioCallParticipant` component we'll create for every participant. We keep references in the dictionary where a `SessionId` will be the key. This way, whenever a participant leaves the call, we can easily find and destroy the corresponding game object.
+We'll use this to reference the `ParticipantPanel` component we'll create for every participant. We keep references in the dictionary where a `SessionId` will be the key. This way, whenever a participant leaves the call, we can easily find and destroy the corresponding game object.
 
 Next, add this method to the `AudioRoomsManager` class:
 ```csharp
 private void OnParticipantJoined(IStreamVideoCallParticipant participant)
 {
-    var go = new GameObject();
-    go.name = $"Participant - {participant.Name} ({participant.SessionId})";
-    var callParticipant = go.AddComponent<AudioCallParticipant>();
-    callParticipant.Init(participant);
-    
+    var participantPanel = Instantiate(_participantPanelPrefab, _participantsContainer);
+    participantPanel.Init(participant);
+
     // Save reference by Session ID so we can easily destroy when this participant leaves the call
-    _callParticipantBySessionId.Add(participant.SessionId, callParticipant);
+    _callParticipantBySessionId.Add(participant.SessionId, participantPanel);
 }
 ```
-The `OnParticipantJoined` method will be executed for each call participant. Let's look at this method in more detail:
-1. We create a new Game Object to attach the `AudioCallParticipant` component. We created a new GameObject dynamically, but it's usually better to spawn the game object from a prefab in an actual project.
-2. We generate a name for the Game Object, including the participant's name and the Session ID. Remember that a single user can join multiple times through multiple devices, so `SessionId` is the unique participant identifier, not `UserId`.
-3. We then attach the `AudioCallParticipant` component and call the `callParticipant.Init` method that will handle participant tracks
-4. Lastly, we add a reference to the `AudioCallParticipant` in the dictionary to conveniently destroy it once the participant leaves the call.
+The `OnParticipantJoined` method will be executed for each call participant. It does 3 things:
+* Spawns a new instance of the `ParticipantPanel` prefab.
+* Calls the `ParticipantPanel.Init` method and passes the `IStreamVideoCallParticipant` object.
+* Adds the newly spawned panel to the `_participantPanels` dictionary using the participant's **SessionId** as key.
 
 Next, add the `OnParticipantLeft` method to the `AudioRoomsManager` class:
 ```csharp
@@ -717,17 +716,17 @@ private void OnParticipantLeft(string sessionId, string userid)
         return;
     }
 
-    var audioCallParticipant = _callParticipantBySessionId[sessionId];
+    var ParticipantPanel = _callParticipantBySessionId[sessionId];
     
     // Destroy the game object represeting a participant
-    Destroy(audioCallParticipant.gameObject);
+    Destroy(ParticipantPanel.gameObject);
     
     // Remove entry from the dictionary
     _callParticipantBySessionId.Remove(sessionId);
 }
 ```
 
-The `OnParticipantLeft` will be called whenever a participant leaves the call. We're attempting to find the `AudioCallParticipant` component using the participant's `sessionId` in the `_callParticipantBySessionId` dictionary and destroy its game object.
+The `OnParticipantLeft` will be called whenever a participant leaves the call. We're attempting to find the `ParticipantPanel` component using the participant's `sessionId` in the `_callParticipantBySessionId` dictionary and destroy its game object.
 
 Next, replace the `JoinCallAsync` method with the following code:
 ```csharp

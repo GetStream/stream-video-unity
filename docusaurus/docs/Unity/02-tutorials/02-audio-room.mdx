@@ -651,7 +651,7 @@ public class ParticipantPanel : MonoBehaviour
         if (track is StreamAudioTrack streamAudioTrack)
         {
             // Create AudioSource
-            _audioOutputAudioSource = gameObject.AddComponent<AudioSource>();
+            _audioOutputAudioSource = GetComponent<AudioSource>();
             
             // Set this AudioSource to receive participant's audio stream
             streamAudioTrack.SetAudioSourceTarget(_audioOutputAudioSource);
@@ -767,7 +767,7 @@ The `OnParticipantJoined` method will be executed for each call participant. It 
 
 Next, add the `OnParticipantLeft` method to the `UIManager` class:
 ```csharp
-private void OnParticipantLeft(string sessionId, string userid)
+private void OnParticipantLeft(string sessionId)
 {
     if (!_callParticipantBySessionId.ContainsKey(sessionId))
     {
@@ -794,6 +794,39 @@ _audioRoomsManager.ParticipantJoined += OnParticipantJoined;
 _audioRoomsManager.ParticipantLeft += OnParticipantLeft;
 ```
 This will subscribe to the `AudioRoomsManager` events that we've added earlier and trigger the logic to handle participants joining or leaving the call.
+
+Lastly, replace the `OnLeaveButtonClickedAsync` with the following code:
+```csharp
+private async void OnLeaveButtonClicked()
+{
+    try
+    {
+        await _audioRoomsManager.LeaveCallAsync();
+        
+        foreach (var panel in _callParticipantBySessionId.Values)
+        {
+            Destroy(panel.gameObject);
+        }
+        
+        _callParticipantBySessionId.Clear();
+    }
+    catch (Exception e)
+    {
+        Debug.LogException(e);
+    }
+}
+```
+What was added is this part:
+```csharp
+foreach (var panel in _callParticipantBySessionId.Values)
+{
+    Destroy(panel.gameObject);
+}
+
+_callParticipantBySessionId.Clear();
+```
+
+This will destroy all participant panels after we leave the call and clear the dictionary.
 
 ### Step 11 - Test
 

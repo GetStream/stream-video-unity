@@ -767,7 +767,7 @@ The `OnParticipantJoined` method will be executed for each call participant. It 
 
 Next, add the `OnParticipantLeft` method to the `UIManager` class:
 ```csharp
-private void OnParticipantLeft(string sessionId, string userid)
+private void OnParticipantLeft(string sessionId)
 {
     if (!_callParticipantBySessionId.ContainsKey(sessionId))
     {

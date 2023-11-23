@@ -548,7 +548,7 @@ After completing this step, your `UIManager` game object should look as below:
 
 **Save the scene.**
 
-### Step 8 - Handling call participants
+### Step 8 - Handle call participants
 
 Next open the `AudioRoomsManager.cs` script and apply the following changes:
 
@@ -613,7 +613,7 @@ public async Task LeaveCallAsync()
 
 We've extended the previous implementation with unsubscribing from the `ParticipantJoined` and `ParticipantLeft` events.
 
-### Step 9 - Handling call participants
+### Step 9 - Setup UI view for a call participant
 
 The last important feature to implement is handling **participants** and their **tracks**. Call **participants** are users who joined through one or multiple devices. **Tracks** represent either **Audio** or **Video** data received from a **participant**. In this tutorial, we'll be using audio tracks only.
 

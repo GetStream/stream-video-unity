@@ -550,6 +550,71 @@ After completing this step, your `UIManager` game object should look as below:
 
 ### Step 8 - Handling call participants
 
+Next open the `AudioRoomsManager.cs` script and apply the following changes:
+
+First, add the following events:
+```csharp
+public Action<IStreamVideoCallParticipant> ParticipantJoined;
+public Action<string> ParticipantLeft;
+```
+
+Next, add these 2 methods:
+```csharp
+private void OnParticipantJoined(IStreamVideoCallParticipant participant)
+{
+    ParticipantJoined?.Invoke(participant);
+}
+
+private void OnParticipantLeft(string sessionId, string userid)
+{
+    ParticipantLeft?.Invoke(sessionId);
+}
+```
+
+Next, replace the `JoinCallAsync` method with the following code:
+```csharp
+public async Task JoinCallAsync(string callId)
+{
+    _activeCall = await _client.JoinCallAsync(StreamCallType.Default, callId, create: true, ring: false, notify: false);
+
+    // Handle already present participants
+    foreach (var participant in _activeCall.Participants)
+    {
+        OnParticipantJoined(participant);
+    }
+
+    // Subscribe to events in order to react to participant joining or leaving the call
+    _activeCall.ParticipantJoined += OnParticipantJoined;
+    _activeCall.ParticipantLeft += OnParticipantLeft;
+}
+```
+
+The above code extends the previous implementation with:
+1. Calling `OnParticipantJoined` for each participant that's already present on the call - `_activeCall.Participants`.
+2. Subscribing to `ParticipantJoined` and `ParticipantLeft` events so we get notified whenever a participant joins or leaves the call.
+
+Lastly, replace the `LeaveCallAsync` method with:
+```csharp
+public async Task LeaveCallAsync()
+{
+    if (_activeCall == null)
+    {
+        Debug.LogWarning("Leave request ignored. There is no active call to leave.");
+        return;
+    }
+    
+    // Unsubscribe from events 
+    _activeCall.ParticipantJoined -= OnParticipantJoined;
+    _activeCall.ParticipantLeft -= OnParticipantLeft;
+    
+    await _activeCall.LeaveAsync();
+}
+```
+
+We've extended the previous implementation with unsubscribing from the `ParticipantJoined` and `ParticipantLeft` events.
+
+### Step 9 - Handling call participants
+
 The last important feature to implement is handling **participants** and their **tracks**. Call **participants** are users who joined through one or multiple devices. **Tracks** represent either **Audio** or **Video** data received from a **participant**. In this tutorial, we'll be using audio tracks only.
 
 Open the `ParticipantPanel.cs` script, located in the **Scripts** folder, and replace it with the following code:
@@ -672,9 +737,11 @@ private AudioSource _audioOutputAudioSource;
 private IStreamVideoCallParticipant _participant;
 ```
 
----
+### Step 10 - Add UI logic to handle call participants
 
-Next, add the following field to the `UIManager` class:
+Open the `UIManager.cs` in your code editor and make the following changes:
+
+Add this field to the class:
 ```csharp
 private readonly Dictionary<string, ParticipantPanel> _callParticipantBySessionId
         = new Dictionary<string, ParticipantPanel>();
@@ -708,10 +775,10 @@ private void OnParticipantLeft(string sessionId, string userid)
         return;
     }
 
-    var ParticipantPanel = _callParticipantBySessionId[sessionId];
+    var participantPanel = _callParticipantBySessionId[sessionId];
     
     // Destroy the game object represeting a participant
-    Destroy(ParticipantPanel.gameObject);
+    Destroy(participantPanel.gameObject);
     
     // Remove entry from the dictionary
     _callParticipantBySessionId.Remove(sessionId);
@@ -720,80 +787,15 @@ private void OnParticipantLeft(string sessionId, string userid)
 
 The `OnParticipantLeft` will be called whenever a participant leaves the call. We're attempting to find the `ParticipantPanel` component using the participant's `sessionId` in the `_callParticipantBySessionId` dictionary and destroy its game object.
 
----
-
-Next open the `AudioRoomsManager.cs` script and apply the following changes:
-
-First, add the following events:
+Next, add these 2 lines anywhere in the `Awake` method:
 ```csharp
-public Action<IStreamVideoCallParticipant> ParticipantJoined;
-public Action<string> ParticipantLeft;
+// Subscribe to events so we can react to changing participants in the call
+_audioRoomsManager.ParticipantJoined += OnParticipantJoined;
+_audioRoomsManager.ParticipantLeft += OnParticipantLeft;
 ```
+This will subscribe to the `AudioRoomsManager` events that we've added earlier and trigger the logic to handle participants joining or leaving the call.
 
-Next, add these 2 methods:
-```csharp
-private void OnParticipantJoined(IStreamVideoCallParticipant participant)
-{
-    ParticipantJoined?.Invoke(participant);
-}
-
-private void OnParticipantLeft(string sessionId, string userid)
-{
-    ParticipantLeft?.Invoke(sessionId);
-}
-```
-
-Next, replace the `JoinCallAsync` method with the following code:
-```csharp
-public async Task JoinCallAsync(string callId)
-{
-    _activeCall = await _client.JoinCallAsync(StreamCallType.Default, callId, create: true, ring: false, notify: false);
-
-    // Handle already present participants
-    foreach (var participant in _activeCall.Participants)
-    {
-        OnParticipantJoined(participant);
-    }
-
-    // Subscribe to events in order to react to participant joining or leaving the call
-    _activeCall.ParticipantJoined += OnParticipantJoined;
-    _activeCall.ParticipantLeft += OnParticipantLeft;
-}
-```
-
-The above code extends the previous implementation with:
-1. Calling `OnParticipantJoined` for each participant that's already present on the call - `_activeCall.Participants`.
-2. Subscribing to `ParticipantJoined` and `ParticipantLeft` events so we get notified whenever a participant joins or leaves the call.
-
-Lastly, replace the `LeaveCallAsync` method with:
-```csharp
-public async Task LeaveCallAsync()
-{
-    if (_activeCall == null)
-    {
-        Debug.LogWarning("Leave request ignored. There is no active call to leave.");
-        return;
-    }
-    
-    // Unsubscribe from events
-    _activeCall.ParticipantJoined -= OnParticipantJoined;
-    _activeCall.ParticipantLeft -= OnParticipantLeft;
-
-    await _activeCall.LeaveAsync();
-    
-    // Destroy all call participants objects
-    foreach (var participant in _callParticipantBySessionId.Values)
-    {
-        Destroy(participant.gameObject);
-    }
-    
-    _callParticipantBySessionId.Clear();
-}
-```
-
-We've extended the previous implementation with unsubscribing from the `ParticipantJoined` and `ParticipantLeft` events.
-
-### Step 9 - Test
+### Step 11 - Test
 
 We're now ready to test the app! To test it, we need two instances of the app. Each running instance of the app will use a microphone and a speaker. This may result in a permission conflict if multiple applications attempt to use the microphone and camera simultaneously. Therefore, a good way to test it is by using your PC and a smartphone. Depending on what type of device you have, you can follow the [Android](../04-platforms/02-android.mdx) or [IOS](../04-platforms/03-ios.mdx) sections to learn how to build the app for mobile platforms.
 

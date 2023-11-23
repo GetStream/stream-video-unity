@@ -651,7 +651,7 @@ public class ParticipantPanel : MonoBehaviour
         if (track is StreamAudioTrack streamAudioTrack)
         {
             // Create AudioSource
-            _audioOutputAudioSource = gameObject.AddComponent<AudioSource>();
+            _audioOutputAudioSource = GetComponent<AudioSource>();
             
             // Set this AudioSource to receive participant's audio stream
             streamAudioTrack.SetAudioSourceTarget(_audioOutputAudioSource);

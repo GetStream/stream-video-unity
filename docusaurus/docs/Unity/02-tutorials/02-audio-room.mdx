@@ -674,7 +674,7 @@ private IStreamVideoCallParticipant _participant;
 
 ---
 
-Next, add the following field to the `AudioRoomsManager` class:
+Next, add the following field to the `UIManager` class:
 ```csharp
 private readonly Dictionary<string, ParticipantPanel> _callParticipantBySessionId
         = new Dictionary<string, ParticipantPanel>();
@@ -682,7 +682,7 @@ private readonly Dictionary<string, ParticipantPanel> _callParticipantBySessionI
 
 We'll use this to reference the `ParticipantPanel` component we'll create for every participant. We keep references in the dictionary where a `SessionId` will be the key. This way, whenever a participant leaves the call, we can easily find and destroy the corresponding game object.
 
-Next, add this method to the `AudioRoomsManager` class:
+Next, add this method to the `UIManager` class:
 ```csharp
 private void OnParticipantJoined(IStreamVideoCallParticipant participant)
 {
@@ -698,7 +698,7 @@ The `OnParticipantJoined` method will be executed for each call participant. It 
 * Calls the `ParticipantPanel.Init` method and passes the `IStreamVideoCallParticipant` object.
 * Adds the newly spawned panel to the `_participantPanels` dictionary using the participant's **SessionId** as key.
 
-Next, add the `OnParticipantLeft` method to the `AudioRoomsManager` class:
+Next, add the `OnParticipantLeft` method to the `UIManager` class:
 ```csharp
 private void OnParticipantLeft(string sessionId, string userid)
 {
@@ -719,6 +719,29 @@ private void OnParticipantLeft(string sessionId, string userid)
 ```
 
 The `OnParticipantLeft` will be called whenever a participant leaves the call. We're attempting to find the `ParticipantPanel` component using the participant's `sessionId` in the `_callParticipantBySessionId` dictionary and destroy its game object.
+
+---
+
+Next open the `AudioRoomsManager.cs` script and apply the following changes:
+
+First, add the following events:
+```csharp
+public Action<IStreamVideoCallParticipant> ParticipantJoined;
+public Action<string> ParticipantLeft;
+```
+
+Next, add these 2 methods:
+```csharp
+private void OnParticipantJoined(IStreamVideoCallParticipant participant)
+{
+    ParticipantJoined?.Invoke(participant);
+}
+
+private void OnParticipantLeft(string sessionId, string userid)
+{
+    ParticipantLeft?.Invoke(sessionId);
+}
+```
 
 Next, replace the `JoinCallAsync` method with the following code:
 ```csharp

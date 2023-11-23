@@ -26,8 +26,6 @@ Download the project and open it in Unity Editor.
 
 The starting project contains the UI that we will use during this tutorial.
 
-Once you open the project, open the `VideoCallingTutorial` scene in the `Scenes` folder.
-
 ### Step 1 - Add Stream's Video SDK for Unity
 
 Follow the [installation section](../01-basics/02-installation.mdx) to see how to import Stream's Video SDK into a Unity Project.
@@ -38,10 +36,10 @@ After completing this step, you should see the **Stream Video & Audio Chat SDK**
 
 ### Step 3 - Setup Video Manager
 
-1. Go to the **Project** window
-2. Navigate to **Assets -> Scripts ** folder
-3. Create a new script file, and call it `VideoManager.cs`
-4. Open the `VideoManager.cs` in your code editor, and replace it with the following script:
+1. Open the `VideoCallingTutorial` scene in the `Scenes` folder
+2. In the the **Project** window, navigate to **Assets -> Scripts** folder
+3. Create a new script file, and name it `VideoManager.cs`
+4. Open the `VideoManager.cs` in your code editor and replace it with the following script:
 
 ```csharp
 using System;
@@ -264,7 +262,7 @@ public class UIManager : MonoBehaviour
 4. Select the `UIManager` game object and attach the `UIManager.cs` script to it.
 5. Save the scene
 
-You should now have a `UIManager` game object with `UIManager.cs` script attach to it:
+You should now have a `UIManager` game object with `UIManager.cs` script attached to it:
 ![UI Manager](../assets/tutorials/video-calls/06.png)
 
 ### Step 7 - Setup `UIManager` references in the inspector

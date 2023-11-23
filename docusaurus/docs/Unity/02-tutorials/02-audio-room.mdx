@@ -11,6 +11,8 @@ Although we called our product "Video SDK" please note that you can use audio on
 
 This is exactly what we'll be doing in this tutorial - we'll setup Audio Rooms to which users can join and talk to each other. This is a very similar use case to when you'd want to implement a Voice Chat for a game session participants.
 
+![Audio Rooms App Preview](../assets/tutorials/audio-room/audio_rooms_tutorial_app_preview.png)
+
 ---
 
 ### Prerequisites
@@ -25,8 +27,6 @@ Download the project and open it in Unity Editor.
 
 The starting project contains the UI that we will use during this tutorial.
 
-Once you open the project, open the `AudioRoomsTutorial` scene in the `Scenes` folder.
-
 ### Step 1 - Add Stream's Video SDK for Unity
 
 Follow the [installation section](../01-basics/02-installation.mdx) to see how to import Stream's Video SDK into a Unity Project.
@@ -39,10 +39,10 @@ After completing this step, you should see the **Stream Video & Audio Chat SDK**
 
 ### Step 2 - Create the Audio Client instance
 
-1. Go to the **Project** window
-2. In the **Assets** folder, create a new folder called **Scripts**
-3. Inside the **Scripts** folder, create a new script file and call it `AudioRoomsManager.cs`
-4. Open the `AudioRoomsManager.cs` script in your code editor and replace the contents with the following script:
+1. Open the `AudioRoomsTutorial` scene in the `Scenes` folder
+2. In the the **Project** window, navigate to **Assets -> Scripts** folder
+3. Create a new script file and name it `AudioRoomsManager.cs`
+4. Open the `AudioRoomsManager.cs` in your code editor and replace it with the following script:
 ```csharp
 using System;
 using System.Threading.Tasks;
@@ -88,7 +88,7 @@ public class AudioRoomsManager : MonoBehaviour
 
 Let's go through this script step by step.
 
-These fields allow us to set the authorization variables(**api key**, **user id** and the **user token**). They're essential to establish a connection for a user.
+These fields allow us to set the authorization variables(**api key**, **user id** and the **user token**). They're essential to establish a connection for a user:
 ```csharp
 [SerializeField]
 private string _apiKey;
@@ -100,7 +100,7 @@ private string _userId;
 private string _userToken;
 ```
 
-This line instantiates the client for **the Stream's Video & Audio SDK**:
+This line instantiates the client for the **Stream's Video & Audio SDK**:
 ```csharp
 _client = StreamVideoClient.CreateDefaultClient();
 ```
@@ -376,6 +376,16 @@ private async void OnLeaveButtonClicked()
 }
 ```
 
+---
+
+Next:
+1. In Unity Editor, go to the **Hierarchy** window, create a new empty game object, and call it `UIManager`.
+2. Select the `UIManager` game object and attach the `UIManager.cs` script to it.
+3. Save the scene
+
+You should now have a `UIManager` game object with `UIManager.cs` script attached to it:
+![UI Manager](../assets/tutorials/audio-room/06.png)
+
 ### Step 6 - Capture Microphone Input
 
 Now, let's add sending audio input captured from our microphone device.
@@ -403,7 +413,7 @@ private void SetActiveMicrophone(int optionIndex)
 
 The `SetActiveMicrophone` method will be called whenever a user picks a new microphone device from the dropdown. The `optionIndex` argument will be provided by the dropdown `onValueChanged` event as we'll soon see.
 
-Let's go through the content of this method line by line.
+Let's go through the content of this method in more detail.
 
 We need the microphone device name to interact with the **Microphone** in Unity. Because the `onValueChanged` event from a dropdown provides an index of the selected option only, we use this index to retrieve the actual device name:
 ```csharp
@@ -419,7 +429,7 @@ if (_activeMicrophoneDevice != null)
 }
 ```
 
-We use Unity's `Microphone.Start` method to capture the audio from the microphone device and stream it into the `_microphoneAudioSource` AudioSource component. We'll later set the `microphoneAudioSource` component as an audio input source.
+We use Unity's `Microphone.Start` method to capture the audio from the microphone device and stream it into the `_microphoneAudioSource` AudioSource component.
 
 :::note
 
@@ -507,7 +517,7 @@ private async void Start()
 }
 ```
 
-What changed is that we've added the part highlighted above. It will set the **Audio Input Source** if case when `SetInputAudioSource` was called before the client was created.
+What changed is that we've added the part highlighted above. It will set the **Audio Input Source** if the `SetInputAudioSource` method was called before the client was created.
 
 ### Step 7 - Setup `UIManager` references in the inspector
 

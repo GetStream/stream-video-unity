@@ -547,25 +547,6 @@ After completing this step, your `UIManager` game object should look as below:
 
 **Save the scene.**
 
-Open the `AudioRoomsManager.cs` script, and add the `JoinCallAsync` and the `LeaveCallAsync` methods:
-```csharp
-public async Task JoinCallAsync(string callId)
-{
-    _activeCall = await _client.JoinCallAsync(StreamCallType.AudioRoom, callId, create: true, ring: false, notify: false);
-}
-
-public async Task LeaveCallAsync()
-{
-    if (_activeCall == null)
-    {
-        Debug.LogWarning("Leave request ignored. There is no active call to leave.");
-        return;
-    }
-
-    await _activeCall.LeaveAsync();
-}
-```
-
 ### Step 8 - Handling call participants
 
 The last important feature to implement is handling **participants** and their **tracks**. Call **participants** are users who joined through one or multiple devices. **Tracks** represent either **Audio** or **Video** data received from a **participant**. In this tutorial, we'll be using audio tracks only.

@@ -72,6 +72,12 @@ activeCamera.Play();
 _client.SetCameraInputSource(activeCamera);
 ```
 
+:::note
+
+For Android, if you're setting the **WebCamTexture** resolution, you need to set the resolution as a multiple of 16x16 as required by webRTC
+
+:::
+
 Please refer to Unity's documentation for more information on how to use **Camera** devices:
 * [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html)
 * [WebCamTexture.devices](https://docs.unity3d.com/ScriptReference/WebCamTexture-devices.html)

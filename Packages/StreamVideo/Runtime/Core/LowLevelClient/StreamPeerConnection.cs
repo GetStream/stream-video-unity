@@ -102,7 +102,9 @@ namespace StreamVideo.Core.LowLevelClient
 
         public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer)
         {
+#if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] Set LocalDesc:\n" + offer.sdp);
+#endif
             return _peerConnection.SetLocalDescriptionAsync(ref offer);
         }
 
@@ -110,8 +112,10 @@ namespace StreamVideo.Core.LowLevelClient
         {
             await _peerConnection.SetRemoteDescriptionAsync(ref offer);
 
+#if STREAM_DEBUG_ENABLED
             _logs.Warning(
                 $"[{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer:\n{offer.sdp}");
+#endif
 
             foreach (var iceCandidate in _pendingIceCandidates)
             {
@@ -124,8 +128,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void AddIceCandidate(RTCIceCandidateInit iceCandidateInit)
         {
+#if STREAM_DEBUG_ENABLED
             _logs.Warning(
                 $"[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
+#endif
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
             {
@@ -189,12 +195,16 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnIceConnectionChange(RTCIceConnectionState state)
         {
+#if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnIceConnectionChange to: " + state);
+#endif
         }
 
         private void OnIceGatheringStateChange(RTCIceGatheringState state)
         {
+#if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnIceGatheringStateChange to: " + state);
+#endif
         }
 
         private void OnNegotiationNeeded()
@@ -209,12 +219,16 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnConnectionStateChange(RTCPeerConnectionState state)
         {
+#if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnConnectionStateChange to: {state}");
+#endif
         }
 
         private void OnTrack(RTCTrackEvent trackEvent)
         {
+#if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnTrack {trackEvent.Track.GetType()}");
+#endif
 
             foreach (var stream in trackEvent.Streams)
             {
@@ -354,7 +368,9 @@ namespace StreamVideo.Core.LowLevelClient
                         rid = "q"
                     };
 
+#if STREAM_DEBUG_ENABLED
                     Debug.LogWarning($"Rid values: {fullQuality.rid}, {halfQuality.rid}, {quarterQuality.rid}");
+#endif
 
                     //StreamTodo: temporarily disabled because simulcast is not working with current Unity's WebRTC lib
                     yield return quarterQuality;
@@ -383,8 +399,10 @@ namespace StreamVideo.Core.LowLevelClient
                 texture = _publisherVideoTrackTexture;
             }
 
+#if STREAM_DEBUG_ENABLED
             Debug.LogWarning(
                 $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
+#endif
 
             return new VideoStreamTrack(_mediaInputProvider.VideoInput);
         }
@@ -429,10 +447,12 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
+#if STREAM_DEBUG_ENABLED
             foreach (var c in forcedCodecs)
             {
                 _logs.Info($"Forced Codec of kind `{kind}`: {c.mimeType}, ");
             }
+#endif
 
             var error = transceiver.SetCodecPreferences(forcedCodecs.ToArray());
             if (error != RTCErrorType.None)

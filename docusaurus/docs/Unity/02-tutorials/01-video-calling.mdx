@@ -859,7 +859,7 @@ private void OnCameraDeviceChanged(int deviceIndex)
     var cameraDeviceName = _cameraDropdown.options[deviceIndex].text;
     
     // Stream camera input into WebCamTexture component 
-    _activeCamera = new WebCamTexture(cameraDeviceName, 1920, 1080, 30);
+    _activeCamera = new WebCamTexture(cameraDeviceName);
     _activeCamera.Play();
     
     // Set this WebCamTexture to be the input for our local user video

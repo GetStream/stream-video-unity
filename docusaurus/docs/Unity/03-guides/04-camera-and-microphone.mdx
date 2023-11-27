@@ -62,12 +62,8 @@ They way you start streaming video from a camera device is by creating a `WebCam
 // Obtain a camera device
 var cameraDevice = WebCamTexture.devices.First();
 
-var width = 1920;
-var height = 1080;
-var fps = 30;
-
 // Use device name to create a new WebCamTexture instance
-var activeCamera = new WebCamTexture(cameraDevice.name, width, height, fps);
+var activeCamera = new WebCamTexture(cameraDevice.name);
 
 // Call Play() in order to start capturing the video
 activeCamera.Play();

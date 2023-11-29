@@ -62,12 +62,8 @@ They way you start streaming video from a camera device is by creating a `WebCam
 // Obtain a camera device
 var cameraDevice = WebCamTexture.devices.First();
 
-var width = 1920;
-var height = 1080;
-var fps = 30;
-
 // Use device name to create a new WebCamTexture instance
-var activeCamera = new WebCamTexture(cameraDevice.name, width, height, fps);
+var activeCamera = new WebCamTexture(cameraDevice.name);
 
 // Call Play() in order to start capturing the video
 activeCamera.Play();
@@ -75,6 +71,12 @@ activeCamera.Play();
 // Set WebCamTexture in Stream's Client - this WebCamTexture will be the video source in video calls
 _client.SetCameraInputSource(activeCamera);
 ```
+
+:::note
+
+For Android, if you're setting the **WebCamTexture** resolution, you need to set the resolution as a multiple of 16x16 as required by webRTC
+
+:::
 
 Please refer to Unity's documentation for more information on how to use **Camera** devices:
 * [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html)

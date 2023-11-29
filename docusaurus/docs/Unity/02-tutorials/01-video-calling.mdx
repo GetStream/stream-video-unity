@@ -159,15 +159,17 @@ Copy the `api key`, `user id`, and the `user token` from the window above and pa
 
 ![Filled Credentials](../assets/tutorials/video-calls/05.png)
 
+Save the scene.
+
 Once you run the project (Press the **Play** button in Unity Editor), you should see a log in Unity Console confirming that the user is connected to the stream server:
 
 ![Filled Credentials](../assets/tutorials/video-calls/05-connected-log.png)
 
 ---
 
-### Step 5 - Add methods to `Join` and `Leave` a call
+### Step 5 - Add methods to Join and Leave a call
 
-In this step, we'll add methods to `Join` and `Leave` the call - these will be called from our UI when the user clicks on the `Join` and `Leave` buttons.
+In this step, we'll add methods to **Join** and **Leave** the call - these will be called from our UI when the user clicks on the `Join` and `Leave` buttons.
 
 Open the `VideoManager.cs` script and apply the following changes:
 
@@ -263,11 +265,13 @@ public class UIManager : MonoBehaviour
 5. Save the scene
 
 You should now have a `UIManager` game object with `UIManager.cs` script attached to it:
-![UI Manager](../assets/tutorials/video-calls/06.png)
+![UI Manager script attached to a game object](../assets/tutorials/video-calls/06.png)
 
 ### Step 7 - Setup `UIManager` references in the inspector
 
-The `UIManager` will interact with UI elements and the prefab asset. Therefore, we must attach all references visible in the inspector window when you select the `UIManager` game object.
+The `UIManager` will use the scene UI elements and the prefab asset. Therefore, we must attach all references visible in the **Inspector** window when you select the `UIManager` game object:
+
+![Game Objects from the scene hierarchy](../assets/tutorials/video-calls/05.png)
 
 In case you're wondering how to do this swiftly, you can follow these steps:
 1. Select the `UIManager` game object in the **Hierarchy** window and **lock** the window (Read [Unity Docs](https://docs.unity3d.com/Manual/InspectorOptions.html) on how to lock **Inspector** window)
@@ -283,13 +287,15 @@ Here's a full list of `UIManager` fields and the corresponding game objects that
 * `Leave Button` - Search for the `LeaveButton` in the **Hierarchy** window
 * `Video Manager` - Search for the `VideoManager` in the **Hierarchy** window
 
-These are the game objects, from the Scene Hierarchy, that should be attached to the `UIManager` script:
+These are the game objects, from the Scene Hierarchy, that need to be attached to the `UIManager` script:
 ![References Scene Hierarchy Game Object](../assets/tutorials/video-calls/08.png)
 
-And on to of the hierarchy game objects, we attach the `Prefabs/ParticipantPanel` prefab file from the Project window.
+Also, from the project files, we attach the `Prefabs/ParticipantPanel` prefab:
+
+![Prefab from the project files](../assets/tutorials/video-calls/05b.png)
 
 After completing this step, your `UIManager` game object should look as below:
-![UI Manager](../assets/tutorials/video-calls/07.png)
+![UI Manager with all references assigned](../assets/tutorials/video-calls/07.png)
 
 ### Step 8 - Add the UI logic
 
@@ -331,7 +337,7 @@ private async void OnLeaveButtonClickedAsync()
 }
 ```
 
-The `OnJoinButtonClickedAsync` method calls the **VideoManager's** `JoinCallAsync` method. Once the `JoinCallAsync` method is awaited, it means that we have joined a call. We then update the UI to reflect this state -> hide the **join* button and show the **leave** button.
+The `OnJoinButtonClickedAsync` method calls the **VideoManager's** `JoinCallAsync` method. Once the `JoinCallAsync` method is awaited, it means that we have joined a call. We then update the UI to reflect this state -> hide the **join** button and show the **leave** button.
 
 The `OnLeaveButtonClickedAsync` method calls the **VideoManager's** `LeaveCallAsync` method and once it's awaited, it will also update the UI and show the **join** button and hide the **leave** button.
 
@@ -462,8 +468,6 @@ What we did here:
 * Subscribe to the `call.ParticipantJoined` event - triggered whenever a new participant joins the call
 * Subscribe to the `call.ParticipantLeft` event - triggered whenever a participant leaves the call
 
-Our current implementation doesn't handle the `ParticipantJoined` and the `ParticipantLeft` events yet - it only propagates them. This is a common pattern that provides a separation of concerns between the business logic and the UI layer. In later steps, we'll handle these events in the `UIManager` class.
-
 Next, replace the `LeaveCallAsync` method with the following code:
 ```csharp
 public async Task LeaveCallAsync()
@@ -483,6 +487,8 @@ public async Task LeaveCallAsync()
 ```
 
 We've extended the `LeaveCallAsync` method to unsubscribe from events when we're leaving the call.
+
+Our current implementation doesn't handle the `ParticipantJoined` and the `ParticipantLeft` events yet - it only propagates them. This is a common pattern that provides a separation of concerns between the business logic and the UI layer. In later steps, we'll handle these events in the `UIManager` class.
 
 ### Step 10 - Setup UI view for a call participant
 
@@ -576,7 +582,7 @@ public void Init(IStreamVideoCallParticipant participant)
 
 What the `Init` method does:
 * Iterates with a foreach loop over the available tracks. The `OnTrackAdded` method is called for each track - this method will handle receiving video or audio data from the track.
-* Subscribe to the `TrackAdded` event - this way we'll also handle tracks that were added later in the call.
+* Subscribes to the `TrackAdded` event - this way we'll also handle tracks that were added later in the call.
 
 Next, is the `OnTrackAdded` method that handles receiving data from the track:
 * If the track is of `StreamAudioTrack` type, we get the `AudioSource` reference and call `streamAudioTrack.SetAudioSourceTarget(audioSource);` in order to start receiving audio data into this `AudioSource` component.
@@ -666,6 +672,8 @@ private void OnParticipantLeft(string sessionId)
     {
         Destroy(participantPanel.gameObject);
     }
+    
+    _participantPanels.Remove(sessionId);
 }
 ```
 
@@ -845,7 +853,7 @@ private void OnMicrophoneDeviceChanged(int deviceIndex)
 
 This method will start capturing the microphone input from a selected microphone device. The `deviceIndex` argument will be provided by Unity's dropdown `onValueChanged` event and will represent the index of the dropdown option that was selected.
 
-Next, add a this method that will handle the camera device:
+Next, add this method that will handle the camera device:
 ```csharp
 private void OnCameraDeviceChanged(int deviceIndex)
 {
@@ -859,7 +867,7 @@ private void OnCameraDeviceChanged(int deviceIndex)
     var cameraDeviceName = _cameraDropdown.options[deviceIndex].text;
     
     // Stream camera input into WebCamTexture component 
-    _activeCamera = new WebCamTexture(cameraDeviceName, 1920, 1080, 30);
+    _activeCamera = new WebCamTexture(cameraDeviceName);
     _activeCamera.Play();
     
     // Set this WebCamTexture to be the input for our local user video
@@ -906,7 +914,7 @@ _microphoneDropdown.onValueChanged.AddListener(OnMicrophoneDeviceChanged);
 _cameraDropdown.onValueChanged.AddListener(OnCameraDeviceChanged);
 ```
 
-Lastly, we call the `OnMicrophoneDeviceChanged` & `OnCameraDeviceChanged` methods providing `0` as a `deviceIndex` argument so that we start capturing the input from the first device from the list. This is reasonable default behaviour:
+Lastly, we call the `OnMicrophoneDeviceChanged` & `OnCameraDeviceChanged` methods providing `0` as a `deviceIndex` argument so that we start capturing the input from the first device from the list. This is a reasonable default behaviour:
 ```csharp
 // Start capturing audio & video from the default device that is first on the list
 OnMicrophoneDeviceChanged(0);

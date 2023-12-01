@@ -247,13 +247,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (_mediaInputProvider.AudioInput == null)
             {
-                if (_audioTrack != null)
-                {
-                    PublisherAudioMediaStream.RemoveTrack(_audioTrack);
-                    _peerConnection.RemoveTrack(_audioTransceiver.Sender);
-                    _audioTrack = null;
-                }
-
+                TryClearAudioTrack();
                 return;
             }
 
@@ -265,18 +259,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             var newAudioTrack = CreatePublisherAudioTrack();
 
-            if (_audioTrack != null)
-            {
-                PublisherAudioMediaStream.RemoveTrack(_audioTrack);
-                _peerConnection.RemoveTrack(_audioTransceiver.Sender);
-
-            }
-
-            PublisherAudioMediaStream.AddTrack(newAudioTrack);
-
-            //StreamTodo: check if this line is needed
-            _peerConnection.AddTrack(newAudioTrack, PublisherAudioMediaStream);
-            _audioTrack = newAudioTrack;
+            TryClearAudioTrack();
+            SetActiveAudioTrack(newAudioTrack);
         }
 
         private void OnVideoInputChanged(WebCamTexture webCamTexture)
@@ -285,6 +269,11 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 CreatePublisherVideoTransceiver();
             }
+        }
+
+        private void OnVideoSceneInputChanged(Camera camera)
+        {
+            //StreamTodo: Implement OnVideoSceneInputChanged
         }
 
         private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind)
@@ -312,18 +301,36 @@ namespace StreamVideo.Core.LowLevelClient
             _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
 
             PublisherAudioMediaStream = new MediaStream();
-            
-            _audioTrack = CreatePublisherAudioTrack();
 
-            PublisherAudioMediaStream.AddTrack(_audioTrack);
-            
-            //StreamTodo: check if this line is needed
-            _peerConnection.AddTrack(_audioTrack, PublisherAudioMediaStream);
+            var audioTrack = CreatePublisherAudioTrack();
+            SetActiveAudioTrack(audioTrack);
 
             if (_audioConfig.EnableRed)
             {
                 ForceCodec(_audioTransceiver, AudioCodecKeyRed, TrackKind.Audio);
             }
+        }
+
+        private void SetActiveAudioTrack(AudioStreamTrack audioTrack)
+        {
+            PublisherAudioMediaStream.AddTrack(_audioTrack);
+
+            //StreamTodo: check if this line is needed
+            _peerConnection.AddTrack(_audioTrack, PublisherAudioMediaStream);
+
+            _audioTrack = audioTrack;
+        }
+
+        private void TryClearAudioTrack()
+        {
+            if (_audioTrack == null)
+            {
+                return;
+            }
+
+            PublisherAudioMediaStream.RemoveTrack(_audioTrack);
+            _peerConnection.RemoveTrack(_audioTransceiver.Sender);
+            _audioTrack = null;
         }
 
         private void CreatePublisherVideoTransceiver()
@@ -445,10 +452,7 @@ namespace StreamVideo.Core.LowLevelClient
             return track;
         }
 
-        private AudioStreamTrack CreatePublisherAudioTrack()
-        {
-            return new AudioStreamTrack(_mediaInputProvider.AudioInput);
-        }
+        private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack(_mediaInputProvider.AudioInput);
 
         private void ForceCodec(RTCRtpTransceiver transceiver, string codecKey, TrackKind kind)
         {

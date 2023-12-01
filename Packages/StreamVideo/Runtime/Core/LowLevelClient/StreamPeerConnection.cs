@@ -242,37 +242,41 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
         }
-        
+
         private void OnAudioInputChanged(AudioSource audio)
         {
-            //StreamTodo: if we change the audio input during the call we should probably not re-create the transceiver but just add new track with new input source and remove the previous audio track
-
             if (_mediaInputProvider.AudioInput == null)
             {
+                if (_audioTrack != null)
+                {
+                    PublisherAudioMediaStream.RemoveTrack(_audioTrack);
+                    _peerConnection.RemoveTrack(_audioTransceiver.Sender);
+                    _audioTrack = null;
+                }
+
                 return;
             }
-            
+
             if (_audioTransceiver == null)
             {
                 CreatePublisherAudioTransceiver();
+                return;
             }
-            else
+
+            var newAudioTrack = CreatePublisherAudioTrack();
+
+            if (_audioTrack != null)
             {
-                var newAudioTrack = CreatePublisherAudioTrack();
-                
                 PublisherAudioMediaStream.RemoveTrack(_audioTrack);
                 _peerConnection.RemoveTrack(_audioTransceiver.Sender);
-                
-                PublisherAudioMediaStream.AddTrack(newAudioTrack);
-            
-                //StreamTodo: check if this line is needed
-                _peerConnection.AddTrack(newAudioTrack, PublisherAudioMediaStream);
-            }
-        }
 
-        private void OnVideoSceneInputChanged(Camera camera)
-        {
-            //StreamTodo: Implement OnVideoSceneInputChanged
+            }
+
+            PublisherAudioMediaStream.AddTrack(newAudioTrack);
+
+            //StreamTodo: check if this line is needed
+            _peerConnection.AddTrack(newAudioTrack, PublisherAudioMediaStream);
+            _audioTrack = newAudioTrack;
         }
 
         private void OnVideoInputChanged(WebCamTexture webCamTexture)

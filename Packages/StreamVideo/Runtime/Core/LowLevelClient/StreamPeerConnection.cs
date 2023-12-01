@@ -49,7 +49,7 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider = mediaInputProvider ?? throw new ArgumentNullException(nameof(mediaInputProvider));
             _peerType = peerType;
             _audioConfig = audioConfig ?? throw new ArgumentNullException(nameof(audioConfig));
-            
+
             _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged += OnVideoInputChanged;
@@ -161,7 +161,7 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
-            
+
             _peerConnection.OnIceCandidate -= OnIceCandidate;
             _peerConnection.OnIceConnectionChange -= OnIceConnectionChange;
             _peerConnection.OnIceGatheringStateChange -= OnIceGatheringStateChange;
@@ -184,12 +184,14 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IStreamAudioConfig _audioConfig;
 
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
-        
+
         private RTCRtpTransceiver _videoTransceiver;
         private RTCRtpTransceiver _audioTransceiver;
 
         private VideoStreamTrack _videoStreamTrack;
         private RenderTexture _publisherVideoTrackTexture;
+        private AudioStreamTrack _audioTrack;
+        private VideoStreamTrack _videoTrack;
 
         private void OnIceCandidate(RTCIceCandidate candidate) => IceTrickled?.Invoke(candidate, _peerType);
 
@@ -241,26 +243,49 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
         }
-        
+
         private void OnAudioInputChanged(AudioSource audio)
         {
-            if (_mediaInputProvider.AudioInput != null)
+            if (_mediaInputProvider.AudioInput == null)
+            {
+                TryClearAudioTrack();
+                return;
+            }
+
+            if (_audioTransceiver == null)
             {
                 CreatePublisherAudioTransceiver();
+                return;
+            }
+
+            var newAudioTrack = CreatePublisherAudioTrack();
+
+            TryClearAudioTrack();
+            SetActiveAudioTrack(newAudioTrack);
+        }
+
+        private void OnVideoInputChanged(WebCamTexture webCamTexture)
+        {
+            if (_mediaInputProvider.VideoInput == null)
+            {
+                if (_videoTrack != null)
+                {
+                    PublisherVideoMediaStream.RemoveTrack(_videoTrack);
+                    _videoTrack = null;
+                }
+
+                return;
+            }
+
+            if (_videoTransceiver == null)
+            {
+                CreatePublisherVideoTransceiver();
             }
         }
 
         private void OnVideoSceneInputChanged(Camera camera)
         {
             //StreamTodo: Implement OnVideoSceneInputChanged
-        }
-
-        private void OnVideoInputChanged(WebCamTexture webCamTexture)
-        {
-            if (_mediaInputProvider.VideoInput != null)
-            {
-                CreatePublisherVideoTransceiver();
-            }
         }
 
         private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind)
@@ -281,18 +306,16 @@ namespace StreamVideo.Core.LowLevelClient
                 sendEncodings = encodings,
             };
         }
-        
+
         private void CreatePublisherAudioTransceiver()
         {
             var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio);
             _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
 
             PublisherAudioMediaStream = new MediaStream();
-            
-            var audioTrack = CreatePublisherAudioTrack();
 
-            PublisherAudioMediaStream.AddTrack(audioTrack);
-            _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
+            var audioTrack = CreatePublisherAudioTrack();
+            SetActiveAudioTrack(audioTrack);
 
             if (_audioConfig.EnableRed)
             {
@@ -300,19 +323,41 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        private void SetActiveAudioTrack(AudioStreamTrack audioTrack)
+        {
+            PublisherAudioMediaStream.AddTrack(audioTrack);
+
+            //StreamTodo: check if this line is needed
+            _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
+
+            _audioTrack = audioTrack;
+        }
+
+        private void TryClearAudioTrack()
+        {
+            if (_audioTrack == null)
+            {
+                return;
+            }
+
+            PublisherAudioMediaStream.RemoveTrack(_audioTrack);
+            _peerConnection.RemoveTrack(_audioTransceiver.Sender);
+            _audioTrack = null;
+        }
+
         private void CreatePublisherVideoTransceiver()
         {
             var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video);
-            
-            PublisherVideoMediaStream = new MediaStream();
-            var videoTrack = CreatePublisherVideoTrack();
 
-            PublisherVideoMediaStream.AddTrack(videoTrack);
-            
+            PublisherVideoMediaStream = new MediaStream();
+            _videoTrack = CreatePublisherVideoTrack();
+
+            PublisherVideoMediaStream.AddTrack(_videoTrack);
+
             // Order seems fragile here in order to get correct msid record in local offer with the PublisherVideoMediaStream
             videoTransceiverInit.streams = new[] { PublisherVideoMediaStream };
 
-            _videoTransceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
+            _videoTransceiver = _peerConnection.AddTransceiver(_videoTrack, videoTransceiverInit);
 
             ForceCodec(_videoTransceiver, VideoCodecKeyH264, TrackKind.Video);
 
@@ -419,10 +464,7 @@ namespace StreamVideo.Core.LowLevelClient
             return track;
         }
 
-        private AudioStreamTrack CreatePublisherAudioTrack()
-        {
-            return new AudioStreamTrack(_mediaInputProvider.AudioInput);
-        }
+        private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack(_mediaInputProvider.AudioInput);
 
         private void ForceCodec(RTCRtpTransceiver transceiver, string codecKey, TrackKind kind)
         {
@@ -431,7 +473,6 @@ namespace StreamVideo.Core.LowLevelClient
                 => c.mimeType.IndexOf(codecKey, StringComparison.OrdinalIgnoreCase) != -1);
 
 #if STREAM_DEBUG_ENABLED
-
             foreach (var codec in capabilities.codecs)
             {
                 _logs.Info($"Available codec of kind `{kind}`: {codec.mimeType}");

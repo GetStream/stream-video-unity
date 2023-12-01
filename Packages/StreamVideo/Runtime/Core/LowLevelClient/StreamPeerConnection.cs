@@ -190,6 +190,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private VideoStreamTrack _videoStreamTrack;
         private RenderTexture _publisherVideoTrackTexture;
+        private AudioStreamTrack _audioTrack;
 
         private void OnIceCandidate(RTCIceCandidate candidate) => IceTrickled?.Invoke(candidate, _peerType);
 
@@ -244,9 +245,28 @@ namespace StreamVideo.Core.LowLevelClient
         
         private void OnAudioInputChanged(AudioSource audio)
         {
-            if (_mediaInputProvider.AudioInput != null)
+            //StreamTodo: if we change the audio input during the call we should probably not re-create the transceiver but just add new track with new input source and remove the previous audio track
+
+            if (_mediaInputProvider.AudioInput == null)
+            {
+                return;
+            }
+            
+            if (_audioTransceiver == null)
             {
                 CreatePublisherAudioTransceiver();
+            }
+            else
+            {
+                var newAudioTrack = CreatePublisherAudioTrack();
+                
+                PublisherAudioMediaStream.RemoveTrack(_audioTrack);
+                _peerConnection.RemoveTrack(_audioTransceiver.Sender);
+                
+                PublisherAudioMediaStream.AddTrack(newAudioTrack);
+            
+                //StreamTodo: check if this line is needed
+                _peerConnection.AddTrack(newAudioTrack, PublisherAudioMediaStream);
             }
         }
 
@@ -289,10 +309,12 @@ namespace StreamVideo.Core.LowLevelClient
 
             PublisherAudioMediaStream = new MediaStream();
             
-            var audioTrack = CreatePublisherAudioTrack();
+            _audioTrack = CreatePublisherAudioTrack();
 
-            PublisherAudioMediaStream.AddTrack(audioTrack);
-            _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
+            PublisherAudioMediaStream.AddTrack(_audioTrack);
+            
+            //StreamTodo: check if this line is needed
+            _peerConnection.AddTrack(_audioTrack, PublisherAudioMediaStream);
 
             if (_audioConfig.EnableRed)
             {

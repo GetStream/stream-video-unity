@@ -281,7 +281,7 @@ namespace StreamVideo.Core.LowLevelClient
             var newVideoTrack = CreatePublisherVideoTrack();
 
             TryClearVideoTrack();
-            SetActiveVideoTrack(newVideoTrack);
+            ReplaceActiveVideoTrack(newVideoTrack);
         }
 
         private void OnVideoSceneInputChanged(Camera camera)
@@ -368,10 +368,11 @@ namespace StreamVideo.Core.LowLevelClient
             VideoSender = _videoTransceiver.Sender;
         }
 
-        private void SetActiveVideoTrack(VideoStreamTrack videoTrack)
+        private void ReplaceActiveVideoTrack(VideoStreamTrack videoTrack)
         {
-            PublisherVideoMediaStream.AddTrack(_videoTrack);
-            VideoSender.ReplaceTrack(videoTrack);
+            PublisherVideoMediaStream.AddTrack(videoTrack);
+
+            _videoTransceiver.Sender.ReplaceTrack(videoTrack);
 
             _videoTrack = videoTrack;
         }
@@ -386,7 +387,6 @@ namespace StreamVideo.Core.LowLevelClient
             _videoTrack.Stop();
             
             PublisherVideoMediaStream.RemoveTrack(_videoTrack);
-            _peerConnection.RemoveTrack(_videoTransceiver.Sender);
             
             _videoTrack = null;
         }

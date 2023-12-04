@@ -16,7 +16,7 @@ namespace StreamVideo.ExampleProject
         public event Action LeaveCallClicked;
         public event Action EndCallClicked;
         public event Action CameraInputChanged;
-        
+
         public event Action<bool> ToggledAudioRed;
         public event Action<bool> ToggledAudioDtx;
 
@@ -56,10 +56,12 @@ namespace StreamVideo.ExampleProject
             _participantSessionIdToView.Remove(sessionId);
             Destroy(view.gameObject);
         }
-        
-        public void DominantSpeakerChanged(IStreamVideoCallParticipant currentDominantSpeaker, IStreamVideoCallParticipant previousDominantSpeaker)
+
+        public void DominantSpeakerChanged(IStreamVideoCallParticipant currentDominantSpeaker,
+            IStreamVideoCallParticipant previousDominantSpeaker)
         {
-            Debug.Log($"Dominant speaker changed from {currentDominantSpeaker.Name} to {previousDominantSpeaker?.Name}");
+            Debug.Log(
+                $"Dominant speaker changed from {currentDominantSpeaker.Name} to {previousDominantSpeaker?.Name}");
 
             foreach (var participantView in _participantSessionIdToView.Values)
             {
@@ -74,11 +76,11 @@ namespace StreamVideo.ExampleProject
         {
             var isActive = call != null;
             var isCallOwner = isActive && call.IsLocalUserOwner;
-            
+
             // If call is active show end/leave button, otherwise show join/create buttons
             _beforeCallButtonsContainer.gameObject.SetActive(!isActive);
             _duringCallButtonsContainer.gameObject.SetActive(isActive);
-            
+
             // If local user is the call owner we can "end" the call, otherwise we can only "leave" the call
             _endBtn.gameObject.SetActive(isCallOwner);
 
@@ -94,7 +96,7 @@ namespace StreamVideo.ExampleProject
             _createBtn.onClick.AddListener(() => JoinClicked?.Invoke(true));
             _leaveBtn.onClick.AddListener(() => LeaveCallClicked?.Invoke());
             _endBtn.onClick.AddListener(() => EndCallClicked?.Invoke());
-            
+
             _audioRedToggle.onValueChanged.AddListener(enabled => ToggledAudioRed?.Invoke(enabled));
             _audioDtxToggle.onValueChanged.AddListener(enabled => ToggledAudioDtx?.Invoke(enabled));
 
@@ -131,7 +133,7 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private Button _createBtn;
-        
+
         [SerializeField]
         private Button _leaveBtn;
 
@@ -164,19 +166,19 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private RawImage _localCameraImage;
-        
+
         [SerializeField]
         private Camera _inputSceneCamera;
-        
+
         [SerializeField]
         private Toggle _audioRedToggle;
-        
+
         [SerializeField]
         private Toggle _audioDtxToggle;
-        
+
         [SerializeField]
         private Transform _beforeCallButtonsContainer;
-        
+
         [SerializeField]
         private Transform _duringCallButtonsContainer;
 
@@ -208,7 +210,6 @@ namespace StreamVideo.ExampleProject
             StopAudioRecording();
         }
 
-        //StreamTodo: move to some media manager
         private void StartAudioRecording()
         {
             if (_inputAudioSource == null)
@@ -237,15 +238,14 @@ namespace StreamVideo.ExampleProject
             var devices = WebCamTexture.devices;
 
 #if UNITY_STANDALONE_WIN
-
             //StreamTodo: remove this, "Capture" is our debug camera
             _defaultCamera = devices.FirstOrDefault(d => d.name.Contains("Capture"));
 
 #elif UNITY_ANDROID || UNITY_IOS
-        _defaultCamera = devices.FirstOrDefault(d => d.isFrontFacing);
+            _defaultCamera = devices.FirstOrDefault(d => d.isFrontFacing);
 
 #else
-        _defaultCamera = devices.FirstOrDefault();
+            _defaultCamera = devices.FirstOrDefault();
 
 #endif
 
@@ -255,7 +255,7 @@ namespace StreamVideo.ExampleProject
                 return;
             }
 
-            Debug.Log($"---------- Default Camera: {_defaultCamera.name}");
+            Debug.Log($"Default Camera: {_defaultCamera.name}");
 
             if (!string.IsNullOrEmpty(_defaultCamera.name))
             {
@@ -287,9 +287,17 @@ namespace StreamVideo.ExampleProject
 
         private void ChangeCamera(string deviceName)
         {
-            if (_activeCamera != null && _activeCamera.isPlaying)
+            if (_activeCamera != null)
             {
+                var prevDevice = _activeCamera.deviceName;
+
                 _activeCamera.Stop();
+                _activeCamera.deviceName = deviceName;
+                _activeCamera.Play();
+
+                Debug.Log($"Changed active camera from `{prevDevice}` to `{deviceName}`");
+
+                return;
             }
 
             _activeCamera = new WebCamTexture(deviceName, Width, Height, FPS);
@@ -297,6 +305,14 @@ namespace StreamVideo.ExampleProject
             _localCameraImage.texture = _activeCamera;
 
             _activeCamera.Play();
+
+            // if we're during the call - update local participant view with the new camera
+            var localParticipant
+                = _participantSessionIdToView.Values.FirstOrDefault(p => p.Participant.IsLocalParticipant);
+            if (localParticipant != null)
+            {
+                localParticipant.SetLocalCameraSource(_activeCamera);
+            }
 
             CameraInputChanged?.Invoke();
         }
@@ -307,7 +323,7 @@ namespace StreamVideo.ExampleProject
             {
                 Destroy(view.gameObject);
             }
-            
+
             _participantSessionIdToView.Clear();
         }
     }

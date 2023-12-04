@@ -268,19 +268,20 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (_mediaInputProvider.VideoInput == null)
             {
-                if (_videoTrack != null)
-                {
-                    PublisherVideoMediaStream.RemoveTrack(_videoTrack);
-                    _videoTrack = null;
-                }
-
+                TryClearVideoTrack();
                 return;
             }
 
             if (_videoTransceiver == null)
             {
                 CreatePublisherVideoTransceiver();
+                return;
             }
+
+            var newVideoTrack = CreatePublisherVideoTrack();
+
+            TryClearVideoTrack();
+            ReplaceActiveVideoTrack(newVideoTrack);
         }
 
         private void OnVideoSceneInputChanged(Camera camera)
@@ -340,8 +341,11 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
+            _audioTrack.Stop();
+            
             PublisherAudioMediaStream.RemoveTrack(_audioTrack);
             _peerConnection.RemoveTrack(_audioTransceiver.Sender);
+            
             _audioTrack = null;
         }
 
@@ -362,6 +366,29 @@ namespace StreamVideo.Core.LowLevelClient
             ForceCodec(_videoTransceiver, VideoCodecKeyH264, TrackKind.Video);
 
             VideoSender = _videoTransceiver.Sender;
+        }
+
+        private void ReplaceActiveVideoTrack(VideoStreamTrack videoTrack)
+        {
+            PublisherVideoMediaStream.AddTrack(videoTrack);
+
+            _videoTransceiver.Sender.ReplaceTrack(videoTrack);
+
+            _videoTrack = videoTrack;
+        }
+
+        private void TryClearVideoTrack()
+        {
+            if (_videoTrack == null)
+            {
+                return;
+            }
+
+            _videoTrack.Stop();
+            
+            PublisherVideoMediaStream.RemoveTrack(_videoTrack);
+            
+            _videoTrack = null;
         }
 
         private static IEnumerable<RTCRtpEncodingParameters> GetVideoEncodingParameters(TrackKind trackKind)

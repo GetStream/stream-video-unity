@@ -7,7 +7,7 @@ This page shortly describes how to send **Audio** and **Video** data to other pa
 
 Before you can set audio and video input sources you need to set up an instance of `StreamVideoClient`. Follow the [Client & Auth](../03-guides/01-client-auth.mdx) guide to learn how to do it.
 
-### Send Audio
+## Setup sending Audio
 
 In order to send audio data you need to set an instance of [AudioSource](https://docs.unity3d.com/ScriptReference/AudioSource.html) as an **input source** by calling the `SetAudioInputSource` method on the instance of `StreamVideoClient`.
 
@@ -15,9 +15,9 @@ In order to send audio data you need to set an instance of [AudioSource](https:/
 _client.SetAudioInputSource(audioSource); // audioSource is of type AudioSource
 ```
 
-### Handling microphone input in Unity
+### Handle microphone input in Unity
 
-They way you start streaming audio from a microphone device is by calling Unity's `Microphone.Start` method and providing the microphone device name.
+The way you start streaming audio from a microphone device is by calling Unity's `Microphone.Start` method and providing the microphone device name.
 You obtain the microphone device name from Unity's `Microphone.devices` array.
 
 ```csharp
@@ -32,12 +32,28 @@ inputAudioSource.clip
     = Microphone.Start(_activeMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
 inputAudioSource.loop = true;
 inputAudioSource.Play();
+
+_client.SetAudioInputSource(inputAudioSource);
 ```
 
-Please refer to Unity's documentation for more information on how to use **Microphone** devices:
-* [Microphone.devices](https://docs.unity3d.com/ScriptReference/Microphone-devices.html)
-* [Microphone.Start](https://docs.unity3d.com/ScriptReference/Microphone.Start.html)
-* [Microphone.End](https://docs.unity3d.com/ScriptReference/Microphone.End.html)
+#### Change microphone device during the call
+
+Here's an example of how to change the active microphone device:
+
+```csharp
+// Stop previously active microphone
+Microphone.End(_activeMicrophoneDeviceName);
+
+// Obtain reference to an AudioSource that was setup as an input source
+var inputAudioSource = GetComponent<AudioSource>();
+
+inputAudioSource.clip = Microphone.Start(newMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
+```
+
+In case you need to use a different reference to `AudioSource`, you can simply call the `_client.SetAudioInputSource` again, and the audio track will be updated with the new audio input:
+```csharp
+_client.SetAudioInputSource(inputAudioSource);
+```
 
 #### Additional Notes
 
@@ -46,7 +62,12 @@ Please refer to Unity's documentation for more information on how to use **Micro
 - You should handle the case where user does not have a microphone device at all and the `Microphone.devices` array is empty.
 - For mobile platforms like **Android** or **iOS** it's best to request a permission to access the microphone and handle the case where user did not grant the permission to use it. Read more in [Unity's docs](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html)
 
-### Send Video
+Please refer to Unity's documentation for more information on how to use **Microphone** devices:
+* [Microphone.devices](https://docs.unity3d.com/ScriptReference/Microphone-devices.html)
+* [Microphone.Start](https://docs.unity3d.com/ScriptReference/Microphone.Start.html)
+* [Microphone.End](https://docs.unity3d.com/ScriptReference/Microphone.End.html)
+
+## Setup sending Video
 
 In order to send video data you need to set an instance of [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html) as a **video source** by calling the `SetCameraInputSource` method on the instance of `StreamVideoClient`.
 
@@ -54,7 +75,7 @@ In order to send video data you need to set an instance of [WebCamTexture](https
 _client.SetCameraInputSource(activeCamera); // activeCamera is of type WebCamTexture
 ```
 
-### Handling camera input in Unity
+### Handle camera device input in Unity
 
 They way you start streaming video from a camera device is by creating a `WebCamTexture` instance using the camera device name (obtained from `WebCamTexture.devices`) and calling `Play()` on the `WebCamTexture` instance.
 
@@ -72,6 +93,28 @@ activeCamera.Play();
 _client.SetCameraInputSource(activeCamera);
 ```
 
+#### Change camera device during the call
+
+The most efficient way to change the camera device is to update the `deviceName` property` on the instance of `WebCamTexture` that was previously set as an input source via `_client.SetCameraInputSource`:
+
+```csharp
+_activeCamera.Stop();
+_activeCamera.deviceName = newDeviceName;
+_activeCamera.Play();
+```
+
+In case you need to use a different reference to `WebCamTexture`, you can simply call the `_client.SetCameraInputSource` again, and the video track will be updated with the new camera input:
+```csharp
+_client.SetCameraInputSource(activeCamera);
+```
+
+#### Additional Notes
+
+- For standalone platforms like **Windows** or **macOS** you'd usually implement a dropdown menu populated with `WebCamTexture.devices` so that the user can pick which camera device should be used.
+- For mobile platforms like **Android** or **iOS** there are usually two cameras available: `Front` and `Back` cameras. Depending on your use case you may either want to automatically select the `Front` camera or allow user to toggle between the `Front` and the `Back` cameras.
+- You should handle the case where user does not have a camera device at all and the `WebCamTexture.devices` array is empty.
+- For mobile platforms like **Android** or **iOS** it's best to request a permission to access the camera and handle the case where user did not grant the permission to use it. Read more in [Unity's docs](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html)
+
 :::note
 
 For Android, if you're setting the **WebCamTexture** resolution, you need to set the resolution as a multiple of 16x16 as required by webRTC
@@ -83,10 +126,3 @@ Please refer to Unity's documentation for more information on how to use **Camer
 * [WebCamTexture.devices](https://docs.unity3d.com/ScriptReference/WebCamTexture-devices.html)
 * [WebCamTexture.Play](https://docs.unity3d.com/ScriptReference/WebCamTexture.Play.html)
 * [WebCamTexture.Stop](https://docs.unity3d.com/ScriptReference/WebCamTexture.Stop.html)
-
-#### Additional Notes
-
-- For standalone platforms like **Windows** or **macOS** you'd usually implement a dropdown menu populated with `WebCamTexture.devices` so that the user can pick which camera device should be used.
-- For mobile platforms like **Android** or **iOS** there are usually two cameras available: `Front` and `Back` cameras. Depending on your use case you may either want to automatically select the `Front` camera or allow user to toggle between the `Front` and the `Back` cameras.
-- You should handle the case where user does not have a camera device at all and the `WebCamTexture.devices` array is empty.
-- For mobile platforms like **Android** or **iOS** it's best to request a permission to access the camera and handle the case where user did not grant the permission to use it. Read more in [Unity's docs](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html)

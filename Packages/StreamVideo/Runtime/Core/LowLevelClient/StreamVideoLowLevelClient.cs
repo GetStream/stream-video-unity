@@ -26,14 +26,17 @@ using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
 using StreamVideo.Libs.Websockets;
 
-#if STREAM_TESTS_ENABLED
-[assembly: InternalsVisibleTo("StreamVideo.Tests")] //StreamTodo: verify which Unity version introduced this
+#if UNITY_EDITOR || STREAM_TESTS_ENABLED
+using System.Runtime.CompilerServices;
 #endif
 
 #if UNITY_EDITOR
-using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("StreamVideo.EditorTools")]
 [assembly: InternalsVisibleTo("StreamVideo.Tests")]
+#endif
+
+#if STREAM_TESTS_ENABLED
+[assembly: InternalsVisibleTo("StreamVideo.Tests")] 
 #endif
 
 namespace StreamVideo.Core.LowLevelClient

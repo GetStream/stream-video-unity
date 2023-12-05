@@ -1,7 +1,8 @@
 using System;
 using System.Linq;
 using StreamVideo.Core.LowLevelClient;
-using StreamChat.EditorTools.DefineSymbols;
+using StreamVideo.EditorTools.Builders;
+using StreamVideo.EditorTools.DefineSymbols;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,6 +21,16 @@ namespace StreamVideo.EditorTools
         public static void ToggleStreamLocalSfuCompilerFlag()
             => ToggleCompilerFlag(StreamLocalSfuModeEnabledCompilerFlag);
 
+        public static void BuildSampleApp()
+        {
+            var parser = new CommandLineParser();
+            var builder = new StreamAppBuilder();
+
+            var buildSettings = parser.GetParsedBuildArgs();
+
+            builder.BuildSampleApp(buildSettings);
+        }
+        
         public static void EnableStreamTestsEnabledCompilerFlag()
             => SetStreamTestsEnabledCompilerFlag(StreamTestsEnabledCompilerFlag, true);
 

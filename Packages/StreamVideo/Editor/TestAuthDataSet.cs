@@ -4,7 +4,7 @@ using System.Linq;
 using StreamVideo.Libs.Auth;
 using Random = UnityEngine.Random;
 
-namespace StreamChat.EditorTools
+namespace StreamVideo.EditorTools
 {
     public struct TestAuthDataSet
     {

@@ -272,6 +272,29 @@ jobs:
       - name: Set GH Comment as variable
         if: github.event_name == 'pull_request'
         id: generate_gh_comment
-        run: echo "::set-output name=gh_comment::$(cat ~/test_results/gh_comment.txt)"     
+        run: echo "::set-output name=gh_comment::$(cat ~/test_results/gh_comment.txt)"
+
+      - name: Build Sample App
+        shell: bash
+        run: sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod "StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp" -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }} -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath "~/SampleAppBuild/App" -quit
+        
+      - name: LS
+        shell: bash
+        run: |
+          ls
+          echo '----'
+          ls ~
+          echo '----'
+          ls "~/SampleAppBuild/"
+          echo '----'
+          ls "~/SampleAppBuild/App/"
+          echo '----'
+        continue-on-error: true
+        
+      - name: Upload Sample App
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}_${{ matrix.unity_version }}_${{ matrix.compiler }}_${{ matrix.dotnet_version }}_${{ matrix.target_platform }}_sample_app
+          path: ~/SampleAppBuild/App/    
 
   

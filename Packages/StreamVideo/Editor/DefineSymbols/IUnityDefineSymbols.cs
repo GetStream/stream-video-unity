@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEditor;
 
-namespace StreamChat.EditorTools.DefineSymbols
+namespace StreamVideo.EditorTools.DefineSymbols
 {
     public interface IUnityDefineSymbols
     {

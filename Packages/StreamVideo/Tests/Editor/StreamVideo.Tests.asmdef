@@ -2,7 +2,7 @@
     "name": "StreamVideo.Tests",
     "rootNamespace": "",
     "references": [
-        "Stream.Core"
+        "StreamVideo.Core"
     ],
     "includePlatforms": [
         "Editor"

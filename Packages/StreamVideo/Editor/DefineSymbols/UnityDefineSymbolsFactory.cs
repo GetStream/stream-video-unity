@@ -1,4 +1,4 @@
-﻿namespace StreamChat.EditorTools.DefineSymbols
+﻿namespace StreamVideo.EditorTools.DefineSymbols
 {
     public class UnityDefineSymbolsFactory
     {

@@ -1,8 +1,8 @@
 {
   "name": "com.stream.video",
-  "version": "0.0.1",
+  "version": "0.5.0",
   "displayName": "Stream Video & Audio Chat SDK",
-  "description": "This SDK allows you to very easily add audio and/or video communication to your project.  Supported platorms: Android, IOS, Windows, MacOS.",
+  "description": "This SDK lets you easily add audio and video communication to your project. You can build anything from spatial Audio chats to fully blown Video Calling apps. Supported platforms: Android, IOS, Windows, MacOS.",
   "unity": "2020.3",
   "documentationUrl": "https://getstream.io/video/docs/unity/",
   "licensesUrl": "https://github.com/GetStream/stream-video-unity/blob/main/LICENSE",
@@ -18,14 +18,13 @@
   ],
   "samples": [
 	{
-	   "displayName": "Video & Audio chat sample",
+	   "displayName": "Video & Audio chat example project",
 	   "description": "Sample project showing a video & audio chat",
 	   "path": "Samples~/VideoChat"
 	}
   ],
   "author": {
-    "name": "Unity",
-    "email": "unity@example.com",
+    "name": "Stream",
     "url": "https://getstream.io/"
   },
   "hideInEditor": false

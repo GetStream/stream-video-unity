@@ -59,7 +59,7 @@ namespace StreamVideo.Core.LowLevelClient
         /// <summary>
         /// SDK Version number
         /// </summary>
-        public static readonly Version SDKVersion = new Version(0, 1, 0);
+        public static readonly Version SDKVersion = new Version(0, 5, 0);
         
         /// <summary>
         /// Local user DTO - only available when the coordinator is connected

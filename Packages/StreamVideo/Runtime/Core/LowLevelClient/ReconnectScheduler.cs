@@ -52,7 +52,7 @@ namespace StreamVideo.Core.LowLevelClient
             _networkMonitor.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
 
             _client.Connected += OnConnected;
-            _client.Reconnecting += OnReconnecting;
+            //_client.Reconnecting += OnReconnecting;
             _client.ConnectionStateChanged += OnConnectionStateChanged;
         }
         
@@ -61,7 +61,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (_client != null)
             {
                 _client.Connected -= OnConnected;
-                _client.Reconnecting -= OnReconnecting;
+                //_client.Reconnecting -= OnReconnecting;
                 _client.ConnectionStateChanged -= OnConnectionStateChanged;
             }
         }
@@ -199,10 +199,11 @@ namespace StreamVideo.Core.LowLevelClient
             NextReconnectTime = _timeService.Time;
         }
 
-        private void OnReconnecting()
-        {
-            _reconnectAttempts++;
-        }
+        //StreamTodo: Unused "OnReconnecting"
+        // private void OnReconnecting()
+        // {
+        //     _reconnectAttempts++;
+        // }
 
         private void OnConnected()
         {

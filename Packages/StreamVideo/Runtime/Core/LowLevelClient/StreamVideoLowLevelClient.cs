@@ -52,7 +52,7 @@ namespace StreamVideo.Core.LowLevelClient
         public event ConnectionHandler Connected;
         
         //StreamTodo: investigate if this is needed. Check BasePersistentWebSocket and TaskScheduler
-        public event Action Reconnecting;
+        //public event Action Reconnecting;
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
 

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -14,6 +16,7 @@ using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
+using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
@@ -36,7 +39,7 @@ using System.Runtime.CompilerServices;
 #endif
 
 #if STREAM_TESTS_ENABLED
-[assembly: InternalsVisibleTo("StreamVideo.Tests")] 
+[assembly: InternalsVisibleTo("StreamVideo.Tests")]
 #endif
 
 namespace StreamVideo.Core.LowLevelClient
@@ -50,7 +53,7 @@ namespace StreamVideo.Core.LowLevelClient
         public const string MenuPrefix = "Stream/";
 
         public event ConnectionHandler Connected;
-        
+
         //StreamTodo: investigate if this is needed. Check BasePersistentWebSocket and TaskScheduler
         public event Action Reconnecting;
         public event Action Disconnected;
@@ -63,11 +66,11 @@ namespace StreamVideo.Core.LowLevelClient
         /// SDK Version number
         /// </summary>
         public static readonly Version SDKVersion = new Version(0, 5, 0);
-        
+
         /// <summary>
         /// Local user DTO - only available when the coordinator is connected
         /// </summary>
-        public OwnUserResponseInternalDTO LocalUserDto { get; private set; } 
+        public OwnUserResponseInternalDTO LocalUserDto { get; private set; }
 
         /// <summary>
         /// Use this method to create the main client instance or use StreamChatClient constructor to create a client instance with custom dependencies
@@ -143,32 +146,35 @@ namespace StreamVideo.Core.LowLevelClient
             _requestUriFactory = new RequestUriFactory(authProvider: this, connectionProvider: this, () =>
                 BuildStreamClientHeader(new UnityApplicationInfo()));
 
-            _httpClient.AddDefaultCustomHeader("stream-auth-type", DefaultStreamAuthType);
-            var header = BuildStreamClientHeader(_applicationInfo);
-            _httpClient.AddDefaultCustomHeader("X-Stream-Client", header);
+            _defaultHttpRequestHeaders.AddRange(GenerateDefaultHttpRequestHeaders());
+
+            foreach (var header in _defaultHttpRequestHeaders)
+            {
+                _httpClient.AddDefaultCustomHeader(header.Key, header.Value);
+            }
 
             //StreamTodo: move to factory
             var coordinatorReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor);
             var sfuReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor);
 
             //StreamTodo: move to factory
-            _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, authProvider: this, _requestUriFactory,
-                _serializer, _timeService, _logs);
-            var sfuWebSocketWrapper = new SfuWebSocket(sfuWebSocket, sfuReconnect, authProvider: this, _requestUriFactory, _serializer,
-                _timeService, _logs, _applicationInfo, SDKVersion);
+            _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, authProvider: this,
+                _requestUriFactory, _serializer, _timeService, _logs);
+            var sfuWebSocketWrapper = new SfuWebSocket(sfuWebSocket, sfuReconnect, authProvider: this,
+                _requestUriFactory, _serializer, _timeService, _logs, _applicationInfo, SDKVersion);
 
             _coordinatorWS.ConnectionStateChanged += OnCoordinatorConnectionStateChanged;
 
-            InternalVideoClientApi
-                = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, lowLevelClient: this);
+            InternalVideoClientApi = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, 
+                lowLevelClient: this);
 
-            _rtcSession = new RtcSession(sfuWebSocketWrapper, _logs, _serializer, _httpClient, _timeService, _config);
+            _rtcSession = new RtcSession(sfuWebSocketWrapper, CreateSessionHttpClient, _logs, _serializer, _timeService,
+                _config);
 
             RegisterCoordinatorEventHandlers();
 
             LogErrorIfUpdateIsNotBeingCalled();
         }
-
 
         //StreamTodo: perhaps remove this overload, more != better
         public Task ConnectUserAsync(AuthCredentials authCredentials, CancellationToken cancellationToken = default)
@@ -202,7 +208,8 @@ namespace StreamVideo.Core.LowLevelClient
             SetPartialConnectionCredentials(apiKey, userId);
 
             await RefreshAuthTokenFromProviderAsync(cancellationToken);
-            await ConnectUserAsync(_authCredentials.ApiKey, _authCredentials.UserId, _authCredentials.UserToken, cancellationToken);
+            await ConnectUserAsync(_authCredentials.ApiKey, _authCredentials.UserId, _authCredentials.UserToken,
+                cancellationToken);
         }
 
         public async Task DisconnectAsync()
@@ -271,7 +278,7 @@ namespace StreamVideo.Core.LowLevelClient
         //
         //     return call;
         // }
-        
+
 
         public Task<string> GetLocationHintAsync()
         {
@@ -291,7 +298,7 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.Dispose();
 
             _updateMonitorCts.Cancel();
-            
+
             if (_rtcSession != null)
             {
                 _rtcSession.Dispose();
@@ -335,14 +342,14 @@ namespace StreamVideo.Core.LowLevelClient
 
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
         internal RtcSession RtcSession => _rtcSession;
-        
+
         internal Task StartCallSessionAsync(StreamCall call) => _rtcSession.StartAsync(call);
 
         internal Task StopCallSessionAsync() => _rtcSession.StopAsync();
 
         private const string DefaultStreamAuthType = "jwt";
         private const string LocationHintHeaderKey = "x-amz-cf-pop";
-        
+
         private static readonly Uri ServerBaseUrl = new Uri("wss://video.stream-io-api.com/video/connect");
         private static readonly Uri LocationHintWebUri = new Uri("https://hint.stream-io-video.com/");
 
@@ -360,6 +367,8 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IStreamClientConfig _config;
         private readonly IApplicationInfo _applicationInfo;
         private readonly RtcSession _rtcSession;
+        
+        private readonly List<(string Key, string Value)> _defaultHttpRequestHeaders = new List<(string Key, string Value)>();
 
         private CancellationTokenSource _updateMonitorCts;
 
@@ -379,7 +388,7 @@ namespace StreamVideo.Core.LowLevelClient
                 Disconnected?.Invoke();
             }
         }
-        
+
         //StreamTodo: cancellation token
         //StreamTodo: make few attempts + can be awaited by the JoinCallAsync + support reconnections
         private async Task UpdateLocationHintAsync()
@@ -463,27 +472,33 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.RegisterEventType<CallNotificationEventInternalDTO>(CoordinatorEventType.CallNotification,
                 e => InternalCallNotificationEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<PermissionRequestEventInternalDTO>(CoordinatorEventType.CallPermissionRequest,
+            _coordinatorWS.RegisterEventType<PermissionRequestEventInternalDTO>(
+                CoordinatorEventType.CallPermissionRequest,
                 e => InternalPermissionRequestEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<UpdatedCallPermissionsEventInternalDTO>(CoordinatorEventType.CallPermissionsUpdated,
+            _coordinatorWS.RegisterEventType<UpdatedCallPermissionsEventInternalDTO>(
+                CoordinatorEventType.CallPermissionsUpdated,
                 e => InternalUpdatedCallPermissionsEvent?.Invoke(e));
 
             _coordinatorWS.RegisterEventType<CallReactionEventInternalDTO>(CoordinatorEventType.CallReactionNew,
                 e => InternalCallReactionEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallRecordingStartedEventInternalDTO>(CoordinatorEventType.CallRecordingStarted,
+            _coordinatorWS.RegisterEventType<CallRecordingStartedEventInternalDTO>(
+                CoordinatorEventType.CallRecordingStarted,
                 e => InternalCallRecordingStartedEvent?.Invoke(e));
-            _coordinatorWS.RegisterEventType<CallRecordingStoppedEventInternalDTO>(CoordinatorEventType.CallRecordingStopped,
+            _coordinatorWS.RegisterEventType<CallRecordingStoppedEventInternalDTO>(
+                CoordinatorEventType.CallRecordingStopped,
                 e => InternalCallRecordingStoppedEvent?.Invoke(e));
 
             _coordinatorWS.RegisterEventType<BlockedUserEventInternalDTO>(CoordinatorEventType.CallBlockedUser,
                 e => InternalBlockedUserEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallBroadcastingStartedEventInternalDTO>(CoordinatorEventType.CallBroadcastingStarted,
+            _coordinatorWS.RegisterEventType<CallBroadcastingStartedEventInternalDTO>(
+                CoordinatorEventType.CallBroadcastingStarted,
                 e => InternalCallBroadcastingStartedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallBroadcastingStoppedEventInternalDTO>(CoordinatorEventType.CallBroadcastingStopped,
+            _coordinatorWS.RegisterEventType<CallBroadcastingStoppedEventInternalDTO>(
+                CoordinatorEventType.CallBroadcastingStopped,
                 e => InternalCallBroadcastingStoppedEvent?.Invoke(e));
 
             _coordinatorWS.RegisterEventType<CallRingEventInternalDTO>(CoordinatorEventType.CallRing,
@@ -492,7 +507,8 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.RegisterEventType<CallSessionEndedEventInternalDTO>(CoordinatorEventType.CallSessionEnded,
                 e => InternalCallSessionEndedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallSessionStartedEventInternalDTO>(CoordinatorEventType.CallSessionStarted,
+            _coordinatorWS.RegisterEventType<CallSessionStartedEventInternalDTO>(
+                CoordinatorEventType.CallSessionStarted,
                 e => InternalCallSessionStartedEvent?.Invoke(e));
 
             _coordinatorWS.RegisterEventType<BlockedUserEventInternalDTO>(CoordinatorEventType.CallUnblockedUser,
@@ -600,6 +616,32 @@ namespace StreamVideo.Core.LowLevelClient
             // sb.Append(applicationInfo.GraphicsMemorySize);
 
             return sb.ToString();
+        }
+        
+        private IEnumerable<(string Key, string Value)> GenerateDefaultHttpRequestHeaders()
+        {
+            var clientHeader = BuildStreamClientHeader(_applicationInfo);
+            
+            yield return ("stream-auth-type", DefaultStreamAuthType);
+            yield return ("X-Stream-Client", clientHeader);
+        }
+
+        private HttpClient CreateSessionHttpClient(IStreamCall activeCall)
+        {
+            var connectUrl = activeCall.Credentials.Server.Url.Replace("/twirp", "");
+
+            var httpClient = new HttpClient();
+            
+            foreach (var header in _defaultHttpRequestHeaders)
+            {
+                httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
+            }
+
+            httpClient.DefaultRequestHeaders.Authorization
+                = new AuthenticationHeaderValue(activeCall.Credentials.Token);
+            httpClient.BaseAddress = new Uri(connectUrl);
+
+            return httpClient;
         }
     }
 }

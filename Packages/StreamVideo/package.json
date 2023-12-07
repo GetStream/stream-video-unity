@@ -1,5 +1,5 @@
 {
-  "name": "com.stream.video",
+  "name": "io.getstream.video",
   "version": "0.5.0",
   "displayName": "Stream Video & Audio Chat SDK",
   "description": "This SDK lets you easily add audio and video communication to your project. You can build anything from spatial Audio chats to fully blown Video Calling apps. Supported platforms: Android, IOS, Windows, MacOS.",

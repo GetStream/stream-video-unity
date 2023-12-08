@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace StreamVideo.Libs.Auth
 {
+    //StreamTodo: write docs about the token provider
     /// <summary>
     /// Providers JWT authorization token for Stream Chat
     /// </summary>

@@ -55,7 +55,7 @@ namespace StreamVideo.Core.LowLevelClient
         public event ConnectionHandler Connected;
 
         //StreamTodo: investigate if this is needed. Check BasePersistentWebSocket and TaskScheduler
-        public event Action Reconnecting;
+        //public event Action Reconnecting;
         public event Action Disconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
 
@@ -168,7 +168,7 @@ namespace StreamVideo.Core.LowLevelClient
             InternalVideoClientApi = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, 
                 lowLevelClient: this);
 
-            _rtcSession = new RtcSession(sfuWebSocketWrapper, CreateSessionHttpClient, _logs, _serializer, _timeService,
+            RtcSession = new RtcSession(sfuWebSocketWrapper, CreateSessionHttpClient, _logs, _serializer, _timeService,
                 _config);
 
             RegisterCoordinatorEventHandlers();
@@ -215,7 +215,7 @@ namespace StreamVideo.Core.LowLevelClient
         public async Task DisconnectAsync()
         {
             await _coordinatorWS.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
-            await _rtcSession.StopAsync();
+            await RtcSession.StopAsync();
         }
 
         public void Update()
@@ -225,60 +225,8 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             _coordinatorWS.Update();
-            _rtcSession.Update();
+            RtcSession.Update();
         }
-
-        //StreamTodo: if ring and notify can't be both true then perhaps enum NotifyMode.Ring, NotifyMode.Notify?
-        //StreamTodo: add CreateCallOptions
-        // public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
-        //     bool notify)
-        // {
-        //     var call = new StreamCall(callType, callId, this);
-        //     if (!create)
-        //     {
-        //         var callData = await InternalVideoClientApi.GetCallAsync(callType, callId, new GetOrCreateCallRequest());
-        //
-        //         if (callData == null)
-        //         {
-        //             //StreamTodo: error call not found
-        //         }
-        //         
-        //         
-        //         //StreamTodo: load data from response to call
-        //     }
-        //
-        //     // StreamTodo: check state if we don't have an active session already
-        //     var locationHint = await GetLocationHintAsync();
-        //     
-        //     //StreamTodo: move this logic to call.Join, this way user can create call object and join later on 
-        //
-        //     // StreamTodo: expose params
-        //     var joinCallRequest = new JoinCallRequest
-        //     {
-        //         Create = create,
-        //         Data = new CallRequest
-        //         {
-        //             CreatedBy = null,
-        //             CreatedById = null,
-        //             Custom = null,
-        //             Members = null,
-        //             SettingsOverride = null,
-        //             StartsAt = DateTimeOffset.Now,
-        //             Team = null
-        //         },
-        //         Location = locationHint,
-        //         MembersLimit = 10,
-        //         MigratingFrom = null,
-        //         Notify = notify,
-        //         Ring = ring
-        //     };
-        //
-        //     var joinCallResponse = await InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
-        //     await _rtcSession.StartAsync(joinCallResponse);
-        //
-        //     return call;
-        // }
-
 
         public Task<string> GetLocationHintAsync()
         {
@@ -298,10 +246,10 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.Dispose();
 
             _updateMonitorCts.Cancel();
-
-            if (_rtcSession != null)
+            
+            if (RtcSession != null)
             {
-                _rtcSession.Dispose();
+                RtcSession.Dispose();
             }
         }
 
@@ -341,15 +289,15 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CustomVideoEventInternalDTO> InternalCustomVideoEvent;
 
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
-        internal RtcSession RtcSession => _rtcSession;
+        internal RtcSession RtcSession { get; }
 
-        internal Task StartCallSessionAsync(StreamCall call) => _rtcSession.StartAsync(call);
+        internal Task StartCallSessionAsync(StreamCall call) => RtcSession.StartAsync(call);
 
-        internal Task StopCallSessionAsync() => _rtcSession.StopAsync();
+        internal Task StopCallSessionAsync() => RtcSession.StopAsync();
 
         private const string DefaultStreamAuthType = "jwt";
         private const string LocationHintHeaderKey = "x-amz-cf-pop";
-
+        
         private static readonly Uri ServerBaseUrl = new Uri("wss://video.stream-io-api.com/video/connect");
         private static readonly Uri LocationHintWebUri = new Uri("https://hint.stream-io-video.com/");
 
@@ -521,6 +469,7 @@ namespace StreamVideo.Core.LowLevelClient
                 e => InternalCustomVideoEvent?.Invoke(e));
         }
 
+        //StreamTodo: we could make this public
         private static bool IsUserIdValid(string userId)
         {
             var r = new Regex("^[a-zA-Z0-9@_-]+$");

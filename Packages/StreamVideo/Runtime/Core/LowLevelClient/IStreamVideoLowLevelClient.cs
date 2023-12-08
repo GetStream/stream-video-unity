@@ -25,7 +25,7 @@ namespace StreamVideo.Core.LowLevelClient
         /// <summary>
         /// Client is attempting to reconnect after lost connection
         /// </summary>
-        event Action Reconnecting;
+        //event Action Reconnecting; //StreamTodo: reimplemented reconnecting event
 
         /// <summary>
         /// Client lost connection with the server. if ReconnectStrategy is Exponential or Constant it will attempt to reconnect.

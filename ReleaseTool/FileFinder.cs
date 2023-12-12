@@ -2,54 +2,44 @@
 
 internal class FileFinder
 {
-    public void FindReleaseFiles(out string versionFilePath, out string changelogFilePath)
+    public ReleaseFilesInfo FindReleaseFiles()
     {
         var rootDirectory = FindSdkRootDirectory();
-        changelogFilePath = FindChangelogFilePath(rootDirectory);
-        versionFilePath = FindVersionFilePath(rootDirectory);
+        var changelogFilePath = FindChangelogFilePath(rootDirectory);
+        var versionFilePath = FindVersionFilePath(rootDirectory);
+        var packageJsonFilePath = FindPackageJsonFilePath(rootDirectory);
+
+        return new ReleaseFilesInfo(versionFilePath, changelogFilePath, packageJsonFilePath);
     }
 
-    public string FindChangelogFilePath(string sdkRootDirectory)
-    {
-        // Changelog should be located in the sdk root directory
-        var files = Directory.GetFiles(sdkRootDirectory);
-        var changelogFilePath = files.FirstOrDefault(fullPath => Path.GetFileName(fullPath) == ChangelogFilename);
-        if (changelogFilePath == null)
-        {
-            throw new FileNotFoundException($"Failed to find the changelog file in the sdk root directory: `{
-                sdkRootDirectory}`. Searched for `{ChangelogFilename}`");
-        }
+    private const string PackagesDirName = "Packages";
+    private const string AssetsDirName = "Assets";
+    private const string SdkVersionFilename = "SdkVersionWrapper.cs";
+    private const string ChangelogFilename = "CHANGELOG.md";
+    private const string PackageJsonFilename = "package.json";
+    
+    private string FindChangelogFilePath(string sdkRootDirectory) => FindFile(sdkRootDirectory, ChangelogFilename, SearchOption.TopDirectoryOnly);
 
-        return changelogFilePath;
-    }
-
-    public string FindVersionFilePath(string sdkRootDirectory)
+    private string FindVersionFilePath(string sdkRootDirectory)
     {
         // Look in the "Packages" dir only so we don't search large folders like "Library"
         var packagesDir = GetPackagesDirectoryPath(sdkRootDirectory);
         
-        var files = Directory.EnumerateFiles(packagesDir.FullName, $"*{SdkVersionFilename}", SearchOption.AllDirectories).ToArray();
-        if (!files.Any())
-        {
-            throw new FileNotFoundException($"Failed to find the SDK version file in the packages directory: `{
-                packagesDir.FullName}`. Searched for `{SdkVersionFilename}`");
-        }
-
-        return files.First();
+        return FindFile(packagesDir.FullName, SdkVersionFilename, SearchOption.AllDirectories);
     }
 
-
-
-    public string FindPackageJsonFilePath(string sdkRootDirectory)
+    private string FindPackageJsonFilePath(string sdkRootDirectory)
     {
-        
+        var packagesDir = GetPackagesDirectoryPath(sdkRootDirectory);
+
+        return FindFile(packagesDir.FullName, PackageJsonFilename, SearchOption.AllDirectories);
     }
 
     /// <summary>
     /// Find SDK root directory - this is where the "Assets" directory is located
     /// </summary>
     /// <exception cref="Exception">Throws an exception when fails to find the root directory</exception>
-    public string FindSdkRootDirectory()
+    private string FindSdkRootDirectory()
     {
         var currentDirectory = Directory.GetCurrentDirectory();
 
@@ -67,14 +57,8 @@ internal class FileFinder
 
         return currentDirectory;
     }
-
-    private const string PackagesDirName = "Packages";
-    private const string AssetsDirName = "Assets";
-    private const string SdkVersionFilename = "SdkVersionWrapper.cs";
-    private const string ChangelogFilename = "CHANGELOG.md";
-    private const string PackageJsonFilename = "package.json";
     
-    private DirectoryInfo GetPackagesDirectoryPath(string sdkRootDirectory)
+    private static DirectoryInfo GetPackagesDirectoryPath(string sdkRootDirectory)
     {
         var packagesDir = new DirectoryInfo(Path.Combine(sdkRootDirectory, PackagesDirName));
         if (!packagesDir.Exists)
@@ -83,5 +67,21 @@ internal class FileFinder
         }
 
         return packagesDir;
+    }
+    
+    private static string FindFile(string searchRootPath, string searchFilename, SearchOption searchOption)
+    {
+        var files = Directory.EnumerateFiles(searchRootPath, $"*{searchFilename}", searchOption).ToArray();
+        if (!files.Any())
+        {
+            throw new FileNotFoundException($"Failed to find `{searchFilename}` file in `{searchRootPath}`");
+        }
+
+        if (files.Length > 1)
+        {
+            throw new FileNotFoundException($"Found multiple `{searchFilename}` files in `{searchRootPath}`. Expected one. Results: " + string.Join(", ", files));
+        }
+
+        return files.First();
     }
 }

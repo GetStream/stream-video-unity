@@ -4,12 +4,20 @@ internal class Validator
 {
     public Version ParseVersion(string version)
     {
-        if (!version.StartsWith("v"))
+        if (version.StartsWith("v"))
         {
-            throw new ArgumentException("Version must start with `v`");
+            version = version[1..];;
         }
 
-        var trimmedVersion = version[1..];
-        return new Version(trimmedVersion);
+        return new Version(version);
+    }
+
+    public void AssertThatNewVersionGreaterThanCurrent(Version newVersion, Version currentVersion)
+    {
+        if (newVersion <= currentVersion)
+        {
+            throw new InvalidOperationException($"New version ({newVersion}) must be greater than current version ({
+                currentVersion}).");
+        }
     }
 }

@@ -16,17 +16,21 @@ internal class ReleaseBuilder
     /// <param name="changelog">Changelog section related to the new version</param>
     public void Execute(string version, string changelog)
     {
+        var filesInfo = _fileFinder.FindReleaseFiles();
+        
         var newVersion = _validator.ParseVersion(version);
+        var currentVersionProp = _fileWriter.GetVersionProperty(filesInfo.PackageJsonFilePath, out _);
+        var currentVersion = _validator.ParseVersion(currentVersionProp.GetValue<string>());
+        
+        _validator.AssertThatNewVersionGreaterThanCurrent(newVersion, currentVersion);
 
-        _fileFinder.FindReleaseFiles(out var versionFilePath, out var changelogFilePath);
+        Console.WriteLine("Version filepath: " + filesInfo.VersionFilePath);
+        Console.WriteLine("Changelog filepath: " + filesInfo.ChangelogFilePath);
+        Console.WriteLine("Package.json filepath: " + filesInfo.PackageJsonFilePath);
 
-        Console.WriteLine("Version filepath: " + versionFilePath);
-        Console.WriteLine("Changelog filepath: " + changelogFilePath);
-
-        // Todo: Verify that new version is greater than the current
-
-        _fileWriter.WriteChangelogFile(newVersion, changelog, changelogFilePath);
-        _fileWriter.WriteVersionFile(newVersion, versionFilePath);
+        _fileWriter.WriteChangelogFile(newVersion, changelog, filesInfo.ChangelogFilePath);
+        _fileWriter.WriteVersionFile(newVersion, filesInfo.VersionFilePath);
+        _fileWriter.WritePackageJsonFile(newVersion, filesInfo.PackageJsonFilePath);
     }
 
     private readonly FileFinder _fileFinder;

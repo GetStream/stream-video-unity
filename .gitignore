@@ -92,3 +92,7 @@ Desktop.ini
 
 #protobuff compiler
 /[Pp]rotoc/
+
+#ReleaseTool sln and csproj should be tracked
+!ReleaseTool/ReleaseTool.csproj
+!ReleaseTool/ReleaseTool.sln

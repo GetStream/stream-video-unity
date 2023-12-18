@@ -210,23 +210,22 @@ jobs:
         run: cat ~/Library/Logs/Unity/Editor.log
         continue-on-error: true
 
-      - name: Enable Stream Tests in Unity
+      - name: Enable Stream Tests in Unity (Attempt 1)
         shell: bash
         run: |
-          success=false
-          for i in {1..3}; do
-            output=$(sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit 2>&1)
-            echo "$output"
-            if [[ ! "$output" == *"License is not active"* ]]; then
-              success=true
-              break
-            fi
-            echo "Attempt $i failed due to inactive license, retrying..."
-          done
-          if [ "$success" = false ]; then
-            echo "All attempts failed."
-            exit 1
-          fi
+          sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit
+
+      - name: Enable Stream Tests in Unity (Attempt 2)
+        if: failure()
+        shell: bash
+        run: |
+          sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit
+
+      - name: Enable Stream Tests in Unity (Attempt 3)
+        if: failure()
+        shell: bash
+        run: |
+          sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit
         
 #skip -quit due to not working with async tests
       - name: Run Unity Tests

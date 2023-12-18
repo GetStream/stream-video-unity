@@ -191,16 +191,41 @@ jobs:
         continue-on-error: true #Unity return exit code 1 even if successfully activating with license file
 
       - name: Launch Unity to test license
+        id: launch_unity_to_test_license
         shell: bash
         run: |
           sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -quit
+        continue-on-error: true 
 
       #if launching Unity failed -> try activating the license again
-      - name: Activate Unity with .ULF license file
-        if: failure()
+      - name: Activate Unity with .ULF license file 2
+        if: steps.launch_unity_to_test_license.outcome == 'failure'
         shell: bash
         run: sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -manualLicenseFile "$(ls | grep ".ulf$")" -quit
         continue-on-error: true #Unity return exit code 1 even if successfully activating with license file
+
+      - name: Launch Unity to test license 2
+        id: launch_unity_to_test_license2
+        if: steps.launch_unity_to_test_license.outcome == 'failure'
+        shell: bash
+        run: |
+          sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -quit
+        continue-on-error: true 
+
+      #if launching Unity failed -> try activating the license again
+      - name: Activate Unity with .ULF license file
+        if: steps.launch_unity_to_test_license2.outcome == 'failure'
+        shell: bash
+        run: sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -manualLicenseFile "$(ls | grep ".ulf$")" -quit
+        continue-on-error: true #Unity return exit code 1 even if successfully activating with license file
+
+      - name: Launch Unity to test license
+        id: launch_unity_to_test_license3
+        if: steps.launch_unity_to_test_license2.outcome == 'failure'
+        shell: bash
+        run: |
+          sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -quit
+        continue-on-error: true
        
       - name: LS Unity Logs dir
         shell: bash
@@ -223,30 +248,35 @@ jobs:
         continue-on-error: true
 
       - name: Enable Stream Tests in Unity (Attempt 1)
+        id: enable_stream_tests_in_unity
         shell: bash
         run: |
           sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit
+        continue-on-error: true
 
       - name: Enable Stream Tests in Unity (Attempt 2)
-        if: failure()
+        id: enable_stream_tests_in_unity2
+        if: steps.enable_stream_tests_in_unity.outcome == 'failure'
         shell: bash
         run: |
           sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit
+        continue-on-error: true
 
       - name: Enable Stream Tests in Unity (Attempt 3)
-        if: failure()
+        id: enable_stream_tests_in_unity3
+        if: steps.enable_stream_tests_in_unity2.outcome == 'failure'
         shell: bash
         run: |
           sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit
         
-#skip -quit due to not working with async tests
+      #skip -quit due to not working with async tests
       - name: Run Unity Tests
         id: run_unity_tests
         shell: bash
         run: sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -runTests -testResults ~/test_results/results.xml -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }}
         continue-on-error: true
         
-#due to skipped -quit
+      #due to skipped -quit
       - name: Force Close Unity
         shell: bash
         run: sudo pkill -x Unity
@@ -321,5 +351,3 @@ jobs:
         with:
           name: ${{ matrix.os }}_${{ matrix.unity_version }}_${{ matrix.compiler }}_${{ matrix.dotnet_version }}_${{ matrix.target_platform }}_sample_app
           path: ~/SampleAppBuild/App/    
-
-  

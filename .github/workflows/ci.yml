@@ -212,7 +212,21 @@ jobs:
 
       - name: Enable Stream Tests in Unity
         shell: bash
-        run: sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit
+        run: |
+          success=false
+          for i in {1..3}; do
+            output=$(sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag -quit 2>&1)
+            echo "$output"
+            if [[ ! "$output" == *"License is not active"* ]]; then
+              success=true
+              break
+            fi
+            echo "Attempt $i failed due to inactive license, retrying..."
+          done
+          if [ "$success" = false ]; then
+            echo "All attempts failed."
+            exit 1
+          fi
         
 #skip -quit due to not working with async tests
       - name: Run Unity Tests
@@ -276,7 +290,7 @@ jobs:
 
       - name: Build Sample App
         shell: bash
-        run: sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod "StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp" -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }} -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath "~/SampleAppBuild/App" -quit
+        run: sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -executeMethod "StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp" -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath "~/SampleAppBuild/App" -quit
         
       - name: LS
         shell: bash

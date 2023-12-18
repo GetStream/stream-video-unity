@@ -189,6 +189,11 @@ jobs:
         shell: bash
         run: sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -manualLicenseFile "$(ls | grep ".ulf$")" -quit
         continue-on-error: true #Unity return exit code 1 even if successfully activating with license file
+
+      - name: Launch Unity to test license
+        shell: bash
+        run: |
+          sudo /Applications/Unity/Unity.app/Contents/MacOS/Unity -batchmode -nographics -projectPath "$GITHUB_WORKSPACE" -quit
        
       - name: LS Unity Logs dir
         shell: bash

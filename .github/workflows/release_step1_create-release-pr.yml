@@ -1,0 +1,62 @@
+﻿name: Release - Step 1 -> Create release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (example: 1.2.3)'
+        required: true
+      changelog:
+        description: 'Changelog (this version only + base64 encoded)'
+        required: true
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '7.0'
+
+      - name: Build .NET Release tool
+        run: dotnet build ./ReleaseTool/ReleaseTool.csproj
+
+      - name: Decode Changelog and Set as Env Variable
+        run: |
+          {
+            DECODED_CHANGELOG=$(echo "${{ github.event.inputs.changelog }}" | base64 --decode)
+            echo 'CHANGELOG<<EOF'
+            echo "$DECODED_CHANGELOG"
+            echo 'EOF'
+          } >> $GITHUB_ENV
+
+      - name: Run .NET Release Tool
+        run: dotnet run --project ./ReleaseTool --version ${{ github.event.inputs.version }} --changelog "${{ env.CHANGELOG }}"
+
+      - name: Create Release Branch
+        run: |
+          git checkout -b release/${{ github.event.inputs.version }}
+
+      - name: Commit Changes
+        run: |
+          git config --global user.name 'Daniel Sierpiński'
+          git config --global user.email '33436839+sierpinskid@users.noreply.github.com'
+          git add .
+          git commit -m "Release version ${{ github.event.inputs.version }}"
+
+      - name: Push Changes
+        run: |
+          git push origin release/${{ github.event.inputs.version }}
+
+      - name: Create Pull Request
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pr_title: "Release version ${{ github.event.inputs.version }}"
+          pr_body: "${{ env.CHANGELOG }}"
+          destination_branch: "main"
+          source_branch: "release/${{ github.event.inputs.version }}"

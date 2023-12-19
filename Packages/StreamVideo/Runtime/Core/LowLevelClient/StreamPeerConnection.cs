@@ -211,7 +211,9 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnNegotiationNeeded()
         {
-            //_logs.Warning($"$$$$$$$ [{_peerType}] OnNegotiationNeeded");
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"[{_peerType}] OnNegotiationNeeded");
+#endif
 
             //StreamTodo: take into account race conditions https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
             //We want to set the local description if signalingState is stable - we need to check it because state could change during async operations
@@ -444,7 +446,6 @@ namespace StreamVideo.Core.LowLevelClient
                     Debug.LogWarning($"Rid values: {fullQuality.rid}, {halfQuality.rid}, {quarterQuality.rid}");
 #endif
 
-                    //StreamTodo: temporarily disabled because simulcast is not working with current Unity's WebRTC lib
                     yield return quarterQuality;
                     yield return halfQuality;
                     yield return fullQuality;

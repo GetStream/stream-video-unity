@@ -125,41 +125,58 @@ namespace StreamVideo.Core.LowLevelClient
 
         public string SessionId { get; private set; }
 
-        public RtcSession(SfuWebSocket sfuWebSocket, ILogs logs, ISerializer serializer, IHttpClient httpClient,
-            ITimeService timeService, IStreamClientConfig config)
+        public RtcSession(SfuWebSocket sfuWebSocket, Func<IStreamCall, HttpClient> httpClientFactory, ILogs logs, ISerializer serializer, ITimeService timeService, 
+            IStreamClientConfig config)
         {
+            _httpClientFactory = httpClientFactory;
             _config = config;
             _timeService = timeService;
             _serializer = serializer;
-            _httpClient = httpClient;
             _logs = logs;
 
             //StreamTodo: SFU WS should be created here so that RTC session owns it
             _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
-            _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
-            _sfuWebSocket.IceTrickle += OnSfuIceTrickle;
+
             _sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
-            _sfuWebSocket.TrackPublished += OnSfuTrackPublished;
-            _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
+            _sfuWebSocket.PublisherAnswer += OnSfuPublisherAnswer;
+            _sfuWebSocket.ConnectionQualityChanged += OnSfuConnectionQualityChanged;
+            _sfuWebSocket.AudioLevelChanged += OnSfuAudioLevelChanged;
+            _sfuWebSocket.IceTrickle += OnSfuIceTrickle;
+            _sfuWebSocket.ChangePublishQuality += OnSfuChangePublishQuality;
             _sfuWebSocket.ParticipantJoined += OnSfuParticipantJoined;
             _sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
             _sfuWebSocket.DominantSpeakerChanged += OnSfuDominantSpeakerChanged;
-            _sfuWebSocket.Error += SfuWebSocketOnError;
+            _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
+            _sfuWebSocket.TrackPublished += OnSfuTrackPublished;
+            _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
+            _sfuWebSocket.Error += OnSfuWebSocketOnError;
+            _sfuWebSocket.CallGrantsUpdated += OnSfuCallGrantsUpdated;
+            _sfuWebSocket.GoAway += OnSfuGoAway;
+            _sfuWebSocket.IceRestart += OnSfuIceRestart;
+            _sfuWebSocket.PinsUpdated += OnSfuPinsUpdated;
         }
 
         public void Dispose()
         {
             StopAsync().LogIfFailed();
 
-            _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
-            _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
             _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
-            _sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
-            _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
+            _sfuWebSocket.PublisherAnswer -= OnSfuPublisherAnswer;
+            _sfuWebSocket.ConnectionQualityChanged -= OnSfuConnectionQualityChanged;
+            _sfuWebSocket.AudioLevelChanged -= OnSfuAudioLevelChanged;
+            _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
+            _sfuWebSocket.ChangePublishQuality -= OnSfuChangePublishQuality;
             _sfuWebSocket.ParticipantJoined -= OnSfuParticipantJoined;
             _sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
             _sfuWebSocket.DominantSpeakerChanged -= OnSfuDominantSpeakerChanged;
-            _sfuWebSocket.Error -= SfuWebSocketOnError;
+            _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
+            _sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
+            _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
+            _sfuWebSocket.Error -= OnSfuWebSocketOnError;
+            _sfuWebSocket.CallGrantsUpdated -= OnSfuCallGrantsUpdated;
+            _sfuWebSocket.GoAway -= OnSfuGoAway;
+            _sfuWebSocket.IceRestart -= OnSfuIceRestart;
+            _sfuWebSocket.PinsUpdated -= OnSfuPinsUpdated;
             _sfuWebSocket.Dispose();
 
             DisposeSubscriber();
@@ -198,6 +215,7 @@ namespace StreamVideo.Core.LowLevelClient
             ClearSession();
 
             ActiveCall = call ?? throw new ArgumentNullException(nameof(call));
+            _httpClient = _httpClientFactory(ActiveCall);
 
             CallState = CallingState.Joining;
 
@@ -257,10 +275,11 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly ILogs _logs;
         private readonly ITimeService _timeService;
         private readonly IStreamClientConfig _config;
+        private readonly Func<IStreamCall, HttpClient> _httpClientFactory;
 
         private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
 
-        private IHttpClient _httpClient;
+        private HttpClient _httpClient;
         private CallingState _callState;
 
         private StreamPeerConnection _subscriber;
@@ -270,6 +289,11 @@ namespace StreamVideo.Core.LowLevelClient
         private float _lastTrackSubscriptionRequestTime;
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
+        
+        private SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
+        private AudioSource _audioInput;
+        private WebCamTexture _videoInput;
+        private Camera _videoSceneInput;
 
         private void ClearSession()
         {
@@ -455,7 +479,9 @@ namespace StreamVideo.Core.LowLevelClient
      */
         private async void OnSfuSubscriberOffer(SubscriberOffer subscriberOffer)
         {
+#if STREAM_DEBUG_ENABLED
             _logs.Warning("OnSfuSubscriberOffer");
+#endif
             //StreamTodo: check RtcSession.kt handleSubscriberOffer for the retry logic
 
             try
@@ -589,9 +615,41 @@ namespace StreamVideo.Core.LowLevelClient
             ActiveCall.UpdateFromSfu(dominantSpeakerChanged, _cache);
         }
         
-        private void SfuWebSocketOnError(Error obj)
+        private void OnSfuWebSocketOnError(Error obj)
         {
             _logs.Error($"Sfu Error - Code: {obj.Error_.Code}, Message: {obj.Error_.Message}, ShouldRetry: {obj.Error_.ShouldRetry}");
+        }
+        
+        private void OnSfuPinsUpdated(PinsChanged pinsChanged)
+        {
+        }
+
+        private void OnSfuIceRestart(ICERestart iceRestart)
+        {
+        }
+
+        private void OnSfuGoAway(GoAway goAway)
+        {
+        }
+
+        private void OnSfuCallGrantsUpdated(CallGrantsUpdated callGrantsUpdated)
+        {
+        }
+
+        private void OnSfuChangePublishQuality(ChangePublishQuality changePublishQuality)
+        {
+        }
+
+        private void OnSfuConnectionQualityChanged(ConnectionQualityChanged connectionQualityChanged)
+        {
+        }
+
+        private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)
+        {
+        }
+
+        private void OnSfuPublisherAnswer(PublisherAnswer publisherAnswer)
+        {
         }
 
         //StreamTodo: implement retry strategy like in Android SDK
@@ -600,29 +658,14 @@ namespace StreamVideo.Core.LowLevelClient
         {
             var serializedRequest = _serializer.Serialize(request);
 
+#if STREAM_DEBUG_ENABLED
             if (preLog)
             {
                 _logs.Warning($"[RPC REQUEST START] {debugRequestName} {serializedRequest}");
             }
+#endif
 
-            //StreamTodo: use injected client or cache this one
-            var connectUrl = ActiveCall.Credentials.Server.Url.Replace("/twirp", "");
-
-            //StreamTodo: move headers population logic elsewhere + remove duplication with main client
-            var httpClient = new HttpClient()
-            {
-                DefaultRequestHeaders =
-                {
-                    { "stream-auth-type", "jwt" },
-                    { "X-Stream-Client", "stream-video-unity-client-0.1.0" }
-                }
-            };
-
-            httpClient.DefaultRequestHeaders.Authorization
-                = new AuthenticationHeaderValue(ActiveCall.Credentials.Token);
-            httpClient.BaseAddress = new Uri(connectUrl);
-
-            var response = await rpcCallAsync(httpClient, request);
+            var response = await rpcCallAsync(_httpClient, request);
             var serializedResponse = _serializer.Serialize(response);
 
 #if STREAM_DEBUG_ENABLED
@@ -743,11 +786,6 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Exception(e);
             }
         }
-
-        private SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
-        private AudioSource _audioInput;
-        private WebCamTexture _videoInput;
-        private Camera _videoSceneInput;
 
         private string ExtractVideoTrackId(string sdp)
         {

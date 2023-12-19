@@ -178,7 +178,6 @@ namespace StreamVideo.Core
             InternalLowLevelClient.RtcSession.AudioInput = audioSource;
         }
 
-        //StreamTodo: Handle calling SetCameraInputSource during the call
         //StreamTodo: later we should accept just Texture or RenderTexture or TextureProvider
         public void SetCameraInputSource(WebCamTexture webCamTexture)
         {

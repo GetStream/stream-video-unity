@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -18,7 +17,6 @@ using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
-using StreamVideo.Libs.Http;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
@@ -546,7 +544,6 @@ namespace StreamVideo.Core.LowLevelClient
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
             var participant = trackPublished.Participant;
 
-
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, out var streamParticipant);
 
             if (participant != null && streamParticipant != null)
@@ -622,6 +619,7 @@ namespace StreamVideo.Core.LowLevelClient
         
         private void OnSfuPinsUpdated(PinsChanged pinsChanged)
         {
+            ActiveCall.UpdateFromSfu(pinsChanged, _cache);
         }
 
         private void OnSfuIceRestart(ICERestart iceRestart)
@@ -1026,7 +1024,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var activeCallIdLog = activeCall == null
                     ? $"{nameof(activeCall)} is null"
                     : $"{nameof(activeCall)} is {activeCall.Id}";
-                logs.Warning($"Received {nameof(ParticipantJoined)} event for call ID: {callId} but {activeCallIdLog}");
+                logs.Error($"Received {nameof(ParticipantJoined)} event for call ID: {callId} but {activeCallIdLog}");
                 return false;
             }
 

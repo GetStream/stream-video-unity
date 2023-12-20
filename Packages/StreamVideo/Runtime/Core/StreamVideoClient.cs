@@ -8,7 +8,6 @@ using Stream.Video.v1.Sfu.Events;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
-using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.State.Caches;

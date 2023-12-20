@@ -102,6 +102,17 @@ namespace StreamVideo.Core.State.Caches
             _statefulModelById.Remove(trackedObject.UniqueId);
         }
 
+        public bool TryRemove(string uniqueId)
+        {
+            if (!_statefulModelById.TryGetValue(uniqueId, out var model))
+            {
+                return false;
+            }
+
+            Remove(model);
+            return true;
+        }
+
         internal delegate TStatefulModel ConstructorHandler(string uniqueId);
 
         internal CacheRepository(ConstructorHandler constructor, ICache cache)

@@ -21,6 +21,7 @@ namespace StreamVideo.Core
         event CallHandler CallEnded;
         IStreamCall ActiveCall { get; }
         IStreamVideoUser LocalUser { get; }
+        bool IsConnected { get; }
 
         /// <summary>
         /// Connect user to Stream server. Returns local user object of type <see cref="IStreamVideoUser"/>

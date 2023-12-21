@@ -340,7 +340,6 @@ namespace StreamVideo.Core
         // {
         //     return Task.CompletedTask; //StreamTodo: implement
         // }
-
         public Task AcceptAsync() => LowLevelClient.InternalVideoClientApi.AcceptCallAsync(Type, Id);
 
         public Task RejectAsync() => LowLevelClient.InternalVideoClientApi.RejectCallAsync(Type, Id);
@@ -369,6 +368,15 @@ namespace StreamVideo.Core
             UpdatePinnedParticipants();
             UpdateSortedParticipants();
         }
+
+        public bool IsPinnedLocally(IStreamVideoCallParticipant participant)
+            => _localPinsSessionIds.Contains(participant.SessionId);
+
+        public bool IsPinnedRemotely(IStreamVideoCallParticipant participant)
+            => _serverPinsSessionIds.Contains(participant.SessionId);
+
+        public bool IsPinned(IStreamVideoCallParticipant participant)
+            => IsPinnedLocally(participant) || IsPinnedRemotely(participant);
 
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
@@ -466,7 +474,7 @@ namespace StreamVideo.Core
             UpdateSortedParticipants();
 
             cache.CallParticipants.TryRemove(participant.sessionId);
-            
+
             //StreamTodo: if we delete the participant from cache we should then pass SessionId and UserId
             ParticipantLeft?.Invoke(participant.sessionId, participant.userId);
         }
@@ -543,15 +551,15 @@ namespace StreamVideo.Core
             //StreamTodo: use hashset pool to optimize
             foreach (var participant in Participants)
             {
-                if (_localPinsSessionIds.Contains(participant.SessionId))
+                if (_serverPinsSessionIds.Contains(participant.SessionId))
                 {
                     _pinnedParticipants.Add(participant);
                 }
             }
-
+            
             foreach (var participant in Participants)
             {
-                if (_serverPinsSessionIds.Contains(participant.SessionId))
+                if (_localPinsSessionIds.Contains(participant.SessionId))
                 {
                     _pinnedParticipants.Add(participant);
                 }

@@ -251,5 +251,23 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         /// <param name="participant">Participant to unpin</param>
         void UnpinLocally(IStreamVideoCallParticipant participant);
+
+        /// <summary>
+        /// Check if this participant is pinned locally. Also check <see cref="IsPinnedRemotely"/> & <see cref="IsPinned"/>.
+        /// </summary>
+        /// <returns>True if participant is pinned locally</returns>
+        bool IsPinnedLocally(IStreamVideoCallParticipant participant);
+
+        /// <summary>
+        /// Check if this participant is pinned remotely. Also check <see cref="IsPinnedLocally"/> & <see cref="IsPinned"/>.
+        /// </summary>
+        /// <returns>True if participant is pinned remotely</returns>
+        bool IsPinnedRemotely(IStreamVideoCallParticipant participant);
+
+        /// <summary>
+        /// Check if this participant is pinned. Also check <see cref="IsPinnedLocally"/> & <see cref="IsPinnedRemotely"/>.
+        /// </summary>
+        /// <returns>True if participant is pinned remotely</returns>
+        bool IsPinned(IStreamVideoCallParticipant participant);
     }
 }

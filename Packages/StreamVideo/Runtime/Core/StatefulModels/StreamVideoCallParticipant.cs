@@ -8,7 +8,6 @@ using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
 using Unity.WebRTC;
-using UnityEngine;
 using Participant = Stream.Video.v1.Sfu.Models.Participant;
 
 namespace StreamVideo.Core.StatefulModels
@@ -128,7 +127,7 @@ namespace StreamVideo.Core.StatefulModels
         {
             
 #if STREAM_DEBUG_ENABLED
-            Debug.LogWarning(
+            Logs.Warning(
                 $"[Participant] Local: {IsLocalParticipant} Session ID: {SessionId} set track of type {type}");
 #endif
 

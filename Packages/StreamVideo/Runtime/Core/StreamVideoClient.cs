@@ -8,7 +8,6 @@ using Stream.Video.v1.Sfu.Events;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
-using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.State.Caches;
@@ -41,6 +40,8 @@ namespace StreamVideo.Core
 
         public IStreamVideoUser LocalUser { get; private set; }
         public IStreamCall ActiveCall => InternalLowLevelClient.RtcSession.ActiveCall;
+
+        public bool IsConnected => InternalLowLevelClient.ConnectionState == ConnectionState.Connected;
 
         /// <summary>
         /// Use this method to create the Video Client. You should have only one instance of this class

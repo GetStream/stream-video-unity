@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if STREAM_TESTS_ENABLED
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -168,3 +169,4 @@ namespace StreamVideo.Tests
         }
     }
 }
+#endif

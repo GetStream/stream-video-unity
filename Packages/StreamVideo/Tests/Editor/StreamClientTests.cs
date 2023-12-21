@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿#if STREAM_TESTS_ENABLED
+using System.Collections;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using StreamVideo.Core;
@@ -33,3 +34,4 @@ namespace StreamVideo.Tests
         //StreamTodo: ensure that LocalUser is populated when connected is triggered
     }
 }
+#endif

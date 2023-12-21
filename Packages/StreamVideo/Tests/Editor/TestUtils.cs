@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if STREAM_TESTS_ENABLED
+using System;
 using System.Collections;
 using System.Threading.Tasks;
 using StreamVideo.Core;
@@ -25,3 +26,4 @@ namespace StreamVideo.Tests
         }
     }
 }
+#endif

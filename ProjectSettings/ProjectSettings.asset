@@ -808,7 +808,7 @@ PlayerSettings:
   webGLDecompressionFallback: 0
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Standalone: STREAM_DEBUG_ENABLED
+    Standalone: STREAM_DEBUG_ENABLED;STREAM_TESTS_ENABLED
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

@@ -1,17 +1,17 @@
 ﻿#if STREAM_TESTS_ENABLED
 using System;
 using NUnit.Framework.Interfaces;
-using StreamVideo.Tests;
+using StreamVideo.Tests.Shared;
 using UnityEngine.TestRunner;
 
 [assembly: TestRunCallback(typeof(UnityTestRunnerCallbacks))]
 
-namespace StreamVideo.Tests
+namespace StreamVideo.Tests.Shared
 {
     /// <summary>
     /// Receives callback from Unity Editor
     /// </summary>
-    internal class UnityTestRunnerCallbacks : ITestRunCallback
+    public class UnityTestRunnerCallbacks : ITestRunCallback
     {
         public static UnityTestRunnerCallbacks Instance { get; private set;}
 

@@ -4,9 +4,9 @@ using System.Collections;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 
-namespace StreamVideo.Tests
+namespace StreamVideo.Tests.Shared
 {
-    internal static class TestUtils
+    public static class TestUtils
     {
         public static IEnumerator RunAsIEnumerator(this Task task,
             Action onSuccess = null, IStreamVideoClient statefulClient = null)

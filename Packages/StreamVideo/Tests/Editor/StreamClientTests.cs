@@ -3,10 +3,11 @@ using System.Collections;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using StreamVideo.Core;
+using StreamVideo.Tests.Shared;
 using UnityEngine.TestTools;
 using Assert = UnityEngine.Assertions.Assert;
 
-namespace StreamVideo.Tests
+namespace StreamVideo.Tests.Editor
 {
     /// <summary>
     /// Tests for <see cref="IStreamVideoClient"/>

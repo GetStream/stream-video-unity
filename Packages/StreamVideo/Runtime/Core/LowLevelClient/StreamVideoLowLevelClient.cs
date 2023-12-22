@@ -35,11 +35,12 @@ using System.Runtime.CompilerServices;
 
 #if UNITY_EDITOR
 [assembly: InternalsVisibleTo("StreamVideo.EditorTools")]
-[assembly: InternalsVisibleTo("StreamVideo.Tests")]
 #endif
 
-#if STREAM_TESTS_ENABLED
-[assembly: InternalsVisibleTo("StreamVideo.Tests")]
+#if STREAM_TESTS_ENABLED || UNITY_EDITOR
+[assembly: InternalsVisibleTo("StreamVideo.Tests.Editor")]
+[assembly: InternalsVisibleTo("StreamVideo.Tests.Runtime")]
+[assembly: InternalsVisibleTo("StreamVideo.Tests.Shared")]
 #endif
 
 namespace StreamVideo.Core.LowLevelClient

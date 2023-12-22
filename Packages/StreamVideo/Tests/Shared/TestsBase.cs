@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using StreamVideo.Core;
 using StreamVideo.Core.Exceptions;
+using UnityEngine;
 
-namespace StreamVideo.Tests
+namespace StreamVideo.Tests.Shared
 {
-    internal class TestsBase
+    public class TestsBase
     {
         [OneTimeSetUp]
         public void OneTimeUp()
@@ -21,9 +22,21 @@ namespace StreamVideo.Tests
         [OneTimeTearDown]
         public async void OneTimeTearDown()
         {
-            await StreamTestClientProvider.Instance.RemoveLockAsync(this);
+            await StreamTestClientProvider.Instance.ReleaseLockAsync(this);
         }
-        
+
+        [TearDown]
+        public async void TearDown()
+        {
+            Debug.LogWarning("Every time tear down");
+
+            if (Client.ActiveCall != null)
+            {
+                Debug.LogWarning("Call was active -> leave");
+                await Client.ActiveCall.LeaveAsync();
+            }
+        }
+
         protected static IStreamVideoClient Client => StreamTestClientProvider.Instance.StateClient;
         
         protected static IEnumerator ConnectAndExecute(Func<Task> test)

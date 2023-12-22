@@ -1,10 +1,9 @@
 {
-    "name": "StreamVideo.Tests.Editor",
+    "name": "StreamVideo.Tests.Shared",
     "rootNamespace": "",
     "references": [
         "StreamVideo.Core",
-        "StreamVideo.Libs",
-        "StreamVideo.Tests.Shared"
+        "StreamVideo.Libs"
     ],
     "includePlatforms": [
         "Editor"

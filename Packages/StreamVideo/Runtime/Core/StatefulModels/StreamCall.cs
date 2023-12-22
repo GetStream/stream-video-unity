@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Core.Utils;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
 using StreamVideo.Core.InternalDTO.Models;
@@ -19,7 +20,8 @@ using StreamVideo.Core.Utils;
 
 namespace StreamVideo.Core
 {
-    public delegate void DominantSpeakerChangedHandler(IStreamVideoCallParticipant currentDominantSpeaker, IStreamVideoCallParticipant previousDominantSpeaker);
+    public delegate void DominantSpeakerChangedHandler(IStreamVideoCallParticipant currentDominantSpeaker,
+        IStreamVideoCallParticipant previousDominantSpeaker);
 
     /// <summary>
     /// Represents a call during which participants can share: audio, video, screen
@@ -32,23 +34,16 @@ namespace StreamVideo.Core
         IUpdateableFrom<CallStateResponseFieldsInternalDTO, StreamCall>,
         IStreamCall
     {
-        //StreamTodo: add sorted participants
-        /**
-     * Sorted participants gives you the list of participants sorted by
-     * * anyone who is pinned
-     * * dominant speaker
-     * * if you are screensharing
-     * * last speaking at
-     * * all other video participants by when they joined
-     * * audio only participants by when they joined
-     *
-     */
         public event ParticipantTrackChangedHandler TrackAdded;
 
         public event ParticipantJoinedHandler ParticipantJoined;
         public event ParticipantLeftHandler ParticipantLeft;
-        
+
         public event DominantSpeakerChangedHandler DominantSpeakerChanged;
+
+        public event Action PinnedParticipantsUpdated;
+
+        //public event Action SortedParticipantsUpdated; //StreamTodo: implement
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
 
@@ -60,7 +55,7 @@ namespace StreamVideo.Core
                 return CreatedBy.Id == localParticipant?.UserId;
             }
         }
-        
+
         public IStreamVideoCallParticipant DominantSpeaker
         {
             get => _dominantSpeaker;
@@ -76,8 +71,11 @@ namespace StreamVideo.Core
                 }
             }
         }
-        
+
         public IStreamVideoCallParticipant PreviousDominantSpeaker { get; private set; }
+
+        public IReadOnlyList<IStreamVideoCallParticipant> PinnedParticipants => _pinnedParticipants;
+        //public IEnumerable<IStreamVideoCallParticipant> SortedParticipants => _sortedParticipants;
 
         #region State
 
@@ -88,19 +86,10 @@ namespace StreamVideo.Core
         public IEnumerable<CallMember> Members => _members.Values;
         public IEnumerable<IStreamVideoUser> BlockedUsers => _blockedUsers;
 
-        /// <summary>
-        /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)
-        /// </summary>
         public string Cid { get; private set; }
 
-        /// <summary>
-        /// Date/time of creation
-        /// </summary>
         public DateTimeOffset CreatedAt { get; private set; }
 
-        /// <summary>
-        /// The user that created the call
-        /// </summary>
         public IStreamVideoUser CreatedBy { get; private set; }
 
         public string CurrentSessionId { get; private set; }
@@ -283,7 +272,8 @@ namespace StreamVideo.Core
         public Task RemoveMembersAsync(IEnumerable<IStreamVideoCallParticipant> participants)
             => RemoveMembersAsync(participants.Select(u => u.UserId));
 
-        public async Task<QueryMembersResult> QueryMembersAsync(IEnumerable<IFieldFilterRule> filters = null, CallMemberSort sort = null, int limit = 25, string prev = null, string next = null)
+        public async Task<QueryMembersResult> QueryMembersAsync(IEnumerable<IFieldFilterRule> filters = null,
+            CallMemberSort sort = null, int limit = 25, string prev = null, string next = null)
         {
             var request = new QueryMembersRequestInternalDTO
             {
@@ -310,17 +300,17 @@ namespace StreamVideo.Core
                 updateable.LoadFromDto(memberDto, Cache);
                 members.Add(domain);
             }
-            
+
             return new QueryMembersResult(members, response.Prev, response.Next);
         }
-        
+
         public Task SendReactionAsync(string type)
             => LowLevelClient.InternalVideoClientApi.SendVideoReactionAsync(Type, Id,
                 new SendReactionRequestInternalDTO
                 {
                     Type = type
                 });
-        
+
         public Task SendReactionAsync(string type, string emojiCode, Dictionary<string, object> customData = null)
             => LowLevelClient.InternalVideoClientApi.SendVideoReactionAsync(Type, Id,
                 new SendReactionRequestInternalDTO
@@ -350,19 +340,8 @@ namespace StreamVideo.Core
         // {
         //     return Task.CompletedTask; //StreamTodo: implement
         // }
-
-        /// <summary>
-        /// Marks the incoming call as accepted.
-        /// This method should be used only for "ringing" call flows.
-        /// <see cref="JoinAsync"/> invokes this method automatically for you when joining a call.
-        /// </summary>
         public Task AcceptAsync() => LowLevelClient.InternalVideoClientApi.AcceptCallAsync(Type, Id);
 
-        /// <summary>
-        /// Marks the incoming call as rejected.
-        /// This method should be used only for "ringing" call flows.
-        /// <see cref="LeaveAsync"/> invokes this method automatically for you when you leave or reject this call.
-        /// </summary>
         public Task RejectAsync() => LowLevelClient.InternalVideoClientApi.RejectCallAsync(Type, Id);
 
         public Task LeaveAsync()
@@ -372,6 +351,32 @@ namespace StreamVideo.Core
         }
 
         public Task EndAsync() => Client.EndCallAsync(this);
+
+        public void PinLocally(IStreamVideoCallParticipant participant)
+        {
+            _localPinsSessionIds.Remove(participant.SessionId);
+            _localPinsSessionIds.AddFirst(participant.SessionId);
+
+            UpdatePinnedParticipants();
+            UpdateSortedParticipants();
+        }
+
+        public void UnpinLocally(IStreamVideoCallParticipant participant)
+        {
+            _localPinsSessionIds.Remove(participant.SessionId);
+
+            UpdatePinnedParticipants();
+            UpdateSortedParticipants();
+        }
+
+        public bool IsPinnedLocally(IStreamVideoCallParticipant participant)
+            => _localPinsSessionIds.Contains(participant.SessionId);
+
+        public bool IsPinnedRemotely(IStreamVideoCallParticipant participant)
+            => _serverPinsSessionIds.Contains(participant.SessionId);
+
+        public bool IsPinned(IStreamVideoCallParticipant participant)
+            => IsPinnedLocally(participant) || IsPinnedRemotely(participant);
 
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
@@ -433,7 +438,8 @@ namespace StreamVideo.Core
                 cache);
         }
 
-        void IUpdateableFrom<CallStateResponseFieldsInternalDTO, StreamCall>.UpdateFromDto(CallStateResponseFieldsInternalDTO dto, ICache cache)
+        void IUpdateableFrom<CallStateResponseFieldsInternalDTO, StreamCall>.UpdateFromDto(
+            CallStateResponseFieldsInternalDTO dto, ICache cache)
         {
             ((IUpdateableFrom<CallResponseInternalDTO, StreamCall>)this).UpdateFromDto(dto.Call, cache);
 
@@ -442,13 +448,14 @@ namespace StreamVideo.Core
             _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
                 cache);
         }
-        
+
         //StreamTodo: handle state update from events, check Android CallState.kt handleEvent()
 
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
+            UpdateServerPins(joinResponse.CallState.Pins);
         }
 
         internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
@@ -461,13 +468,27 @@ namespace StreamVideo.Core
         {
             var participant = Session.UpdateFromSfu(participantLeft, cache);
 
+            _localPinsSessionIds.RemoveAll(participant.sessionId);
+            _serverPinsSessionIds.RemoveAll(pin => pin == participant.sessionId);
+            UpdatePinnedParticipants();
+            UpdateSortedParticipants();
+
+            cache.CallParticipants.TryRemove(participant.sessionId);
+
             //StreamTodo: if we delete the participant from cache we should then pass SessionId and UserId
             ParticipantLeft?.Invoke(participant.sessionId, participant.userId);
         }
-        
+
         internal void UpdateFromSfu(DominantSpeakerChanged dominantSpeakerChanged, ICache cache)
         {
             DominantSpeaker = Participants.FirstOrDefault(p => p.SessionId == dominantSpeakerChanged.SessionId);
+        }
+
+        internal void UpdateFromSfu(PinsChanged pinsChanged, ICache cache)
+        {
+            UpdateServerPins(pinsChanged.Pins);
+            UpdatePinnedParticipants();
+            UpdateSortedParticipants();
         }
 
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
@@ -496,9 +517,15 @@ namespace StreamVideo.Core
 
         private readonly Dictionary<string, CallMember> _members = new Dictionary<string, CallMember>();
         private readonly List<OwnCapability> _ownCapabilities = new List<OwnCapability>();
-        
+
         //StreamTodo: update this from BlockedUserEvent & UnblockedUserEvent + what about the initial state when we join? We only receive _blockedUserIds
         private readonly List<StreamVideoUser> _blockedUsers = new List<StreamVideoUser>();
+
+        private readonly LinkedList<string> _localPinsSessionIds = new LinkedList<string>();
+        private readonly List<string> _serverPinsSessionIds = new List<string>();
+
+        private readonly List<IStreamVideoCallParticipant>
+            _pinnedParticipants = new List<IStreamVideoCallParticipant>();
 
         #endregion
 
@@ -506,5 +533,44 @@ namespace StreamVideo.Core
         private readonly StreamCallType _type;
         private string _id;
         private IStreamVideoCallParticipant _dominantSpeaker;
+
+        private void UpdateServerPins(IEnumerable<Pin> pins)
+        {
+            _serverPinsSessionIds.Clear();
+
+            foreach (var pin in pins)
+            {
+                _serverPinsSessionIds.Add(pin.SessionId);
+            }
+        }
+
+        private void UpdatePinnedParticipants()
+        {
+            _pinnedParticipants.Clear();
+
+            //StreamTodo: use hashset pool to optimize
+            foreach (var participant in Participants)
+            {
+                if (_serverPinsSessionIds.Contains(participant.SessionId))
+                {
+                    _pinnedParticipants.Add(participant);
+                }
+            }
+            
+            foreach (var participant in Participants)
+            {
+                if (_localPinsSessionIds.Contains(participant.SessionId))
+                {
+                    _pinnedParticipants.Add(participant);
+                }
+            }
+
+            PinnedParticipantsUpdated?.Invoke();
+        }
+
+        private void UpdateSortedParticipants()
+        {
+            //SortedParticipantsUpdated?.Invoke();
+        }
     }
 }

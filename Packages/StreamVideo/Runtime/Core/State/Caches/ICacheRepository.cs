@@ -24,6 +24,8 @@ namespace StreamVideo.Core.State.Caches
             where TType : class, TTrackedObject, IStreamStatefulModel, IUpdateableFrom<TDto, TType>;
 
         void Remove(TTrackedObject trackedObject);
+
+        bool TryRemove(string uniqueId);
     }
 
     internal interface IStatefulModelsFactory

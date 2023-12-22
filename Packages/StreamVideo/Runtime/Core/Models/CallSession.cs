@@ -90,7 +90,6 @@ namespace StreamVideo.Core.Models
         
         internal (string sessionId, string userId) UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
-            //StreamTodo: we should either remove the participant from cache or somehow mark to be removed. Otherwise cache will grow while the app is running
             var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
             _participants.Remove(participant);
             

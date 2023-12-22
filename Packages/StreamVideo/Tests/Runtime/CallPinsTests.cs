@@ -1,3 +1,4 @@
+#if STREAM_TESTS_ENABLED
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
@@ -79,3 +80,4 @@ namespace StreamVideo.Tests.Runtime
         //StreamTodo: when participant leaves expect him removed from PinnedParticipants
     }
 }
+#endif

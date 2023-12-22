@@ -74,7 +74,7 @@ namespace StreamVideo.Core
 
         public IStreamVideoCallParticipant PreviousDominantSpeaker { get; private set; }
 
-        public IEnumerable<IStreamVideoCallParticipant> PinnedParticipants => _pinnedParticipants;
+        public IReadOnlyList<IStreamVideoCallParticipant> PinnedParticipants => _pinnedParticipants;
         //public IEnumerable<IStreamVideoCallParticipant> SortedParticipants => _sortedParticipants;
 
         #region State

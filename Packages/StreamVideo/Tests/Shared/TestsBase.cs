@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using StreamVideo.Core;
 using StreamVideo.Core.Exceptions;
+using StreamVideo.Core.StatefulModels;
 using UnityEngine;
 
 namespace StreamVideo.Tests.Shared
@@ -35,6 +36,13 @@ namespace StreamVideo.Tests.Shared
                 Debug.LogWarning("Call was active -> leave");
                 await Client.ActiveCall.LeaveAsync();
             }
+        }
+
+        public async Task<IStreamCall> JoinRandomCallAsync()
+        {
+            var callId = Guid.NewGuid().ToString();
+            return await Client.JoinCallAsync(StreamCallType.Default, callId, create: true, ring: false,
+                notify: false);
         }
 
         protected static IStreamVideoClient Client => StreamTestClientProvider.Instance.StateClient;

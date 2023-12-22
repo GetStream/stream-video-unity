@@ -51,7 +51,7 @@ namespace StreamVideo.Core.StatefulModels
         /// Locally pinned participants are first, then the participant pinned remotely (by other participants with appropriate permissions).
         /// Any update to this collection will trigger the <see cref="PinnedParticipantsUpdated"/> event.
         /// </summary>
-        IEnumerable<IStreamVideoCallParticipant> PinnedParticipants { get; }
+        IReadOnlyList<IStreamVideoCallParticipant> PinnedParticipants { get; }
 
         /// <summary>
         /// Participants sorted by:

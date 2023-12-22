@@ -40,6 +40,12 @@ namespace StreamVideo.Tests.Shared
         
         public void StartCoroutine(IEnumerator coroutine)
         {
+            if (!Application.isPlaying)
+            {
+                throw new NotSupportedException(
+                    "Coroutines require play mode and can only be started from runtime tests.");
+            }
+            
             if (_coroutineRunner == null)
             {
                 _coroutineRunner = new GameObject

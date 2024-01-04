@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Core.Utils;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
+using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -157,7 +158,7 @@ namespace StreamVideo.Core
 
         #endregion
 
-        public Task GoLiveAsync() => Client.LeaveCallAsync(this);
+        public Task GoLiveAsync() => Client.GoLiveAsync(this);
 
         public Task StopLiveAsync() => Client.StopLiveAsync(this);
 
@@ -378,6 +379,19 @@ namespace StreamVideo.Core
         public bool IsPinned(IStreamVideoCallParticipant participant)
             => IsPinnedLocally(participant) || IsPinnedRemotely(participant);
 
+        //StreamTodo: add to docs
+        public bool TryGetCapabilitiesByRole(string role, out IReadOnlyList<string> capabilities)
+        {
+            if (!_capabilitiesByRole.ContainsKey(role))
+            {
+                capabilities = null;
+                return false;
+            }
+
+            capabilities = _capabilitiesByRole[role];
+            return true;
+        }
+
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
         {
@@ -451,6 +465,12 @@ namespace StreamVideo.Core
 
         //StreamTodo: handle state update from events, check Android CallState.kt handleEvent()
 
+        internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
+            IStatefulModelContext context)
+            : base(uniqueId, repository, context)
+        {
+        }
+
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
@@ -494,10 +514,38 @@ namespace StreamVideo.Core
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
             => TrackAdded?.Invoke(participant, track);
 
-        internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
-            IStatefulModelContext context)
-            : base(uniqueId, repository, context)
+        internal void UpdateCapabilitiesByRoleFromDto(CallUpdatedEventInternalDTO callUpdatedEventInternalDto)
+            => UpdateCapabilitiesByRole(callUpdatedEventInternalDto.CapabilitiesByRole);
+
+        public void UpdateCapabilitiesByRoleFromDto(
+            CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEventInternalDto)
+            => UpdateCapabilitiesByRole(callMemberUpdatedPermissionEventInternalDto.CapabilitiesByRole);
+
+        internal void UpdateMembersFromDto(CallCreatedEventInternalDTO callCreatedEventInternalDto)
+            => UpdateMembersFromDto(callCreatedEventInternalDto.Members);
+
+        public void UpdateMembersFromDto(CallMemberAddedEventInternalDTO callMemberAddedEventInternalDto)
+            => UpdateMembersFromDto(callMemberAddedEventInternalDto.Members);
+
+        public void UpdateMembersFromDto(CallMemberUpdatedEventInternalDTO callMemberUpdatedEventInternalDto)
+            => UpdateMembersFromDto(callMemberUpdatedEventInternalDto.Members);
+
+        public void UpdateMembersFromDto(
+            CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEventInternal)
+            => UpdateMembersFromDto(callMemberUpdatedPermissionEventInternal.Members);
+
+        public void UpdateMembersFromDto(CallNotificationEventInternalDTO callNotificationEventInternalDto)
+            => UpdateMembersFromDto(callNotificationEventInternalDto.Members);
+
+        public void UpdateMembersFromDto(CallMemberRemovedEventInternalDTO callMemberRemovedEventInternalDto)
         {
+            foreach (var removedMemberId in callMemberRemovedEventInternalDto.Members)
+            {
+                if (_members.ContainsKey(removedMemberId))
+                {
+                    _members.Remove(removedMemberId);
+                }
+            }
         }
 
         protected override string InternalUniqueId
@@ -527,10 +575,13 @@ namespace StreamVideo.Core
         private readonly List<IStreamVideoCallParticipant>
             _pinnedParticipants = new List<IStreamVideoCallParticipant>();
 
+        private readonly Dictionary<string, List<string>> _capabilitiesByRole = new Dictionary<string, List<string>>();
+
         #endregion
 
         private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
+
         private string _id;
         private IStreamVideoCallParticipant _dominantSpeaker;
 
@@ -556,7 +607,7 @@ namespace StreamVideo.Core
                     _pinnedParticipants.Add(participant);
                 }
             }
-            
+
             foreach (var participant in Participants)
             {
                 if (_localPinsSessionIds.Contains(participant.SessionId))
@@ -571,6 +622,35 @@ namespace StreamVideo.Core
         private void UpdateSortedParticipants()
         {
             //SortedParticipantsUpdated?.Invoke();
+        }
+
+        private void UpdateMembersFromDto(IEnumerable<MemberResponseInternalDTO> membersDtos)
+        {
+            _members.TryUpdateOrCreateFromDto(membersDtos, keySelector: dtoItem => dtoItem.UserId, Cache);
+        }
+
+        private void UpdateCapabilitiesByRole(Dictionary<string, List<string>> capabilitiesByRole)
+        {
+            foreach (var role in _capabilitiesByRole.Keys)
+            {
+                if (!capabilitiesByRole.ContainsKey(role))
+                {
+                    _capabilitiesByRole.Remove(role);
+                }
+            }
+
+            foreach (var roleCapabilities in capabilitiesByRole)
+            {
+                if (!_capabilitiesByRole.ContainsKey(roleCapabilities.Key))
+                {
+                    _capabilitiesByRole[roleCapabilities.Key] = new List<string>();
+                }
+
+                _capabilitiesByRole[roleCapabilities.Key].Clear();
+                _capabilitiesByRole[roleCapabilities.Key].AddRange(roleCapabilities.Value);
+            }
+
+            //StreamTodo: according to description in CallUpdatedEventInternalDTO we should use also update the _ownCapabilities here based on the user role
         }
     }
 }

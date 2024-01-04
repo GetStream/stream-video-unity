@@ -20,6 +20,7 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.NetworkMonitors;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
+using StreamVideo.Libs.Utils;
 using StreamVideo.Libs.VideoClientInstanceRunner;
 using StreamVideo.Libs.Websockets;
 using Unity.WebRTC;
@@ -29,12 +30,13 @@ using Cache = StreamVideo.Core.State.Caches.Cache;
 namespace StreamVideo.Core
 {
     public delegate void CallHandler(IStreamCall call);
+
     public delegate void ConnectHandler(IStreamVideoUser localUser);
 
     public class StreamVideoClient : IStreamVideoClient
     {
         public event ConnectHandler Connected;
-        
+
         public event CallHandler CallStarted;
         public event CallHandler CallEnded;
 
@@ -65,9 +67,9 @@ namespace StreamVideo.Core
 
             var client = new StreamVideoClient(coordinatorWebSocket, sfuWebSocket, httpClient,
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
-            
+
             gameObjectRunner?.RunClientInstance(client);
-            
+
             return client;
         }
 
@@ -190,7 +192,8 @@ namespace StreamVideo.Core
             InternalLowLevelClient.RtcSession.VideoSceneInput = sceneCamera;
         }
 
-        public async Task<QueryCallsResult> QueryCallsAsync(IEnumerable<IFieldFilterRule> filters = null, CallSort sort = null, int limit = 25, string prev = null, string next = null, bool watch = false)
+        public async Task<QueryCallsResult> QueryCallsAsync(IEnumerable<IFieldFilterRule> filters = null,
+            CallSort sort = null, int limit = 25, string prev = null, string next = null, bool watch = false)
         {
             var request = new QueryCallsRequestInternalDTO
             {
@@ -213,12 +216,12 @@ namespace StreamVideo.Core
             {
                 _cache.TryCreateOrUpdate(callDto);
             }
-            
+
             return new QueryCallsResult(calls, response.Prev, response.Next);
         }
-        
+
         #region IStreamVideoClientEventsListener
-        
+
         event Action IStreamVideoClientEventsListener.Destroyed
         {
             add => this.Destroyed += value;
@@ -239,7 +242,7 @@ namespace StreamVideo.Core
                 Dispose();
             });
         }
-        
+
         #endregion
 
         internal StreamVideoLowLevelClient InternalLowLevelClient { get; private set; }
@@ -257,7 +260,7 @@ namespace StreamVideo.Core
             await InternalLowLevelClient.InternalVideoClientApi.EndCallAsync(call.Type, call.Id);
             await LeaveCallAsync(call);
         }
-        
+
         internal Task StartHLSAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StartBroadcastingAsync(call.Type, call.Id);
 
@@ -297,10 +300,11 @@ namespace StreamVideo.Core
                 });
 
         internal Task UnblockUserAsync(IStreamCall call, string userId)
-            => InternalLowLevelClient.InternalVideoClientApi.UnblockUserAsync(call.Type, call.Id, new UnblockUserRequestInternalDTO
-            {
-                UserId = userId
-            });
+            => InternalLowLevelClient.InternalVideoClientApi.UnblockUserAsync(call.Type, call.Id,
+                new UnblockUserRequestInternalDTO
+                {
+                    UserId = userId
+                });
 
         internal Task RequestPermissionAsync(IStreamCall call, List<string> capabilities)
             => InternalLowLevelClient.InternalVideoClientApi.RequestPermissionAsync(call.Type, call.Id,
@@ -308,8 +312,9 @@ namespace StreamVideo.Core
                 {
                     Permissions = capabilities
                 });
-        
-        internal Task UpdateUserPermissions(IStreamCall call, string userId, List<string> grantPermissions, List<string> revokePermissions)
+
+        internal Task UpdateUserPermissions(IStreamCall call, string userId, List<string> grantPermissions,
+            List<string> revokePermissions)
             => InternalLowLevelClient.InternalVideoClientApi.UpdateUserPermissionsAsync(call.Type, call.Id,
                 new UpdateUserPermissionsRequestInternalDTO
                 {
@@ -326,10 +331,10 @@ namespace StreamVideo.Core
                 });
 
         private event Action Destroyed;
-        
+
         private readonly ILogs _logs;
         private readonly ICache _cache;
-        
+
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
@@ -350,8 +355,6 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallCreatedEvent += OnInternalCallCreatedEvent;
             lowLevelClient.InternalCallUpdatedEvent += OnInternalCallUpdatedEvent;
             lowLevelClient.InternalCallEndedEvent += OnInternalCallEndedEvent;
-            lowLevelClient.InternalParticipantJoinedEvent += OnInternalParticipantJoinedEvent;
-            lowLevelClient.InternalParticipantLeftEvent += OnInternalParticipantLeftEvent;
             lowLevelClient.InternalCallAcceptedEvent += OnInternalCallAcceptedEvent;
             lowLevelClient.InternalCallRejectedEvent += OnInternalCallRejectedEvent;
             lowLevelClient.InternalCallLiveStartedEvent += OnInternalCallLiveStartedEvent;
@@ -374,7 +377,7 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallUnblockedUserEvent += OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalConnectionErrorEvent += OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent += OnInternalCustomVideoEvent;
-            
+
             lowLevelClient.Connected += InternalLowLevelClientOnConnected;
         }
 
@@ -383,8 +386,6 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallCreatedEvent -= OnInternalCallCreatedEvent;
             lowLevelClient.InternalCallUpdatedEvent -= OnInternalCallUpdatedEvent;
             lowLevelClient.InternalCallEndedEvent -= OnInternalCallEndedEvent;
-            lowLevelClient.InternalParticipantJoinedEvent -= OnInternalParticipantJoinedEvent;
-            lowLevelClient.InternalParticipantLeftEvent -= OnInternalParticipantLeftEvent;
             lowLevelClient.InternalCallAcceptedEvent -= OnInternalCallAcceptedEvent;
             lowLevelClient.InternalCallRejectedEvent -= OnInternalCallRejectedEvent;
             lowLevelClient.InternalCallLiveStartedEvent -= OnInternalCallLiveStartedEvent;
@@ -407,10 +408,10 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallUnblockedUserEvent -= OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalConnectionErrorEvent -= OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent -= OnInternalCustomVideoEvent;
-            
+
             lowLevelClient.Connected -= InternalLowLevelClientOnConnected;
         }
-        
+
         private void InternalLowLevelClientOnConnected()
         {
             LocalUser = _cache.TryCreateOrUpdate(InternalLowLevelClient.LocalUserDto);
@@ -418,67 +419,77 @@ namespace StreamVideo.Core
 
         private void OnInternalCallCreatedEvent(CallCreatedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallCreatedEventInternalDTO here
+            // CallCreatedEventInternalDTO desc says we should check the ringing state but this seems obsolete - there's no such property. Also, there is a CallRingEventInternalDTO
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            call.UpdateMembersFromDto(eventData);
         }
 
         private void OnInternalCallUpdatedEvent(CallUpdatedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallUpdatedEventInternalDTO here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            call.UpdateCapabilitiesByRoleFromDto(eventData);
         }
 
         private void OnInternalCallEndedEvent(CallEndedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallEndedEventInternalDTO here
-        }
-
-        private void OnInternalParticipantJoinedEvent(ParticipantJoined eventData)
-        {
-            // Implement handling logic for ParticipantJoined here
-        }
-
-        private void OnInternalParticipantLeftEvent(ParticipantLeft eventData)
-        {
-            // Implement handling logic for ParticipantLeft here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            call.LeaveAsync().LogIfFailed();
         }
 
         private void OnInternalCallAcceptedEvent(CallAcceptedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallAcceptedEventInternalDTO here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            //StreamTodo: handle eventData.User - The user who accepted the call
+            
+            //StreamTodo: handle call accepted - check Android -> it does auto-join + updates ringing state + keeps accepted in state. We also might want to expose an event
         }
 
         private void OnInternalCallRejectedEvent(CallRejectedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallRejectedEventInternalDTO here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            //StreamTodo: handle eventData.User - The user who rejected the call
+            
+            //StreamTodo: handle call rejected - check Android -> it updates ringing state + keeps rejectedBy in state. We also might want to expose an event
         }
 
         private void OnInternalCallLiveStartedEvent(CallLiveStartedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallLiveStartedEventInternalDTO here
+            _cache.TryCreateOrUpdate(eventData.Call);
+            
+            //StreamTodo: expose an event that the call got started?
         }
 
         private void OnInternalCallMemberAddedEvent(CallMemberAddedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallMemberAddedEventInternalDTO here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            call.UpdateMembersFromDto(eventData);
         }
 
         private void OnInternalCallMemberRemovedEvent(CallMemberRemovedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallMemberRemovedEventInternalDTO here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            call.UpdateMembersFromDto(eventData);
         }
 
         private void OnInternalCallMemberUpdatedEvent(CallMemberUpdatedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallMemberUpdatedEventInternalDTO here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            call.UpdateMembersFromDto(eventData);
         }
 
         private void OnInternalCallMemberUpdatedPermissionEvent(CallMemberUpdatedPermissionEventInternalDTO eventData)
         {
-            // Implement handling logic for CallMemberUpdatedPermissionEventInternalDTO here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            call.UpdateMembersFromDto(eventData);
+            call.UpdateCapabilitiesByRoleFromDto(eventData);
         }
 
         private void OnInternalCallNotificationEvent(CallNotificationEventInternalDTO eventData)
         {
-            // Implement handling logic for CallNotificationEventInternalDTO here
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            call.UpdateMembersFromDto(eventData);
+            
+            //StreamTodo: handle eventData.User
         }
 
         private void OnInternalPermissionRequestEvent(PermissionRequestEventInternalDTO eventData)
@@ -550,6 +561,5 @@ namespace StreamVideo.Core
         {
             // Implement handling logic for CustomVideoEventInternalDTO here
         }
-
     }
 }

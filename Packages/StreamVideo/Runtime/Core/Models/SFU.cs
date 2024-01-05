@@ -12,7 +12,7 @@ namespace StreamVideo.Core.Models
 #if STREAM_LOCAL_SFU
         public string Url => StreamVideoLowLevelClient.LocalSfuWebSocketUri.ToString();
 #else
-                public string Url { get; private set; }
+        public string Url { get; private set; }
 #endif
 
         public string WsEndpoint { get; private set; }

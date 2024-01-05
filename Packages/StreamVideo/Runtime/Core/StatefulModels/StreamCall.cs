@@ -24,6 +24,8 @@ namespace StreamVideo.Core
     public delegate void DominantSpeakerChangedHandler(IStreamVideoCallParticipant currentDominantSpeaker,
         IStreamVideoCallParticipant previousDominantSpeaker);
 
+    public delegate void CallReactionAddedHandler(Reaction reaction, IStreamVideoCallParticipant participant);
+
     /// <summary>
     /// Represents a call during which participants can share: audio, video, screen
     /// </summary>
@@ -45,6 +47,11 @@ namespace StreamVideo.Core
         public event Action PinnedParticipantsUpdated;
 
         //public event Action SortedParticipantsUpdated; //StreamTodo: implement
+
+        public event CallReactionAddedHandler ReactionAdded;
+
+        public event Action RecordingStarted;
+        public event Action RecordingStopped;
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
 
@@ -514,32 +521,32 @@ namespace StreamVideo.Core
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
             => TrackAdded?.Invoke(participant, track);
 
-        internal void UpdateCapabilitiesByRoleFromDto(CallUpdatedEventInternalDTO callUpdatedEventInternalDto)
-            => UpdateCapabilitiesByRole(callUpdatedEventInternalDto.CapabilitiesByRole);
+        internal void UpdateCapabilitiesByRoleFromDto(CallUpdatedEventInternalDTO callUpdatedEvent)
+            => UpdateCapabilitiesByRole(callUpdatedEvent.CapabilitiesByRole);
 
-        public void UpdateCapabilitiesByRoleFromDto(
-            CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEventInternalDto)
-            => UpdateCapabilitiesByRole(callMemberUpdatedPermissionEventInternalDto.CapabilitiesByRole);
+        internal void UpdateCapabilitiesByRoleFromDto(
+            CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEvent)
+            => UpdateCapabilitiesByRole(callMemberUpdatedPermissionEvent.CapabilitiesByRole);
 
-        internal void UpdateMembersFromDto(CallCreatedEventInternalDTO callCreatedEventInternalDto)
-            => UpdateMembersFromDto(callCreatedEventInternalDto.Members);
+        internal void UpdateMembersFromDto(CallCreatedEventInternalDTO callCreatedEvent)
+            => UpdateMembersFromDto(callCreatedEvent.Members);
 
-        public void UpdateMembersFromDto(CallMemberAddedEventInternalDTO callMemberAddedEventInternalDto)
-            => UpdateMembersFromDto(callMemberAddedEventInternalDto.Members);
+        internal void UpdateMembersFromDto(CallMemberAddedEventInternalDTO callMemberAddedEvent)
+            => UpdateMembersFromDto(callMemberAddedEvent.Members);
 
-        public void UpdateMembersFromDto(CallMemberUpdatedEventInternalDTO callMemberUpdatedEventInternalDto)
-            => UpdateMembersFromDto(callMemberUpdatedEventInternalDto.Members);
+        internal void UpdateMembersFromDto(CallMemberUpdatedEventInternalDTO callMemberUpdatedEvent)
+            => UpdateMembersFromDto(callMemberUpdatedEvent.Members);
 
-        public void UpdateMembersFromDto(
-            CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEventInternal)
-            => UpdateMembersFromDto(callMemberUpdatedPermissionEventInternal.Members);
+        internal void UpdateMembersFromDto(
+            CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEvent)
+            => UpdateMembersFromDto(callMemberUpdatedPermissionEvent.Members);
 
-        public void UpdateMembersFromDto(CallNotificationEventInternalDTO callNotificationEventInternalDto)
-            => UpdateMembersFromDto(callNotificationEventInternalDto.Members);
+        internal void UpdateMembersFromDto(CallNotificationEventInternalDTO callNotificationEvent)
+            => UpdateMembersFromDto(callNotificationEvent.Members);
 
-        public void UpdateMembersFromDto(CallMemberRemovedEventInternalDTO callMemberRemovedEventInternalDto)
+        internal void UpdateMembersFromDto(CallMemberRemovedEventInternalDTO callMemberRemovedEvent)
         {
-            foreach (var removedMemberId in callMemberRemovedEventInternalDto.Members)
+            foreach (var removedMemberId in callMemberRemovedEvent.Members)
             {
                 if (_members.ContainsKey(removedMemberId))
                 {
@@ -547,6 +554,53 @@ namespace StreamVideo.Core
                 }
             }
         }
+
+        internal void UpdateOwnCapabilitiesFrom(
+            UpdatedCallPermissionsEventInternalDTO updatedCallPermissionsEvent)
+        {
+            var ownCapabilities = updatedCallPermissionsEvent.OwnCapabilities;
+            if (ownCapabilities == null || ownCapabilities.Count == 0)
+            {
+                return;
+            }
+
+            _ownCapabilities.Clear();
+            foreach (var c in ownCapabilities)
+            {
+                var capability = c.ToPublicEnum();
+                _ownCapabilities.Add(capability);
+            }
+
+            //StreamTodo: we should probably expose an event OwnCapabilitiesChanged
+        }
+
+        internal void InternalHandleCallRecordingStartedEvent(CallReactionEventInternalDTO callReactionEvent)
+        {
+            var reaction = new Reaction();
+            Cache.TryUpdateOrCreateFromDto(reaction, callReactionEvent.Reaction);
+
+            var participant
+                = _client.RtcSession.ActiveCall.Participants.FirstOrDefault(p => p.UserId == reaction.User.Id);
+            if (participant == null)
+            {
+                Logs.ErrorIfDebug(
+                    $"Failed to find participant for reaction. UserId: {reaction.User.Id}, Participants: " +
+                    string.Join(", ", _client.RtcSession.ActiveCall.Participants.Select(p => p.UserId)));
+                return;
+            }
+
+            //StreamTodo: Android also keeps track of reactions per participant, each participant has reactions collections
+
+            ReactionAdded?.Invoke(reaction, participant);
+        }
+
+        internal void InternalHandleCallRecordingStartedEvent(
+            CallRecordingStartedEventInternalDTO callRecordingStartedEvent)
+            => RecordingStarted?.Invoke();
+
+        public void InternalHandleCallRecordingStoppedEvent(
+            CallRecordingStoppedEventInternalDTO callRecordingStoppedEvent)
+            => RecordingStopped?.Invoke();
 
         protected override string InternalUniqueId
         {

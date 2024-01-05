@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.QueryBuilders.Sort.Calls;
-using Stream.Video.v1.Sfu.Events;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Models;
 using StreamVideo.Core.QueryBuilders.Filters;
+using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs;
@@ -26,6 +27,9 @@ using StreamVideo.Libs.Websockets;
 using Unity.WebRTC;
 using UnityEngine;
 using Cache = StreamVideo.Core.State.Caches.Cache;
+#if STREAM_DEBUG_ENABLED
+using System.Runtime.CompilerServices;
+#endif
 
 namespace StreamVideo.Core
 {
@@ -440,7 +444,7 @@ namespace StreamVideo.Core
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
             //StreamTodo: handle eventData.User - The user who accepted the call
-            
+
             //StreamTodo: handle call accepted - check Android -> it does auto-join + updates ringing state + keeps accepted in state. We also might want to expose an event
         }
 
@@ -448,14 +452,14 @@ namespace StreamVideo.Core
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
             //StreamTodo: handle eventData.User - The user who rejected the call
-            
+
             //StreamTodo: handle call rejected - check Android -> it updates ringing state + keeps rejectedBy in state. We also might want to expose an event
         }
 
         private void OnInternalCallLiveStartedEvent(CallLiveStartedEventInternalDTO eventData)
         {
             _cache.TryCreateOrUpdate(eventData.Call);
-            
+
             //StreamTodo: expose an event that the call got started?
         }
 
@@ -488,33 +492,66 @@ namespace StreamVideo.Core
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
             call.UpdateMembersFromDto(eventData);
-            
+
             //StreamTodo: handle eventData.User
         }
 
         private void OnInternalPermissionRequestEvent(PermissionRequestEventInternalDTO eventData)
         {
-            // Implement handling logic for PermissionRequestEventInternalDTO here
+            var requestingUser = _cache.TryCreateOrUpdate(eventData.User);
+
+            //StreamTodo: implement event PermissionsRequested + should we cast string to some enum?
+
+            /* Android keeps permission requests in this format
+             * data class PermissionRequest(
+    val call: Call,
+    val user: User,
+    val createdAt: OffsetDateTime,
+    val permissions: List<String>,
+    var grantedAt: OffsetDateTime? = null,
+    var rejectedAt: OffsetDateTime? = null,
+)
+             */
         }
 
         private void OnInternalUpdatedCallPermissionsEvent(UpdatedCallPermissionsEventInternalDTO eventData)
         {
-            // Implement handling logic for UpdatedCallPermissionsEventInternalDTO here
+            if (!AssertCidMatch(eventData.CallCid, ActiveCall?.Cid))
+            {
+                return;
+            }
+
+            InternalLowLevelClient.RtcSession.ActiveCall.UpdateOwnCapabilitiesFrom(eventData);
         }
 
         private void OnInternalCallReactionEvent(CallReactionEventInternalDTO eventData)
         {
-            // Implement handling logic for CallReactionEventInternalDTO here
+            if (!AssertCidMatch(eventData.CallCid, ActiveCall?.Cid))
+            {
+                return;
+            }
+            
+            InternalLowLevelClient.RtcSession.ActiveCall.InternalHandleCallRecordingStartedEvent(eventData);
         }
 
         private void OnInternalCallRecordingStartedEvent(CallRecordingStartedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallRecordingStartedEventInternalDTO here
+            if (!AssertCidMatch(eventData.CallCid, ActiveCall?.Cid))
+            {
+                return;
+            }
+            
+            InternalLowLevelClient.RtcSession.ActiveCall.InternalHandleCallRecordingStartedEvent(eventData);
         }
 
         private void OnInternalCallRecordingStoppedEvent(CallRecordingStoppedEventInternalDTO eventData)
         {
-            // Implement handling logic for CallRecordingStoppedEventInternalDTO here
+            if (!AssertCidMatch(eventData.CallCid, ActiveCall?.Cid))
+            {
+                return;
+            }
+            
+            InternalLowLevelClient.RtcSession.ActiveCall.InternalHandleCallRecordingStoppedEvent(eventData);
         }
 
         private void OnInternalBlockedUserEvent(BlockedUserEventInternalDTO eventData)
@@ -560,6 +597,19 @@ namespace StreamVideo.Core
         private void OnInternalCustomVideoEvent(CustomVideoEventInternalDTO eventData)
         {
             // Implement handling logic for CustomVideoEventInternalDTO here
+        }
+        
+        private bool AssertCidMatch(string cidA, string cidB, [CallerMemberName] string callerName = "")
+        {
+            var areEqual = cidA == cidB;
+#if STREAM_DEBUG_ENABLED
+
+            if (!areEqual)
+            {
+                _logs.Error($"CID mismatch: {cidA} vs {cidB} in {callerName}");
+            }
+#endif
+            return areEqual;
         }
     }
 }

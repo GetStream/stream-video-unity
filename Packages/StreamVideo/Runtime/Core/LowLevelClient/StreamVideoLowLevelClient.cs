@@ -264,8 +264,6 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CallCreatedEventInternalDTO> InternalCallCreatedEvent;
         internal event Action<CallUpdatedEventInternalDTO> InternalCallUpdatedEvent;
         internal event Action<CallEndedEventInternalDTO> InternalCallEndedEvent;
-        internal event Action<ParticipantJoined> InternalParticipantJoinedEvent;
-        internal event Action<ParticipantLeft> InternalParticipantLeftEvent;
         internal event Action<CallAcceptedEventInternalDTO> InternalCallAcceptedEvent;
         internal event Action<CallRejectedEventInternalDTO> InternalCallRejectedEvent;
         internal event Action<CallLiveStartedEventInternalDTO> InternalCallLiveStartedEvent;
@@ -389,12 +387,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             _coordinatorWS.RegisterEventType<CallEndedEventInternalDTO>(CoordinatorEventType.CallEnded,
                 e => InternalCallEndedEvent?.Invoke(e));
-
-            _coordinatorWS.RegisterEventType<ParticipantJoined>(CoordinatorEventType.CallSessionParticipantJoined,
-                e => InternalParticipantJoinedEvent?.Invoke(e));
-
-            _coordinatorWS.RegisterEventType<ParticipantLeft>(CoordinatorEventType.CallSessionParticipantLeft,
-                e => InternalParticipantLeftEvent?.Invoke(e));
 
             _coordinatorWS.RegisterEventType<CallAcceptedEventInternalDTO>(CoordinatorEventType.CallAccepted,
                 e => InternalCallAcceptedEvent?.Invoke(e));

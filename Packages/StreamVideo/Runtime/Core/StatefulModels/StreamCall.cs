@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Core.Utils;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
+using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -22,6 +23,8 @@ namespace StreamVideo.Core
 {
     public delegate void DominantSpeakerChangedHandler(IStreamVideoCallParticipant currentDominantSpeaker,
         IStreamVideoCallParticipant previousDominantSpeaker);
+
+    public delegate void CallReactionAddedHandler(Reaction reaction, IStreamVideoCallParticipant participant);
 
     /// <summary>
     /// Represents a call during which participants can share: audio, video, screen
@@ -44,6 +47,11 @@ namespace StreamVideo.Core
         public event Action PinnedParticipantsUpdated;
 
         //public event Action SortedParticipantsUpdated; //StreamTodo: implement
+
+        public event CallReactionAddedHandler ReactionAdded;
+
+        public event Action RecordingStarted;
+        public event Action RecordingStopped;
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
 
@@ -157,7 +165,7 @@ namespace StreamVideo.Core
 
         #endregion
 
-        public Task GoLiveAsync() => Client.LeaveCallAsync(this);
+        public Task GoLiveAsync() => Client.GoLiveAsync(this);
 
         public Task StopLiveAsync() => Client.StopLiveAsync(this);
 
@@ -378,6 +386,19 @@ namespace StreamVideo.Core
         public bool IsPinned(IStreamVideoCallParticipant participant)
             => IsPinnedLocally(participant) || IsPinnedRemotely(participant);
 
+        //StreamTodo: add to docs
+        public bool TryGetCapabilitiesByRole(string role, out IReadOnlyList<string> capabilities)
+        {
+            if (!_capabilitiesByRole.ContainsKey(role))
+            {
+                capabilities = null;
+                return false;
+            }
+
+            capabilities = _capabilitiesByRole[role];
+            return true;
+        }
+
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
         {
@@ -451,6 +472,12 @@ namespace StreamVideo.Core
 
         //StreamTodo: handle state update from events, check Android CallState.kt handleEvent()
 
+        internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
+            IStatefulModelContext context)
+            : base(uniqueId, repository, context)
+        {
+        }
+
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
@@ -494,11 +521,89 @@ namespace StreamVideo.Core
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
             => TrackAdded?.Invoke(participant, track);
 
-        internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
-            IStatefulModelContext context)
-            : base(uniqueId, repository, context)
+        internal void UpdateCapabilitiesByRoleFromDto(CallUpdatedEventInternalDTO callUpdatedEvent)
+            => UpdateCapabilitiesByRole(callUpdatedEvent.CapabilitiesByRole);
+
+        internal void UpdateCapabilitiesByRoleFromDto(
+            CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEvent)
+            => UpdateCapabilitiesByRole(callMemberUpdatedPermissionEvent.CapabilitiesByRole);
+
+        internal void UpdateMembersFromDto(CallCreatedEventInternalDTO callCreatedEvent)
+            => UpdateMembersFromDto(callCreatedEvent.Members);
+
+        internal void UpdateMembersFromDto(CallMemberAddedEventInternalDTO callMemberAddedEvent)
+            => UpdateMembersFromDto(callMemberAddedEvent.Members);
+
+        internal void UpdateMembersFromDto(CallMemberUpdatedEventInternalDTO callMemberUpdatedEvent)
+            => UpdateMembersFromDto(callMemberUpdatedEvent.Members);
+
+        internal void UpdateMembersFromDto(
+            CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEvent)
+            => UpdateMembersFromDto(callMemberUpdatedPermissionEvent.Members);
+
+        internal void UpdateMembersFromDto(CallNotificationEventInternalDTO callNotificationEvent)
+            => UpdateMembersFromDto(callNotificationEvent.Members);
+
+        internal void UpdateMembersFromDto(CallRingEventInternalDTO callRingEvent)
+            => UpdateMembersFromDto(callRingEvent.Members);
+
+        internal void UpdateMembersFromDto(CallMemberRemovedEventInternalDTO callMemberRemovedEvent)
         {
+            foreach (var removedMemberId in callMemberRemovedEvent.Members)
+            {
+                if (_members.ContainsKey(removedMemberId))
+                {
+                    _members.Remove(removedMemberId);
+                }
+            }
         }
+
+        internal void UpdateOwnCapabilitiesFrom(
+            UpdatedCallPermissionsEventInternalDTO updatedCallPermissionsEvent)
+        {
+            var ownCapabilities = updatedCallPermissionsEvent.OwnCapabilities;
+            if (ownCapabilities == null || ownCapabilities.Count == 0)
+            {
+                return;
+            }
+
+            _ownCapabilities.Clear();
+            foreach (var c in ownCapabilities)
+            {
+                var capability = c.ToPublicEnum();
+                _ownCapabilities.Add(capability);
+            }
+
+            //StreamTodo: we should probably expose an event OwnCapabilitiesChanged
+        }
+
+        internal void InternalHandleCallRecordingStartedEvent(CallReactionEventInternalDTO callReactionEvent)
+        {
+            var reaction = new Reaction();
+            Cache.TryUpdateOrCreateFromDto(reaction, callReactionEvent.Reaction);
+
+            var participant
+                = _client.RtcSession.ActiveCall.Participants.FirstOrDefault(p => p.UserId == reaction.User.Id);
+            if (participant == null)
+            {
+                Logs.ErrorIfDebug(
+                    $"Failed to find participant for reaction. UserId: {reaction.User.Id}, Participants: " +
+                    string.Join(", ", _client.RtcSession.ActiveCall.Participants.Select(p => p.UserId)));
+                return;
+            }
+
+            //StreamTodo: Android also keeps track of reactions per participant, each participant has reactions collections
+
+            ReactionAdded?.Invoke(reaction, participant);
+        }
+
+        internal void InternalHandleCallRecordingStartedEvent(
+            CallRecordingStartedEventInternalDTO callRecordingStartedEvent)
+            => RecordingStarted?.Invoke();
+
+        public void InternalHandleCallRecordingStoppedEvent(
+            CallRecordingStoppedEventInternalDTO callRecordingStoppedEvent)
+            => RecordingStopped?.Invoke();
 
         protected override string InternalUniqueId
         {
@@ -527,10 +632,13 @@ namespace StreamVideo.Core
         private readonly List<IStreamVideoCallParticipant>
             _pinnedParticipants = new List<IStreamVideoCallParticipant>();
 
+        private readonly Dictionary<string, List<string>> _capabilitiesByRole = new Dictionary<string, List<string>>();
+
         #endregion
 
         private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
+
         private string _id;
         private IStreamVideoCallParticipant _dominantSpeaker;
 
@@ -556,7 +664,7 @@ namespace StreamVideo.Core
                     _pinnedParticipants.Add(participant);
                 }
             }
-            
+
             foreach (var participant in Participants)
             {
                 if (_localPinsSessionIds.Contains(participant.SessionId))
@@ -571,6 +679,35 @@ namespace StreamVideo.Core
         private void UpdateSortedParticipants()
         {
             //SortedParticipantsUpdated?.Invoke();
+        }
+
+        private void UpdateMembersFromDto(IEnumerable<MemberResponseInternalDTO> membersDtos)
+        {
+            _members.TryUpdateOrCreateFromDto(membersDtos, keySelector: dtoItem => dtoItem.UserId, Cache);
+        }
+
+        private void UpdateCapabilitiesByRole(Dictionary<string, List<string>> capabilitiesByRole)
+        {
+            foreach (var role in _capabilitiesByRole.Keys)
+            {
+                if (!capabilitiesByRole.ContainsKey(role))
+                {
+                    _capabilitiesByRole.Remove(role);
+                }
+            }
+
+            foreach (var roleCapabilities in capabilitiesByRole)
+            {
+                if (!_capabilitiesByRole.ContainsKey(roleCapabilities.Key))
+                {
+                    _capabilitiesByRole[roleCapabilities.Key] = new List<string>();
+                }
+
+                _capabilitiesByRole[roleCapabilities.Key].Clear();
+                _capabilitiesByRole[roleCapabilities.Key].AddRange(roleCapabilities.Value);
+            }
+
+            //StreamTodo: according to description in CallUpdatedEventInternalDTO we should use also update the _ownCapabilities here based on the user role
         }
     }
 }

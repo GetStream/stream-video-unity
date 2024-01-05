@@ -16,11 +16,26 @@ namespace StreamVideo.Core.StatefulModels
         event ParticipantLeftHandler ParticipantLeft;
         
         event DominantSpeakerChangedHandler DominantSpeakerChanged;
+
+        /// <summary>
+        /// Notifies that a call participant added a reaction to this call
+        /// </summary>
+        event CallReactionAddedHandler ReactionAdded;
         
         /// <summary>
         /// Notifies that the <see cref="PinnedParticipants"/> collection was updated
         /// </summary>
         event Action PinnedParticipantsUpdated;
+        
+        /// <summary>
+        /// Recording of this call started
+        /// </summary>
+        event Action RecordingStarted;
+        
+        /// <summary>
+        /// Recording of this call stopped
+        /// </summary>
+        event Action RecordingStopped;
         
         /// <summary>
         /// Notifies that the <see cref="SortedParticipants"/> collection was updated

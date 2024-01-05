@@ -373,12 +373,12 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallRecordingStartedEvent += OnInternalCallRecordingStartedEvent;
             lowLevelClient.InternalCallRecordingStoppedEvent += OnInternalCallRecordingStoppedEvent;
             lowLevelClient.InternalBlockedUserEvent += OnInternalBlockedUserEvent;
+            lowLevelClient.InternalCallUnblockedUserEvent += OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalCallBroadcastingStartedEvent += OnInternalCallBroadcastingStartedEvent;
             lowLevelClient.InternalCallBroadcastingStoppedEvent += OnInternalCallBroadcastingStoppedEvent;
             lowLevelClient.InternalCallRingEvent += OnInternalCallRingEvent;
             lowLevelClient.InternalCallSessionEndedEvent += OnInternalCallSessionEndedEvent;
             lowLevelClient.InternalCallSessionStartedEvent += OnInternalCallSessionStartedEvent;
-            lowLevelClient.InternalCallUnblockedUserEvent += OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalConnectionErrorEvent += OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent += OnInternalCustomVideoEvent;
 
@@ -404,12 +404,12 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallRecordingStartedEvent -= OnInternalCallRecordingStartedEvent;
             lowLevelClient.InternalCallRecordingStoppedEvent -= OnInternalCallRecordingStoppedEvent;
             lowLevelClient.InternalBlockedUserEvent -= OnInternalBlockedUserEvent;
+            lowLevelClient.InternalCallUnblockedUserEvent -= OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalCallBroadcastingStartedEvent -= OnInternalCallBroadcastingStartedEvent;
             lowLevelClient.InternalCallBroadcastingStoppedEvent -= OnInternalCallBroadcastingStoppedEvent;
             lowLevelClient.InternalCallRingEvent -= OnInternalCallRingEvent;
             lowLevelClient.InternalCallSessionEndedEvent -= OnInternalCallSessionEndedEvent;
             lowLevelClient.InternalCallSessionStartedEvent -= OnInternalCallSessionStartedEvent;
-            lowLevelClient.InternalCallUnblockedUserEvent -= OnInternalCallUnblockedUserEvent;
             lowLevelClient.InternalConnectionErrorEvent -= OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent -= OnInternalCustomVideoEvent;
 
@@ -557,36 +557,46 @@ namespace StreamVideo.Core
         private void OnInternalBlockedUserEvent(BlockedUserEventInternalDTO eventData)
         {
             // Implement handling logic for BlockedUserEventInternalDTO here
-        }
-
-        private void OnInternalCallBroadcastingStartedEvent(CallBroadcastingStartedEventInternalDTO eventData)
-        {
-            // Implement handling logic for CallBroadcastingStartedEventInternalDTO here
-        }
-
-        private void OnInternalCallBroadcastingStoppedEvent(CallBroadcastingStoppedEventInternalDTO eventData)
-        {
-            // Implement handling logic for CallBroadcastingStoppedEventInternalDTO here
-        }
-
-        private void OnInternalCallRingEvent(CallRingEventInternalDTO eventData)
-        {
-            // Implement handling logic for CallRingEventInternalDTO here
-        }
-
-        private void OnInternalCallSessionEndedEvent(CallSessionEndedEventInternalDTO eventData)
-        {
-            // Implement handling logic for CallSessionEndedEventInternalDTO here
-        }
-
-        private void OnInternalCallSessionStartedEvent(CallSessionStartedEventInternalDTO eventData)
-        {
-            // Implement handling logic for CallSessionStartedEventInternalDTO here
+            var blockedUser = _cache.TryCreateOrUpdate(eventData.User);
+            var blockedByUser = _cache.TryCreateOrUpdate(eventData.BlockedByUser);
+            
+            //StreamTodo: expose UserBlocked event?
         }
 
         private void OnInternalCallUnblockedUserEvent(BlockedUserEventInternalDTO eventData)
         {
             // Implement handling logic for CallUnblockedUserEventInternalDTO here
+        }
+
+        private void OnInternalCallBroadcastingStartedEvent(CallBroadcastingStartedEventInternalDTO eventData)
+        {
+            //StreamTodo: Implement handling logic for CallBroadcastingStartedEventInternalDTO here
+        }
+
+        private void OnInternalCallBroadcastingStoppedEvent(CallBroadcastingStoppedEventInternalDTO eventData)
+        {
+            //StreamTodo: Implement handling logic for CallBroadcastingStoppedEventInternalDTO here
+        }
+
+        private void OnInternalCallRingEvent(CallRingEventInternalDTO eventData)
+        {
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            var caller = _cache.TryCreateOrUpdate(eventData.User);
+            
+            call.UpdateMembersFromDto(eventData);
+            
+            //StreamTodo: expose CallRinging event?
+        }
+
+        private void OnInternalCallSessionEndedEvent(CallSessionEndedEventInternalDTO eventData)
+        {
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
+            //StreamTodo: should we do anything else? 
+        }
+
+        private void OnInternalCallSessionStartedEvent(CallSessionStartedEventInternalDTO eventData)
+        {
+            var call = _cache.TryCreateOrUpdate(eventData.Call);
         }
 
         private void OnInternalConnectionErrorEvent(ConnectionErrorEventInternalDTO eventData)
@@ -596,7 +606,7 @@ namespace StreamVideo.Core
 
         private void OnInternalCustomVideoEvent(CustomVideoEventInternalDTO eventData)
         {
-            // Implement handling logic for CustomVideoEventInternalDTO here
+            //StreamTodo: Implement handling logic for CustomVideoEventInternalDTO here
         }
         
         private bool AssertCidMatch(string cidA, string cidB, [CallerMemberName] string callerName = "")

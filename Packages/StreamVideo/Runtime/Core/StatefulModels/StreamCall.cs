@@ -544,6 +544,9 @@ namespace StreamVideo.Core
         internal void UpdateMembersFromDto(CallNotificationEventInternalDTO callNotificationEvent)
             => UpdateMembersFromDto(callNotificationEvent.Members);
 
+        internal void UpdateMembersFromDto(CallRingEventInternalDTO callRingEvent)
+            => UpdateMembersFromDto(callRingEvent.Members);
+
         internal void UpdateMembersFromDto(CallMemberRemovedEventInternalDTO callMemberRemovedEvent)
         {
             foreach (var removedMemberId in callMemberRemovedEvent.Members)

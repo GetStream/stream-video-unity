@@ -8,9 +8,7 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient;
-using StreamVideo.Core.Models;
 using StreamVideo.Core.QueryBuilders.Filters;
-using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs;
@@ -27,9 +25,6 @@ using StreamVideo.Libs.Websockets;
 using Unity.WebRTC;
 using UnityEngine;
 using Cache = StreamVideo.Core.State.Caches.Cache;
-#if STREAM_DEBUG_ENABLED
-using System.Runtime.CompilerServices;
-#endif
 
 namespace StreamVideo.Core
 {
@@ -530,7 +525,7 @@ namespace StreamVideo.Core
             {
                 return;
             }
-            
+
             InternalLowLevelClient.RtcSession.ActiveCall.InternalHandleCallRecordingStartedEvent(eventData);
         }
 
@@ -540,7 +535,7 @@ namespace StreamVideo.Core
             {
                 return;
             }
-            
+
             InternalLowLevelClient.RtcSession.ActiveCall.InternalHandleCallRecordingStartedEvent(eventData);
         }
 
@@ -550,7 +545,7 @@ namespace StreamVideo.Core
             {
                 return;
             }
-            
+
             InternalLowLevelClient.RtcSession.ActiveCall.InternalHandleCallRecordingStoppedEvent(eventData);
         }
 
@@ -559,7 +554,7 @@ namespace StreamVideo.Core
             // Implement handling logic for BlockedUserEventInternalDTO here
             var blockedUser = _cache.TryCreateOrUpdate(eventData.User);
             var blockedByUser = _cache.TryCreateOrUpdate(eventData.BlockedByUser);
-            
+
             //StreamTodo: expose UserBlocked event?
         }
 
@@ -582,9 +577,9 @@ namespace StreamVideo.Core
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
             var caller = _cache.TryCreateOrUpdate(eventData.User);
-            
+
             call.UpdateMembersFromDto(eventData);
-            
+
             //StreamTodo: expose CallRinging event?
         }
 
@@ -608,15 +603,15 @@ namespace StreamVideo.Core
         {
             //StreamTodo: Implement handling logic for CustomVideoEventInternalDTO here
         }
-        
-        private bool AssertCidMatch(string cidA, string cidB, [CallerMemberName] string callerName = "")
+
+        private bool AssertCidMatch(string cidA, string cidB)
         {
             var areEqual = cidA == cidB;
 #if STREAM_DEBUG_ENABLED
 
             if (!areEqual)
             {
-                _logs.Error($"CID mismatch: {cidA} vs {cidB} in {callerName}");
+                _logs.Error($"CID mismatch: {cidA} vs {cidB}");
             }
 #endif
             return areEqual;

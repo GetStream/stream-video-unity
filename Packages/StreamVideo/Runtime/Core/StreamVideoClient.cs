@@ -32,7 +32,7 @@ namespace StreamVideo.Core
 
     public delegate void ConnectHandler(IStreamVideoUser localUser);
 
-    public class StreamVideoClient : IStreamVideoClient
+    public class StreamVideoClient : IStreamVideoClient, IInternalStreamVideoClient
     {
         public event ConnectHandler Connected;
 
@@ -244,41 +244,38 @@ namespace StreamVideo.Core
 
         #endregion
 
-        internal StreamVideoLowLevelClient InternalLowLevelClient { get; private set; }
 
-        internal async Task LeaveCallAsync(IStreamCall call)
-        {
-            //StreamTodo: check if call is active
-            await InternalLowLevelClient.RtcSession.StopAsync();
-            CallEnded?.Invoke(call);
-        }
 
-        internal async Task EndCallAsync(IStreamCall call)
+        StreamVideoLowLevelClient IInternalStreamVideoClient.InternalLowLevelClient => InternalLowLevelClient;
+
+        Task IInternalStreamVideoClient.LeaveCallAsync(IStreamCall call) => LeaveCallAsync(call);
+
+        async Task IInternalStreamVideoClient.EndCallAsync(IStreamCall call)
         {
             //StreamTodo: check if call is active
             await InternalLowLevelClient.InternalVideoClientApi.EndCallAsync(call.Type, call.Id);
             await LeaveCallAsync(call);
         }
 
-        internal Task StartHLSAsync(IStreamCall call)
+        Task IInternalStreamVideoClient.StartHLSAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StartBroadcastingAsync(call.Type, call.Id);
 
-        internal Task StopHLSAsync(IStreamCall call)
+        Task IInternalStreamVideoClient.StopHLSAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StopBroadcastingAsync(call.Type, call.Id);
 
-        internal Task GoLiveAsync(IStreamCall call)
+        Task IInternalStreamVideoClient.GoLiveAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.GoLiveAsync(call.Type, call.Id);
 
-        internal Task StopLiveAsync(IStreamCall call)
+        Task IInternalStreamVideoClient.StopLiveAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StopLiveAsync(call.Type, call.Id);
 
-        internal Task StartRecordingAsync(IStreamCall call)
+        Task IInternalStreamVideoClient.StartRecordingAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StartRecordingAsync(call.Type, call.Id);
 
-        internal Task StopRecordingAsync(IStreamCall call)
+        Task IInternalStreamVideoClient.StopRecordingAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StopRecordingAsync(call.Type, call.Id);
 
-        internal Task MuteAllUsersAsync(IStreamCall call, bool audio, bool video, bool screenShare)
+        Task IInternalStreamVideoClient.MuteAllUsersAsync(IStreamCall call, bool audio, bool video, bool screenShare)
         {
             var body = new MuteUsersRequestInternalDTO
             {
@@ -291,28 +288,28 @@ namespace StreamVideo.Core
             return InternalLowLevelClient.InternalVideoClientApi.MuteUsersAsync(call.Type, call.Id, body);
         }
 
-        internal Task BlockUserAsync(IStreamCall call, string userId)
+        Task IInternalStreamVideoClient.BlockUserAsync(IStreamCall call, string userId)
             => InternalLowLevelClient.InternalVideoClientApi.BlockUserAsync(call.Type, call.Id,
                 new BlockUserRequestInternalDTO
                 {
                     UserId = userId
                 });
 
-        internal Task UnblockUserAsync(IStreamCall call, string userId)
+        Task IInternalStreamVideoClient.UnblockUserAsync(IStreamCall call, string userId)
             => InternalLowLevelClient.InternalVideoClientApi.UnblockUserAsync(call.Type, call.Id,
                 new UnblockUserRequestInternalDTO
                 {
                     UserId = userId
                 });
 
-        internal Task RequestPermissionAsync(IStreamCall call, List<string> capabilities)
+        Task IInternalStreamVideoClient.RequestPermissionAsync(IStreamCall call, List<string> capabilities)
             => InternalLowLevelClient.InternalVideoClientApi.RequestPermissionAsync(call.Type, call.Id,
                 new RequestPermissionRequestInternalDTO
                 {
                     Permissions = capabilities
                 });
 
-        internal Task UpdateUserPermissions(IStreamCall call, string userId, List<string> grantPermissions,
+        Task IInternalStreamVideoClient.UpdateUserPermissions(IStreamCall call, string userId, List<string> grantPermissions,
             List<string> revokePermissions)
             => InternalLowLevelClient.InternalVideoClientApi.UpdateUserPermissionsAsync(call.Type, call.Id,
                 new UpdateUserPermissionsRequestInternalDTO
@@ -322,17 +319,26 @@ namespace StreamVideo.Core
                     UserId = userId
                 });
 
-        internal Task RemoveMembersAsync(IStreamCall call, List<string> removeUsers)
+        Task IInternalStreamVideoClient.RemoveMembersAsync(IStreamCall call, List<string> removeUsers)
             => InternalLowLevelClient.InternalVideoClientApi.UpdateCallMembersAsync(call.Type, call.Id,
                 new UpdateCallMembersRequestInternalDTO
                 {
                     RemoveMembers = removeUsers,
                 });
 
+        private StreamVideoLowLevelClient InternalLowLevelClient { get; }
+        
         private event Action Destroyed;
 
         private readonly ILogs _logs;
         private readonly ICache _cache;
+        
+        private async Task LeaveCallAsync(IStreamCall call)
+        {
+            //StreamTodo: check if call is active
+            await InternalLowLevelClient.RtcSession.StopAsync();
+            CallEnded?.Invoke(call);
+        }
 
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,

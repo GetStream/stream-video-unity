@@ -128,6 +128,5 @@ namespace StreamVideo.Core.State.Caches
 
         private readonly ConstructorHandler _constructor;
         private readonly ICache _cache;
-        private readonly IStatefulModelsFactory _statefulModelsFactory;
     }
 }

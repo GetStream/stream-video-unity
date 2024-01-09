@@ -40,7 +40,7 @@ namespace StreamVideo.Core.StatefulModels
         /// <summary>
         /// Notifies that the <see cref="SortedParticipants"/> collection was updated
         /// </summary>
-        //event Action SortedParticipantsUpdated;
+        event Action SortedParticipantsUpdated;
 
         Credentials Credentials { get; }
         
@@ -73,11 +73,11 @@ namespace StreamVideo.Core.StatefulModels
         /// - anyone who is pinned (locally pinned first, then remotely pinned)
         /// - anyone who is screen-sharing
         /// - dominant speaker
-        /// - all other video participants by when they joined
-        /// - audio only participants by when they joined
+        /// - all other video participants
+        /// - audio only participants
         /// Any update to this collection will trigger the <see cref="SortedParticipantsUpdated"/> event.
         /// </summary>
-        //IEnumerable<IStreamVideoCallParticipant> SortedParticipants { get; }
+        IEnumerable<IStreamVideoCallParticipant> SortedParticipants { get; }
         
         IReadOnlyList<OwnCapability> OwnCapabilities { get; }
 

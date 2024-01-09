@@ -4,7 +4,8 @@
     "references": [
         "StreamVideo.Core",
         "StreamVideo.Libs",
-        "StreamVideo.Tests.Shared"
+        "StreamVideo.Tests.Shared",
+        "TNRD.NSubstitute"
     ],
     "includePlatforms": [
         "Editor"

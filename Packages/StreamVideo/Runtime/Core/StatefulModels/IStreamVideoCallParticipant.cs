@@ -12,6 +12,9 @@ namespace StreamVideo.Core.StatefulModels
     /// </summary>
     public interface IStreamVideoCallParticipant : IStreamStatefulModel
     {
+        /// <summary>
+        /// A track was added for this participant. Tracks represents streams of video, and audio. You can get all tracks via <see cref="GetTracks"/>
+        /// </summary>
         event ParticipantTrackChangedHandler TrackAdded;
         
         /// <summary>
@@ -61,6 +64,9 @@ namespace StreamVideo.Core.StatefulModels
         bool IsSpeaking { get; }
         ConnectionQuality ConnectionQuality { get; }
 
+        /// <summary>
+        /// Get all tracks associated with this participant. You can also use <see cref="TrackAdded"/> to get notified when a track is added
+        /// </summary>
         IEnumerable<IStreamTrack> GetTracks();
     }
 }

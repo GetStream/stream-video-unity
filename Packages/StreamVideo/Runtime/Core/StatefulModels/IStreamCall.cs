@@ -11,10 +11,24 @@ namespace StreamVideo.Core.StatefulModels
 {
     public interface IStreamCall : IStreamStatefulModel
     {
-        event ParticipantTrackChangedHandler TrackAdded;
+        /// <summary>
+        /// A new participant joined the call
+        /// </summary>
         event ParticipantJoinedHandler ParticipantJoined;
+        
+        /// <summary>
+        /// A participant left the call
+        /// </summary>
         event ParticipantLeftHandler ParticipantLeft;
         
+        /// <summary>
+        /// A track was added for a participant in the call
+        /// </summary>
+        event ParticipantTrackChangedHandler ParticipantTrackAdded;
+
+        /// <summary>
+        /// The most actively speaking participant in the call has changed
+        /// </summary>
         event DominantSpeakerChangedHandler DominantSpeakerChanged;
 
         /// <summary>
@@ -48,19 +62,7 @@ namespace StreamVideo.Core.StatefulModels
         /// Participants are users that are currently in the call. You can also get all users associated with the call via <see cref="Members"/>
         /// </summary>
         IReadOnlyList<IStreamVideoCallParticipant> Participants { get; }
-        
-        /// <summary>
-        /// Participant that is currently the most actively speaking.
-        /// When dominant speaker changes the <see cref="DominantSpeakerChanged"/> event will trigger.
-        /// You can also get the <see cref="PreviousDominantSpeaker"/>
-        /// </summary>
-        IStreamVideoCallParticipant DominantSpeaker { get; }
-        
-        /// <summary>
-        /// Participant that was the last
-        /// </summary>
-        IStreamVideoCallParticipant PreviousDominantSpeaker { get; }
-        
+
         /// <summary>
         /// Participant that are pinned to this call sorted by the time they were pinned.
         /// Locally pinned participants are first, then the participant pinned remotely (by other participants with appropriate permissions).
@@ -78,7 +80,19 @@ namespace StreamVideo.Core.StatefulModels
         /// Any update to this collection will trigger the <see cref="SortedParticipantsUpdated"/> event.
         /// </summary>
         IEnumerable<IStreamVideoCallParticipant> SortedParticipants { get; }
-        
+
+        /// <summary>
+        /// Participant that is currently the most actively speaking.
+        /// When dominant speaker changes the <see cref="DominantSpeakerChanged"/> event will trigger.
+        /// You can also get the <see cref="PreviousDominantSpeaker"/>
+        /// </summary>
+        IStreamVideoCallParticipant DominantSpeaker { get; }
+
+        /// <summary>
+        /// Participant that was the last
+        /// </summary>
+        IStreamVideoCallParticipant PreviousDominantSpeaker { get; }
+
         IReadOnlyList<OwnCapability> OwnCapabilities { get; }
 
         /// <summary>
@@ -104,7 +118,15 @@ namespace StreamVideo.Core.StatefulModels
         /// All three will be members but only "Jane" will be a participant. You can get call participants with <see cref="Participants"/>
         /// </summary>
         IEnumerable<CallMember> Members { get; }
+        
+        /// <summary>
+        /// Is the call being currently recorded
+        /// </summary>
         bool Recording { get; }
+        
+        /// <summary>
+        /// Users that are blocked in this call
+        /// </summary>
         IEnumerable<IStreamVideoUser> BlockedUsers { get; }
         CallSettings Settings { get; }
         bool Backstage { get; }

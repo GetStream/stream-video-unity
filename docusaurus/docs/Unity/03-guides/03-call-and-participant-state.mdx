@@ -5,7 +5,7 @@ description: How the state is exposed
 
 ### Stateful models
 
-Stream's Video SDK for Unity contains several **stateful** models that automatically receive events from the Stream Server and update its inner state. Thanks to this you can always rely on them having the most up-to-date state.
+Stream's Video SDK for Unity contains several **stateful** models that automatically receive events from the Stream Server and update their inner state. Thanks to this you can always rely on them having the most up-to-date state.
 
 Stateful models:
 * **IStreamCall** - represents a call object
@@ -24,31 +24,81 @@ var callId = "my-call-id";
 var streamCall = await _client.GetOrCreateCallAsync(callType, callId);
 ```
 
-The following fields are available on the call
+Here's an outline of the `IStreamCall` object:
 
-| Attribute | Description |
+### Events
+
+| Event | Description |
 | --- | --- |
-| `Participants` | The list of call participants |
-| `Members` | The list of call members |
-| `Recording` | Boolean if the call is being recorded or not |
-| `BlockedUsers` | The users who are blocked from this call |
-| `Settings` | The settings for this call |
-| `OwnCapabilities` | Which actions you have permission to do |
-| `Backstage` | If a call is in backstage mode or not |
-| `CreatedAt` | When the call was created |
-| `UpdatedAt` | When the call was updated |
-| `StartsAt` | When the call is scheduled to start |
-| `EndedAt` | When the call ended |
-| `Team` | Team that the call is restricted to. Default to null. |
-| `CreatedBy` | Who created the call |
-| `Ingress` | If there is an active ingress session to this call. IE if you're sending RTMP into the call |
+| `ParticipantJoined` | Fired when a new participant joins the call |
+| `ParticipantLeft` | Fired when a participant leaves the call |
+| `ParticipantTrackAdded` | Fired when a track is added for a participant in the call |
+| `DominantSpeakerChanged` | Fired when the most actively speaking participant in the call changes |
+| `ReactionAdded` | Fired when a call participant adds a reaction to the call |
+| `PinnedParticipantsUpdated` | Fired when the `PinnedParticipants` collection is updated |
+| `RecordingStarted` | Fired when recording of the call starts |
+| `RecordingStopped` | Fired when recording of the call stops |
+| `SortedParticipantsUpdated` | Fired when the `SortedParticipants` collection is updated |
 
-The following methods are available on the call
+### Properties
 
-| Attribute | Description |
+| Property | Description |
 | --- | --- |
+| `Participants` | Users that are currently in the call. The complete list of users associated with the call can be obtained via `Members`. |
+| `DominantSpeaker` | The participant that is currently the most actively speaking. Changes in the dominant speaker trigger the `DominantSpeakerChanged` event. The `PreviousDominantSpeaker` can also be obtained. |
+| `PreviousDominantSpeaker` | The participant who was the last dominant speaker before the current one. |
+| `PinnedParticipants` | Participants that are pinned to this call, sorted by the time they were pinned. Locally pinned participants are listed first, followed by those pinned remotely. Updates to this collection trigger the `PinnedParticipantsUpdated` event. |
+| `SortedParticipants` | Participants sorted by pin status, screen-sharing status, dominant speaker, video participants, and audio-only participants. Any update to this collection triggers the `SortedParticipantsUpdated` event. |
+| `OwnCapabilities` | A list of actions the user has permission to perform in the call. |
+| `Id` | The identifier of the call. |
+| `Cid` | The unique identifier for the call, combining `Type` and `Id`. |
+| `Type` | The type of call, which determines the permissions schema used. Types can be predefined or custom-created via the dashboard. |
+| `IsLocalUserOwner` | Indicates whether the local user is the owner of the call. |
+| `Members` | Users permanently associated with the call, including those who haven't joined. This includes all invited participants, regardless of whether they have joined the call. |
+| `Recording` | Indicates whether the call is currently being recorded. |
+| `BlockedUsers` | A list of users that are blocked in this call. |
+| `Settings` | The settings configured for this call. |
+| `Backstage` | Indicates whether the call is in backstage mode. |
+| `CreatedAt` | The date and time when the call was created. |
+| `UpdatedAt` | The date and time of the last update to the call. |
+| `StartsAt` | The scheduled start time of the call. |
+| `EndedAt` | The date and time when the call ended. |
+| `Team` | The team that the call is restricted to. |
+| `CreatedBy` | The user who created the call. |
+| `Ingress` | Indicates if there is an active ingress session to this call (e.g., sending RTMP into the call). |
 
-| `HasPermissions` | method for checking if you have a certain permission |
+### Methods
+
+| Method | Description |
+| --- | --- |
+| `LeaveAsync` | Leave the call |
+| `EndAsync` | End the call |
+| `GoLiveAsync` | Start the live stream of the call |
+| `StopLiveAsync` | Stop the live stream of the call |
+| `StartRecordingAsync` | Start recording the call |
+| `StopRecordingAsync` | Stop recording the call |
+| `MuteAllUsersAsync` | Mute all users in the call |
+| `BlockUserAsync` | Block a user from the call |
+| `UnblockUserAsync` | Unblock a user from the call |
+| `HasPermissions` | Check if you currently have a certain permission |
+| `RequestPermissionAsync` | Request a permission from the call host |
+| `RequestPermissionsAsync` | Request multiple permissions from the call host |
+| `GrantPermissionsAsync` | Grant permissions to a user in this call |
+| `RevokePermissionsAsync` | Revoke permissions from a user in this call |
+| `AcceptAsync` | Mark an incoming call as accepted |
+| `RejectAsync` | Mark an incoming call as rejected |
+| `StartHLS` | Start HTTP Live Streaming |
+| `StopHLS` | Stop HTTP Live Streaming |
+| `RemoveMembersAsync` | Remove members from the call |
+| `MuteUsersAsync` | Mute specific users in the call |
+| `QueryMembersAsync` | Query members in the call |
+| `SendReactionAsync` | Send a reaction in the call |
+| `SendCustomEventAsync` | Send a custom event in the call |
+| `PinLocally` | Pin a participant locally |
+| `UnpinLocally` | Unpin a participant locally |
+| `IsPinnedLocally` | Check if a participant is pinned locally |
+| `IsPinnedRemotely` | Check if a participant is pinned remotely |
+| `IsPinned` | Check if a participant is pinned |
 
 
 ### Participant State
@@ -81,18 +131,41 @@ streamCall.ParticipantJoined += OnParticipantJoined;
 streamCall.ParticipantLeft += OnParticipantLeft; 
 ```
 
-The following fields are available on the participant
+Here's an outline of the `IStreamVideoCallParticipant` object:
 
-| Attribute | Description |
+### Events
+
+| Event | Description |
 | --- | --- |
-| `User` | The user object for this participant |
-| `VideoTrack` | The video track object for this participant |
-| `AudioTrack` | The participant's audio track object |
-| `ScreenShareTrack` | The screensharing track object |
-| `JoinedAt` | When this participant joined |
-| `AudioLevel` | How loudly this user is talking. Float |
-| `IsSpeaking` | If the user is speaking |
-| `ConnectionQuality` | The participant's connection quality |
-| `IsDominantSpeaker` | If this participant is the dominant speaker or not |
+| `TrackAdded` | Fired when a track is added for this participant. Tracks represent streams of video and audio. |
+
+### Properties
+
+| Property | Description |
+| --- | --- |
+| `IsPinned` | Indicates if this participant is "pinned" in the call, giving them precedence in the `IStreamCall.SortedParticipants` list |
+| `IsScreenSharing` | Indicates if this participant is currently streaming a screen share track |
+| `IsVideoEnabled` | Indicates if this participant is currently streaming a video track |
+| `IsAudioEnabled` | Indicates if this participant is currently streaming an audio track |
+| `IsDominantSpeaker` | Indicates if this participant is currently the most actively speaking participant |
+| `UserId` | The user ID of the participant |
+| `SessionId` | A unique identifier for a participant in a call, allowing for multiple instances of the same user through different devices |
+| `TrackLookupPrefix` | A prefix used for track lookup |
+| `Name` | The name of the participant |
+| `IsLocalParticipant` | Indicates if this is the participant from the local device |
+| `User` | The `IStreamVideoUser` associated with the participant |
+| `VideoTrack` | The video track of the participant |
+| `AudioTrack` | The audio track of the participant |
+| `ScreenShareTrack` | The screen share track of the participant |
+| `JoinedAt` | The date and time when the participant joined the call |
+| `AudioLevel` | The audio level of the participant |
+| `IsSpeaking` | Indicates if the participant is currently speaking |
+| `ConnectionQuality` | The quality of the connection for the participant |
+
+### Methods
+
+| Method | Description |
+| --- | --- |
+| `GetTracks` | Retrieves all tracks associated with this participant. This method can be used in conjunction with the `TrackAdded` event to manage tracks. |
 
 

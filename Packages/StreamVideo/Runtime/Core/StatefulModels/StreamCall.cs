@@ -39,7 +39,7 @@ namespace StreamVideo.Core
         IUpdateableFrom<CallStateResponseFieldsInternalDTO, StreamCall>,
         IStreamCall
     {
-        public event ParticipantTrackChangedHandler TrackAdded;
+        public event ParticipantTrackChangedHandler ParticipantTrackAdded;
 
         public event ParticipantJoinedHandler ParticipantJoined;
         public event ParticipantLeftHandler ParticipantLeft;
@@ -531,7 +531,7 @@ namespace StreamVideo.Core
 
         //StreamTodo: missing TrackRemoved or perhaps we should not care whether a track was added/removed but only published/unpublished -> enabled/disabled
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
-            => TrackAdded?.Invoke(participant, track);
+            => ParticipantTrackAdded?.Invoke(participant, track);
 
         internal void UpdateCapabilitiesByRoleFromDto(CallUpdatedEventInternalDTO callUpdatedEvent)
             => UpdateCapabilitiesByRole(callUpdatedEvent.CapabilitiesByRole);

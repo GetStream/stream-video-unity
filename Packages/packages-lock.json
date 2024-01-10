@@ -45,7 +45,7 @@
       }
     },
     "com.unity.ide.rider": {
-      "version": "3.0.25",
+      "version": "3.0.27",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -170,6 +170,13 @@
         "com.unity.webrtc": "3.0.0-pre.7",
         "com.unity.nuget.newtonsoft-json": "3.2.0"
       }
+    },
+    "net.tnrd.nsubstitute": {
+      "version": "https://github.com/Thundernerd/Unity3D-NSubstitute.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "449712b25ae237eb5da2d958dd72a5432051e192"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

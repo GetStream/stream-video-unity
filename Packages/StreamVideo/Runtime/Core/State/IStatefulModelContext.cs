@@ -7,7 +7,7 @@ namespace StreamVideo.Core.State
     internal interface IStatefulModelContext
     {
         ICache Cache { get; }
-        StreamVideoClient Client { get; }
+        IInternalStreamVideoClient Client { get; }
         ILogs Logs { get; }
         ISerializer Serializer { get; }
     }

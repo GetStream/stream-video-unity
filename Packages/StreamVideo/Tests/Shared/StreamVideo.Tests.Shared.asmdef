@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "StreamVideo.Core",
-        "StreamVideo.Libs"
+        "StreamVideo.Libs",
+        "TNRD.NSubstitute"
     ],
     "includePlatforms": [
         "Editor"

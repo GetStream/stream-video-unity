@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models.Sfu;
@@ -185,6 +186,12 @@ namespace StreamVideo.Core.StatefulModels
         }
 
         protected override StreamVideoCallParticipant Self => this;
+
+        protected override Task SyncCustomDataAsync()
+        {
+            // This can probably use UpdateCallMembersAsync??
+            throw new NotImplementedException();
+        }
 
         #region Tracks
 

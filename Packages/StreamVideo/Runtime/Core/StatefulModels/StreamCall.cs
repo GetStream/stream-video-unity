@@ -337,20 +337,6 @@ namespace StreamVideo.Core
                 Custom = eventData
             });
 
-        // public Task GetOrCreateAsync()
-        // {
-        //     return Task.CompletedTask;
-        // }
-
-        /**
-   * Will start to watch for call related WebSocket events and initiate a call session with the server.
-   *
-   * @returns a promise which resolves once the call join-flow has finished.
-   */
-        // public Task JoinAsync()
-        // {
-        //     return Task.CompletedTask; //StreamTodo: implement
-        // }
         public Task AcceptAsync() => LowLevelClient.InternalVideoClientApi.AcceptCallAsync(Type, Id);
 
         public Task RejectAsync() => LowLevelClient.InternalVideoClientApi.RejectCallAsync(Type, Id);
@@ -628,6 +614,17 @@ namespace StreamVideo.Core
         }
 
         protected override StreamCall Self => this;
+
+        protected override Task SyncCustomDataAsync()
+        {
+            return InternalUpdateCallAsync(new UpdateCallRequestInternalDTO
+            {
+                Custom = InternalCustomData.InternalDictionary
+            });
+        }
+
+        private Task InternalUpdateCallAsync(UpdateCallRequestInternalDTO request)
+            => LowLevelClient.InternalVideoClientApi.UpdateCallAsync(Type, Id, request);
 
         #region State
 

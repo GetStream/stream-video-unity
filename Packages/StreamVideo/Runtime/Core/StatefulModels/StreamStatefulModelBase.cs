@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Libs.Logs;
+using StreamVideo.Libs.Serialization;
 
 namespace StreamVideo.Core.StatefulModels
 {
@@ -14,7 +16,9 @@ namespace StreamVideo.Core.StatefulModels
     internal abstract class StreamStatefulModelBase<TStatefulModel> : IStreamStatefulModel
         where TStatefulModel : class, IStreamStatefulModel
     {
-        public IStreamCustomData CustomData => _customData;
+
+        //StreamTodo: determine if CustomData is available for all models e.g. does participant have custom data?
+        public IStreamCustomData CustomData => InternalCustomData;
 
         string IStreamStatefulModel.UniqueId => InternalUniqueId;
 
@@ -30,15 +34,13 @@ namespace StreamVideo.Core.StatefulModels
             Logs = context.Logs ?? throw new ArgumentNullException(nameof(context.Logs));
             Cache = context.Cache ?? throw new ArgumentNullException(nameof(context.Cache));
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _serializer = context.Serializer ?? throw new ArgumentNullException(nameof(context.Serializer));
 
-            _customData = new StreamCustomData(_additionalProperties, context.Serializer);
+            InternalCustomData = new StreamCustomData(context.Serializer, SyncCustomDataAsync);
 
             InternalUniqueId = uniqueId;
             Repository.Track(Self);
         }
-        
-        //StreamTodo: wrap completely the _additionalProperties in StreamCustomData and not operate on both
-        protected Dictionary<string, object> GetInternalAdditionalPropertiesDictionary() => _additionalProperties; 
 
         protected abstract string InternalUniqueId { get; set; }
 
@@ -48,27 +50,15 @@ namespace StreamVideo.Core.StatefulModels
         protected ILogs Logs { get; }
         protected ICache Cache { get; }
         protected ICacheRepository<TStatefulModel> Repository { get; }
+        protected StreamCustomData InternalCustomData { get; }
 
-        protected void LoadCustomData(Dictionary<string, object> additionalProperties)
+        protected void LoadCustomData(Dictionary<string, object> customData)
         {
-            //StreamTodo: investigate if there's a case we don't want to clear here
-            //Without clear channel full update or partial update unset won't work because we'll ignore that WS sent channel without custom data
-            
-            //StreamTodo: 2, wrap into _customData.Sync(additionalProperties); instead of having a collection here
-
-            //StreamTodo: rename to customData
-            _additionalProperties.Clear();
-            foreach (var keyValuePair in additionalProperties)
-            {
-                if (_additionalProperties.ContainsKey(keyValuePair.Key))
-                {
-                    _additionalProperties[keyValuePair.Key] = keyValuePair.Value;
-                    continue;
-                }
-
-                _additionalProperties.Add(keyValuePair.Key, keyValuePair.Value);
-            }
+            Logs.Warning("LoadCustomData called with:\n" + _serializer.Serialize(customData));
+            InternalCustomData.ReplaceAllWith(customData);
         }
+
+        protected abstract Task SyncCustomDataAsync();
 
         protected static T GetOrDefault<T>(T? source, T defaultValue)
             where T : struct
@@ -81,8 +71,7 @@ namespace StreamVideo.Core.StatefulModels
         protected static T GetOrDefault<T>(T source, T defaultValue)
             where T : class
             => source ?? defaultValue;
-
-        private readonly StreamCustomData _customData;
-        private readonly Dictionary<string, object> _additionalProperties = new Dictionary<string, object>();
+        
+        private readonly ISerializer _serializer;
     }
 }

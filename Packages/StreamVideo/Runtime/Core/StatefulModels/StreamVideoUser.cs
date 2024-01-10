@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
@@ -55,6 +56,12 @@ namespace StreamVideo.Core.StatefulModels
 
         protected override string InternalUniqueId { get => Id; set => Id = value; }
         protected override StreamVideoUser Self => this;
+
+        protected override Task SyncCustomDataAsync()
+        {
+            // This can probably use UpdateCallMembersAsync??
+            throw new NotImplementedException();
+        }
 
         #region State
 

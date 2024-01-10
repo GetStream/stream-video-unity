@@ -3,6 +3,8 @@ name: CI - Run Tests + Build Sample App
 on:
   pull_request:
     branches: [ main, develop ]
+  pull_request_target:
+    types: [edited, synchronized] #Triggers CI when the PR target was changed
   push:
     branches: [ main, develop ]
 

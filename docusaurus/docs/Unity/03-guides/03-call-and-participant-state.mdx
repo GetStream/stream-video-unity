@@ -44,29 +44,28 @@ Here's an outline of the `IStreamCall` object:
 
 | Property | Description |
 | --- | --- |
-| `Credentials` | Credentials for the call |
-| `Participants` | List of users currently in the call |
-| `PinnedParticipants` | List of participants pinned to the call, sorted by the time they were pinned |
-| `SortedParticipants` | Participants sorted by pin status, screen-sharing status, dominant speaker, video participants, and audio-only participants |
-| `DominantSpeaker` | The participant currently most actively speaking |
-| `PreviousDominantSpeaker` | The participant who was last the dominant speaker |
-| `OwnCapabilities` | List of actions the user has permission to do |
-| `Id` | Call ID |
-| `Cid` | Unique identifier for the call, combining `Type` and `Id` |
-| `Type` | Type of call, determining the permissions schema used |
-| `IsLocalUserOwner` | Indicates if the local user is the owner of the call |
-| `Members` | Users permanently associated with the call, including those not currently in the call |
-| `Recording` | Indicates if the call is currently being recorded |
-| `BlockedUsers` | Users blocked in this call |
-| `Settings` | Settings for the call |
-| `Backstage` | Indicates if the call is in backstage mode |
-| `CreatedAt` | Date/time of call creation |
-| `UpdatedAt` | Date/time of the last call update |
-| `StartsAt` | Date/time when the call will start |
-| `EndedAt` | Date/time when the call ended |
-| `Team` | Team that the call is restricted to |
-| `CreatedBy` | The user who created the call |
-| `Ingress` | Indicates if there is an active ingress session to this call |
+| `Participants` | Users that are currently in the call. The complete list of users associated with the call can be obtained via `Members`. |
+| `DominantSpeaker` | The participant that is currently the most actively speaking. Changes in the dominant speaker trigger the `DominantSpeakerChanged` event. The `PreviousDominantSpeaker` can also be obtained. |
+| `PreviousDominantSpeaker` | The participant who was the last dominant speaker before the current one. |
+| `PinnedParticipants` | Participants that are pinned to this call, sorted by the time they were pinned. Locally pinned participants are listed first, followed by those pinned remotely. Updates to this collection trigger the `PinnedParticipantsUpdated` event. |
+| `SortedParticipants` | Participants sorted by pin status, screen-sharing status, dominant speaker, video participants, and audio-only participants. Any update to this collection triggers the `SortedParticipantsUpdated` event. |
+| `OwnCapabilities` | A list of actions the user has permission to perform in the call. |
+| `Id` | The identifier of the call. |
+| `Cid` | The unique identifier for the call, combining `Type` and `Id`. |
+| `Type` | The type of call, which determines the permissions schema used. Types can be predefined or custom-created via the dashboard. |
+| `IsLocalUserOwner` | Indicates whether the local user is the owner of the call. |
+| `Members` | Users permanently associated with the call, including those who haven't joined. This includes all invited participants, regardless of whether they have joined the call. |
+| `Recording` | Indicates whether the call is currently being recorded. |
+| `BlockedUsers` | A list of users that are blocked in this call. |
+| `Settings` | The settings configured for this call. |
+| `Backstage` | Indicates whether the call is in backstage mode. |
+| `CreatedAt` | The date and time when the call was created. |
+| `UpdatedAt` | The date and time of the last update to the call. |
+| `StartsAt` | The scheduled start time of the call. |
+| `EndedAt` | The date and time when the call ended. |
+| `Team` | The team that the call is restricted to. |
+| `CreatedBy` | The user who created the call. |
+| `Ingress` | Indicates if there is an active ingress session to this call (e.g., sending RTMP into the call). |
 
 ### Methods
 

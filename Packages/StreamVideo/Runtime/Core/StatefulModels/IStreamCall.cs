@@ -160,6 +160,8 @@ namespace StreamVideo.Core.StatefulModels
 
         CallIngress Ingress { get; }
 
+        CallEgress Egress { get; }
+
         Task LeaveAsync();
 
         Task EndAsync();

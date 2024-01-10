@@ -43,7 +43,7 @@ namespace StreamVideo.Core.StatefulModels
         protected abstract string InternalUniqueId { get; set; }
 
         protected abstract TStatefulModel Self { get; }
-        protected StreamVideoClient Client { get; }
+        protected IInternalStreamVideoClient Client { get; }
         protected StreamVideoLowLevelClient LowLevelClient => Client.InternalLowLevelClient;
         protected ILogs Logs { get; }
         protected ICache Cache { get; }

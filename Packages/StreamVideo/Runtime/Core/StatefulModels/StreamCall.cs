@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Core;
 using Core.Utils;
 using Stream.Video.v1.Sfu.Events;
 using Stream.Video.v1.Sfu.Models;
@@ -18,6 +19,7 @@ using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
+using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 
 namespace StreamVideo.Core
 {
@@ -46,7 +48,7 @@ namespace StreamVideo.Core
 
         public event Action PinnedParticipantsUpdated;
 
-        //public event Action SortedParticipantsUpdated; //StreamTodo: implement
+        public event Action SortedParticipantsUpdated;
 
         public event CallReactionAddedHandler ReactionAdded;
 
@@ -74,6 +76,7 @@ namespace StreamVideo.Core
 
                 if (prev != value)
                 {
+                    UpdateSortedParticipants();
                     PreviousDominantSpeaker = prev;
                     DominantSpeakerChanged?.Invoke(value, prev);
                 }
@@ -83,7 +86,7 @@ namespace StreamVideo.Core
         public IStreamVideoCallParticipant PreviousDominantSpeaker { get; private set; }
 
         public IReadOnlyList<IStreamVideoCallParticipant> PinnedParticipants => _pinnedParticipants;
-        //public IEnumerable<IStreamVideoCallParticipant> SortedParticipants => _sortedParticipants;
+        public IEnumerable<IStreamVideoCallParticipant> SortedParticipants => _sortedParticipants;
 
         #region State
 
@@ -365,16 +368,14 @@ namespace StreamVideo.Core
             _localPinsSessionIds.Remove(participant.SessionId);
             _localPinsSessionIds.AddFirst(participant.SessionId);
 
-            UpdatePinnedParticipants();
-            UpdateSortedParticipants();
+            UpdatePinnedParticipants(out _);
         }
 
         public void UnpinLocally(IStreamVideoCallParticipant participant)
         {
             _localPinsSessionIds.Remove(participant.SessionId);
 
-            UpdatePinnedParticipants();
-            UpdateSortedParticipants();
+            UpdatePinnedParticipants(out _);
         }
 
         public bool IsPinnedLocally(IStreamVideoCallParticipant participant)
@@ -488,6 +489,7 @@ namespace StreamVideo.Core
         internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
         {
             var participant = Session.UpdateFromSfu(participantJoined, cache);
+            UpdateSortedParticipants();
             ParticipantJoined?.Invoke(participant);
         }
 
@@ -497,8 +499,12 @@ namespace StreamVideo.Core
 
             _localPinsSessionIds.RemoveAll(participant.sessionId);
             _serverPinsSessionIds.RemoveAll(pin => pin == participant.sessionId);
-            UpdatePinnedParticipants();
-            UpdateSortedParticipants();
+
+            UpdatePinnedParticipants(out var updatedSortedParticipants);
+            if (!updatedSortedParticipants)
+            {
+                UpdateSortedParticipants();
+            }
 
             cache.CallParticipants.TryRemove(participant.sessionId);
 
@@ -508,16 +514,22 @@ namespace StreamVideo.Core
 
         internal void UpdateFromSfu(DominantSpeakerChanged dominantSpeakerChanged, ICache cache)
         {
+            var prev = DominantSpeaker;
             DominantSpeaker = Participants.FirstOrDefault(p => p.SessionId == dominantSpeakerChanged.SessionId);
+
+            if (prev != DominantSpeaker)
+            {
+                UpdateSortedParticipants();
+            }
         }
 
         internal void UpdateFromSfu(PinsChanged pinsChanged, ICache cache)
         {
             UpdateServerPins(pinsChanged.Pins);
-            UpdatePinnedParticipants();
-            UpdateSortedParticipants();
+            UpdatePinnedParticipants(out _);
         }
 
+        //StreamTodo: missing TrackRemoved or perhaps we should not care whether a track was added/removed but only published/unpublished -> enabled/disabled
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
             => TrackAdded?.Invoke(participant, track);
 
@@ -601,9 +613,13 @@ namespace StreamVideo.Core
             CallRecordingStartedEventInternalDTO callRecordingStartedEvent)
             => RecordingStarted?.Invoke();
 
-        public void InternalHandleCallRecordingStoppedEvent(
+        internal void InternalHandleCallRecordingStoppedEvent(
             CallRecordingStoppedEventInternalDTO callRecordingStoppedEvent)
             => RecordingStopped?.Invoke();
+
+        internal void NotifyTrackStateChanged(StreamVideoCallParticipant participant, TrackType trackType,
+            bool isEnabled)
+            => UpdateSortedParticipants();
 
         protected override string InternalUniqueId
         {
@@ -632,6 +648,11 @@ namespace StreamVideo.Core
         private readonly List<IStreamVideoCallParticipant>
             _pinnedParticipants = new List<IStreamVideoCallParticipant>();
 
+        private readonly List<IStreamVideoCallParticipant>
+            _sortedParticipants = new List<IStreamVideoCallParticipant>();
+
+        private readonly CallParticipantComparer _participantComparer = new CallParticipantComparer();
+
         private readonly Dictionary<string, List<string>> _capabilitiesByRole = new Dictionary<string, List<string>>();
 
         #endregion
@@ -652,7 +673,7 @@ namespace StreamVideo.Core
             }
         }
 
-        private void UpdatePinnedParticipants()
+        private void UpdatePinnedParticipants(out bool sortedParticipants)
         {
             _pinnedParticipants.Clear();
 
@@ -673,12 +694,40 @@ namespace StreamVideo.Core
                 }
             }
 
+            //StreamTodo: optimize
+            var anyChanged = false;
+            foreach (var participant in Participants)
+            {
+                var prevIsPinned = participant.IsPinned;
+                var isPinned = IsPinned(participant);
+
+                if (prevIsPinned != isPinned)
+                {
+                    ((StreamVideoCallParticipant)participant).SetIsPinned(isPinned);
+                    anyChanged = true;
+                }
+            }
+
+            if (!anyChanged)
+            {
+                sortedParticipants = false;
+                return;
+            }
+
+            sortedParticipants = true;
+            UpdateSortedParticipants();
             PinnedParticipantsUpdated?.Invoke();
         }
 
         private void UpdateSortedParticipants()
         {
-            //SortedParticipantsUpdated?.Invoke();
+            _participantComparer.Reset();
+            _sortedParticipants.Sort(_participantComparer);
+
+            if (_participantComparer.OrderChanged)
+            {
+                SortedParticipantsUpdated?.Invoke();
+            }
         }
 
         private void UpdateMembersFromDto(IEnumerable<MemberResponseInternalDTO> membersDtos)

@@ -523,13 +523,13 @@ namespace StreamVideo.Core.LowLevelClient
             var cause = trackUnpublished.Cause;
 
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
-            var participant = trackUnpublished.Participant;
+            var participantSfuDto = trackUnpublished.Participant;
 
-            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, out var streamParticipant);
+            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, out var participant);
 
-            if (participant != null && streamParticipant != null)
+            if (participantSfuDto != null && participant != null)
             {
-                streamParticipant.UpdateFromSfu(participant);
+                participant.UpdateFromSfu(participantSfuDto);
             }
             
             //StreamTodo: raise an event so user can react to track unpublished? Otherwise the video will just freeze
@@ -542,13 +542,13 @@ namespace StreamVideo.Core.LowLevelClient
             var type = trackPublished.Type.ToPublicEnum();
 
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
-            var participant = trackPublished.Participant;
+            var participantSfuDto = trackPublished.Participant;
 
-            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, out var streamParticipant);
+            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, out var participant);
 
-            if (participant != null && streamParticipant != null)
+            if (participantSfuDto != null && participant != null)
             {
-                streamParticipant.UpdateFromSfu(participant);
+                participant.UpdateFromSfu(participantSfuDto);
             }
 
             //StreamTodo: fixes the case when joining a call where other participant starts with no video and activates video track after we've joined -
@@ -573,6 +573,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             participant.SetTrackEnabled(trackType, isEnabled);
+            
+            ActiveCall.NotifyTrackStateChanged(participant, trackType, isEnabled);
         }
 
         private void OnSfuParticipantJoined(ParticipantJoined participantJoined)

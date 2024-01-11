@@ -457,8 +457,6 @@ namespace StreamVideo.Core
                 cache);
         }
 
-        //StreamTodo: handle state update from events, check Android CallState.kt handleEvent()
-
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
             : base(uniqueId, repository, context)

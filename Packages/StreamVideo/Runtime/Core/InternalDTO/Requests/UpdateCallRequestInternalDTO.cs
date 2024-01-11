@@ -22,19 +22,19 @@ namespace StreamVideo.Core.InternalDTO.Requests
         /// Custom data for this object
         /// </summary>
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
+        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; }
 
         /// <summary>
         /// the settings to change for this call
         /// </summary>
         [Newtonsoft.Json.JsonProperty("settings_override", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public CallSettingsRequestInternalDTO SettingsOverride { get; set; } = default!;
+        public CallSettingsRequestInternalDTO SettingsOverride { get; set; }
 
         /// <summary>
         /// the time the call is scheduled to start
         /// </summary>
         [Newtonsoft.Json.JsonProperty("starts_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.DateTimeOffset StartsAt { get; set; } = default!;
+        public System.DateTimeOffset? StartsAt { get; set; }
 
     }
 

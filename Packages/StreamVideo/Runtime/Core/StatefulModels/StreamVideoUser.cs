@@ -22,10 +22,6 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         public DateTimeOffset CreatedAt { get; private set; }
 
-        //StreamTodo: ensure custom data is handled
-        // public Dictionary<string, object> Custom { get; private set; }
-        //     = new Dictionary<string, object>();
-
         /// <summary>
         /// Date/time of deletion
         /// </summary>

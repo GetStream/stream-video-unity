@@ -27,14 +27,18 @@ namespace StreamVideo.Core.State
             return true;
         }
 
-        /// <summary>
-        /// Set custom data and sync with the server
-        /// </summary>
-        /// <param name="key">Unique key by witch the custom data entry will be retrieved via <see cref="Get{TType}"/></param>
-        /// <param name="value">The value. This can be any type, even your custom class but it MUST properly serialize to JSON.</param>
         public Task SetAsync(string key, object value)
         {
             _customData[key] = value;
+            return _customDataServerSyncCallback();
+        }
+        
+        public Task SetManyAsync(IEnumerable<(string key, object value)> data)
+        {
+            foreach (var (key, value) in data)
+            {
+                _customData[key] = value;
+            }
             return _customDataServerSyncCallback();
         }
         

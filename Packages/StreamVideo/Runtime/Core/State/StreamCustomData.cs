@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using StreamVideo.Libs.Serialization;
 
 namespace StreamVideo.Core.State
@@ -26,13 +27,43 @@ namespace StreamVideo.Core.State
             return true;
         }
 
-        internal StreamCustomData(Dictionary<string, object> customData, ISerializer serializer)
+        public Task SetAsync(string key, object value)
+        {
+            _customData[key] = value;
+            return _customDataServerSyncCallback();
+        }
+        
+        public Task SetManyAsync(IEnumerable<(string key, object value)> data)
+        {
+            foreach (var (key, value) in data)
+            {
+                _customData[key] = value;
+            }
+            return _customDataServerSyncCallback();
+        }
+        
+        internal Dictionary<string, object> InternalDictionary => _customData;
+
+        internal StreamCustomData(ISerializer serializer, Func<Task> customDataServerSyncCallback)
         {
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-            _customData = customData;
+            _customDataServerSyncCallback = customDataServerSyncCallback ?? throw new ArgumentNullException(nameof(customDataServerSyncCallback));
         }
 
-        private readonly Dictionary<string, object> _customData;
+        /// <summary>
+        /// Replace custom data with the source
+        /// </summary>
+        internal void ReplaceAllWith(Dictionary<string, object> source)
+        {
+            _customData.Clear();
+            foreach (var keyValuePair in source)
+            {
+                _customData[keyValuePair.Key] = keyValuePair.Value;
+            }
+        }
+
+        private readonly Dictionary<string, object> _customData = new Dictionary<string, object>();
         private readonly ISerializer _serializer;
+        private readonly Func<Task> _customDataServerSyncCallback;
     }
 }

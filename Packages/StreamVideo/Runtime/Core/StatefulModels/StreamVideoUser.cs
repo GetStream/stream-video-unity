@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
@@ -20,10 +21,6 @@ namespace StreamVideo.Core.StatefulModels
         /// Date/time of creation
         /// </summary>
         public DateTimeOffset CreatedAt { get; private set; }
-
-        //StreamTodo: ensure custom data is handled
-        // public Dictionary<string, object> Custom { get; private set; }
-        //     = new Dictionary<string, object>();
 
         /// <summary>
         /// Date/time of deletion
@@ -55,6 +52,12 @@ namespace StreamVideo.Core.StatefulModels
 
         protected override string InternalUniqueId { get => Id; set => Id = value; }
         protected override StreamVideoUser Self => this;
+
+        protected override Task SyncCustomDataAsync()
+        {
+            //StreamTodo: implement user custom data writing once the API exposes such functionality
+            throw new NotImplementedException();
+        }
 
         #region State
 

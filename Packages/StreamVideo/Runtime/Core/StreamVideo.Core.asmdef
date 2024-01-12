@@ -1,6 +1,6 @@
 {
     "name": "StreamVideo.Core",
-    "rootNamespace": "",
+    "rootNamespace": "StreamVideo",
     "references": [
         "StreamVideo.Libs",
         "Google.Protobuf",

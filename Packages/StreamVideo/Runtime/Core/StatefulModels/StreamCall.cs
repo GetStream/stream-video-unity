@@ -16,12 +16,11 @@ using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
-using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 
-namespace StreamVideo.Core
+namespace StreamVideo.Core.StatefulModels
 {
     public delegate void DominantSpeakerChangedHandler(IStreamVideoCallParticipant currentDominantSpeaker,
         IStreamVideoCallParticipant previousDominantSpeaker);
@@ -54,6 +53,8 @@ namespace StreamVideo.Core
 
         public event Action RecordingStarted;
         public event Action RecordingStopped;
+        
+        public IStreamCustomData CustomData => InternalCustomData;
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
 
@@ -337,20 +338,6 @@ namespace StreamVideo.Core
                 Custom = eventData
             });
 
-        // public Task GetOrCreateAsync()
-        // {
-        //     return Task.CompletedTask;
-        // }
-
-        /**
-   * Will start to watch for call related WebSocket events and initiate a call session with the server.
-   *
-   * @returns a promise which resolves once the call join-flow has finished.
-   */
-        // public Task JoinAsync()
-        // {
-        //     return Task.CompletedTask; //StreamTodo: implement
-        // }
         public Task AcceptAsync() => LowLevelClient.InternalVideoClientApi.AcceptCallAsync(Type, Id);
 
         public Task RejectAsync() => LowLevelClient.InternalVideoClientApi.RejectCallAsync(Type, Id);
@@ -470,8 +457,6 @@ namespace StreamVideo.Core
             _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
                 cache);
         }
-
-        //StreamTodo: handle state update from events, check Android CallState.kt handleEvent()
 
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
@@ -629,6 +614,17 @@ namespace StreamVideo.Core
 
         protected override StreamCall Self => this;
 
+        protected override Task SyncCustomDataAsync()
+        {
+            return InternalUpdateCallAsync(new UpdateCallRequestInternalDTO
+            {
+                Custom = InternalCustomData.InternalDictionary
+            });
+        }
+
+        private Task InternalUpdateCallAsync(UpdateCallRequestInternalDTO request)
+            => LowLevelClient.InternalVideoClientApi.UpdateCallAsync(Type, Id, request);
+
         #region State
 
         //StreamTodo: is this always in sync with _blockedUsers? 
@@ -757,6 +753,33 @@ namespace StreamVideo.Core
             }
 
             //StreamTodo: according to description in CallUpdatedEventInternalDTO we should use also update the _ownCapabilities here based on the user role
+        }
+
+        public Task SyncParticipantCustomDataAsync(IStreamVideoCallParticipant participant,
+            Dictionary<string, object> internalCustomData)
+        {
+            const string participantsCustomDataPrefix = "pXwf2Z1mFOOEXV_participants_data";
+
+            if (!CustomData.TryGet<Dictionary<string, Dictionary<string, object>>>(participantsCustomDataPrefix, out var allParticipantsCustomData))
+            {
+                allParticipantsCustomData = new Dictionary<string, Dictionary<string, object>>();
+                InternalCustomData.InternalDictionary[participantsCustomDataPrefix] = allParticipantsCustomData;
+            }
+
+            if (!allParticipantsCustomData.ContainsKey(participant.SessionId))
+            {
+                allParticipantsCustomData[participant.SessionId] = new Dictionary<string, object>();
+            }
+
+            var participantCustomData = allParticipantsCustomData[participant.SessionId];
+
+            participantCustomData.Clear();
+            foreach (var keyValuePair in internalCustomData)
+            {
+                participantCustomData[keyValuePair.Key] = keyValuePair.Value;
+            }
+
+            return SyncCustomDataAsync();
         }
     }
 }

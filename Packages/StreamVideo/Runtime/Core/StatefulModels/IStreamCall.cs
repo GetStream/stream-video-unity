@@ -9,7 +9,7 @@ using StreamVideo.Core.State;
 
 namespace StreamVideo.Core.StatefulModels
 {
-    public interface IStreamCall : IStreamStatefulModel
+    public interface IStreamCall : IStreamStatefulModel, IHasCustomData
     {
         /// <summary>
         /// A new participant joined the call

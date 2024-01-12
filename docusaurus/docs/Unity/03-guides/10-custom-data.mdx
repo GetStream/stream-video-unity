@@ -1,0 +1,84 @@
+---
+title: Pinning participants
+description: How to pin participants
+---
+
+Custom data is additional information that you can add to the call or participants. It is a dictionary of key-value pairs that you can use to store any types of objects you need.
+
+:::warning
+
+The data you put inside custom data must properly serialize to JSON. Otherwise the operation will fail. You can also put already serialized data and deserialize it on your own.
+
+:::
+
+# Call object
+
+### Writing custom data
+
+In order to write custom data for the call use `streamCall.CustomData.SetAsync` or `streamCall.CustomData.SetManyAsync`:
+
+```csharp
+var streamCall = await _client.GetOrCreateCallAsync(StreamCallType.Default, "my-call-id");
+
+// Writing custom data
+await streamCall.CustomData.SetAsync("my_number", 34); // int type
+await streamCall.CustomData.SetAsync("my_string", "hello"); // string type
+
+var sampleStruct = new SampleStruct(name: "Peter", age: 27);
+
+await streamCall.CustomData.SetAsync("my_custom_type", sampleStruct); // custom type
+```
+
+### Reading custom data
+
+Once you set the custom data you can then read it with `streamCall.CustomData.Get` or `streamCall.CustomData.TryGet` methods as shown in the examples below. Both `Get` and `TryGet` methods are generic and you need to provide a valid type. 
+The internal serializer will attempt to deserialize the stored data into the type you've provided.
+
+```csharp
+var streamCall = await _client.GetOrCreateCallAsync(StreamCallType.Default, "my-call-id");
+
+// Reading custom data
+var myNumber = streamCall.CustomData.Get<int>("my_number"); // int type
+var myString = streamCall.CustomData.Get<string>("my_string"); // string type
+var myCustomType = streamCall.CustomData.Get<SampleStruct>("my_custom_type"); // custom type
+```
+
+# Call participant object
+
+Likewise, you can attach custom data to any call participant object as well.
+
+### Writing custom data
+
+In order to write custom data for the call participant use `participant.CustomData.SetAsync` or `participant.CustomData.SetManyAsync`:
+
+```csharp
+var streamCall = await _client.GetOrCreateCallAsync(StreamCallType.Default, "my-call-id");
+
+// Get sample call participant
+var participant = streamCall.Participants.First();
+
+// Writing custom data
+await participant.CustomData.SetAsync("my_number", 34); // int type
+await participant.CustomData.SetAsync("my_string", "hello"); // string type
+
+var sampleStruct = new SampleStruct(name: "Peter", age: 27);
+
+await participant.CustomData.SetAsync("my_custom_type", sampleStruct); // custom type
+```
+
+### Reading custom data
+
+Once you set the custom data you can then read it with `participant.CustomData.Get` or `participant.CustomData.TryGet` methods as shown in the examples below. Both `Get` and `TryGet` methods are generic and you need to provide a valid type.
+The internal serializer will attempt to deserialize the stored data into the type you've provided.
+
+```csharp
+var streamCall = await _client.GetOrCreateCallAsync(StreamCallType.Default, "my-call-id");
+
+// Get sample call participant
+var participant = streamCall.Participants.First();
+
+// Reading custom data
+var myNumber = participant.CustomData.Get<int>("my_number"); // int type
+var myString = participant.CustomData.Get<string>("my_string"); // string type
+var myCustomType = participant.CustomData.Get<SampleStruct>("my_custom_type"); // custom type
+```

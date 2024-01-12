@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using StreamVideo.Tests.Shared;
@@ -61,8 +62,9 @@ namespace Tests.Runtime
             Assert.AreEqual(80, retrievedAbility.Attributes["MagicDefence"]);
             Assert.AreEqual(-15, retrievedAbility.Attributes["Agility"]);
 
-
             Assert.AreEqual(2, 0, streamCall.CustomData.Count);
+            
+            //StreamTodo: we should intercept the HttpClient and check that the data is actually serialized and send to the API. Currently we're just checking if local write works
         }
 
         private struct TestAbilityStruct
@@ -70,6 +72,23 @@ namespace Tests.Runtime
             public string Name { get; set; }
             public int Cost { get; set; }
             public Dictionary<string, int> Attributes { get; set; }
+        }
+        
+        [UnityTest]
+        public IEnumerator When_setting_participant_custom_data_expect_custom_data_set()
+            => ConnectAndExecute(When_setting_participant_custom_data_expect_custom_data_set_Async);
+
+        private async Task When_setting_participant_custom_data_expect_custom_data_set_Async()
+        {
+            var streamCall = await JoinRandomCallAsync();
+            var participant = streamCall.Participants.FirstOrDefault();
+            Assert.NotNull(participant);
+            
+            Assert.AreEqual(0, participant.CustomData.Count);
+
+            await participant.CustomData.SetAsync("position", new Vector3(1, 2, 3));
+            var position = participant.CustomData.Get<Vector3>("position");
+            Assert.AreEqual(new Vector3(1, 2, 3), position);
         }
     }
 }

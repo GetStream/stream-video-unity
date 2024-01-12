@@ -37,5 +37,8 @@ namespace StreamVideo.Core
             List<string> revokePermissions);
 
         Task RemoveMembersAsync(IStreamCall call, List<string> removeUsers);
+
+        Task SetParticipantCustomDataAsync(IStreamVideoCallParticipant participant,
+            Dictionary<string, object> internalDictionary);
     }
 }

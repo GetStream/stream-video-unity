@@ -16,10 +16,6 @@ namespace StreamVideo.Core.StatefulModels
     internal abstract class StreamStatefulModelBase<TStatefulModel> : IStreamStatefulModel
         where TStatefulModel : class, IStreamStatefulModel
     {
-
-        //StreamTodo: determine if CustomData is available for all models e.g. does participant have custom data?
-        public IStreamCustomData CustomData => InternalCustomData;
-
         string IStreamStatefulModel.UniqueId => InternalUniqueId;
 
         internal StreamStatefulModelBase(string uniqueId, ICacheRepository<TStatefulModel> repository,
@@ -54,7 +50,6 @@ namespace StreamVideo.Core.StatefulModels
 
         protected void LoadCustomData(Dictionary<string, object> customData)
         {
-            Logs.Warning("LoadCustomData called with:\n" + _serializer.Serialize(customData));
             InternalCustomData.ReplaceAllWith(customData);
         }
 

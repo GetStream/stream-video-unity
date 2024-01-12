@@ -10,7 +10,7 @@ namespace StreamVideo.Core.StatefulModels
     /// <summary>
     /// A <see cref="IStreamVideoUser"/> that is actively connected to a <see cref="IStreamCall"/>
     /// </summary>
-    public interface IStreamVideoCallParticipant : IStreamStatefulModel
+    public interface IStreamVideoCallParticipant : IStreamStatefulModel, IHasCustomData
     {
         /// <summary>
         /// A track was added for this participant. Tracks represents streams of video, and audio. You can get all tracks via <see cref="GetTracks"/>

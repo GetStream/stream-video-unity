@@ -326,6 +326,19 @@ namespace StreamVideo.Core
                     RemoveMembers = removeUsers,
                 });
 
+        Task IInternalStreamVideoClient.SetParticipantCustomDataAsync(IStreamVideoCallParticipant participant,
+            Dictionary<string, object> internalCustomData)
+        {
+            var activeCall = InternalLowLevelClient.RtcSession.ActiveCall;
+            if (activeCall == null)
+            {
+                throw new InvalidOperationException(
+                    "Tried to set custom data for a participant but there is no active call session.");
+            }
+
+            return activeCall.SyncParticipantCustomDataAsync(participant, internalCustomData);
+        }
+
         private StreamVideoLowLevelClient InternalLowLevelClient { get; }
         
         private event Action Destroyed;

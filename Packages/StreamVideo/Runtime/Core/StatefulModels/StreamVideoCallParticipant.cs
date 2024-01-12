@@ -21,7 +21,7 @@ namespace StreamVideo.Core.StatefulModels
         public event ParticipantTrackChangedHandler TrackAdded;
 
         public bool IsLocalParticipant => UserSessionId == Client.InternalLowLevelClient.RtcSession.SessionId;
-        
+
         public bool IsPinned { get; private set; }
 
         public bool IsScreenSharing => ScreenShareTrack?.Enabled ?? false;
@@ -55,7 +55,7 @@ namespace StreamVideo.Core.StatefulModels
 
         public string SessionId { get; private set; }
         public IEnumerable<TrackType> PublishedTracks => _publishedTracks;
-        
+
         public string TrackLookupPrefix { get; private set; }
         public ConnectionQuality ConnectionQuality { get; private set; }
         public bool IsSpeaking { get; private set; }
@@ -66,6 +66,8 @@ namespace StreamVideo.Core.StatefulModels
         public IEnumerable<string> Roles => _roles;
 
         #endregion
+
+        public IStreamCustomData CustomData => InternalCustomData;
 
         public StreamVideoCallParticipant(string uniqueId, ICacheRepository<StreamVideoCallParticipant> repository,
             IStatefulModelContext context)
@@ -134,7 +136,6 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void SetTrack(TrackType type, MediaStreamTrack mediaStreamTrack, out IStreamTrack streamTrack)
         {
-            
 #if STREAM_DEBUG_ENABLED
             Logs.Warning(
                 $"[Participant] Local: {IsLocalParticipant} Session ID: {SessionId} set track of type {type}");
@@ -188,10 +189,7 @@ namespace StreamVideo.Core.StatefulModels
         protected override StreamVideoCallParticipant Self => this;
 
         protected override Task SyncCustomDataAsync()
-        {
-            // This can probably use UpdateCallMembersAsync??
-            throw new NotImplementedException();
-        }
+            => Client.SetParticipantCustomDataAsync(this, InternalCustomData.InternalDictionary);
 
         #region Tracks
 

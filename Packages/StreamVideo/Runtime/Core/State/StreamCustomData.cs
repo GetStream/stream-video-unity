@@ -42,8 +42,6 @@ namespace StreamVideo.Core.State
             return _customDataServerSyncCallback();
         }
         
-        //StreamTodo: Add SetMultipleAsync or SetManyAsync
-
         internal Dictionary<string, object> InternalDictionary => _customData;
 
         internal StreamCustomData(ISerializer serializer, Func<Task> customDataServerSyncCallback)

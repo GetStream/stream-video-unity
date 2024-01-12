@@ -10,6 +10,9 @@ using UnityEngine;
 
 namespace StreamVideo.Core
 {
+    /// <summary>
+    /// This is the main client to connect to Stream service and create calls that enable participants to share video & audio streams.
+    /// </summary>
     public interface IStreamVideoClient : IStreamVideoClientEventsListener, IDisposable
     {
         /// <summary>

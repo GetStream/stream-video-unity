@@ -55,7 +55,7 @@ namespace StreamVideo.Core.StatefulModels
 
         protected override Task SyncCustomDataAsync()
         {
-            // This can probably use UpdateCallMembersAsync??
+            //StreamTodo: implement user custom data writing once the API exposes such functionality
             throw new NotImplementedException();
         }
 

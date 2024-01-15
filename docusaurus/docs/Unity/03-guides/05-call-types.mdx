@@ -3,7 +3,8 @@ title: Call Types
 description: How Call Types control features and permissions
 ---
 
-import CallTypesPage from "../../../shared/video/_call-types.md";
+import CallTypesPage from '../../../shared/video/_call-types.mdx';
+import WithExternalLinks from '../../../shared/video/_withExternalLinks';
 
 When you create a call like this:
 
@@ -28,3 +29,13 @@ Apart from setting the `callId` you also pick the `StreamCallType`.
 There are 4 built-in call types, and you can also create your own.
 
 <CallTypesPage />
+
+<WithExternalLinks
+    mapping={{
+        '/tutorials/video-calling/':
+            'https://getstream.io/video/sdk/unity/tutorial/video-calling/',
+        '/tutorials/audio-room/':
+            'https://getstream.io/video/sdk/unity/tutorial/audio-room/',
+    }}
+    selectorsToRemove={['div[id=livestream-tutorial-mnemonic]']}
+/>

@@ -13,65 +13,104 @@ namespace StreamVideo.ExampleProject
 {
     public class StreamVideoManager : MonoBehaviour
     {
-        protected void Awake()
-        {
-            _uiManager.JoinClicked += OnJoinClicked;
-            _uiManager.LeaveCallClicked += OnLeaveCallClicked;
-            _uiManager.EndCallClicked += OnEndCallClicked;
-            _uiManager.ToggledAudioRed += OnToggledAudioRed;
-            _uiManager.ToggledAudioDtx += OnToggledAudioDtx;
-        }
+        public event Action<IStreamCall> CallStarted;
+        public event Action CallEnded;
 
-        protected void Start()
+        public IStreamVideoClient Client => _client;
+
+        /// <summary>
+        /// Join the Call with a given ID. We can either create it or try to join only.
+        /// </summary>
+        /// <param name="callId">Call ID</param>
+        /// <param name="create">Do we create this call before trying to join</param>
+        public async Task JoinAsync(string callId, bool create = true)
         {
-            if (!string.IsNullOrEmpty(_joinCallId))
+            if (string.IsNullOrEmpty(callId))
             {
-                _uiManager.SetJoinCallId(_joinCallId);
+                throw new Exception($"Call ID is required");
             }
 
-            var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
+            Debug.Log($"Join call, create: {create}, callId: {callId}");
+            await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
+        }
 
+        public void EndActiveCall()
+        {
+            if (_activeCall == null)
+            {
+                throw new InvalidOperationException("Tried to end the call but there is not active call.");
+            }
+
+            _activeCall.EndAsync().LogIfFailed();
+        }
+
+        public void LeaveActiveCall()
+        {
+            if (_activeCall == null)
+            {
+                throw new InvalidOperationException("Tried to end the call but there is not active call.");
+            }
+
+            _activeCall.LeaveAsync().LogIfFailed();
+        }
+
+        /// <summary>
+        /// Read <see cref="IStreamAudioConfig.EnableDtx"/>
+        /// </summary>
+        /// <param name="value"></param>
+        public void SetAudioDtx(bool value) => _clientConfig.Audio.EnableDtx = value;
+
+        /// <summary>
+        /// Read <see cref="IStreamAudioConfig.EnableRed"/>
+        /// </summary>
+        public void SetAudioREDundancyEncoding(bool value) => _clientConfig.Audio.EnableRed = value;
+
+        protected void Awake()
+        {
             _clientConfig = new StreamClientConfig
             {
                 LogLevel = StreamLogLevel.Debug,
-                Audio =
-                {
-                    EnableRed = _uiManager.AudioRedEnabled,
-                    EnableDtx = _uiManager.AudioDtxEnabled
-                }
             };
+        }
+
+        protected async void Start()
+        {
+            var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
 
             _client = StreamVideoClient.CreateDefaultClient(_clientConfig);
             _client.CallStarted += OnCallStarted;
             _client.CallEnded += OnCallEnded;
 
-            ConnectToStreamAsync(credentials).LogIfFailed();
+            try
+            {
+                await ConnectToStreamAsync(credentials);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         protected async void OnDestroy()
         {
-            _uiManager.JoinClicked -= OnJoinClicked;
-            _uiManager.LeaveCallClicked -= OnLeaveCallClicked;
-            _uiManager.EndCallClicked -= OnEndCallClicked;
-            _uiManager.ToggledAudioRed -= OnToggledAudioRed;
-            _uiManager.ToggledAudioDtx -= OnToggledAudioDtx;
-
-            if (_client != null)
+            if (_client == null)
             {
-                try
-                {
-                    await _client.DisconnectAsync();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
-
-                _client.CallStarted -= OnCallStarted;
-                _client.CallEnded -= OnCallEnded;
-                _client.Dispose();
-                _client = null;
+                return;
             }
+
+            try
+            {
+                await _client.DisconnectAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+
+            _client.CallStarted -= OnCallStarted;
+            _client.CallEnded -= OnCallEnded;
+            _client.Dispose();
+            _client = null;
         }
 
         /// <summary>
@@ -92,13 +131,6 @@ namespace StreamVideo.ExampleProject
             public string Error;
         }
 
-        [SerializeField]
-        private UIManager _uiManager;
-
-        [Header("The Join Call ID from UI's Input will override this value")]
-        [SerializeField]
-        private string _joinCallId = "";
-
         [Space(50)]
         [Header("Authorization Credentials")]
         [SerializeField]
@@ -113,44 +145,6 @@ namespace StreamVideo.ExampleProject
         private IStreamVideoClient _client;
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
-
-        private string TryGetCallId(bool create) => create ? Guid.NewGuid().ToString() : _uiManager.JoinCallId;
-
-        private async void OnJoinClicked(bool create)
-        {
-            try
-            {
-                var callId = TryGetCallId(create);
-                if (string.IsNullOrEmpty(callId))
-                {
-                    Debug.LogError($"Failed to get call ID in mode create: {create}.");
-                    return;
-                }
-
-                _client.SetAudioInputSource(_uiManager.InputAudioSource);
-                _client.SetCameraInputSource(_uiManager.InputCameraSource);
-                _client.SetCameraInputSource(_uiManager.InputSceneCamera);
-
-                Debug.Log($"Join clicked, create: {create}, callId: {callId}");
-
-                var streamCall
-                    = await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
-        }
-
-        private void OnToggledAudioDtx(bool value)
-        {
-            _clientConfig.Audio.EnableDtx = value;
-        }
-
-        private void OnToggledAudioRed(bool value)
-        {
-            _clientConfig.Audio.EnableRed = value;
-        }
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {
@@ -171,6 +165,10 @@ namespace StreamVideo.ExampleProject
             await _client.ConnectUserAsync(credentials);
         }
 
+        /// <summary>
+        /// This method will fetch Stream's demo credentials. These credentials are not usable in a real production due to limited rates.
+        /// Customer accounts do have a FREE tier so please register at https://getstream.io/ to get your own app ID and credentials.
+        /// </summary>
         private static async Task<DemoCredentialsApiResponse> GetStreamDemoTokenAsync()
         {
             var serializer = new NewtonsoftJsonSerializer();
@@ -199,38 +197,13 @@ namespace StreamVideo.ExampleProject
         private void OnCallStarted(IStreamCall call)
         {
             _activeCall = call;
-            foreach (var participant in _activeCall.Participants)
-            {
-                _uiManager.AddParticipant(participant);
-            }
-
-            _activeCall.ParticipantJoined += _uiManager.AddParticipant;
-            _activeCall.ParticipantLeft += _uiManager.RemoveParticipant;
-            _activeCall.DominantSpeakerChanged += _uiManager.DominantSpeakerChanged;
-
-            _uiManager.SetJoinCallId(call.Id);
-            _uiManager.SetActiveCall(call);
+            CallStarted?.Invoke(call);
         }
 
         private void OnCallEnded(IStreamCall call)
         {
-            _activeCall.ParticipantJoined -= _uiManager.AddParticipant;
-            _activeCall.ParticipantLeft -= _uiManager.RemoveParticipant;
-            _activeCall.DominantSpeakerChanged -= _uiManager.DominantSpeakerChanged;
             _activeCall = null;
-
-            _uiManager.SetJoinCallId(string.Empty);
-            _uiManager.SetActiveCall(null);
-        }
-
-        private void OnEndCallClicked()
-        {
-            _activeCall.EndAsync().LogIfFailed();
-        }
-
-        private void OnLeaveCallClicked()
-        {
-            _activeCall.LeaveAsync().LogIfFailed();
+            CallEnded?.Invoke();
         }
     }
 }

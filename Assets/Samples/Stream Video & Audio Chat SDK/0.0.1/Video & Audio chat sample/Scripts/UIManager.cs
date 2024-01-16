@@ -8,29 +8,17 @@ using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject
 {
-    public delegate void JoinCallHandler(bool create);
-
     public class UIManager : MonoBehaviour
     {
-        public event JoinCallHandler JoinClicked;
-        public event Action LeaveCallClicked;
-        public event Action EndCallClicked;
-        public event Action CameraInputChanged;
+        [Header("Video Sending Settings")]
+        [SerializeField]
+        private int _senderVideoWidth = 1280;
 
-        public event Action<bool> ToggledAudioRed;
-        public event Action<bool> ToggledAudioDtx;
+        [SerializeField]
+        private int _senderVideoHeight = 720;
 
-        public AudioSource InputAudioSource => _inputAudioSource;
-        public WebCamTexture InputCameraSource => _activeCamera;
-        public Camera InputSceneCamera => _inputSceneCamera;
-        public string JoinCallId => _joinCallIdInput.text;
-
-        public bool AudioRedEnabled => _audioRedToggle.isOn;
-        public bool AudioDtxEnabled => _audioDtxToggle.isOn;
-
-        public int Width = 1280;
-        public int Height = 720;
-        public int FPS = 30;
+        [SerializeField]
+        private int _senderVideoFps = 30;
 
         public void AddParticipant(IStreamVideoCallParticipant participant)
         {
@@ -41,7 +29,7 @@ namespace StreamVideo.ExampleProject
             if (participant.IsLocalParticipant)
             {
                 // Set input camera as a video source for local participant - we won't receive OnTrack event for local participant
-                view.SetLocalCameraSource(InputCameraSource);
+                view.SetLocalCameraSource(_activeCamera);
             }
         }
 
@@ -74,6 +62,8 @@ namespace StreamVideo.ExampleProject
 
         public void SetActiveCall(IStreamCall call)
         {
+            _activeCall = call;
+            
             var isActive = call != null;
             var isCallOwner = isActive && call.IsLocalUserOwner;
 
@@ -92,13 +82,17 @@ namespace StreamVideo.ExampleProject
 
         protected void Awake()
         {
-            _joinBtn.onClick.AddListener(() => JoinClicked?.Invoke(false));
-            _createBtn.onClick.AddListener(() => JoinClicked?.Invoke(true));
-            _leaveBtn.onClick.AddListener(() => LeaveCallClicked?.Invoke());
-            _endBtn.onClick.AddListener(() => EndCallClicked?.Invoke());
+            _videoManager = GetComponent<StreamVideoManager>();
+            _videoManager.CallStarted += OnCallStarted;
+            _videoManager.CallEnded += OnCallEnded;
 
-            _audioRedToggle.onValueChanged.AddListener(enabled => ToggledAudioRed?.Invoke(enabled));
-            _audioDtxToggle.onValueChanged.AddListener(enabled => ToggledAudioDtx?.Invoke(enabled));
+            _joinBtn.onClick.AddListener(OnJoinCallButtonClicked);
+            _createBtn.onClick.AddListener(OnCreateAndJoinCallButtonClicked);
+            _leaveBtn.onClick.AddListener(_videoManager.LeaveActiveCall);
+            _endBtn.onClick.AddListener(_videoManager.EndActiveCall);
+
+            _audioRedToggle.onValueChanged.AddListener(_videoManager.SetAudioREDundancyEncoding);
+            _audioDtxToggle.onValueChanged.AddListener(_videoManager.SetAudioDtx);
 
             _microphoneDeviceDropdown.ClearOptions();
             _microphoneDeviceDropdown.onValueChanged.AddListener(OnMicrophoneDeviceChanged);
@@ -123,6 +117,12 @@ namespace StreamVideo.ExampleProject
             OnMicrophoneToggled(_microphoneDeviceToggle.enabled);
 
             //StreamTodo: handle camera toggle
+        }
+
+        protected void OnDestroy()
+        {
+            _videoManager.CallStarted -= OnCallStarted;
+            _videoManager.CallEnded -= OnCallEnded;
         }
 
         private readonly Dictionary<string, ParticipantView> _participantSessionIdToView
@@ -186,6 +186,91 @@ namespace StreamVideo.ExampleProject
 
         private WebCamTexture _activeCamera;
         private WebCamDevice _defaultCamera;
+
+        private StreamVideoManager _videoManager;
+        private IStreamCall _activeCall;
+
+        private void OnCallStarted(IStreamCall call)
+        {
+            SetJoinCallId(call.Id);
+            SetActiveCall(call);
+            
+            // Generate participant UI for already present participants
+            foreach (var participant in call.Participants)
+            {
+                AddParticipant(participant);
+            }
+            
+            // Subscribe to participants joining or leaving the call
+            call.ParticipantJoined += AddParticipant;
+            call.ParticipantLeft += RemoveParticipant;
+            
+            // Subscribe to the change of the most actively speaking participant
+            call.DominantSpeakerChanged += DominantSpeakerChanged;
+        }
+
+        private void OnCallEnded()
+        {
+            _activeCall.ParticipantJoined -= AddParticipant;
+            _activeCall.ParticipantLeft -= RemoveParticipant;
+            _activeCall.DominantSpeakerChanged -= DominantSpeakerChanged;
+            
+            SetJoinCallId(string.Empty);
+            SetActiveCall(null);
+        }
+
+        private async void OnJoinCallButtonClicked()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_joinCallIdInput.text))
+                {
+                    Log("`Call ID` is required when trying to join a call", LogType.Error);
+                    return;
+                }
+
+                _videoManager.Client.SetAudioInputSource(_inputAudioSource);
+                _videoManager.Client.SetCameraInputSource(_activeCamera);
+                
+                // Optional
+                _videoManager.Client.SetCameraInputSource(_inputSceneCamera);
+
+                await _videoManager.JoinAsync(_joinCallIdInput.text, create: false);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+
+        private async void OnCreateAndJoinCallButtonClicked()
+        {
+            try
+            {
+                _videoManager.Client.SetAudioInputSource(_inputAudioSource);
+                _videoManager.Client.SetCameraInputSource(_activeCamera);
+                _videoManager.Client.SetCameraInputSource(_inputSceneCamera);
+
+                var callId = CreateRandomCallId();
+                await _videoManager.JoinAsync(callId, create: true);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+
+        private string CreateRandomCallId() => Guid.NewGuid().ToString().Replace("-", "");
+
+        private void Log(string message, LogType type)
+        {
+            if (type == LogType.Exception)
+            {
+                throw new NotSupportedException("To log exceptions use " + nameof(Debug.LogException));
+            }
+
+            Debug.LogFormat(type, LogOption.None, context: null, format: message);
+        }
 
         private void OnMicrophoneDeviceChanged(int index)
         {
@@ -300,7 +385,7 @@ namespace StreamVideo.ExampleProject
                 return;
             }
 
-            _activeCamera = new WebCamTexture(deviceName, Width, Height, FPS);
+            _activeCamera = new WebCamTexture(deviceName, _senderVideoWidth, _senderVideoHeight, _senderVideoFps);
 
             _localCameraImage.texture = _activeCamera;
 
@@ -314,7 +399,7 @@ namespace StreamVideo.ExampleProject
                 localParticipant.SetLocalCameraSource(_activeCamera);
             }
 
-            CameraInputChanged?.Invoke();
+            _videoManager.Client.SetCameraInputSource(_activeCamera);
         }
 
         private void ClearAllParticipants()

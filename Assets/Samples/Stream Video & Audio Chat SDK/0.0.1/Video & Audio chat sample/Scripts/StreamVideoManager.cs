@@ -130,8 +130,11 @@ namespace StreamVideo.ExampleProject
         {
             public string Error;
         }
+        
+        [SerializeField]
+        [TextArea]
+        private string _info = "Get your credentials from https://dashboard.getstream.io/. If you leave the credentials empty then Stream's Demo credentials will be used automatically.";
 
-        [Space(50)]
         [Header("Authorization Credentials")]
         [SerializeField]
         private string _apiKey = "";
@@ -145,6 +148,7 @@ namespace StreamVideo.ExampleProject
         private IStreamVideoClient _client;
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
+        private WebCamTexture _inputCamera;
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {

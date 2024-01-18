@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace StreamVideo.ExampleProject
+namespace StreamVideo.ExampleProject.UI
 {
     public class ParticipantView : MonoBehaviour
     {

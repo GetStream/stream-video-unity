@@ -70,7 +70,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             // Subscribe to participants joining or leaving the call
             _activeCall.ParticipantJoined += OnParticipantJoined;
-            _activeCall.ParticipantLeft += RemoveParticipant;
+            _activeCall.ParticipantLeft += OnParticipantLeft;
 
             // Subscribe to the change of the most actively speaking participant
             _activeCall.DominantSpeakerChanged += OnDominantSpeakerChanged;
@@ -89,7 +89,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             if (_activeCall != null)
             {
                 _activeCall.ParticipantJoined -= OnParticipantJoined;
-                _activeCall.ParticipantLeft -= RemoveParticipant;
+                _activeCall.ParticipantLeft -= OnParticipantLeft;
                 _activeCall.DominantSpeakerChanged -= OnDominantSpeakerChanged;
                 _activeCall = null;
             }
@@ -109,11 +109,14 @@ namespace StreamVideo.ExampleProject.UI.Screens
             {
                 var isDominantSpeaker = participantView.Participant == currentDominantSpeaker;
                 participantView.UpdateIsDominantSpeaker(isDominantSpeaker);
-                break;
             }
+            
+            SortParticipantViews();
         }
         
         private void OnParticipantJoined(IStreamVideoCallParticipant participant) => AddParticipant(participant, sortParticipantViews: true);
+        
+        private void OnParticipantLeft(string sessionId, string userId) => RemoveParticipant(sessionId, userId, sortParticipantViews: true);
 
         private void AddParticipant(IStreamVideoCallParticipant participant, bool sortParticipantViews)
         {
@@ -134,8 +137,26 @@ namespace StreamVideo.ExampleProject.UI.Screens
             }
         }
 
+        private void RemoveParticipant(string sessionId, string userId, bool sortParticipantViews)
+        {
+            if (!_participantSessionIdToView.TryGetValue(sessionId, out var view))
+            {
+                Debug.LogError("Failed to find view for removed participant with sessionId: " + sessionId);
+                return;
+            }
+
+            _participantSessionIdToView.Remove(sessionId);
+            Destroy(view.gameObject);
+            
+            if (sortParticipantViews)
+            {
+                SortParticipantViews();
+            }
+        }
+
         /// <summary>
-        /// Sort participant views based on SortedParticipants property
+        /// Sort participant views based on SortedParticipants property.
+        /// This will place dominant participant in large window and the other participants in a scrollable view underneath
         /// </summary>
         private void SortParticipantViews()
         {
@@ -161,23 +182,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
             var isDominantSpeaker = participant == _activeCall.DominantSpeaker;
             return GetParticipantViewParent(isDominantSpeaker);
         }
-        
+
         private Transform GetParticipantViewParent(bool isDominantSpeaker)
             => isDominantSpeaker ? _dominantSpeakerContainer : _remainingParticipantsContainer;
-
-        private void RemoveParticipant(string sessionId, string userId)
-        {
-            if (!_participantSessionIdToView.TryGetValue(sessionId, out var view))
-            {
-                Debug.LogError("Failed to find view for removed participant with sessionId: " + sessionId);
-                return;
-            }
-
-            _participantSessionIdToView.Remove(sessionId);
-            Destroy(view.gameObject);
-        }
-
-        private void SetJoinCallId(string joinCallId) => _joinCallIdInput.text = joinCallId;
 
         private void RemoveAllParticipants()
         {

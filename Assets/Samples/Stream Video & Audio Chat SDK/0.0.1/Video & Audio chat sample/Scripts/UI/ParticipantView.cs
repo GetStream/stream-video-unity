@@ -28,13 +28,6 @@ namespace StreamVideo.ExampleProject.UI
             Participant.TrackAdded += OnParticipantTrackAdded;
 
             _name.text = Participant.Name;
-
-            if (Participant.IsLocalParticipant)
-            {
-                _name.text += " (local)";
-            }
-            
-            _name.text += $"<br>{Participant.SessionId}";
         }
 
         public void UpdateIsDominantSpeaker(bool isDominantSpeaker)

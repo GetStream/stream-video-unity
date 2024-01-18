@@ -13,6 +13,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
             UIManager = uiManager ? uiManager : throw new ArgumentNullException(nameof(uiManager));
             
             _gameObject = gameObject;
+            
+            // Hide every screen view by default. The UIManager controls which screen should become visible
+            _gameObject.SetActive(false);
         }
 
         public void Show(TInitArgs initArgs)
@@ -39,7 +42,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected StreamVideoManager VideoManager { get; private set; }
         protected UIManager UIManager { get; private set; }
-
+        
         protected abstract void OnShow(TInitArgs initArgs);
 
         protected abstract void OnHide();

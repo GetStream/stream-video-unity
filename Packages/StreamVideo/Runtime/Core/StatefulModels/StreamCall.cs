@@ -53,7 +53,7 @@ namespace StreamVideo.Core.StatefulModels
 
         public event Action RecordingStarted;
         public event Action RecordingStopped;
-        
+
         public IStreamCustomData CustomData => InternalCustomData;
 
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
@@ -69,7 +69,7 @@ namespace StreamVideo.Core.StatefulModels
 
         public IStreamVideoCallParticipant DominantSpeaker
         {
-            get => _dominantSpeaker;
+            get => _dominantSpeaker ?? Session.Participants.FirstOrDefault();
             private set
             {
                 var prev = _dominantSpeaker;
@@ -760,7 +760,8 @@ namespace StreamVideo.Core.StatefulModels
         {
             const string participantsCustomDataPrefix = "pXwf2Z1mFOOEXV_participants_data";
 
-            if (!CustomData.TryGet<Dictionary<string, Dictionary<string, object>>>(participantsCustomDataPrefix, out var allParticipantsCustomData))
+            if (!CustomData.TryGet<Dictionary<string, Dictionary<string, object>>>(participantsCustomDataPrefix,
+                    out var allParticipantsCustomData))
             {
                 allParticipantsCustomData = new Dictionary<string, Dictionary<string, object>>();
                 InternalCustomData.InternalDictionary[participantsCustomDataPrefix] = allParticipantsCustomData;

@@ -1547,7 +1547,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6480392315630648303
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1611,10 +1611,9 @@ MonoBehaviour:
   _participantViewPrefab: {fileID: 206063798946056810, guid: 8e6e01d55ac3a294190ec75159fd5592, type: 3}
   _dominantSpeakerContainer: {fileID: 6480392314249026205}
   _remainingParticipantsContainer: {fileID: 6480392315420529555}
-  _participantsContainer: {fileID: 0}
   _leaveBtn: {fileID: 6480392315580084351}
   _endBtn: {fileID: 6480392314047834102}
-  _joinCallIdInput: {fileID: 0}
+  _joinCallIdInput: {fileID: 7384330386348051496}
 --- !u!1 &6480392315631565443
 GameObject:
   m_ObjectHideFlags: 0
@@ -1908,7 +1907,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Call ID:'
+  m_text: 'Invite Other Users. Send this Call ID:'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

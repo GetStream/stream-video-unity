@@ -766,9 +766,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _info: Get your credentials from https://dashboard.getstream.io/. If you leave
     the credentials empty then Stream's Demo credentials will be used automatically.
-  _apiKey: mmhfdzb5evj2
-  _userId: Han_Solo
-  _userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiSGFuX1NvbG8iLCJpc3MiOiJodHRwczovL3Byb250by5nZXRzdHJlYW0uaW8iLCJzdWIiOiJ1c2VyL0hhbl9Tb2xvIiwiaWF0IjoxNzA1NTg5MjI0LCJleHAiOjE3MDYxOTQwMjl9.5X_SqUlvdU2ICesZUsSfM5i8NXzLcvbwHEU2GLvu_rg
+  _apiKey: 
+  _userId: 
+  _userToken: 
 --- !u!4 &1354881825
 Transform:
   m_ObjectHideFlags: 0

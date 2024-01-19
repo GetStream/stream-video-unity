@@ -75,6 +75,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
             // Subscribe to the change of the most actively speaking participant
             _activeCall.DominantSpeakerChanged += OnDominantSpeakerChanged;
 
+            _activeCall.SortedParticipantsUpdated += SortParticipantViews;
+
             UIManager.ActiveCameraChanged += OnActiveCameraChanged;
 
             // Show active call ID so user can copy it and send others to join
@@ -91,6 +93,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 _activeCall.ParticipantJoined -= OnParticipantJoined;
                 _activeCall.ParticipantLeft -= OnParticipantLeft;
                 _activeCall.DominantSpeakerChanged -= OnDominantSpeakerChanged;
+                _activeCall.SortedParticipantsUpdated -= SortParticipantViews;
                 _activeCall = null;
             }
 

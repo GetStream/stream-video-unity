@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace StreamVideo.ExampleProject
+namespace StreamVideo.ExampleProject.UI
 {
     public class ParticipantView : MonoBehaviour
     {
@@ -28,13 +28,6 @@ namespace StreamVideo.ExampleProject
             Participant.TrackAdded += OnParticipantTrackAdded;
 
             _name.text = Participant.Name;
-
-            if (Participant.IsLocalParticipant)
-            {
-                _name.text += " (local)";
-            }
-            
-            _name.text += $"<br>{Participant.SessionId}";
         }
 
         public void UpdateIsDominantSpeaker(bool isDominantSpeaker)

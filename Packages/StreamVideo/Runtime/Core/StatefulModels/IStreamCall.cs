@@ -162,8 +162,14 @@ namespace StreamVideo.Core.StatefulModels
 
         CallEgress Egress { get; }
 
+        /// <summary>
+        /// Leave the call without ending it. Other participants will remain connected. If you wish to end the call for all participants you can use the <see cref="EndAsync"/>
+        /// </summary>
         Task LeaveAsync();
 
+        /// <summary>
+        /// End call for all participants. If you only want to leave the call without ending it for others you can use the <see cref="LeaveAsync"/>
+        /// </summary>
         Task EndAsync();
 
         Task GoLiveAsync();

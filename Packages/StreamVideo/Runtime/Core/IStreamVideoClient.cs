@@ -37,10 +37,21 @@ namespace StreamVideo.Core
         Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify);
 
+        /// <summary>
+        /// Set the source for sending AUDIO. Check out the docs to learn on how to capture audio from a Microphone device https://getstream.io/video/docs/unity/guides/camera-and-microphone/
+        /// </summary>
+        /// <param name="audioSource"></param>
         void SetAudioInputSource(AudioSource audioSource);
 
+        /// <summary>
+        /// Set the source for sending VIDEO from a Camera device. Check out the docs to learn how to setup capturing video from a camera device https://getstream.io/video/docs/unity/guides/camera-and-microphone/
+        /// </summary>
+        /// <param name="webCamTexture"></param>
         void SetCameraInputSource(WebCamTexture webCamTexture);
 
+        /// <summary>
+        /// Set the source for sending VIDEO or rendered Scene Camera. You can pass any scene camera and the video will be sent to other participants.
+        /// </summary>
         void SetCameraInputSource(Camera sceneCamera);
 
         /// <summary>

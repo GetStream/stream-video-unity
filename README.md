@@ -39,7 +39,7 @@ More information [here](https://getstream.io/video/docs/unity/basics/installatio
 
 ## 📕 Tutorials
 
-With Stream's video components, you can use their SDK to build in-app video calling, audio rooms, audio calls, or live streaming. The best place to get started is with their tutorials:
+With Stream's video components, you can use our SDK to build in-app video calling, audio rooms, audio calls, or live streaming. The best place to get started is with our tutorials:
 
 - **[Video & Audio Calling Tutorial](https://getstream.io/video/docs/unity/tutorials/video-calling/)**
 - **[Audio Rooms Tutorial](https://getstream.io/video/docs/unity/tutorials/audio-room/)**

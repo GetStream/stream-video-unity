@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using StreamVideo.Core.StatefulModels;
 
-namespace Core
+namespace StreamVideo.Core
 {
     /// <summary>
     /// User for sorting of <see cref="IStreamCall.SortedParticipants"/>

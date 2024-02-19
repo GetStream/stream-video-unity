@@ -134,7 +134,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _connectUserTaskSource.SetResult(true);
             _connectUserTaskSource = null;
 
-            Logs.Info("Connection confirmed by server with connection id: " + ConnectionId);
+#if STREAM_DEBUG_ENABLED
+            Logs.Info("Connected to the coordinator. Connection id: " + ConnectionId);
+#endif
         }
 
         private void HandleNewWebsocketMessage(string msg)

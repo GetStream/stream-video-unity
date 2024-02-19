@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Core.Utils
+namespace StreamVideo.Core.Utils
 {
     internal static class LinkedListUtils
     {

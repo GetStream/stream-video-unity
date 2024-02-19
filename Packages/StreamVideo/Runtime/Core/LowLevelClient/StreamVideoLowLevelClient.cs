@@ -53,7 +53,7 @@ namespace StreamVideo.Core.LowLevelClient
         /// SDK Version number
         /// </summary>
         public static readonly Version SDKVersion = SdkVersionWrapper.SDKVersion;
-        
+
         /// <summary>
         /// Local user DTO - only available when the coordinator is connected
         /// </summary>
@@ -152,7 +152,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             _coordinatorWS.ConnectionStateChanged += OnCoordinatorConnectionStateChanged;
 
-            InternalVideoClientApi = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory, 
+            InternalVideoClientApi = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory,
                 lowLevelClient: this);
 
             RtcSession = new RtcSession(sfuWebSocketWrapper, CreateSessionHttpClient, _logs, _serializer, _timeService,
@@ -175,12 +175,15 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (!ConnectionState.IsValidToConnect())
             {
-                throw new InvalidOperationException("Attempted to connect, but client is in state: " + ConnectionState);
+                throw new InvalidOperationException(
+                    "Attempted to connect, but client is in a state invalid to connect. Current state: " +
+                    ConnectionState);
             }
 
+#if STREAM_DEBUG_ENABLED
             var connectUri = _requestUriFactory.CreateCoordinatorConnectionUri();
-
             _logs.Info($"Connect to coordinator: {connectUri}");
+#endif
 
             await _coordinatorWS.ConnectAsync(cancellationToken);
             await UpdateLocationHintAsync();
@@ -233,7 +236,7 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.Dispose();
 
             _updateMonitorCts.Cancel();
-            
+
             if (RtcSession != null)
             {
                 RtcSession.Dispose();
@@ -282,7 +285,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private const string DefaultStreamAuthType = "jwt";
         private const string LocationHintHeaderKey = "x-amz-cf-pop";
-        
+
         private static readonly Uri ServerBaseUrl = new Uri("wss://video.stream-io-api.com/video/connect");
         private static readonly Uri LocationHintWebUri = new Uri("https://hint.stream-io-video.com/");
 
@@ -300,8 +303,9 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IStreamClientConfig _config;
         private readonly IApplicationInfo _applicationInfo;
         private readonly RtcSession _rtcSession;
-        
-        private readonly List<(string Key, string Value)> _defaultHttpRequestHeaders = new List<(string Key, string Value)>();
+
+        private readonly List<(string Key, string Value)> _defaultHttpRequestHeaders
+            = new List<(string Key, string Value)>();
 
         private CancellationTokenSource _updateMonitorCts;
 
@@ -337,7 +341,9 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _locationHint = locationHeader.Value.First();
+#if STREAM_DEBUG_ENABLED
             _logs.Info("Location Hint: " + _locationHint);
+#endif
         }
 
         private async Task RefreshAuthTokenFromProviderAsync(CancellationToken cancellationToken = default)
@@ -545,11 +551,11 @@ namespace StreamVideo.Core.LowLevelClient
 
             return sb.ToString();
         }
-        
+
         private IEnumerable<(string Key, string Value)> GenerateDefaultHttpRequestHeaders()
         {
             var clientHeader = BuildStreamClientHeader(_applicationInfo);
-            
+
             yield return ("stream-auth-type", DefaultStreamAuthType);
             yield return ("X-Stream-Client", clientHeader);
         }
@@ -559,7 +565,7 @@ namespace StreamVideo.Core.LowLevelClient
             var connectUrl = activeCall.Credentials.Server.Url.Replace("/twirp", "");
 
             var httpClient = new HttpClient();
-            
+
             foreach (var header in _defaultHttpRequestHeaders)
             {
                 httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);

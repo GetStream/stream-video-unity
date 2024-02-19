@@ -61,7 +61,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var prevState = _callState;
                 _callState = value;
-                _logs.Warning($"Call state changed from {prevState} to {value}");
+                _logs.Info($"Call state changed from {prevState} to {value}");
             }
         }
         
@@ -358,7 +358,9 @@ namespace StreamVideo.Core.LowLevelClient
             };
             request.Tracks.AddRange(tracks);
 
+#if STREAM_DEBUG_ENABLED
             _logs.Info($"Request SFU - UpdateSubscriptionsRequest\n{_serializer.Serialize(request)}");
+#endif
 
             var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions,
                 nameof(GeneratedAPI.UpdateSubscriptions));
@@ -832,7 +834,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (t.Sender.Track.Kind == TrackKind.Video)
                 {
-                    var videoLayers = GetVideoLayers(_publisher.VideoSender.GetParameters().encodings, captureResolution);
+                    var videoLayers = GetPublisherVideoLayers(_publisher.VideoSender.GetParameters().encodings, captureResolution);
                     trackInfo.Layers.AddRange(videoLayers);
                     
 #if STREAM_DEBUG_ENABLED
@@ -867,7 +869,7 @@ namespace StreamVideo.Core.LowLevelClient
             return sdpOffer;
         }
 
-        private IEnumerable<VideoLayer> GetVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
+        private static IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
             (int Width, int Height) captureResolution)
         {
             foreach (var encoding in encodings)

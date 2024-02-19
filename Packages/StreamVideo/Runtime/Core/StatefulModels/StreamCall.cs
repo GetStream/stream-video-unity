@@ -579,6 +579,7 @@ namespace StreamVideo.Core.StatefulModels
             var reaction = new Reaction();
             Cache.TryUpdateOrCreateFromDto(reaction, callReactionEvent.Reaction);
 
+            //StreamTodo: NullReferenceException here because _client is never set
             var participant
                 = _client.RtcSession.ActiveCall.Participants.FirstOrDefault(p => p.UserId == reaction.User.Id);
             if (participant == null)

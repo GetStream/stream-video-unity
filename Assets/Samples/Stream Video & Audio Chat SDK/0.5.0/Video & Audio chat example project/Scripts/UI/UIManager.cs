@@ -15,15 +15,21 @@ namespace StreamVideo.ExampleProject.UI
 
         public void ChangeMicrophone(string deviceName, bool isActive)
         {
-            StopAudioRecording();
-            var prevDevice = _activeMicrophoneDeviceName;
-            _activeMicrophoneDeviceName = deviceName;
-            Debug.Log($"Changed active MICROPHONE from `{prevDevice}` to `{_activeMicrophoneDeviceName}`");
+            if (!string.IsNullOrEmpty(_selectedMicrophoneDeviceName))
+            {
+                StopAudioRecording();
+            }
+
+            var prevDevice = _selectedMicrophoneDeviceName ?? "None";
+            _selectedMicrophoneDeviceName = deviceName;
 
             if (isActive)
             {
                 StartAudioRecording();
             }
+
+            Debug.Log(
+                $"Changed selected MICROPHONE from `{prevDevice}` to `{_selectedMicrophoneDeviceName}`. Recording: {isActive}");
         }
 
         public void ChangeCamera(string deviceName)
@@ -65,7 +71,7 @@ namespace StreamVideo.ExampleProject.UI
 
             StopAudioRecording();
         }
-        
+
         public void Log(string message, LogType type)
         {
             if (type == LogType.Exception)
@@ -120,7 +126,7 @@ namespace StreamVideo.ExampleProject.UI
         [SerializeField]
         private MainScreenView _mainScreen;
 
-        private string _activeMicrophoneDeviceName;
+        private string _selectedMicrophoneDeviceName;
 
         private void OnCallStarted(IStreamCall call) => ShowCallScreen(call);
 
@@ -130,23 +136,36 @@ namespace StreamVideo.ExampleProject.UI
         {
             if (_inputAudioSource == null)
             {
-                Debug.LogError("Input Audio Source is null");
+                Debug.LogError("Audio recording failed. Input Audio Source is null");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_selectedMicrophoneDeviceName))
+            {
+                Debug.LogError("Audio recording failed. ");
                 return;
             }
 
             //StreamTodo: should the volume be 0 so we never hear input from our own microphone?
             _inputAudioSource.clip
-                = Microphone.Start(_activeMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
+                = Microphone.Start(_selectedMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
             _inputAudioSource.loop = true;
             _inputAudioSource.Play();
 
-            Debug.Log("Audio recording started. Device name: " + _activeMicrophoneDeviceName);
+            Debug.Log("Audio recording started. Device name: " + _selectedMicrophoneDeviceName);
         }
 
         private void StopAudioRecording()
         {
-            Microphone.End(_activeMicrophoneDeviceName);
-            Debug.Log("Audio recording stopped");
+            var isRecording = !string.IsNullOrEmpty(_selectedMicrophoneDeviceName) &&
+                              !Microphone.IsRecording(_selectedMicrophoneDeviceName);
+            if (!isRecording)
+            {
+                return;
+            }
+
+            Microphone.End(_selectedMicrophoneDeviceName);
+            Debug.Log($"Audio recording stopped for `{_selectedMicrophoneDeviceName}`");
         }
 
         private void ShowMainScreen()

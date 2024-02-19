@@ -35,7 +35,7 @@ namespace StreamVideo.Core.LowLevelClient
     public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
 
     public delegate void ParticipantLeftHandler(string sessionId, string userId);
-    
+
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
 
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
@@ -61,10 +61,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var prevState = _callState;
                 _callState = value;
-                _logs.Info($"Call state changed from {prevState} to {value}");
+                _logs.Info($"Call state changed from: `{prevState} to: `{value}`");
             }
         }
-        
+
         public StreamCall ActiveCall { get; private set; }
 
         #region IInputProvider
@@ -96,7 +96,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 var prev = _videoInput;
                 _videoInput = value;
-                
+
                 if (prev != _videoInput)
                 {
                     VideoInputChanged?.Invoke(value);
@@ -111,7 +111,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 var prev = _videoSceneInput;
                 _videoSceneInput = value;
-                
+
                 if (prev != _videoSceneInput)
                 {
                     VideoSceneInputChanged?.Invoke(value);
@@ -123,7 +123,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public string SessionId { get; private set; }
 
-        public RtcSession(SfuWebSocket sfuWebSocket, Func<IStreamCall, HttpClient> httpClientFactory, ILogs logs, ISerializer serializer, ITimeService timeService, 
+        public RtcSession(SfuWebSocket sfuWebSocket, Func<IStreamCall, HttpClient> httpClientFactory, ILogs logs,
+            ISerializer serializer, ITimeService timeService,
             IStreamClientConfig config)
         {
             _httpClientFactory = httpClientFactory;
@@ -208,7 +209,7 @@ namespace StreamVideo.Core.LowLevelClient
                 throw new InvalidOperationException(
                     $"Cannot start new session until previous call is active. Active call: {ActiveCall}");
             }
-            
+
             //StreamTodo: perhaps not necessary here
             ClearSession();
 
@@ -224,7 +225,10 @@ namespace StreamVideo.Core.LowLevelClient
             CreateSubscriber(iceServers);
 
             SessionId = Guid.NewGuid().ToString();
-            _logs.Warning($"START Session: " + SessionId);
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Info($"START Session: " + SessionId);
+#endif
 
             // We don't set initial offer as local. Later on we set generated answer as a local
             var offer = await _subscriber.CreateOfferAsync();
@@ -287,7 +291,7 @@ namespace StreamVideo.Core.LowLevelClient
         private float _lastTrackSubscriptionRequestTime;
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
-        
+
         private SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
@@ -296,7 +300,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void ClearSession()
         {
             _pendingIceTrickleRequests.Clear();
-            
+
             _subscriber?.Dispose();
             _subscriber = null;
             _publisher?.Dispose();
@@ -533,7 +537,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 participant.UpdateFromSfu(participantSfuDto);
             }
-            
+
             //StreamTodo: raise an event so user can react to track unpublished? Otherwise the video will just freeze
         }
 
@@ -575,7 +579,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             participant.SetTrackEnabled(trackType, isEnabled);
-            
+
             ActiveCall.NotifyTrackStateChanged(participant, trackType, isEnabled);
         }
 
@@ -610,17 +614,18 @@ namespace StreamVideo.Core.LowLevelClient
 
             QueueTracksSubscriptionRequest();
         }
-        
+
         private void OnSfuDominantSpeakerChanged(DominantSpeakerChanged dominantSpeakerChanged)
         {
             ActiveCall.UpdateFromSfu(dominantSpeakerChanged, _cache);
         }
-        
+
         private void OnSfuWebSocketOnError(Error obj)
         {
-            _logs.Error($"Sfu Error - Code: {obj.Error_.Code}, Message: {obj.Error_.Message}, ShouldRetry: {obj.Error_.ShouldRetry}");
+            _logs.Error(
+                $"Sfu Error - Code: {obj.Error_.Code}, Message: {obj.Error_.Message}, ShouldRetry: {obj.Error_.ShouldRetry}");
         }
-        
+
         private void OnSfuPinsUpdated(PinsChanged pinsChanged)
         {
             ActiveCall.UpdateFromSfu(pinsChanged, _cache);
@@ -719,7 +724,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             Debug.LogWarning("OnPublisherNegotiationNeeded");
 #endif
-            
+
             try
             {
                 if (_publisher.SignalingState != RTCSignalingState.Stable)
@@ -740,8 +745,9 @@ namespace StreamVideo.Core.LowLevelClient
                         type = offer.type,
                         sdp = _sdpMungeUtils.ModifySdp(offer.sdp, enableRed: false, _config.Audio.EnableDtx)
                     };
-                    
-                    _logs.Info($"Modified SDP, enable red: {_config.Audio.EnableRed}, enable DTX: {_config.Audio.EnableDtx} ");
+
+                    _logs.Info(
+                        $"Modified SDP, enable red: {_config.Audio.EnableRed}, enable DTX: {_config.Audio.EnableDtx} ");
                 }
 
                 await _publisher.SetLocalDescriptionAsync(ref offer);
@@ -755,7 +761,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
                 _logs.Warning($"[Publisher] LocalDesc (SDP Offer):\n{offer.sdp}");
 #endif
-                
+
                 var tracks = GetPublisherTracks(offer.sdp);
 
                 //StreamTodo: mangle SDP
@@ -772,11 +778,11 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
                 var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher));
-                
+
 #if STREAM_DEBUG_ENABLED
                 _logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
 #endif
-                
+
                 await _publisher.SetRemoteDescriptionAsync(new RTCSessionDescription()
                 {
                     type = RTCSdpType.Answer,
@@ -792,10 +798,11 @@ namespace StreamVideo.Core.LowLevelClient
         private string ExtractVideoTrackId(string sdp)
         {
             var lines = sdp.Split("\n");
-            var mediaStreamRecord = lines.Single(l => l.StartsWith($"a=msid:{_publisher.PublisherVideoMediaStream.Id}"));
+            var mediaStreamRecord
+                = lines.Single(l => l.StartsWith($"a=msid:{_publisher.PublisherVideoMediaStream.Id}"));
             var parts = mediaStreamRecord.Split(" ");
             var result = parts[1];
-            
+
             // StreamTodo: verify if this is needed
             result = result.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
 
@@ -812,10 +819,10 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: investigate why this return no results
             // var senderTracks = _publisher.GetTransceivers().Where(t
             //     => t.Direction == RTCRtpTransceiverDirection.SendOnly && t.Sender?.Track != null).ToArray();
-            
+
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"GetPublisherTracks - transceivers: {transceivers?.Count()} ");
-#endif         
+#endif
 
             //StreamTodo: figure out TrackType, because we rely on transceiver track type mapping we don't support atm screen video/audio share tracks
             //This implementation is based on the Android SDK, perhaps we shouldn't rely on GetTransceivers() but maintain our own TrackType => Transceiver mapping
@@ -834,9 +841,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (t.Sender.Track.Kind == TrackKind.Video)
                 {
-                    var videoLayers = GetPublisherVideoLayers(_publisher.VideoSender.GetParameters().encodings, captureResolution);
+                    var videoLayers = GetPublisherVideoLayers(_publisher.VideoSender.GetParameters().encodings,
+                        captureResolution);
                     trackInfo.Layers.AddRange(videoLayers);
-                    
+
 #if STREAM_DEBUG_ENABLED
                     _logs.Warning(
                         $"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
@@ -849,7 +857,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private string ReplaceVp8PayloadType(string sdpOffer)
         {
-            string[] patterns = 
+            string[] patterns =
             {
                 @"m=video 9 UDP/TLS/RTP/SAVPF 127",
                 @"a=rtpmap:127 VP8/90000",

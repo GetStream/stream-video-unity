@@ -106,7 +106,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             IStreamVideoCallParticipant previousDominantSpeaker)
         {
             Debug.Log(
-                $"Dominant speaker changed from {currentDominantSpeaker.Name} to {previousDominantSpeaker?.Name}");
+                $"Dominant speaker changed from: `{GetSpeakerName(previousDominantSpeaker)}` to: `{GetSpeakerName(currentDominantSpeaker)}`");
 
             foreach (var participantView in _participantSessionIdToView.Values)
             {
@@ -115,6 +115,16 @@ namespace StreamVideo.ExampleProject.UI.Screens
             }
             
             SortParticipantViews();
+        }
+
+        private static string GetSpeakerName(IStreamVideoCallParticipant participant)
+        {
+            if (participant == null)
+            {
+                return "None";
+            }
+
+            return string.IsNullOrEmpty(participant.Name) ? participant.UserId : participant.Name;
         }
         
         private void OnParticipantJoined(IStreamVideoCallParticipant participant) => AddParticipant(participant, sortParticipantViews: true);

@@ -19,7 +19,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
     internal partial class TargetResolutionRequestInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("bitrate", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public int Bitrate { get; set; } = default!;
+        public int? Bitrate { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("height", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Height { get; set; } = default!;

@@ -19,17 +19,17 @@ namespace StreamVideo.Core.InternalDTO.Models
     internal partial class VideoSettingsInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("access_request_enabled", Required = Newtonsoft.Json.Required.Always)]
-        public bool AccessRequestEnabled { get; set; } = default!;
+        public bool AccessRequestEnabled { get; set; }
 
         [Newtonsoft.Json.JsonProperty("camera_default_on", Required = Newtonsoft.Json.Required.Always)]
-        public bool CameraDefaultOn { get; set; } = default!;
+        public bool CameraDefaultOn { get; set; }
 
         [Newtonsoft.Json.JsonProperty("camera_facing", Required = Newtonsoft.Json.Required.Always)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public VideoSettingsCameraFacingInternalEnum CameraFacing { get; set; } = default!;
+        public VideoSettingsCameraFacingInternalEnum? CameraFacing { get; set; }
 
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Always)]
-        public bool Enabled { get; set; } = default!;
+        public bool Enabled { get; set; }
 
         [Newtonsoft.Json.JsonProperty("target_resolution", Required = Newtonsoft.Json.Required.Always)]
         public TargetResolutionInternalDTO TargetResolution { get; set; } = new TargetResolutionInternalDTO();

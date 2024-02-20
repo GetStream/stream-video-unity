@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.InternalDTO.Events;
+using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.QueryBuilders.Filters;
@@ -169,6 +170,7 @@ namespace StreamVideo.Core
             return LocalUser;
         }
 
+        //StreamTodo: change public to explicit interface
         public void Update() => InternalLowLevelClient.Update();
 
         public IEnumerator WebRTCUpdateCoroutine() => WebRTC.Update();
@@ -185,7 +187,7 @@ namespace StreamVideo.Core
         {
             InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;
         }
-
+        
         public void SetCameraInputSource(Camera sceneCamera)
         {
             InternalLowLevelClient.RtcSession.VideoSceneInput = sceneCamera;
@@ -243,7 +245,6 @@ namespace StreamVideo.Core
         }
 
         #endregion
-
 
 
         StreamVideoLowLevelClient IInternalStreamVideoClient.InternalLowLevelClient => InternalLowLevelClient;
@@ -309,7 +310,8 @@ namespace StreamVideo.Core
                     Permissions = capabilities
                 });
 
-        Task IInternalStreamVideoClient.UpdateUserPermissions(IStreamCall call, string userId, List<string> grantPermissions,
+        Task IInternalStreamVideoClient.UpdateUserPermissions(IStreamCall call, string userId,
+            List<string> grantPermissions,
             List<string> revokePermissions)
             => InternalLowLevelClient.InternalVideoClientApi.UpdateUserPermissionsAsync(call.Type, call.Id,
                 new UpdateUserPermissionsRequestInternalDTO
@@ -340,12 +342,12 @@ namespace StreamVideo.Core
         }
 
         private StreamVideoLowLevelClient InternalLowLevelClient { get; }
-        
+
         private event Action Destroyed;
 
         private readonly ILogs _logs;
         private readonly ICache _cache;
-        
+
         private async Task LeaveCallAsync(IStreamCall call)
         {
             //StreamTodo: check if call is active
@@ -627,7 +629,6 @@ namespace StreamVideo.Core
         {
             var areEqual = cidA == cidB;
 #if STREAM_DEBUG_ENABLED
-
             if (!areEqual)
             {
                 _logs.Error($"CID mismatch: {cidA} vs {cidB}");

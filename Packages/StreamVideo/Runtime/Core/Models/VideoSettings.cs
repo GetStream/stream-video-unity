@@ -10,7 +10,7 @@ namespace StreamVideo.Core.Models
 
         public bool CameraDefaultOn { get; private set;}
 
-        public VideoSettingsCameraFacing CameraFacing { get; private set;}
+        public VideoSettingsCameraFacing? CameraFacing { get; private set;}
 
         public bool Enabled { get; private set;}
 
@@ -20,7 +20,7 @@ namespace StreamVideo.Core.Models
         {
             AccessRequestEnabled = dto.AccessRequestEnabled;
             CameraDefaultOn = dto.CameraDefaultOn;
-            CameraFacing = dto.CameraFacing.ToPublicEnum();
+            CameraFacing = dto.CameraFacing?.ToPublicEnum();
             Enabled = dto.Enabled;
             TargetResolution = cache.TryUpdateOrCreateFromDto(TargetResolution, dto.TargetResolution);
         }

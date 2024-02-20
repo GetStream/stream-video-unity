@@ -43,8 +43,9 @@ namespace StreamVideo.Core.LowLevelClient
         public RTCRtpSender VideoSender { get; private set; }
 
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
-            IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig)
+            IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig, PublisherVideoSettings publisherVideoSettings)
         {
+            _publisherVideoSettings = publisherVideoSettings ?? throw new ArgumentNullException(nameof(publisherVideoSettings));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _mediaInputProvider = mediaInputProvider ?? throw new ArgumentNullException(nameof(mediaInputProvider));
             _peerType = peerType;
@@ -182,6 +183,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly StreamPeerType _peerType;
         private readonly IMediaInputProvider _mediaInputProvider;
         private readonly IStreamAudioConfig _audioConfig;
+        private readonly PublisherVideoSettings _publisherVideoSettings;
 
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
 
@@ -291,7 +293,8 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: Implement OnVideoSceneInputChanged
         }
 
-        private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind)
+        private static RTCRtpTransceiverInit BuildTransceiverInit(StreamPeerType type, TrackKind kind,
+            PublisherVideoSettings publisherVideoSettings)
         {
             if (type == StreamPeerType.Subscriber)
             {
@@ -301,7 +304,7 @@ namespace StreamVideo.Core.LowLevelClient
                 };
             }
 
-            var encodings = GetVideoEncodingParameters(kind).ToArray();
+            var encodings = GetVideoEncodingParameters(kind, publisherVideoSettings).ToArray();
 
             return new RTCRtpTransceiverInit
             {
@@ -312,7 +315,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreatePublisherAudioTransceiver()
         {
-            var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio);
+            var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio, _publisherVideoSettings);
             _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
 
             PublisherAudioMediaStream = new MediaStream();
@@ -344,16 +347,16 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _audioTrack.Stop();
-            
+
             PublisherAudioMediaStream.RemoveTrack(_audioTrack);
             _peerConnection.RemoveTrack(_audioTransceiver.Sender);
-            
+
             _audioTrack = null;
         }
 
         private void CreatePublisherVideoTransceiver()
         {
-            var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video);
+            var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video, _publisherVideoSettings);
 
             PublisherVideoMediaStream = new MediaStream();
             _videoTrack = CreatePublisherVideoTrack();
@@ -387,13 +390,14 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _videoTrack.Stop();
-            
+
             PublisherVideoMediaStream.RemoveTrack(_videoTrack);
-            
+
             _videoTrack = null;
         }
 
-        private static IEnumerable<RTCRtpEncodingParameters> GetVideoEncodingParameters(TrackKind trackKind)
+        private static IEnumerable<RTCRtpEncodingParameters> GetVideoEncodingParameters(TrackKind trackKind,
+            PublisherVideoSettings publisherVideoSettings)
         {
             switch (trackKind)
             {
@@ -412,13 +416,12 @@ namespace StreamVideo.Core.LowLevelClient
                     break;
                 case TrackKind.Video:
 
-
                     var fullQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
                         maxBitrate = RtcSession.FullPublishVideoBitrate,
                         //minBitrate = RtcSession.FullPublishVideoBitrate / 2,
-                        maxFramerate = 30,
+                        maxFramerate = publisherVideoSettings.FrameRate,
                         scaleResolutionDownBy = 1.0,
                         rid = "f"
                     };
@@ -427,7 +430,7 @@ namespace StreamVideo.Core.LowLevelClient
                         active = true,
                         maxBitrate = RtcSession.HalfPublishVideoBitrate,
                         //minBitrate = RtcSession.HalfPublishVideoBitrate / 2,
-                        maxFramerate = 20,
+                        maxFramerate = publisherVideoSettings.FrameRate,
                         scaleResolutionDownBy = 2.0,
                         rid = "h"
                     };
@@ -437,7 +440,7 @@ namespace StreamVideo.Core.LowLevelClient
                         active = true,
                         maxBitrate = RtcSession.QuarterPublishVideoBitrate,
                         //minBitrate = RtcSession.QuarterPublishVideoBitrate / 2,
-                        maxFramerate = 10,
+                        maxFramerate = publisherVideoSettings.FrameRate,
                         scaleResolutionDownBy = 4.0,
                         rid = "q"
                     };
@@ -456,21 +459,31 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        private VideoResolution GetPublisherResolution()
+        {
+            //StreamTodo: check if resolution is forced with UpdateVideoPublisherSettings
+            
+            if (_mediaInputProvider.VideoInput != null)
+            {
+                return new VideoResolution(_mediaInputProvider.VideoInput.width, _mediaInputProvider.VideoInput.height);
+            }
+
+            return VideoResolution.Res_1080p;
+        }
+
         private VideoStreamTrack CreatePublisherVideoTrack()
         {
+            if (_mediaInputProvider.VideoInput == null)
+            {
+                throw new ArgumentException($"Can't create publisher video track because `{nameof(_mediaInputProvider.VideoInput)}` is not null");
+            }
+
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
 
-            //StreamTodo: hardcoded resolution
-            _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
+            var res = GetPublisherResolution();
+            _publisherVideoTrackTexture = new RenderTexture(res.Width, res.Height, 0, format);
 
-            Texture texture = _mediaInputProvider.VideoInput;
-
-            if (_mediaInputProvider.VideoInput == null)
-            {
-                Debug.LogError("Video Input is null");
-                texture = _publisherVideoTrackTexture;
-            }
 
 #if STREAM_DEBUG_ENABLED
             Debug.LogWarning(
@@ -480,6 +493,7 @@ namespace StreamVideo.Core.LowLevelClient
             return new VideoStreamTrack(_mediaInputProvider.VideoInput);
         }
 
+        //StreamTodo: CreatePublisherVideoTrackFromSceneCamera() is not used in any path
         private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()
         {
             var gfxType = SystemInfo.graphicsDeviceType;

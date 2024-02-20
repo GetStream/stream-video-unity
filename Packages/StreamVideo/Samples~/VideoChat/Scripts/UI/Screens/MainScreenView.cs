@@ -12,7 +12,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
     public class MainScreenView : BaseScreenView<CallScreenView.InitArgs>
     {
         /// <summary>
-        /// Arguments requires to initialize this screen when showing
+        /// Arguments required to initialize this screen when showing
         /// </summary>
         public readonly struct InitArgs
         {
@@ -33,7 +33,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _microphoneDeviceDropdown.AddOptions(Microphone.devices.ToList());
 
             _microphoneDeviceToggle.onValueChanged.AddListener(UIManager.SetMicrophoneActive);
-            UIManager.SetMicrophoneActive(_microphoneDeviceToggle.enabled);
 
             _cameraDeviceDropdown.ClearOptions();
             _cameraDeviceDropdown.onValueChanged.AddListener(OnCameraDeviceChanged);
@@ -86,6 +85,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
         private Toggle _audioDtxToggle;
 
         private WebCamDevice _defaultCamera;
+        private string _defaultMicrophoneDeviceName;
 
         private async void OnJoinCallButtonClicked()
         {
@@ -161,36 +161,51 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             if (string.IsNullOrEmpty(_defaultCamera.name))
             {
-                Debug.LogError("Failed to pick default camera device");
+                Debug.LogWarning("Failed to pick default camera device");
                 return;
             }
 
-            Debug.Log($"Default Camera: {_defaultCamera.name}");
-
-            if (!string.IsNullOrEmpty(_defaultCamera.name))
-            {
-                UIManager.ChangeCamera(_defaultCamera.name);
-            }
+            SetCameraDropdown(_defaultCamera.name);
         }
 
         //StreamTodo: remove
         private void SmartPickDefaultMicrophone()
         {
             var preferredMicDevices = new[] { "bose", "airpods" };
-            var defaultMicrophone = Microphone.devices.FirstOrDefault(d
+            _defaultMicrophoneDeviceName = Microphone.devices.FirstOrDefault(d
                 => preferredMicDevices.Any(m => d.IndexOf(m, StringComparison.OrdinalIgnoreCase) != -1));
 
-            if (!string.IsNullOrEmpty(defaultMicrophone))
+            if (string.IsNullOrEmpty(_defaultMicrophoneDeviceName))
             {
-                var index = Array.IndexOf(Microphone.devices, defaultMicrophone);
-                if (index == -1)
-                {
-                    Debug.LogError("Failed to find index of smart picked microphone");
-                    return;
-                }
-
-                _microphoneDeviceDropdown.value = index;
+                Debug.LogWarning("Failed to pick default microphone device");
+                return;
             }
+
+            SetMicrophoneDropdown(_defaultMicrophoneDeviceName);
+        }
+
+        private void SetMicrophoneDropdown(string deviceName)
+        {
+            var index = Array.IndexOf(Microphone.devices, deviceName);
+            if (index == -1)
+            {
+                Debug.LogError($"Failed to find index for microphone device: {deviceName}");
+                return;
+            }
+
+            _microphoneDeviceDropdown.value = index;
+        }
+        
+        private void SetCameraDropdown(string deviceName)
+        {
+            var index = Array.IndexOf(WebCamTexture.devices.Select(d => d.name).ToArray(), deviceName);
+            if (index == -1)
+            {
+                Debug.LogError($"Failed to find index for camera device: {deviceName}");
+                return;
+            }
+
+            _cameraDeviceDropdown.value = index;
         }
 
         private static string CreateRandomCallId() => Guid.NewGuid().ToString().Replace("-", "");

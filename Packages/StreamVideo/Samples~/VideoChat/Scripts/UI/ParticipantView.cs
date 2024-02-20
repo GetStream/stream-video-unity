@@ -97,10 +97,10 @@ namespace StreamVideo.ExampleProject.UI
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {
+            Debug.Log($"Track received from `{participant.UserId}`, type: {track.GetType()}");
             switch (track)
             {
                 case StreamAudioTrack streamAudioTrack:
-                    Debug.LogWarning("Audio source received");
                     if (_audioSource != null)
                     {
                         Debug.LogError("Multiple audio track!");

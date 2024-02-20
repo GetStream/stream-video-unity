@@ -131,9 +131,13 @@ namespace StreamVideo.ExampleProject
             public string Error;
         }
         
+#pragma warning disable CS0414 //Disable warning that _info is unused. It's purpose is to display info box in the Unity Inspector only
+        
         [SerializeField]
         [TextArea]
         private string _info = "Get your credentials from https://dashboard.getstream.io/. If you leave the credentials empty then Stream's Demo credentials will be used automatically.";
+        
+#pragma warning restore CS0414
 
         [Header("Authorization Credentials")]
         [SerializeField]

@@ -155,17 +155,21 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
 #elif UNITY_ANDROID || UNITY_IOS
             _defaultCamera = devices.FirstOrDefault(d => d.isFrontFacing);
-#else
-            _defaultCamera = devices.FirstOrDefault();
 #endif
 
             if (string.IsNullOrEmpty(_defaultCamera.name))
             {
-                Debug.LogWarning("Failed to pick default camera device");
+                _defaultCamera = devices.FirstOrDefault();
+            }
+            
+            if (string.IsNullOrEmpty(_defaultCamera.name))
+            {
+                Debug.LogError("Failed to pick default camera device");
                 return;
             }
 
-            SetCameraDropdown(_defaultCamera.name);
+            SetCameraDropdownWithoutNotify(_defaultCamera.name);
+            UIManager.ChangeCamera(_defaultCamera.name);
         }
 
         //StreamTodo: remove
@@ -177,14 +181,20 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             if (string.IsNullOrEmpty(_defaultMicrophoneDeviceName))
             {
-                Debug.LogWarning("Failed to pick default microphone device");
+                _defaultMicrophoneDeviceName = Microphone.devices.FirstOrDefault();
+            }
+            
+            if (string.IsNullOrEmpty(_defaultMicrophoneDeviceName))
+            {
+                Debug.LogError("Failed to pick default microphone device");
                 return;
             }
 
-            SetMicrophoneDropdown(_defaultMicrophoneDeviceName);
+            SetMicrophoneDropdownWithoutNotify(_defaultMicrophoneDeviceName);
+            UIManager.ChangeMicrophone(_defaultMicrophoneDeviceName, _microphoneDeviceToggle.enabled);
         }
 
-        private void SetMicrophoneDropdown(string deviceName)
+        private void SetMicrophoneDropdownWithoutNotify(string deviceName)
         {
             var index = Array.IndexOf(Microphone.devices, deviceName);
             if (index == -1)
@@ -193,10 +203,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 return;
             }
 
-            _microphoneDeviceDropdown.value = index;
+            _microphoneDeviceDropdown.SetValueWithoutNotify(index);
         }
         
-        private void SetCameraDropdown(string deviceName)
+        private void SetCameraDropdownWithoutNotify(string deviceName)
         {
             var index = Array.IndexOf(WebCamTexture.devices.Select(d => d.name).ToArray(), deviceName);
             if (index == -1)
@@ -205,7 +215,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 return;
             }
 
-            _cameraDeviceDropdown.value = index;
+            _cameraDeviceDropdown.SetValueWithoutNotify(index);
         }
 
         private static string CreateRandomCallId() => Guid.NewGuid().ToString().Replace("-", "");

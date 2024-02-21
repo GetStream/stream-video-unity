@@ -96,7 +96,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var prev = _videoInput;
                 _videoInput = value;
 
-                _publisherVideoSettings.MaxResolution = new VideoResolution(value.width, value.height);
+                _publisherVideoSettings.MaxResolution = new VideoResolution((uint)value.width, (uint)value.height);
                 _publisherVideoSettings.FrameRate = (uint)value.requestedFPS;
 
                 if (prev != _videoInput)
@@ -271,6 +271,12 @@ namespace StreamVideo.Core.LowLevelClient
             _subscriber?.RestartIce();
             _publisher?.RestartIce();
         }
+        
+        public void UpdateRequestedVideoResolution(string sessionId, VideoResolution videoResolution)
+        {
+            _videoResolutionByParticipantSessionId[sessionId] = videoResolution;
+            QueueTracksSubscriptionRequest();
+        }
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
 
@@ -283,6 +289,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
         private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
+        private readonly Dictionary<string, VideoResolution> _videoResolutionByParticipantSessionId = new Dictionary<string, VideoResolution>();
 
         private HttpClient _httpClient;
         private CallingState _callState;
@@ -303,6 +310,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void ClearSession()
         {
             _pendingIceTrickleRequests.Clear();
+            _videoResolutionByParticipantSessionId.Clear();
 
             _subscriber?.Dispose();
             _subscriber = null;
@@ -315,6 +323,16 @@ namespace StreamVideo.Core.LowLevelClient
             _trackSubscriptionRequestInProgress = false;
         }
 
+        //StreamTodo: request track subscriptions when SFU got changed. Android comment for setVideoSubscriptions:
+        /*
+         * - it sends the resolutions we're displaying the video at so the SFU can decide which track to send
+         * - when switching SFU we should repeat this info
+         * - http calls failing here breaks the call. (since you won't receive the video)
+         * - we should retry continously until it works and after it continues to fail, raise an error that shuts down the call
+         * - we retry when:
+         * -- error isn't permanent, SFU didn't change, the mute/publish state didn't change
+         * -- we cap at 30 retries to prevent endless loops
+        */
         private void QueueTracksSubscriptionRequest()
         {
             if (_trackSubscriptionRequested)
@@ -388,7 +406,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()
         {
-            //StreamTodo: inject info on what tracks we want and what dimensions
+            //StreamTodo: inject info on what tracks we want. Hardcoded audio & video but missing screenshare support
             var trackTypes = new[] { TrackTypeInternal.Video, TrackTypeInternal.Audio };
 
             foreach (var participant in ActiveCall.Participants)
@@ -398,22 +416,29 @@ namespace StreamVideo.Core.LowLevelClient
                     continue;
                 }
 
+                var requestedVideoResolution = GetRequestedVideoResolution(participant);
+
                 foreach (var trackType in trackTypes)
                 {
                     yield return new TrackSubscriptionDetails
                     {
                         UserId = participant.UserId,
                         SessionId = participant.SessionId,
-
                         TrackType = trackType,
-                        Dimension = new VideoDimension
-                        {
-                            Width = 1200,
-                            Height = 1200
-                        }
+                        Dimension = requestedVideoResolution.ToVideoDimension()
                     };
                 }
             }
+        }
+
+        private VideoResolution GetRequestedVideoResolution(IStreamVideoCallParticipant participant)
+        {
+            if (_videoResolutionByParticipantSessionId.TryGetValue(participant.SessionId, out var resolution))
+            {
+                return resolution;
+            }
+
+            return _config.Video.DefaultParticipantVideoResolution;
         }
 
         private async Task SendIceCandidateAsync(RTCIceCandidate candidate, StreamPeerType streamPeerType)
@@ -614,6 +639,8 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: optimize with StringBuilder
             var id = $"{participantLeft.Participant.UserId}({participantLeft.Participant.SessionId})";
             _logs.Info($"Participant: {id} left");
+
+            _videoResolutionByParticipantSessionId.Remove(participantLeft.Participant.SessionId);
 
             QueueTracksSubscriptionRequest();
         }

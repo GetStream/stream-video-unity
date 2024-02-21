@@ -93,6 +93,9 @@ namespace StreamVideo.Core.StatefulModels
             }
         }
 
+        public void UpdateRequestedVideoResolution(VideoResolution videoResolution)
+            => LowLevelClient.RtcSession.UpdateRequestedVideoResolution(SessionId, videoResolution);
+
         public override string ToString()
             => $"{nameof(StreamVideoCallParticipant)} with User ID: {UserId} & Session ID: {SessionId}";
 

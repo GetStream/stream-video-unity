@@ -1,6 +1,4 @@
-﻿using StreamVideo.Core.LowLevelClient;
-
-namespace StreamVideo.Core.Configs
+﻿namespace StreamVideo.Core.Configs
 {
     /// <summary>
     /// Configuration for <see cref="IStreamVideoLowLevelClient"/>
@@ -17,5 +15,7 @@ namespace StreamVideo.Core.Configs
         StreamLogLevel LogLevel { get; set; }
 
         IStreamAudioConfig Audio { get; }
+        
+        IStreamVideoConfig Video { get; }
     }
 }

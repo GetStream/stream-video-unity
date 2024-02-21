@@ -10,5 +10,7 @@
         public StreamLogLevel LogLevel { get; set; } = StreamLogLevel.FailureOnly;
 
         public IStreamAudioConfig Audio { get; } = new StreamAudioConfig();
+        
+        public IStreamVideoConfig Video { get; } = new StreamVideoConfig();
     }
 }

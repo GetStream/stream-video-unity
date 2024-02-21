@@ -1,5 +1,8 @@
 ﻿namespace StreamVideo.Core.Configs
 {
+    /// <summary>
+    /// Configuration for audio streaming
+    /// </summary>
     public interface IStreamAudioConfig
     {
         /// <summary>

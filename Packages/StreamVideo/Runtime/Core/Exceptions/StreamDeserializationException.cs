@@ -11,7 +11,7 @@ namespace StreamVideo.Core.Exceptions
         public Type TargetType { get; }
 
         public StreamDeserializationException(string content, Type targetType, Exception innerException)
-            : base($"Failed to deserialize string to type: `{targetType.Name}` ", innerException)
+            : base($"Deserialization Failed. Type: `{targetType.Name}`. Error: `{innerException.Message}`. Content: {content}", innerException)
         {
             TargetType = targetType;
             Content = content;

@@ -44,7 +44,9 @@ namespace StreamVideo.Core
         void SetAudioInputSource(AudioSource audioSource);
 
         /// <summary>
-        /// Set the source for sending VIDEO from a Camera device. Check out the docs to learn how to setup capturing video from a camera device https://getstream.io/video/docs/unity/guides/camera-and-microphone/
+        /// Set the source for sending VIDEO from a Camera device.
+        /// Video resolution and FPS (frames per second) defined in the passed <see cref="webCamTexture"/> will be used to define the max resolution and FPS of the published video
+        /// Check out the docs to learn how to setup capturing video from a camera device https://getstream.io/video/docs/unity/guides/camera-and-microphone/
         /// </summary>
         /// <param name="webCamTexture"></param>
         void SetCameraInputSource(WebCamTexture webCamTexture);

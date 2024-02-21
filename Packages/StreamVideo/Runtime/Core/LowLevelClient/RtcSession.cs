@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
@@ -96,6 +95,9 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 var prev = _videoInput;
                 _videoInput = value;
+
+                _publisherVideoSettings.MaxResolution = new VideoResolution(value.width, value.height);
+                _publisherVideoSettings.FrameRate = (uint)value.requestedFPS;
 
                 if (prev != _videoInput)
                 {
@@ -280,6 +282,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly Func<IStreamCall, HttpClient> _httpClientFactory;
 
         private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
+        private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
 
         private HttpClient _httpClient;
         private CallingState _callState;
@@ -811,9 +814,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         private IEnumerable<TrackInfo> GetPublisherTracks(string sdp)
         {
-            //StreamTodo: get resolution from some IMediaDeviceProvider / IMediaSourceProvider
-            var captureResolution = (Width: 1920, Height: 1080);
-
             var transceivers = _publisher.GetTransceivers().ToArray();
 
             //StreamTodo: investigate why this return no results
@@ -842,7 +842,7 @@ namespace StreamVideo.Core.LowLevelClient
                 if (t.Sender.Track.Kind == TrackKind.Video)
                 {
                     var videoLayers = GetPublisherVideoLayers(_publisher.VideoSender.GetParameters().encodings,
-                        captureResolution);
+                        _publisherVideoSettings);
                     trackInfo.Layers.AddRange(videoLayers);
 
 #if STREAM_DEBUG_ENABLED
@@ -878,19 +878,20 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private static IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
-            (int Width, int Height) captureResolution)
+            PublisherVideoSettings videoSettings)
         {
             foreach (var encoding in encodings)
             {
                 var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
-                var width = (uint)(captureResolution.Width / scaleBy);
-                var height = (uint)(captureResolution.Height / scaleBy);
+                var resolution = videoSettings.MaxResolution;
+                var width = (uint)(resolution.Width / scaleBy);
+                var height = (uint)(resolution.Height / scaleBy);
 
                 var quality = EncodingsToVideoQuality(encoding);
 
 #if STREAM_DEBUG_ENABLED
                 _logs.Warning(
-                    $"Video layer - rid: {encoding.rid} quality: {quality}, scaleBy: {scaleBy}, width: {width}, height: {height}");
+                    $"Video layer - rid: {encoding.rid} quality: {quality}, scaleBy: {scaleBy}, width: {width}, height: {height}, bitrate: {encoding.maxBitrate}");
 #endif
 
                 yield return new VideoLayer
@@ -902,7 +903,7 @@ namespace StreamVideo.Core.LowLevelClient
                         Height = height
                     },
                     Bitrate = (uint)(encoding.maxBitrate ?? 0),
-                    Fps = 24, //StreamTodo: hardcoded value, should integrator set this?
+                    Fps = encoding.maxFramerate.GetValueOrDefault(30),
                     Quality = quality,
                 };
             }
@@ -988,7 +989,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
             _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers,
-                this, _config.Audio);
+                this, _config.Audio, _publisherVideoSettings);
             _subscriber.IceTrickled += OnIceTrickled;
             _subscriber.StreamAdded += OnSubscriberStreamAdded;
         }
@@ -1013,7 +1014,7 @@ namespace StreamVideo.Core.LowLevelClient
             var callSettings = ActiveCall.Settings;
 
             _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers,
-                this, _config.Audio);
+                this, _config.Audio, _publisherVideoSettings);
             _publisher.IceTrickled += OnIceTrickled;
             _publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
         }

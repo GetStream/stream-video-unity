@@ -17,16 +17,8 @@
         public VideoResolution MaxResolution { get; set; } = VideoResolution.Res_720p;
         
         /// <summary>
-        /// Max frames per second at which the video will be streamed to other participants.
-        /// The final frame rate depends on factors like network bandwidth and traffic.
-        /// Stream will automatically adjust the resolution to network conditions in order to ensure smooth video as much as possible.
+        /// Frames per second (FPS) at which the video will be streamed to other participants.
         /// </summary>
         public uint FrameRate { get; set; } = 30;
-
-        internal void CopyValuesFrom(PublisherVideoSettings source)
-        {
-            MaxResolution = source.MaxResolution;
-            FrameRate = source.FrameRate;
-        }
     }
 }

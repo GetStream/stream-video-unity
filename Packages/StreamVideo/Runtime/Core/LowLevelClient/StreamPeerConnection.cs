@@ -484,7 +484,6 @@ namespace StreamVideo.Core.LowLevelClient
             var res = GetPublisherResolution();
             _publisherVideoTrackTexture = new RenderTexture(res.Width, res.Height, 0, format);
 
-
 #if STREAM_DEBUG_ENABLED
             Debug.LogWarning(
                 $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");

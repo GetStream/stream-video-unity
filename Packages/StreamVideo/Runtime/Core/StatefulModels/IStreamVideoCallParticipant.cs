@@ -68,5 +68,16 @@ namespace StreamVideo.Core.StatefulModels
         /// Get all tracks associated with this participant. You can also use <see cref="TrackAdded"/> to get notified when a track is added
         /// </summary>
         IEnumerable<IStreamTrack> GetTracks();
+
+        /// <summary>
+        /// Set the desired video resolution for this participant. This should match the video resolution that you're displaying on the device.
+        /// Using this function is critical to ensuring a smooth video experience, especially with multiple participants in a session. 
+        /// By default, you receive other participants' videos in a high resolution, but as more participants join the session, this can quickly use up all of the available network bandwidth and lead to video stuttering.
+        /// To optimize video performance, set the video resolution you display for every participant. Call this as often as the rendered resolution changes.
+        ///
+        /// StreamTodo: add link to the docs about best practices
+        /// </summary>
+        /// <param name="videoResolution">Video resolution you wish to receive for this participant. You can use a predefined size or pick a predefined one from <see cref="VideoResolution"/></param>
+        void UpdateRequestedVideoResolution(VideoResolution videoResolution);
     }
 }

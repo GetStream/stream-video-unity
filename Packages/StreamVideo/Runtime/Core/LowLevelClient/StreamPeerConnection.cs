@@ -461,11 +461,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         private VideoResolution GetPublisherResolution()
         {
-            //StreamTodo: check if resolution is forced with UpdateVideoPublisherSettings
-            
             if (_mediaInputProvider.VideoInput != null)
             {
-                return new VideoResolution(_mediaInputProvider.VideoInput.width, _mediaInputProvider.VideoInput.height);
+                var maxResolution = _publisherVideoSettings.MaxResolution;
+                return new VideoResolution(maxResolution.Width, maxResolution.Height);
             }
 
             return VideoResolution.Res_1080p;
@@ -482,7 +481,7 @@ namespace StreamVideo.Core.LowLevelClient
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
 
             var res = GetPublisherResolution();
-            _publisherVideoTrackTexture = new RenderTexture(res.Width, res.Height, 0, format);
+            _publisherVideoTrackTexture = new RenderTexture((int)res.Width, (int)res.Height, 0, format);
 
 #if STREAM_DEBUG_ENABLED
             Debug.LogWarning(

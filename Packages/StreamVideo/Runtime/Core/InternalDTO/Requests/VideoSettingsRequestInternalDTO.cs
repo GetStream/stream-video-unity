@@ -32,7 +32,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         public bool? Enabled { get; set; }
 
         [Newtonsoft.Json.JsonProperty("target_resolution", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public TargetResolutionRequestInternalDTO TargetResolution { get; set; }
+        public TargetResolutionRequestInternalDTO TargetResolution { get; set; } = default!;
 
     }
 

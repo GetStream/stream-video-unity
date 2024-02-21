@@ -16,6 +16,14 @@ namespace StreamVideo.Core.Configs
         /// </summary>
         StreamLogLevel LogLevel { get; set; }
 
+        /// <summary>
+        /// Audio related configuration
+        /// </summary>
         IStreamAudioConfig Audio { get; }
+        
+        /// <summary>
+        /// Video related configuration
+        /// </summary>
+        IStreamVideoConfig Video { get; }
     }
 }

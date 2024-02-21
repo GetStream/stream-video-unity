@@ -1,4 +1,6 @@
-﻿namespace StreamVideo.Core
+﻿using Stream.Video.v1.Sfu.Models;
+
+namespace StreamVideo.Core
 {
     /// <summary>
     /// Video resolution
@@ -11,7 +13,7 @@
     /// - <see cref="Res_240p"/> -> 320x240
     /// - <see cref="Res_144p"/> -> 256x144
     /// </summary>
-    internal struct VideoResolution
+    public struct VideoResolution
     {
         /// <summary>
         /// FullHD -> 1920x1080
@@ -43,14 +45,16 @@
         /// </summary>
         public static VideoResolution Res_144p => new VideoResolution(256, 144);
 
-        public VideoResolution(int width, int height)
+        public VideoResolution(uint width, uint height)
         {
             Width = width;
             Height = height;
         }
 
-        public int Width { get; }
-        public int Height { get; }
+        public uint Width { get; }
+        public uint Height { get; }
+
+        internal VideoDimension ToVideoDimension() => new VideoDimension { Width = Width, Height = Height };
     }
 
     //StreamTodo: add reference to the docs for recommended video resolution

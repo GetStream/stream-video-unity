@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
@@ -904,7 +905,7 @@ namespace StreamVideo.Core.LowLevelClient
             return sdpOffer;
         }
 
-        private static IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
+        private IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
             PublisherVideoSettings videoSettings)
         {
             foreach (var encoding in encodings)

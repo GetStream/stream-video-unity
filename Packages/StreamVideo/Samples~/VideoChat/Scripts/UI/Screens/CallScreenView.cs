@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 using TMPro;
 using UnityEngine;
@@ -65,7 +66,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             {
                 AddParticipant(participant, sortParticipantViews: false);
             }
-            
+
             SortParticipantViews();
 
             // Subscribe to participants joining or leaving the call
@@ -113,7 +114,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 var isDominantSpeaker = participantView.Participant == currentDominantSpeaker;
                 participantView.UpdateIsDominantSpeaker(isDominantSpeaker);
             }
-            
+
             SortParticipantViews();
         }
 
@@ -126,10 +127,12 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             return string.IsNullOrEmpty(participant.Name) ? participant.UserId : participant.Name;
         }
-        
-        private void OnParticipantJoined(IStreamVideoCallParticipant participant) => AddParticipant(participant, sortParticipantViews: true);
-        
-        private void OnParticipantLeft(string sessionId, string userId) => RemoveParticipant(sessionId, userId, sortParticipantViews: true);
+
+        private void OnParticipantJoined(IStreamVideoCallParticipant participant)
+            => AddParticipant(participant, sortParticipantViews: true);
+
+        private void OnParticipantLeft(string sessionId, string userId)
+            => RemoveParticipant(sessionId, userId, sortParticipantViews: true);
 
         private void AddParticipant(IStreamVideoCallParticipant participant, bool sortParticipantViews)
         {
@@ -160,7 +163,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             _participantSessionIdToView.Remove(sessionId);
             Destroy(view.gameObject);
-            
+
             if (sortParticipantViews)
             {
                 SortParticipantViews();

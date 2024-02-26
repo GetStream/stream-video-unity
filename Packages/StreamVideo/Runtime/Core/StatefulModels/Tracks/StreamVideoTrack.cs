@@ -56,6 +56,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
                 _targetTexture.Create();
             }
             
+            //StreamTodo: debug this size, it can get to negative values
             var rect = _targetImage.GetComponent<RectTransform>();
             var current = rect.sizeDelta;
             rect.sizeDelta = new Vector2(current.x, current.x * (1/sizeRatio));

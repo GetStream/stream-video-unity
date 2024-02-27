@@ -84,7 +84,7 @@ They way you start streaming video from a camera device is by creating a `WebCam
 var cameraDevice = WebCamTexture.devices.First();
 
 // Use device name to create a new WebCamTexture instance
-var activeCamera = new WebCamTexture(cameraDevice.name);
+var activeCamera = new WebCamTexture(cameraDevice.name, 1920, 1080, 24);
 
 // Call Play() in order to start capturing the video
 activeCamera.Play();
@@ -93,9 +93,17 @@ activeCamera.Play();
 _client.SetCameraInputSource(activeCamera);
 ```
 
+The video resolution and FPS parameters you set in your `WebCamTexture` instance will be used for the video publishing settings. In the above example, the video will aim to be streamed at 1080p (1920x1080) resolution and 24 frames per second.
+
+:::note
+
+Stream service will dynamically adjust the video resolution and FPS parameters based on the network traffic. The ultimate goal is to ensure a smooth video experience without video stuttering. The settings you provide are the maximum aimed for if the network conditions allow it.
+
+:::
+
 #### Change camera device during the call
 
-The most efficient way to change the camera device is to update the `deviceName` property` on the instance of `WebCamTexture` that was previously set as an input source via `_client.SetCameraInputSource`:
+The most efficient way to change the camera device is to update the `deviceName` property on the instance of `WebCamTexture` that was previously set as an input source via `_client.SetCameraInputSource`:
 
 ```csharp
 _activeCamera.Stop();

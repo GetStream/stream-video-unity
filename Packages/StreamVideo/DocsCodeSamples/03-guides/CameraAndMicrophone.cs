@@ -42,7 +42,7 @@ namespace DocsCodeSamples._03_guides
             var cameraDevice = WebCamTexture.devices.First();
 
             // Use device name to create a new WebCamTexture instance
-            var activeCamera = new WebCamTexture(cameraDevice.name);
+            var activeCamera = new WebCamTexture(cameraDevice.name, 1920, 1080, 24);
 
             // Call Play() in order to start capturing the video
             activeCamera.Play();

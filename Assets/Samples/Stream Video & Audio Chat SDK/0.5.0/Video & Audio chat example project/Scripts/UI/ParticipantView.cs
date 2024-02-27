@@ -1,4 +1,5 @@
 ﻿using System;
+using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using TMPro;
@@ -57,6 +58,12 @@ namespace StreamVideo.ExampleProject.UI
             // we set RenderTexture a a RawImage.texture because the RenderTexture will receive video stream from the local camera
             _video.texture = _localParticipantRenderTexture;
         }
+        
+        // Called by Unity Engine
+        protected void Awake()
+        {
+            _videoRectTransform = _video.GetComponent<RectTransform>();
+        }
 
         // Called by Unity Engine
         protected void Update()
@@ -64,6 +71,15 @@ namespace StreamVideo.ExampleProject.UI
             if (_localWebCamTexture != null)
             {
                 Graphics.Blit(_localWebCamTexture, _localParticipantRenderTexture);
+            }
+
+            var videoRenderedSize = new Vector2(_videoRectTransform.rect.width, _videoRectTransform.rect.height);
+            if (videoRenderedSize != _lastVideoRenderedSize)
+            {
+                _lastVideoRenderedSize = videoRenderedSize;
+                var videoResolution = new VideoResolution((int)videoRenderedSize.x, (int)videoRenderedSize.y);
+                Participant.UpdateRequestedVideoResolution(videoResolution);
+                Debug.Log($"Rendered resolution changed for participant `{Participant.UserId}`. Requested video resolution update to: {videoResolution}");
             }
         }
 
@@ -94,6 +110,8 @@ namespace StreamVideo.ExampleProject.UI
         private AudioSource _audioSource;
         private RenderTexture _localParticipantRenderTexture;
         private WebCamTexture _localWebCamTexture;
+        private RectTransform _videoRectTransform;
+        private Vector2 _lastVideoRenderedSize;
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {

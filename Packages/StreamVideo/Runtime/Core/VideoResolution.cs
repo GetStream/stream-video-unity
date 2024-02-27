@@ -1,4 +1,5 @@
-﻿using Stream.Video.v1.Sfu.Models;
+﻿using System;
+using Stream.Video.v1.Sfu.Models;
 
 namespace StreamVideo.Core
 {
@@ -51,8 +52,26 @@ namespace StreamVideo.Core
             Height = height;
         }
 
+        public VideoResolution(int width, int height)
+        {
+            if (width <= 0)
+            {
+                throw new ArgumentOutOfRangeException($"{nameof(width)} must be greater than 0. Passed value: {width}");
+            }
+
+            if (height <= 0)
+            {
+                throw new ArgumentOutOfRangeException($"{nameof(height)} must be greater than 0. Passed value: {height}");
+            }
+
+            Width = (uint)width;
+            Height = (uint)height;
+        }
+
         public uint Width { get; }
         public uint Height { get; }
+
+        public override string ToString() => $"Video resolution: {Width}x{Height}";
 
         internal VideoDimension ToVideoDimension() => new VideoDimension { Width = Width, Height = Height };
     }

@@ -37,15 +37,15 @@ namespace StreamVideo.Tests.Shared
                 await Client.ActiveCall.LeaveAsync();
             }
         }
+        
+        protected static IStreamVideoClient Client => StreamTestClientProvider.Instance.StateClient;
 
-        public async Task<IStreamCall> JoinRandomCallAsync()
+        protected async Task<IStreamCall> JoinRandomCallAsync()
         {
             var callId = Guid.NewGuid().ToString();
             return await Client.JoinCallAsync(StreamCallType.Default, callId, create: true, ring: false,
                 notify: false);
         }
-
-        protected static IStreamVideoClient Client => StreamTestClientProvider.Instance.StateClient;
         
         protected static IEnumerator ConnectAndExecute(Func<Task> test)
         {

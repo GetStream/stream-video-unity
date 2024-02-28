@@ -179,15 +179,25 @@ namespace StreamVideo.Core
 
         public void SetAudioInputSource(AudioSource audioSource)
         {
+            if (audioSource == null)
+            {
+                throw new ArgumentNullException($"Failed to set Audio Input Source because the passed `{nameof(audioSource)}` is null.");
+            }
+            
             InternalLowLevelClient.RtcSession.AudioInput = audioSource;
         }
 
         //StreamTodo: later we should accept just Texture or RenderTexture or TextureProvider
         public void SetCameraInputSource(WebCamTexture webCamTexture)
         {
+            if (webCamTexture == null)
+            {
+                throw new ArgumentNullException($"Failed to set Camera Input Source because the passed `{nameof(webCamTexture)}` is null.");
+            }
+
             InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;
         }
-        
+
         public void SetCameraInputSource(Camera sceneCamera)
         {
             InternalLowLevelClient.RtcSession.VideoSceneInput = sceneCamera;

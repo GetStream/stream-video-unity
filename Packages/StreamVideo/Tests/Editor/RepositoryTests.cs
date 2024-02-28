@@ -45,7 +45,7 @@ namespace Tests.Editor
 
             var currentDirectory = Directory.GetCurrentDirectory();
             var importedPackageSamplesParentPath
-                = Path.Combine(currentDirectory, "Assets\\Samples\\", displayName, version);
+                = Path.Combine(currentDirectory, "Assets", "Samples", displayName, version);
 
             foreach (var sample in samples)
             {
@@ -70,26 +70,27 @@ namespace Tests.Editor
                 {
                     var diff1 = importedSampleFileListing.Except(sourceSampleFileListing, fileComparer);
                     var diff2 = sourceSampleFileListing.Except(importedSampleFileListing, fileComparer);
-                    
+
                     var sb = new StringBuilder();
-                    sb.AppendLine($"Sample imported files vs source files mismatch. Package: `{sampleDisplayName}`. Differences:");
+                    sb.AppendLine(
+                        $"Sample imported files vs source files mismatch. Package: `{sampleDisplayName}`. Differences:");
                     sb.AppendLine("Imported vs Source Diff in files: " + diff1.Count());
                     foreach (var diff in diff1)
                     {
                         sb.AppendLine("- " + diff.Name);
                     }
+
                     sb.AppendLine("Source vs Imported Diff in files: " + diff2.Count());
                     foreach (var diff in diff2)
                     {
                         sb.AppendLine("- " + diff.Name);
                     }
+
                     Debug.Log(sb.ToString());
                 }
-                
+
                 Assert.IsTrue(isSequenceEqual);
             }
         }
-        
-
     }
 }

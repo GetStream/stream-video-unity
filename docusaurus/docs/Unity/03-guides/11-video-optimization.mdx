@@ -1,0 +1,36 @@
+---
+title: Video Optimization
+description: Best practices for video optimization
+---
+
+Many factors affect the smoothness of video transitions, one of which is the optimal usage of network bandwidth. Network bandwidth represents the maximum data capacity that a user can send and receive through the network. Given video's substantial size, providing a good real-time video experience requires transferring sufficient data to maintain an appropriate number of frames per second (FPS). However, attempting to send too much data can result in video stuttering.
+
+## Dynamic resolution scaling
+
+The Stream service automatically adjusts the video resolution and framerate delivered to each call participant based on current network conditions to ensure smooth video transmission. In extreme cases where a participant's bandwidth capacity is insufficient for both video and audio, the Stream service may temporarily pause video to preserve audio streaming quality.
+
+Stream media servers actively monitor network conditions and optimize the data delivered to each participant. However, there are certain actions you can take to make this process as efficient as possible.
+
+## Control requested video resolution per participant
+
+A practical approach is to request video tracks at the resolution that matches your actual rendering needs. This minimizes UI scaling and optimizes bandwidth usage.
+
+By default, video is delivered at 1080p (1920x1080) resolution. While this ensures high-quality video, it may be excessive depending on your UI layout. For example, if your application displays participants in a small grid, where each participant's video occupies a maximum of 480x270 pixels, you would be transferring four times more data than necessary. This excessive data transfer, due to down-scaling, can lead to bandwidth issues.
+
+To request a specific video resolution for each call participant, use the UpdateRequestedVideoResolution method on the IStreamVideoCallParticipant object as shown below:
+```csharp
+participant.UpdateRequestedVideoResolution(new VideoResolution(1280, 720));
+```
+Invoke this method whenever the rendered resolution changes.
+
+## Video Frame Rate recommendations
+
+The ideal frames per second (FPS) for video transmission varies by use case. Below are general recommendations:
+
+| Use case | FPS (frames per second) | Comment |
+| --- | --- | --- |
+| Video Calling & Broadcasting | 30 | Typically, 30FPS is sufficient for standard video calls and broadcasting. |
+| Screen-sharing | 10-15 | A lower FPS is usually adequate, but a high resolution is recommended to prevent artifacts and ensure clarity. |
+| E-Sports streaming | 50-60 | Fast-paced action requires a higher frame rate for smooth playback. |
+
+

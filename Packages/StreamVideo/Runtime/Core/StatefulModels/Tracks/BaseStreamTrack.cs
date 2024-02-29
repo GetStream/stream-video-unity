@@ -5,6 +5,8 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 {
     public abstract class BaseStreamTrack : IStreamTrack
     {
+        //StreamTodo: add event that EnabledChanged
+        
         //StreamTodo: should we check ReadyState as well or is Enabled flag covering this?
         public bool Enabled => InternalTrack.Enabled;
 

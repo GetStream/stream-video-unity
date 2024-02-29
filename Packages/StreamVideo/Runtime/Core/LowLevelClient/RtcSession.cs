@@ -61,7 +61,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var prevState = _callState;
                 _callState = value;
-                _logs.Info($"Call state changed from: `{prevState} to: `{value}`");
+                _logs.Info($"Call state changed from: `{prevState}` to: `{value}`");
             }
         }
 

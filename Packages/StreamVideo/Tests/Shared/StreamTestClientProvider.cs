@@ -1,19 +1,13 @@
 ﻿#if STREAM_TESTS_ENABLED
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
-using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
-using StreamVideo.Libs.Auth;
-using StreamVideo.Libs.Serialization;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 namespace StreamVideo.Tests.Shared
 {
@@ -34,132 +28,72 @@ namespace StreamVideo.Tests.Shared
             await TryDisposeInstancesAsync();
         }
 
-        public IStreamVideoClient StateClient => _client ??= CreateStateClient();
-
-        public Task ConnectStateClientAsync() => ConnectStateClientAsync(StateClient);
-        
-        public void StartCoroutine(IEnumerator coroutine)
+        public Task LeaveAllActiveCallsAsync()
         {
-            if (!Application.isPlaying)
+            var tasks = new List<Task>();
+            foreach (var client in _spawnedClients)
             {
-                throw new NotSupportedException(
-                    "Coroutines require play mode and can only be started from runtime tests.");
-            }
-            
-            if (_coroutineRunner == null)
-            {
-                _coroutineRunner = new GameObject
+                if (client.ActiveCall != null)
                 {
-                    name = "CoroutineRunner"
-                };
-                
-                var component = _coroutineRunner.AddComponent<CoroutineRunnerWrapper.CoroutineRunner>();
-                Assert.IsNotNull(component);
+                    tasks.Add(client.ActiveCall.LeaveAsync());
+                }
+            }
+
+            return Task.WhenAll(tasks);
+        }
+
+        public async Task<ITestClient[]> GetConnectedTestClientsAsync(int numberOfClients)
+        {
+            if (numberOfClients < 1)
+            {
+                throw new ArgumentOutOfRangeException($"{nameof(numberOfClients)} must be greater than or equal to 1");
             }
             
-            var runner = _coroutineRunner.GetComponent<CoroutineRunnerWrapper.CoroutineRunner>();
-            runner.StartCoroutine(coroutine);
-        }
-        
-        private class DemoCredentialsApiResponse
-        {
-            public string UserId;
-            public string Token;
-            public string APIKey;
-        }
-        
-        private class DemoCredentialsApiError
-        {
-            public string Error;
+            TryStartUpdateTask();
+
+            var clients = GetVideoClientsAsync(numberOfClients);
+            ITestClient[] testClients = clients.Select(c => new TestClient(c)).ToArray();
+            var connectTasks = testClients.Select(c => c.ConnectAsync());
+
+            await Task.WhenAll(connectTasks);
+
+            return testClients;
         }
 
         private static StreamTestClientProvider _instance;
 
         private readonly HashSet<object> _locks = new HashSet<object>();
+        private readonly List<IStreamVideoClient> _spawnedClients = new List<IStreamVideoClient>();
 
-        private IStreamVideoClient _client;
         private bool _runFinished;
-        private GameObject _coroutineRunner;
+        private Task _updateTask;
+        private CancellationTokenSource _updateTaskCts;
 
         private StreamTestClientProvider()
         {
             UnityTestRunnerCallbacks.RunFinishedCallback += OnRunFinishedCallback;
         }
-
-        private static async Task ConnectStateClientAsync(IStreamVideoClient client)
-        {
-            if (client.IsConnected)
-            {
-                return;
-            }
-
-            const int timeout = 5000;
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var getCredentialsTask = GetStreamDemoCredentialsAsync();
-            while (!getCredentialsTask.IsCompleted)
-            {
-                client.Update();
-                await Task.Delay(1);
-                
-                if (timer.ElapsedMilliseconds > timeout)
-                {
-                    throw new TimeoutException($"Reached timeout when trying to get credentials. Ms passed: {timer.ElapsedMilliseconds}");
-                }
-            }
-
-            var demoCredentials = getCredentialsTask.Result;
-            var credentials
-                = new AuthCredentials(demoCredentials.APIKey, demoCredentials.UserId, demoCredentials.Token);
-            
-            var connectTask = client.ConnectUserAsync(credentials);
-            while (!connectTask.IsCompleted)
-            {
-#if STREAM_DEBUG_ENABLED
-                Debug.Log($"Wait for {nameof(client)} to connect user with ID: {credentials.UserId}");
-#endif
-
-                client.Update();
-                await Task.Delay(1);
-
-                if (timer.ElapsedMilliseconds > timeout)
-                {
-                    throw new TimeoutException($"Reached timeout when trying to connect user: {credentials.UserId}");
-                }
-            }
-            
-            timer.Stop();
-
-            Debug.Log($"State client connected. after {timer.Elapsed.TotalSeconds}");
-        }
         
-        private static async Task<DemoCredentialsApiResponse> GetStreamDemoCredentialsAsync()
+        private IEnumerable<IStreamVideoClient> GetVideoClientsAsync(int numberOfClients)
         {
-            Debug.Log("Get demo credentials " + Time.time);
-            var serializer = new NewtonsoftJsonSerializer();
-            var httpClient = new HttpClient();
-            var uriBuilder = new UriBuilder
-            {
-                Host = "pronto.getstream.io",
-                Path = "/api/auth/create-token",
-                Query = $"user_id=DemoUser",
-                Scheme = "https",
-            };
+            var returnedClients = 0;
 
-            var uri = uriBuilder.Uri;
-            var response = await httpClient.GetAsync(uri);
-            var result = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
+            foreach (var client in _spawnedClients)
             {
-                var apiError = serializer.Deserialize<DemoCredentialsApiError>(result);
-                throw new Exception(
-                    $"Failed to get demo credentials. Error status code: `{response.StatusCode}`, Error message: `{apiError.Error}`");
+                if (returnedClients >= numberOfClients)
+                {
+                    yield break;
+                }
+
+                yield return client;
+                returnedClients++;
             }
-            
-            Debug.Log("Demo credentials received: " + Time.time);
 
-            return serializer.Deserialize<DemoCredentialsApiResponse>(result);
+            while (returnedClients < numberOfClients)
+            {
+                yield return CreateStateClient();
+                returnedClients++;
+            }
         }
 
         private void OnRunFinishedCallback(ITestResult obj)
@@ -187,27 +121,71 @@ namespace StreamVideo.Tests.Shared
                 LogLevel = StreamLogLevel.Debug
             });
 
+            _spawnedClients.Add(client);
             return client;
         }
 
         private async Task DisposeStateClientsAsync()
         {
-            TryStopAllCoroutines();
-            
-            if (_client != null)
+            TryStopUpdateTask();
+
+            var tasks = new List<Task>();
+            tasks.AddRange(_spawnedClients.Select(async c =>
             {
-                await _client.DisconnectAsync();
-                _client.Dispose();
-                _client = null;
-            }
+                await c.DisconnectAsync();
+                c.Dispose();
+            }));
+
+            await Task.WhenAll(tasks);
+            _spawnedClients.Clear();
         }
 
-        private void TryStopAllCoroutines()
+        private void TryStartUpdateTask()
         {
-            if (_coroutineRunner != null)
+            if (_updateTask != null)
             {
-                var runner = _coroutineRunner.GetComponent<CoroutineRunnerWrapper.CoroutineRunner>();
-                runner.StopAllCoroutines();
+                return;
+            }
+
+            _updateTaskCts = new CancellationTokenSource();
+            _updateTask = UpdateTaskAsync();
+
+            _updateTask.ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    Debug.LogError(t.Exception);
+                }
+            });
+        }
+
+        private void TryStopUpdateTask()
+        {
+            Debug.LogWarning("TryStopUpdateTask");
+            _updateTaskCts?.Cancel();
+        }
+
+        private async Task UpdateTaskAsync()
+        {
+            Debug.LogWarning("UpdateTaskAsync STARTED");
+            while (!_updateTaskCts.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    _updateTaskCts.Token.ThrowIfCancellationRequested();
+                }
+                catch (Exception)
+                {
+                    Debug.LogWarning("UpdateTaskAsync STOPPED");
+                    throw;
+                }
+
+                foreach (var client in _spawnedClients)
+                {
+                    client.Update();
+                }
+
+                await Task.Delay(1);
             }
         }
     }

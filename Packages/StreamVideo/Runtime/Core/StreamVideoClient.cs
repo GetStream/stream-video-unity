@@ -181,7 +181,7 @@ namespace StreamVideo.Core
         {
             if (audioSource == null)
             {
-                throw new ArgumentNullException($"Failed to set Audio Input Source because the passed `{nameof(audioSource)}` is null.");
+                throw new ArgumentNullException(nameof(audioSource));
             }
             
             InternalLowLevelClient.RtcSession.AudioInput = audioSource;
@@ -192,7 +192,7 @@ namespace StreamVideo.Core
         {
             if (webCamTexture == null)
             {
-                throw new ArgumentNullException($"Failed to set Camera Input Source because the passed `{nameof(webCamTexture)}` is null.");
+                throw new ArgumentNullException(nameof(webCamTexture));
             }
 
             InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;

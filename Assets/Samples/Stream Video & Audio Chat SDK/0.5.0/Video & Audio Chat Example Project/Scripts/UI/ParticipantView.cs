@@ -38,8 +38,8 @@ namespace StreamVideo.ExampleProject.UI
         }
 
         /// <summary>
-        /// Call this for local participant only. We use this because we will not receive the `Participant.TrackAdded` event for the local participant.
-        /// So if we want to show stream from a local camera we need to hook it up separately
+        /// Call this for local participant only. We will not receive the `Participant.TrackAdded` event for the local participant.
+        /// So in order to show the stream from a local camera we hook it up separately
         /// </summary>
         public void SetLocalCameraSource(WebCamTexture localWebCamTexture)
         {
@@ -50,6 +50,12 @@ namespace StreamVideo.ExampleProject.UI
                 // Dispose previous texture 
                 _localParticipantRenderTexture.Release();
                 _localParticipantRenderTexture = null;
+            }
+
+            if (localWebCamTexture == null)
+            {
+                _video.texture = null;
+                return;
             }
             
             _localParticipantRenderTexture = new RenderTexture(localWebCamTexture.width, localWebCamTexture.height, 0, RenderTextureFormat.Default);
@@ -73,7 +79,8 @@ namespace StreamVideo.ExampleProject.UI
                 Graphics.Blit(_localWebCamTexture, _localParticipantRenderTexture);
             }
 
-            var videoRenderedSize = new Vector2(_videoRectTransform.rect.width, _videoRectTransform.rect.height);
+            var rect = _videoRectTransform.rect;
+            var videoRenderedSize = new Vector2(rect.width, rect.height);
             if (videoRenderedSize != _lastVideoRenderedSize)
             {
                 _lastVideoRenderedSize = videoRenderedSize;

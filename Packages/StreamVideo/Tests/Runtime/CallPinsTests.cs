@@ -14,9 +14,9 @@ namespace StreamVideo.Tests.Runtime
         public IEnumerator When_participant_pinned_expect_pinned_participants_changed_event_fired()
             => ConnectAndExecute(When_participant_pinned_expect_pinned_participants_changed_event_fired_Async);
 
-        private async Task When_participant_pinned_expect_pinned_participants_changed_event_fired_Async()
+        private async Task When_participant_pinned_expect_pinned_participants_changed_event_fired_Async(ITestClient client)
         {
-            var streamCall = await JoinRandomCallAsync();
+            var streamCall = await client.JoinRandomCallAsync();
             var participant = streamCall.Participants.First();
 
             var eventWasFired = false;
@@ -31,9 +31,9 @@ namespace StreamVideo.Tests.Runtime
         public IEnumerator When_participant_unpinned_expect_pinned_participants_changed_event_fired()
             => ConnectAndExecute(When_participant_unpinned_expect_pinned_participants_changed_event_fired_Async);
 
-        private async Task When_participant_unpinned_expect_pinned_participants_changed_event_fired_Async()
+        private async Task When_participant_unpinned_expect_pinned_participants_changed_event_fired_Async(ITestClient client)
         {
-            var streamCall = await JoinRandomCallAsync();
+            var streamCall = await client.JoinRandomCallAsync();
             var participant = streamCall.Participants.First();
 
             streamCall.PinLocally(participant);
@@ -50,9 +50,9 @@ namespace StreamVideo.Tests.Runtime
         public IEnumerator When_participant_pinned_expect_pinned_participants_collection_contains()
             => ConnectAndExecute(When_participant_pinned_expect_pinned_participants_collection_contains_Async);
 
-        private async Task When_participant_pinned_expect_pinned_participants_collection_contains_Async()
+        private async Task When_participant_pinned_expect_pinned_participants_collection_contains_Async(ITestClient client)
         {
-            var streamCall = await JoinRandomCallAsync();
+            var streamCall = await client.JoinRandomCallAsync();
             var participant = streamCall.Participants.First();
 
             streamCall.PinLocally(participant);
@@ -65,9 +65,9 @@ namespace StreamVideo.Tests.Runtime
         public IEnumerator When_participant_unpinned_expect_pinned_participants_collection_updated()
             => ConnectAndExecute(When_participant_unpinned_expect_pinned_participants_collection_updated_Async);
 
-        private async Task When_participant_unpinned_expect_pinned_participants_collection_updated_Async()
+        private async Task When_participant_unpinned_expect_pinned_participants_collection_updated_Async(ITestClient client)
         {
-            var streamCall = await JoinRandomCallAsync();
+            var streamCall = await client.JoinRandomCallAsync();
             var participant = streamCall.Participants.First();
 
             streamCall.PinLocally(participant);

@@ -25,6 +25,8 @@ namespace StreamVideo.Libs.Websockets
 
         public WebSocketState State => _internalClient?.State ?? WebSocketState.None;
 
+        public int QueuedMessagesCount => _receiveQueue.Count;
+
         /// <param name="isDebugMode">Additional logs will be printed</param>
         public WebsocketClient(ILogs logs, Encoding encoding = default, bool isDebugMode = false)
         {
@@ -90,7 +92,7 @@ namespace StreamVideo.Libs.Websockets
 
             _sendQueue.Add(messageSegment);
         }
-        
+
         public void Send(byte[] message)
         {
             var messageSegment = new ArraySegment<byte>(message);
@@ -125,6 +127,11 @@ namespace StreamVideo.Libs.Websockets
         {
             LogInfoIfDebugMode("Disconnect");
             await TryDisposeResourcesAsync(closeStatus, closeMessage);
+            
+            _receiveQueue.Clear();
+            while (_sendQueue.TryTake(out _))
+            {
+            }
 
             Disconnected?.Invoke();
         }
@@ -135,7 +142,7 @@ namespace StreamVideo.Libs.Websockets
             DisconnectAsync(WebSocketCloseStatus.NormalClosure, "WebSocket client is disposed")
                 .ContinueWith(_ => LogExceptionIfDebugMode(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
-        
+
         private const int UpdatesPerSecond = 20;
         private const int UpdatePeriod = 1000 / UpdatesPerSecond;
         private const int UpdatePeriodOffset = UpdatePeriod / 2;
@@ -255,10 +262,15 @@ namespace StreamVideo.Libs.Websockets
         {
             try
             {
-                _backgroundReceiveTimer?.Dispose();
-                _backgroundReceiveTimer = null;
-                _backgroundSendTimer?.Dispose();
-                _backgroundSendTimer = null;
+                if (_backgroundReceiveTimer != null)
+                {
+                    await _backgroundReceiveTimer.DisposeAsync();
+                }
+
+                if (_backgroundSendTimer != null)
+                {
+                    await _backgroundSendTimer.DisposeAsync();
+                }
             }
             catch (Exception e)
             {
@@ -297,8 +309,12 @@ namespace StreamVideo.Libs.Websockets
             }
             finally
             {
-                _internalClient.Dispose();
-                _internalClient = null;
+                //StreamTOdo: this fixes possible null ref if Dispose was called multiple times but perhaps this logic should not be called multiple times
+                if (_internalClient == null)
+                {
+                    _internalClient.Dispose();
+                    _internalClient = null;
+                }
             }
         }
 

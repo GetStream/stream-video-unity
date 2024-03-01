@@ -527,12 +527,15 @@ namespace StreamVideo.Core.LowLevelClient
                 };
 
                 await _subscriber.SetRemoteDescriptionAsync(rtcSessionDescription);
+                _subscriber.ThrowDisposedDuringOperationIfNull();
 
                 var answer = await _subscriber.CreateAnswerAsync();
+                _subscriber.ThrowDisposedDuringOperationIfNull();
 
                 //StreamTodo: mangle SDP
 
                 await _subscriber.SetLocalDescriptionAsync(ref answer);
+                _subscriber.ThrowDisposedDuringOperationIfNull();
 
                 var sendAnswerRequest = new SendAnswerRequest
                 {
@@ -543,6 +546,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                 await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
                     preLog: true);
+            }
+            catch (DisposedDuringOperationException)
+            {
+                
             }
             catch (Exception e)
             {
@@ -765,7 +772,8 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 var offer = await _publisher.CreateOfferAsync();
-
+                _publisher.ThrowDisposedDuringOperationIfNull();
+                
                 //StreamTodo: ignored the _config.Audio.EnableRed because with current webRTC version this modification causes a crash
                 //We're also forcing the red codec in the StreamPeerConnection but atm this results in "InvalidModification"
                 //This is most likely issue with the webRTC lib
@@ -782,6 +790,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 await _publisher.SetLocalDescriptionAsync(ref offer);
+                _publisher.ThrowDisposedDuringOperationIfNull();
 
                 // //StreamTodo: timeout + break if we're disconnecting/reconnecting
                 // while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
@@ -809,6 +818,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
                 var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher));
+                _publisher.ThrowDisposedDuringOperationIfNull();
 
 #if STREAM_DEBUG_ENABLED
                 _logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
@@ -819,6 +829,10 @@ namespace StreamVideo.Core.LowLevelClient
                     type = RTCSdpType.Answer,
                     sdp = result.Sdp
                 });
+            }
+            catch (DisposedDuringOperationException)
+            {
+                
             }
             catch (Exception e)
             {

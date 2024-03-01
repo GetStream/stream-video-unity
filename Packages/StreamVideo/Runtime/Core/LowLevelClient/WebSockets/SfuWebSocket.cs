@@ -138,7 +138,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
 
 #if STREAM_DEBUG_ENABLED
-
                 DebugLogEvent(sfuEvent);
 #endif
 

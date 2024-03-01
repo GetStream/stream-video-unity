@@ -19,6 +19,8 @@ namespace StreamVideo.Libs.Websockets
         public event Action Connected;
         public event Action Disconnected;
         public event Action ConnectionFailed;
+        
+        public int QueuedMessagesCount => _messages.Count;
 
         public NativeWebSocketWrapper(ILogs logs, bool isDebugMode)
         {
@@ -82,6 +84,7 @@ namespace StreamVideo.Libs.Websockets
 
             UnsubscribeFromEvents();
             await _webSocket.Close();
+            _messages.Clear();
             Disconnected?.Invoke();
         }
 

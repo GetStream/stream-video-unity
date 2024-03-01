@@ -1,10 +1,12 @@
-﻿using System;
+﻿#if STREAM_TESTS_ENABLED
+using System;
 using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using StreamVideo.Tests.Editor;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -94,3 +96,4 @@ namespace Tests.Editor
         }
     }
 }
+#endif

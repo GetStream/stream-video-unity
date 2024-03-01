@@ -2,13 +2,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using StreamVideo.Core;
 using StreamVideo.Core.Exceptions;
-using StreamVideo.Core.StatefulModels;
-using UnityEngine;
+using StreamVideo.Tests.Shared.DisposableAssets;
+using Debug = UnityEngine.Debug;
 
 namespace StreamVideo.Tests.Shared
 {
@@ -36,6 +36,36 @@ namespace StreamVideo.Tests.Shared
             Debug.LogWarning("[Per Test] TearDown");
 
             await StreamTestClientProvider.Instance.LeaveAllActiveCallsAsync();
+            DisposableAssetsProvider.DisposeInstances();
+        }
+
+        protected DisposableAssetsProvider DisposableAssetsProvider { get; } = new DisposableAssetsProvider();
+
+        protected virtual void OnTearDown()
+        {
+            
+        }
+
+        protected static async Task<(bool, TimeSpan)> WaitForConditionAsync(Func<bool> condition, int timeoutMs = 2000)
+        {
+            if (condition())
+            {
+                return (true, TimeSpan.Zero);
+            }
+            
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            while (stopwatch.ElapsedMilliseconds < timeoutMs)
+            {
+                await Task.Delay(1);
+
+                if (condition())
+                {
+                    return (true, stopwatch.Elapsed);
+                }
+            }
+            
+            return (false, stopwatch.Elapsed);
         }
         
         protected static IEnumerator ConnectAndExecute(Func<Task> test)

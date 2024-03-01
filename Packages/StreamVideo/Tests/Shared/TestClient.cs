@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if STREAM_TESTS_ENABLED
+using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -124,3 +125,4 @@ namespace StreamVideo.Tests.Shared
         }
     }
 }
+#endif

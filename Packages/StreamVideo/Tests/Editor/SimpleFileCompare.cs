@@ -1,4 +1,5 @@
-﻿namespace Tests.Editor
+﻿#if STREAM_TESTS_ENABLED
+namespace StreamVideo.Tests.Editor
 {
     /// <summary>
     /// This implementation defines a very simple comparison
@@ -25,3 +26,4 @@
         }
     }
 }
+#endif

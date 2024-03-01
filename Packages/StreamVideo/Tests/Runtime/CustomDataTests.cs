@@ -8,7 +8,7 @@ using NUnit.Framework;
 using StreamVideo.Tests.Shared;
 using UnityEngine.TestTools;
 
-namespace Tests.Runtime
+namespace StreamVideo.Tests.Runtime
 {
     internal class CustomDataTests : TestsBase
     {

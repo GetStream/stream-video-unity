@@ -41,11 +41,6 @@ namespace StreamVideo.Tests.Shared
 
         protected DisposableAssetsProvider DisposableAssetsProvider { get; } = new DisposableAssetsProvider();
 
-        protected virtual void OnTearDown()
-        {
-            
-        }
-
         protected static async Task<(bool, TimeSpan)> WaitForConditionAsync(Func<bool> condition, int timeoutMs = 2000)
         {
             if (condition())

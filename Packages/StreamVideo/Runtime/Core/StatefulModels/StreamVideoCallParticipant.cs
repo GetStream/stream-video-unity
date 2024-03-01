@@ -31,6 +31,7 @@ namespace StreamVideo.Core.StatefulModels
 
         #region Tracks
 
+        //StreamTodo: VideoTrack, AudioTrack, ScreenShareTrack should be more specific types. Otherwise developer would have to usually cast it so there's no point in not doing this already
         public IStreamTrack AudioTrack => _audioTrack;
         public IStreamTrack VideoTrack => _videoTrack;
         public IStreamTrack ScreenShareTrack => _screenShareTrack;

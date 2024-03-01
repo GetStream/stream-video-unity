@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿#if STREAM_TESTS_ENABLED
+using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 
@@ -15,3 +16,4 @@ namespace StreamVideo.Tests.Shared
         Task ConnectAsync();
     }
 }
+#endif

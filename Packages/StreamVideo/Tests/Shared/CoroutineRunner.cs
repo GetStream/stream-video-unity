@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if STREAM_TESTS_ENABLED
+using UnityEngine;
 
 namespace StreamVideo.Tests.Shared
 {
@@ -13,3 +14,4 @@ namespace StreamVideo.Tests.Shared
         }
     }
 }
+#endif

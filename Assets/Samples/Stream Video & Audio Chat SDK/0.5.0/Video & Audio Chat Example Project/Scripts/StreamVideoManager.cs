@@ -16,7 +16,7 @@ namespace StreamVideo.ExampleProject
         public event Action<IStreamCall> CallStarted;
         public event Action CallEnded;
 
-        public IStreamVideoClient Client => _client;
+        public IStreamVideoClient Client { get; private set; }
 
         /// <summary>
         /// Join the Call with a given ID. We can either create it or try to join only.
@@ -31,7 +31,7 @@ namespace StreamVideo.ExampleProject
             }
 
             Debug.Log($"Join call, create: {create}, callId: {callId}");
-            await _client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
+            await Client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
         }
 
         public void EndActiveCall()
@@ -77,9 +77,9 @@ namespace StreamVideo.ExampleProject
         {
             var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
 
-            _client = StreamVideoClient.CreateDefaultClient(_clientConfig);
-            _client.CallStarted += OnCallStarted;
-            _client.CallEnded += OnCallEnded;
+            Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
+            Client.CallStarted += OnCallStarted;
+            Client.CallEnded += OnCallEnded;
 
             try
             {
@@ -93,24 +93,24 @@ namespace StreamVideo.ExampleProject
 
         protected async void OnDestroy()
         {
-            if (_client == null)
+            if (Client == null)
             {
                 return;
             }
 
             try
             {
-                await _client.DisconnectAsync();
+                await Client.DisconnectAsync();
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
             }
 
-            _client.CallStarted -= OnCallStarted;
-            _client.CallEnded -= OnCallEnded;
-            _client.Dispose();
-            _client = null;
+            Client.CallStarted -= OnCallStarted;
+            Client.CallEnded -= OnCallEnded;
+            Client.Dispose();
+            Client = null;
         }
 
         /// <summary>
@@ -149,10 +149,8 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private string _userToken = "";
 
-        private IStreamVideoClient _client;
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
-        private WebCamTexture _inputCamera;
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {
@@ -170,7 +168,7 @@ namespace StreamVideo.ExampleProject
                     demoCredentials.Token);
             }
 
-            await _client.ConnectUserAsync(credentials);
+            await Client.ConnectUserAsync(credentials);
         }
 
         /// <summary>

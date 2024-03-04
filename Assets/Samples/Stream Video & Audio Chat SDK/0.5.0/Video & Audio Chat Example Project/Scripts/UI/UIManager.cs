@@ -32,7 +32,7 @@ namespace StreamVideo.ExampleProject.UI
                 $"Changed selected MICROPHONE from `{prevDevice}` to `{_selectedMicrophoneDeviceName}`. Recording: {isActive}");
         }
 
-        public void ChangeCamera(string deviceName)
+        public void ChangeCamera(string deviceName, bool isActive)
         {
             var prevDevice = ActiveCamera != null ? ActiveCamera.deviceName : "None";
 
@@ -102,7 +102,6 @@ namespace StreamVideo.ExampleProject.UI
         [SerializeField]
         private StreamVideoManager _videoManager;
 
-        [Header("Video Sending Settings")]
         [SerializeField]
         private int _senderVideoWidth = 1280;
 
@@ -112,14 +111,12 @@ namespace StreamVideo.ExampleProject.UI
         [SerializeField]
         private int _senderVideoFps = 30;
 
-        [Header("Input Sources")]
         [SerializeField]
         private AudioSource _inputAudioSource;
 
         [SerializeField]
         private Camera _inputSceneCamera;
 
-        [Header("Screen Views")]
         [SerializeField]
         private CallScreenView _callScreen;
 

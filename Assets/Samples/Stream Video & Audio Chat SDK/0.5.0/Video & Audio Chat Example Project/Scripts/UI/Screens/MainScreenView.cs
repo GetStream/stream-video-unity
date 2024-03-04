@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using StreamVideo.ExampleProject.UI.Devices;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,22 +28,13 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             _audioRedToggle.onValueChanged.AddListener(VideoManager.SetAudioREDundancyEncoding);
             _audioDtxToggle.onValueChanged.AddListener(VideoManager.SetAudioDtx);
+            
+            _cameraPanel.DeviceChanged += OnCameraDeviceChanged;
+            _cameraPanel.DeviceToggled += OnCameraDeviceChanged;
 
-            _microphoneDeviceDropdown.ClearOptions();
-            _microphoneDeviceDropdown.onValueChanged.AddListener(OnMicrophoneDeviceChanged);
-            _microphoneDeviceDropdown.AddOptions(Microphone.devices.ToList());
-
-            _microphoneDeviceToggle.onValueChanged.AddListener(UIManager.SetMicrophoneActive);
-
-            _cameraDeviceDropdown.ClearOptions();
-            _cameraDeviceDropdown.onValueChanged.AddListener(OnCameraDeviceChanged);
-            var cameraDevices = WebCamTexture.devices;
-
-            foreach (var device in cameraDevices)
-            {
-                _cameraDeviceDropdown.options.Add(new TMP_Dropdown.OptionData(device.name));
-            }
-
+            _microphonePanel.DeviceChanged += OnMicrophoneDeviceChanged;
+            _microphonePanel.DeviceToggled += OnMicrophoneDeviceChanged;
+            
             SmartPickDefaultCamera();
             SmartPickDefaultMicrophone();
         }
@@ -67,18 +59,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
         private TMP_InputField _joinCallIdInput;
 
         [SerializeField]
-        private TMP_Dropdown _microphoneDeviceDropdown;
-
-        [SerializeField]
-        private Toggle _microphoneDeviceToggle;
-
-        [SerializeField]
-        private TMP_Dropdown _cameraDeviceDropdown;
-
-        [SerializeField]
-        private Toggle _cameraDeviceToggle;
-
-        [SerializeField]
         private RawImage _localCameraImage;
 
         [SerializeField]
@@ -86,6 +66,12 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         [SerializeField]
         private Toggle _audioDtxToggle;
+
+        [SerializeField]
+        private CameraMediaDevicePanel _cameraPanel;
+
+        [SerializeField]
+        private MicrophoneMediaDevicePanel _microphonePanel;
 
         private WebCamDevice _defaultCamera;
         private string _defaultMicrophoneDeviceName;
@@ -136,12 +122,11 @@ namespace StreamVideo.ExampleProject.UI.Screens
             VideoManager.Client.SetCameraInputSource(UIManager.InputSceneSource);
         }
 
-        private void OnCameraDeviceChanged(int optionIndex)
-            => UIManager.ChangeCamera(_cameraDeviceDropdown.options[optionIndex].text);
+        private void OnCameraDeviceChanged()
+            => UIManager.ChangeCamera(_cameraPanel.SelectedDeviceName, _cameraPanel.IsDeviceActive);
 
-        private void OnMicrophoneDeviceChanged(int index)
-            => UIManager.ChangeMicrophone(_microphoneDeviceDropdown.options[index].text,
-                _microphoneDeviceToggle.enabled);
+        private void OnMicrophoneDeviceChanged()
+            => UIManager.ChangeMicrophone(_microphonePanel.SelectedDeviceName, _microphonePanel.IsDeviceActive);
 
         private void OnActiveCameraChanged(WebCamTexture activeCamera)
         {
@@ -171,8 +156,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 return;
             }
 
-            SetCameraDropdownWithoutNotify(_defaultCamera.name);
-            UIManager.ChangeCamera(_defaultCamera.name);
+            _cameraPanel.SelectDeviceWithoutNotify(_defaultCamera.name);
+            UIManager.ChangeCamera(_defaultCamera.name, _cameraPanel.IsDeviceActive);
         }
 
         //StreamTodo: remove
@@ -193,32 +178,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 return;
             }
 
-            SetMicrophoneDropdownWithoutNotify(_defaultMicrophoneDeviceName);
-            UIManager.ChangeMicrophone(_defaultMicrophoneDeviceName, _microphoneDeviceToggle.enabled);
-        }
-
-        private void SetMicrophoneDropdownWithoutNotify(string deviceName)
-        {
-            var index = Array.IndexOf(Microphone.devices, deviceName);
-            if (index == -1)
-            {
-                Debug.LogError($"Failed to find index for microphone device: {deviceName}");
-                return;
-            }
-
-            _microphoneDeviceDropdown.SetValueWithoutNotify(index);
-        }
-        
-        private void SetCameraDropdownWithoutNotify(string deviceName)
-        {
-            var index = Array.IndexOf(WebCamTexture.devices.Select(d => d.name).ToArray(), deviceName);
-            if (index == -1)
-            {
-                Debug.LogError($"Failed to find index for camera device: {deviceName}");
-                return;
-            }
-
-            _cameraDeviceDropdown.SetValueWithoutNotify(index);
+            _microphonePanel.SelectDeviceWithoutNotify(_defaultMicrophoneDeviceName);
+            UIManager.ChangeMicrophone(_defaultMicrophoneDeviceName, _microphonePanel.IsDeviceActive);
         }
 
         private static string CreateRandomCallId() => Guid.NewGuid().ToString().Replace("-", "");

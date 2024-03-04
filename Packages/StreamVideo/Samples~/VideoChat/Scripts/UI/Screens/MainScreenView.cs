@@ -9,18 +9,18 @@ namespace StreamVideo.ExampleProject.UI.Screens
     /// <summary>
     /// The main screen where a use can create a call or join
     /// </summary>
-    public class MainScreenView : BaseScreenView<CallScreenView.InitArgs>
+    public class MainScreenView : BaseScreenView<CallScreenView.ShowArgs>
     {
         /// <summary>
         /// Arguments required to initialize this screen when showing
         /// </summary>
-        public readonly struct InitArgs
+        public readonly struct ShowArgs
         {
         }
 
-        public void Show() => base.Show(new CallScreenView.InitArgs());
+        public void Show() => base.Show(new CallScreenView.ShowArgs());
 
-        protected override void OnShow(CallScreenView.InitArgs initArgs)
+        protected override void OnInit()
         {
             _joinBtn.onClick.AddListener(OnJoinCallButtonClicked);
             _createBtn.onClick.AddListener(OnCreateAndJoinCallButtonClicked);
@@ -45,7 +45,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             SmartPickDefaultCamera();
             SmartPickDefaultMicrophone();
-
+        }
+        
+        protected override void OnShow(CallScreenView.ShowArgs showArgs)
+        {
             UIManager.ActiveCameraChanged += OnActiveCameraChanged;
         }
 

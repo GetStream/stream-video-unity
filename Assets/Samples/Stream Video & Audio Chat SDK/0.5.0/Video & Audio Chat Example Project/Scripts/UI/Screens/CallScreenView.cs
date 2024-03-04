@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 using TMPro;
 using UnityEngine;
@@ -11,16 +10,16 @@ namespace StreamVideo.ExampleProject.UI.Screens
     /// <summary>
     /// Screen visible during the active call. Shows other participants
     /// </summary>
-    public class CallScreenView : BaseScreenView<CallScreenView.InitArgs>
+    public class CallScreenView : BaseScreenView<CallScreenView.ShowArgs>
     {
         /// <summary>
         /// Arguments required to initialize this screen when showing
         /// </summary>
-        public readonly struct InitArgs
+        public readonly struct ShowArgs
         {
             public readonly IStreamCall ActiveCall;
 
-            public InitArgs(IStreamCall activeCall)
+            public ShowArgs(IStreamCall activeCall)
             {
                 ActiveCall = activeCall;
             }
@@ -51,12 +50,15 @@ namespace StreamVideo.ExampleProject.UI.Screens
         private IStreamCall _activeCall;
         private ParticipantView _currentDominantSpeakerView;
 
-        protected override void OnShow(InitArgs initArgs)
+        protected override void OnInit()
         {
-            _activeCall = initArgs.ActiveCall;
-
             _leaveBtn.onClick.AddListener(VideoManager.LeaveActiveCall);
             _endBtn.onClick.AddListener(VideoManager.EndActiveCall);
+        }
+
+        protected override void OnShow(ShowArgs showArgs)
+        {
+            _activeCall = showArgs.ActiveCall;
 
             // If local user is the call owner we can "end" the call for all participants, otherwise we can only "leave" the call
             _endBtn.gameObject.SetActive(_activeCall.IsLocalUserOwner);
@@ -86,9 +88,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected override void OnHide()
         {
-            _leaveBtn.onClick.RemoveListener(VideoManager.LeaveActiveCall);
-            _endBtn.onClick.RemoveListener(VideoManager.EndActiveCall);
-
             if (_activeCall != null)
             {
                 _activeCall.ParticipantJoined -= OnParticipantJoined;

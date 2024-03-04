@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Unity.WebRTC;
-using TrackTypeInternalEnum = Stream.Video.v1.Sfu.Models.TrackType;
+using SfuTrackType = Stream.Video.v1.Sfu.Models.TrackType;
 using OriginalNameAttr = Google.Protobuf.Reflection.OriginalNameAttribute;
 
 namespace StreamVideo.Core.Models.Sfu
@@ -18,40 +18,40 @@ namespace StreamVideo.Core.Models.Sfu
 
     internal static class TrackTypeExt
     {
-        public static TrackTypeInternalEnum ToInternalEnum(this TrackKind trackType)
+        public static SfuTrackType ToInternalEnum(this TrackKind trackType)
         {
             switch (trackType)
             {
-                case TrackKind.Audio: return TrackTypeInternalEnum.Audio;
-                case TrackKind.Video: return TrackTypeInternalEnum.Video;
+                case TrackKind.Audio: return SfuTrackType.Audio;
+                case TrackKind.Video: return SfuTrackType.Video;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(trackType), trackType, null);
             }
         }
         
-        public static TrackTypeInternalEnum ToInternalEnum(this TrackType trackType)
+        public static SfuTrackType ToInternalEnum(this TrackType trackType)
         {
             switch (trackType)
             {
-                case TrackType.Unspecified: return TrackTypeInternalEnum.Unspecified;
-                case TrackType.Audio: return TrackTypeInternalEnum.Audio;
-                case TrackType.Video: return TrackTypeInternalEnum.Video;
-                case TrackType.ScreenShare: return TrackTypeInternalEnum.ScreenShare;
-                case TrackType.ScreenShareAudio: return TrackTypeInternalEnum.ScreenShareAudio;
+                case TrackType.Unspecified: return SfuTrackType.Unspecified;
+                case TrackType.Audio: return SfuTrackType.Audio;
+                case TrackType.Video: return SfuTrackType.Video;
+                case TrackType.ScreenShare: return SfuTrackType.ScreenShare;
+                case TrackType.ScreenShareAudio: return SfuTrackType.ScreenShareAudio;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(trackType), trackType, null);
             }
         }
 
-        public static TrackType ToPublicEnum(this TrackTypeInternalEnum trackType)
+        public static TrackType ToPublicEnum(this SfuTrackType trackType)
         {
             switch (trackType)
             {
-                case TrackTypeInternalEnum.Unspecified: return TrackType.Unspecified;
-                case TrackTypeInternalEnum.Audio: return TrackType.Audio;
-                case TrackTypeInternalEnum.Video: return TrackType.Video;
-                case TrackTypeInternalEnum.ScreenShare: return TrackType.ScreenShare;
-                case TrackTypeInternalEnum.ScreenShareAudio: return TrackType.ScreenShareAudio;
+                case SfuTrackType.Unspecified: return TrackType.Unspecified;
+                case SfuTrackType.Audio: return TrackType.Audio;
+                case SfuTrackType.Video: return TrackType.Video;
+                case SfuTrackType.ScreenShare: return TrackType.ScreenShare;
+                case SfuTrackType.ScreenShareAudio: return TrackType.ScreenShareAudio;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(trackType), trackType, null);
             }
@@ -62,9 +62,9 @@ namespace StreamVideo.Core.Models.Sfu
 
         static TrackTypeExt()
         {
-            var type = typeof(TrackTypeInternalEnum);
+            var type = typeof(SfuTrackType);
 
-            foreach (TrackTypeInternalEnum value in Enum.GetValues(typeof(TrackTypeInternalEnum)))
+            foreach (SfuTrackType value in Enum.GetValues(typeof(SfuTrackType)))
             {
                 var memberInfos = type.GetMember(value.ToString());
                 var valueMemberInfo = memberInfos.First(m => m.DeclaringType == type);

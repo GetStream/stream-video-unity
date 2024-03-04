@@ -61,7 +61,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var prevState = _callState;
                 _callState = value;
-                _logs.Info($"Call state changed from: `{prevState} to: `{value}`");
+                _logs.Info($"Call state changed from: `{prevState}` to: `{value}`");
             }
         }
 
@@ -138,47 +138,12 @@ namespace StreamVideo.Core.LowLevelClient
 
             //StreamTodo: SFU WS should be created here so that RTC session owns it
             _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
-
-            _sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
-            _sfuWebSocket.PublisherAnswer += OnSfuPublisherAnswer;
-            _sfuWebSocket.ConnectionQualityChanged += OnSfuConnectionQualityChanged;
-            _sfuWebSocket.AudioLevelChanged += OnSfuAudioLevelChanged;
-            _sfuWebSocket.IceTrickle += OnSfuIceTrickle;
-            _sfuWebSocket.ChangePublishQuality += OnSfuChangePublishQuality;
-            _sfuWebSocket.ParticipantJoined += OnSfuParticipantJoined;
-            _sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
-            _sfuWebSocket.DominantSpeakerChanged += OnSfuDominantSpeakerChanged;
-            _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
-            _sfuWebSocket.TrackPublished += OnSfuTrackPublished;
-            _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
-            _sfuWebSocket.Error += OnSfuWebSocketOnError;
-            _sfuWebSocket.CallGrantsUpdated += OnSfuCallGrantsUpdated;
-            _sfuWebSocket.GoAway += OnSfuGoAway;
-            _sfuWebSocket.IceRestart += OnSfuIceRestart;
-            _sfuWebSocket.PinsUpdated += OnSfuPinsUpdated;
         }
 
         public void Dispose()
         {
             StopAsync().LogIfFailed();
 
-            _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
-            _sfuWebSocket.PublisherAnswer -= OnSfuPublisherAnswer;
-            _sfuWebSocket.ConnectionQualityChanged -= OnSfuConnectionQualityChanged;
-            _sfuWebSocket.AudioLevelChanged -= OnSfuAudioLevelChanged;
-            _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
-            _sfuWebSocket.ChangePublishQuality -= OnSfuChangePublishQuality;
-            _sfuWebSocket.ParticipantJoined -= OnSfuParticipantJoined;
-            _sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
-            _sfuWebSocket.DominantSpeakerChanged -= OnSfuDominantSpeakerChanged;
-            _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
-            _sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
-            _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
-            _sfuWebSocket.Error -= OnSfuWebSocketOnError;
-            _sfuWebSocket.CallGrantsUpdated -= OnSfuCallGrantsUpdated;
-            _sfuWebSocket.GoAway -= OnSfuGoAway;
-            _sfuWebSocket.IceRestart -= OnSfuIceRestart;
-            _sfuWebSocket.PinsUpdated -= OnSfuPinsUpdated;
             _sfuWebSocket.Dispose();
 
             DisposeSubscriber();
@@ -215,6 +180,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             //StreamTodo: perhaps not necessary here
             ClearSession();
+
+            SubscribeToSfuEvents();
 
             ActiveCall = call ?? throw new ArgumentNullException(nameof(call));
             _httpClient = _httpClientFactory(ActiveCall);
@@ -272,7 +239,7 @@ namespace StreamVideo.Core.LowLevelClient
             _subscriber?.RestartIce();
             _publisher?.RestartIce();
         }
-        
+
         public void UpdateRequestedVideoResolution(string sessionId, VideoResolution videoResolution)
         {
             _videoResolutionByParticipantSessionId[sessionId] = videoResolution;
@@ -290,7 +257,9 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
         private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
-        private readonly Dictionary<string, VideoResolution> _videoResolutionByParticipantSessionId = new Dictionary<string, VideoResolution>();
+
+        private readonly Dictionary<string, VideoResolution> _videoResolutionByParticipantSessionId
+            = new Dictionary<string, VideoResolution>();
 
         private HttpClient _httpClient;
         private CallingState _callState;
@@ -322,6 +291,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             _trackSubscriptionRequested = false;
             _trackSubscriptionRequestInProgress = false;
+
+            UnsubscribeFromSfuEvents();
         }
 
         //StreamTodo: request track subscriptions when SFU got changed. Android comment for setVideoSubscriptions:
@@ -527,12 +498,15 @@ namespace StreamVideo.Core.LowLevelClient
                 };
 
                 await _subscriber.SetRemoteDescriptionAsync(rtcSessionDescription);
+                _subscriber.ThrowDisposedDuringOperationIfNull();
 
                 var answer = await _subscriber.CreateAnswerAsync();
+                _subscriber.ThrowDisposedDuringOperationIfNull();
 
                 //StreamTodo: mangle SDP
 
                 await _subscriber.SetLocalDescriptionAsync(ref answer);
+                _subscriber.ThrowDisposedDuringOperationIfNull();
 
                 var sendAnswerRequest = new SendAnswerRequest
                 {
@@ -543,6 +517,9 @@ namespace StreamVideo.Core.LowLevelClient
 
                 await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
                     preLog: true);
+            }
+            catch (DisposedDuringOperationException)
+            {
             }
             catch (Exception e)
             {
@@ -765,6 +742,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 var offer = await _publisher.CreateOfferAsync();
+                _publisher.ThrowDisposedDuringOperationIfNull();
 
                 //StreamTodo: ignored the _config.Audio.EnableRed because with current webRTC version this modification causes a crash
                 //We're also forcing the red codec in the StreamPeerConnection but atm this results in "InvalidModification"
@@ -782,6 +760,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 await _publisher.SetLocalDescriptionAsync(ref offer);
+                _publisher.ThrowDisposedDuringOperationIfNull();
 
                 // //StreamTodo: timeout + break if we're disconnecting/reconnecting
                 // while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
@@ -809,6 +788,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
                 var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher));
+                _publisher.ThrowDisposedDuringOperationIfNull();
 
 #if STREAM_DEBUG_ENABLED
                 _logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
@@ -819,6 +799,9 @@ namespace StreamVideo.Core.LowLevelClient
                     type = RTCSdpType.Answer,
                     sdp = result.Sdp
                 });
+            }
+            catch (DisposedDuringOperationException)
+            {
             }
             catch (Exception e)
             {
@@ -1070,6 +1053,48 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             return true;
+        }
+
+        private void SubscribeToSfuEvents()
+        {
+            _sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
+            _sfuWebSocket.PublisherAnswer += OnSfuPublisherAnswer;
+            _sfuWebSocket.ConnectionQualityChanged += OnSfuConnectionQualityChanged;
+            _sfuWebSocket.AudioLevelChanged += OnSfuAudioLevelChanged;
+            _sfuWebSocket.IceTrickle += OnSfuIceTrickle;
+            _sfuWebSocket.ChangePublishQuality += OnSfuChangePublishQuality;
+            _sfuWebSocket.ParticipantJoined += OnSfuParticipantJoined;
+            _sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
+            _sfuWebSocket.DominantSpeakerChanged += OnSfuDominantSpeakerChanged;
+            _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
+            _sfuWebSocket.TrackPublished += OnSfuTrackPublished;
+            _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
+            _sfuWebSocket.Error += OnSfuWebSocketOnError;
+            _sfuWebSocket.CallGrantsUpdated += OnSfuCallGrantsUpdated;
+            _sfuWebSocket.GoAway += OnSfuGoAway;
+            _sfuWebSocket.IceRestart += OnSfuIceRestart;
+            _sfuWebSocket.PinsUpdated += OnSfuPinsUpdated;
+        }
+
+        private void UnsubscribeFromSfuEvents()
+        {
+            _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
+            _sfuWebSocket.PublisherAnswer -= OnSfuPublisherAnswer;
+            _sfuWebSocket.ConnectionQualityChanged -= OnSfuConnectionQualityChanged;
+            _sfuWebSocket.AudioLevelChanged -= OnSfuAudioLevelChanged;
+            _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
+            _sfuWebSocket.ChangePublishQuality -= OnSfuChangePublishQuality;
+            _sfuWebSocket.ParticipantJoined -= OnSfuParticipantJoined;
+            _sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
+            _sfuWebSocket.DominantSpeakerChanged -= OnSfuDominantSpeakerChanged;
+            _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
+            _sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
+            _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
+            _sfuWebSocket.Error -= OnSfuWebSocketOnError;
+            _sfuWebSocket.CallGrantsUpdated -= OnSfuCallGrantsUpdated;
+            _sfuWebSocket.GoAway -= OnSfuGoAway;
+            _sfuWebSocket.IceRestart -= OnSfuIceRestart;
+            _sfuWebSocket.PinsUpdated -= OnSfuPinsUpdated;
         }
     }
 }

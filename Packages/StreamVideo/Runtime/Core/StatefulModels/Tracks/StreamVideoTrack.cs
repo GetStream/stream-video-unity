@@ -60,6 +60,8 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             var rect = _targetImage.GetComponent<RectTransform>();
             var current = rect.sizeDelta;
             rect.sizeDelta = new Vector2(current.x, current.x * (1/sizeRatio));
+            
+            //StreamTodo: investigate if copying texture is really necessary. Perhaps we can just use the texture from the VideoStreamTrack
 
             //StreamTodo: use CopyTexture if available on this GPU
             Graphics.Blit(source, _targetTexture);

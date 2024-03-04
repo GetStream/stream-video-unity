@@ -12,6 +12,7 @@ namespace StreamVideo.Libs.Websockets
         event Action Connected;
         event Action Disconnected;
         event Action ConnectionFailed;
+        int QueuedMessagesCount { get; }
 
         bool TryDequeueMessage(out byte[] message);
 

@@ -8,7 +8,7 @@ using NUnit.Framework;
 using StreamVideo.Tests.Shared;
 using UnityEngine.TestTools;
 
-namespace Tests.Runtime
+namespace StreamVideo.Tests.Runtime
 {
     internal class CustomDataTests : TestsBase
     {
@@ -16,9 +16,9 @@ namespace Tests.Runtime
         public IEnumerator When_setting_call_custom_data_expect_custom_data_set()
             => ConnectAndExecute(When_setting_call_custom_data_expect_custom_data_set_Async);
 
-        private async Task When_setting_call_custom_data_expect_custom_data_set_Async()
+        private async Task When_setting_call_custom_data_expect_custom_data_set_Async(ITestClient client)
         {
-            var streamCall = await JoinRandomCallAsync();
+            var streamCall = await client.JoinRandomCallAsync();
             Assert.AreEqual(0, streamCall.CustomData.Count);
 
             await streamCall.CustomData.SetAsync("number", 34);
@@ -32,9 +32,9 @@ namespace Tests.Runtime
         public IEnumerator When_setting_call_custom_many_data_expect_custom_data_set()
             => ConnectAndExecute(When_setting_call_custom_many_data_expect_custom_data_set_Async);
 
-        private async Task When_setting_call_custom_many_data_expect_custom_data_set_Async()
+        private async Task When_setting_call_custom_many_data_expect_custom_data_set_Async(ITestClient client)
         {
-            var streamCall = await JoinRandomCallAsync();
+            var streamCall = await client.JoinRandomCallAsync();
             Assert.AreEqual(0, streamCall.CustomData.Count);
 
             var testStruct = new TestAbilityStruct
@@ -78,9 +78,9 @@ namespace Tests.Runtime
         public IEnumerator When_setting_participant_custom_data_expect_custom_data_set()
             => ConnectAndExecute(When_setting_participant_custom_data_expect_custom_data_set_Async);
 
-        private async Task When_setting_participant_custom_data_expect_custom_data_set_Async()
+        private async Task When_setting_participant_custom_data_expect_custom_data_set_Async(ITestClient client)
         {
-            var streamCall = await JoinRandomCallAsync();
+            var streamCall = await client.JoinRandomCallAsync();
             var participant = streamCall.Participants.FirstOrDefault();
             Assert.NotNull(participant);
             

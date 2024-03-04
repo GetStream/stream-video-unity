@@ -2,16 +2,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using StreamVideo.Core;
 using StreamVideo.Core.Exceptions;
-using StreamVideo.Core.StatefulModels;
-using UnityEngine;
+using StreamVideo.Tests.Shared.DisposableAssets;
+using Debug = UnityEngine.Debug;
 
 namespace StreamVideo.Tests.Shared
 {
+    public delegate Task SingleClientTestHandler(ITestClient client);
+    public delegate Task TwoClientsTestHandler(ITestClient client1, ITestClient client2);
+    
     public class TestsBase
     {
         [OneTimeSetUp]
@@ -23,38 +26,61 @@ namespace StreamVideo.Tests.Shared
         [OneTimeTearDown]
         public async void OneTimeTearDown()
         {
+            Debug.LogWarning("[One Time] TearDown");
             await StreamTestClientProvider.Instance.ReleaseLockAsync(this);
         }
 
         [TearDown]
         public async void TearDown()
         {
-            Debug.LogWarning("Every time tear down");
+            Debug.LogWarning("[Per Test] TearDown");
 
-            if (Client.ActiveCall != null)
-            {
-                Debug.LogWarning("Call was active -> leave");
-                await Client.ActiveCall.LeaveAsync();
-            }
+            await StreamTestClientProvider.Instance.LeaveAllActiveCallsAsync();
+            DisposableAssetsProvider.DisposeInstances();
         }
-        
-        protected static IStreamVideoClient Client => StreamTestClientProvider.Instance.StateClient;
 
-        protected async Task<IStreamCall> JoinRandomCallAsync()
+        protected DisposableAssetsProvider DisposableAssetsProvider { get; } = new DisposableAssetsProvider();
+
+        protected static async Task<(bool, TimeSpan)> WaitForConditionAsync(Func<bool> condition, int timeoutMs = 2000)
         {
-            var callId = Guid.NewGuid().ToString();
-            return await Client.JoinCallAsync(StreamCallType.Default, callId, create: true, ring: false,
-                notify: false);
+            if (condition())
+            {
+                return (true, TimeSpan.Zero);
+            }
+            
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            while (stopwatch.ElapsedMilliseconds < timeoutMs)
+            {
+                await Task.Delay(1);
+
+                if (condition())
+                {
+                    return (true, stopwatch.Elapsed);
+                }
+            }
+            
+            return (false, stopwatch.Elapsed);
         }
         
         protected static IEnumerator ConnectAndExecute(Func<Task> test)
         {
-            yield return ConnectAndExecuteAsync(test).RunAsIEnumerator(statefulClient: Client);
+            yield return ConnectAndExecuteAsync(_ => test()).RunAsIEnumerator();
         }
         
-        private static async Task ConnectAndExecuteAsync(Func<Task> test)
+        protected static IEnumerator ConnectAndExecute(SingleClientTestHandler test)
         {
-            await StreamTestClientProvider.Instance.ConnectStateClientAsync();
+            yield return ConnectAndExecuteAsync(clients => test(clients[0]), clientsToSpawn: 1).RunAsIEnumerator();
+        }
+        
+        protected static IEnumerator ConnectAndExecute(TwoClientsTestHandler test)
+        {
+            yield return ConnectAndExecuteAsync(clients => test(clients[0], clients[1]), clientsToSpawn: 2).RunAsIEnumerator();
+        }
+        
+        private static async Task ConnectAndExecuteAsync(Func<ITestClient[], Task> test, int clientsToSpawn = 1)
+        {
+            var clients = await StreamTestClientProvider.Instance.GetConnectedTestClientsAsync(clientsToSpawn);
             const int maxAttempts = 7;
             var currentAttempt = 0;
             var completed = false;
@@ -64,7 +90,7 @@ namespace StreamVideo.Tests.Shared
                 currentAttempt++;
                 try
                 {
-                    await test();
+                    await test(clients);
                     completed = true;
                     break;
                 }

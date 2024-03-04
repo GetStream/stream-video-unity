@@ -163,7 +163,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             WebsocketClient.ConnectionFailed -= OnConnectionFailed;
             WebsocketClient.Disconnected -= OnDisconnected;
 
-            //StreamTodo: we're disposing the WS but we're not the owner, would be better to accept a factory method so we own the obj
+            //StreamTodo: we're disposing the WS but we're not the owner, would be better to receive a factory method so we own the obj
             WebsocketClient.Dispose();
         }
 
@@ -294,7 +294,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private void OnDisconnected()
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"{LogsPrefix} Websocket Disconnected");
+            Logs.Warning($"{LogsPrefix} Websocket Disconnected. Messages left: {WebsocketClient.QueuedMessagesCount}");
 #endif
             ConnectionState = ConnectionState.Disconnected;
         }

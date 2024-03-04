@@ -24,11 +24,9 @@ namespace StreamVideo.Tests.Editor
         public IEnumerator When_connecting_user_expect_no_errors()
             => ConnectAndExecute(When_connecting_user_expect_no_errors_Async);
 
-        private Task When_connecting_user_expect_no_errors_Async()
+        private Task When_connecting_user_expect_no_errors_Async(ITestClient client)
         {
-            var client = Client;
-            Assert.IsTrue(client.IsConnected);
-
+            Assert.IsTrue(client.Client.IsConnected);
             return Task.CompletedTask;
         }
 

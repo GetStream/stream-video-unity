@@ -54,6 +54,7 @@ namespace StreamVideo.Core.StatefulModels
 
         public IStreamCustomData CustomData => InternalCustomData;
 
+        //StreamTodo: Maybe add OtherParticipants -> All participants except for the local participant?
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
 
         public bool IsLocalUserOwner
@@ -113,6 +114,7 @@ namespace StreamVideo.Core.StatefulModels
         public CallEgress Egress { get; private set; }
 
         //StreamTodo: nullable? no date in DTO should resolve to null not 0000-00-00
+        //StreamTodo: test if this is set when call ends, also test how it behaves if the call ID is reused
         /// <summary>
         /// Date/time when the call ended
         /// </summary>

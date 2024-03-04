@@ -96,3 +96,6 @@ Desktop.ini
 #ReleaseTool sln and csproj should be tracked
 !ReleaseTool/ReleaseTool.csproj
 !ReleaseTool/ReleaseTool.sln
+
+#internal tools
+internal_replace_package_samples_by_imported_samples.bat

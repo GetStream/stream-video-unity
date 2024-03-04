@@ -177,7 +177,7 @@ namespace StreamVideo.ExampleProject.UI
         private void ShowCallScreen(IStreamCall call)
         {
             _mainScreen.Hide();
-            _callScreen.Show(new CallScreenView.InitArgs(call));
+            _callScreen.Show(new CallScreenView.ShowArgs(call));
         }
     }
 }

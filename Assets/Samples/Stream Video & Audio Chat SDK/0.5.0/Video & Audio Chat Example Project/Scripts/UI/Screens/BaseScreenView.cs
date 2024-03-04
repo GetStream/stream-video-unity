@@ -16,6 +16,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
             
             // Hide every screen view by default. The UIManager controls which screen should become visible
             _gameObject.SetActive(false);
+            
+            OnInit();
         }
 
         public void Show(TInitArgs initArgs)
@@ -42,6 +44,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected StreamVideoManager VideoManager { get; private set; }
         protected UIManager UIManager { get; private set; }
+
+        protected abstract void OnInit();
         
         protected abstract void OnShow(TInitArgs initArgs);
 

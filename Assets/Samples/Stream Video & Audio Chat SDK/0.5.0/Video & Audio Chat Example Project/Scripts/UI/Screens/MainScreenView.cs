@@ -30,10 +30,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _audioDtxToggle.onValueChanged.AddListener(VideoManager.SetAudioDtx);
             
             _cameraPanel.DeviceChanged += OnCameraDeviceChanged;
-            _cameraPanel.DeviceToggled += OnCameraDeviceChanged;
+            _cameraPanel.DeviceToggled += OnCameraDeviceToggled;
 
             _microphonePanel.DeviceChanged += OnMicrophoneDeviceChanged;
-            _microphonePanel.DeviceToggled += OnMicrophoneDeviceChanged;
+            _microphonePanel.DeviceToggled += OnMicrophoneDeviceToggled;
             
             SmartPickDefaultCamera();
             SmartPickDefaultMicrophone();
@@ -86,9 +86,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
                     return;
                 }
 
-                // Set input sources before connecting with other participants
-                SetInputSources();
-
                 await VideoManager.JoinAsync(_joinCallIdInput.text, create: false);
             }
             catch (Exception e)
@@ -101,9 +98,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             try
             {
-                // Set input sources before connecting with other participants
-                SetInputSources();
-
                 var callId = CreateRandomCallId();
                 await VideoManager.JoinAsync(callId, create: true);
             }
@@ -113,20 +107,15 @@ namespace StreamVideo.ExampleProject.UI.Screens
             }
         }
 
-        private void SetInputSources()
-        {
-            VideoManager.Client.SetAudioInputSource(UIManager.InputAudioSource);
-            VideoManager.Client.SetCameraInputSource(UIManager.ActiveCamera);
-
-            // Optional, only needed when you want to stream scene Camera render
-            VideoManager.Client.SetCameraInputSource(UIManager.InputSceneSource);
-        }
-
         private void OnCameraDeviceChanged()
             => UIManager.ChangeCamera(_cameraPanel.SelectedDeviceName, _cameraPanel.IsDeviceActive);
 
+        private void OnCameraDeviceToggled() => UIManager.SetCameraActive(_cameraPanel.IsDeviceActive);
+
         private void OnMicrophoneDeviceChanged()
             => UIManager.ChangeMicrophone(_microphonePanel.SelectedDeviceName, _microphonePanel.IsDeviceActive);
+
+        private void OnMicrophoneDeviceToggled() => UIManager.SetMicrophoneActive(_microphonePanel.IsDeviceActive);
 
         private void OnActiveCameraChanged(WebCamTexture activeCamera)
         {

@@ -71,15 +71,15 @@ namespace StreamVideo.ExampleProject
             {
                 LogLevel = StreamLogLevel.Debug,
             };
+            
+            Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
+            Client.CallStarted += OnCallStarted;
+            Client.CallEnded += OnCallEnded;
         }
 
         protected async void Start()
         {
             var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
-
-            Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
-            Client.CallStarted += OnCallStarted;
-            Client.CallEnded += OnCallEnded;
 
             try
             {

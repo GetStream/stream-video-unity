@@ -16,7 +16,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
         public event Action DeviceToggled;
 
         public string SelectedDeviceName { get; private set; }
-        public bool IsDeviceActive { get; private set; }
+        public bool IsDeviceActive { get; private set; } = true;
 
         public void SelectDeviceWithoutNotify(string deviceName)
         {
@@ -35,8 +35,11 @@ namespace StreamVideo.ExampleProject.UI.Devices
             _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
 
             _deviceButton.Init(_buttonOnSprite, _buttonOffSprite);
+            _deviceButton.UpdateSprite(IsDeviceActive);
             _deviceButton.Clicked += OnDeviceButtonClicked;
 
+            UpdateDevicesDropdown(GetDevicesNames().ToList());
+            
             _refreshDeviceInterval = new WaitForSeconds(0.5f);
             _refreshCoroutine = StartCoroutine(RefreshDevicesList());
         }

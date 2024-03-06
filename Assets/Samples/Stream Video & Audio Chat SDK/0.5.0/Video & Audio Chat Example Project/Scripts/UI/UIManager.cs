@@ -62,6 +62,8 @@ namespace StreamVideo.ExampleProject.UI
         /// </summary>
         public void SetMicrophoneActive(bool isActive)
         {
+            _videoManager.Client.AudioDeviceManager.SetEnabled(isActive);
+            
             if (isActive)
             {
                 StartAudioRecording();
@@ -76,6 +78,8 @@ namespace StreamVideo.ExampleProject.UI
         /// </summary>
         public void SetCameraActive(bool isActive)
         {
+            _videoManager.Client.VideoDeviceManager.SetEnabled(isActive);
+            
             if (isActive)
             {
                 ActiveCamera.Play();

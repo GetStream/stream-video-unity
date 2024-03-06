@@ -10,5 +10,8 @@ namespace StreamVideo.Core.DeviceManagers
         }
 
         protected override void OnSetEnabled(bool isEnabled) => RtcSession.TrySetVideoTrackEnabled(isEnabled);
+        
+        //StreamTodo: wrap all Unity webcam texture operations here. Enabling/Disabling tracks should manage the WebCamTexture so that users only 
+        //Also take into account that user may want to provide his instance of WebCamTexture + monitor for devices list changes 
     }
 }

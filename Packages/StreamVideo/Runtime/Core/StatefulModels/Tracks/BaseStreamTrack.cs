@@ -3,12 +3,13 @@ using Unity.WebRTC;
 
 namespace StreamVideo.Core.StatefulModels.Tracks
 {
+    public delegate void StreamTrackStateChangeHandler(bool isEnabled);
+    
     public abstract class BaseStreamTrack : IStreamTrack
     {
-        //StreamTodo: add event that EnabledChanged
+        public event StreamTrackStateChangeHandler EnabledChanged;
         
-        //StreamTodo: should we check ReadyState as well or is Enabled flag covering this?
-        public bool Enabled => InternalTrack.Enabled;
+        public bool IsEnabled => InternalTrack.Enabled;
 
         internal BaseStreamTrack(MediaStreamTrack track)
         {
@@ -17,10 +18,13 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         
         internal virtual void Update()
         {
-            
         }
 
-        internal void SetEnabled(bool enabled) => InternalTrack.Enabled = enabled;
+        internal void SetEnabled(bool enabled)
+        {
+            InternalTrack.Enabled = enabled;
+            EnabledChanged?.Invoke(enabled);
+        }
 
         protected MediaStreamTrack InternalTrack { get; set; }
     }

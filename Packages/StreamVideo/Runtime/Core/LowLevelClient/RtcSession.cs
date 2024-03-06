@@ -150,6 +150,7 @@ namespace StreamVideo.Core.LowLevelClient
             DisposePublisher();
         }
 
+        //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
         public void Update()
         {
             _sfuWebSocket.Update();
@@ -240,10 +241,30 @@ namespace StreamVideo.Core.LowLevelClient
             _publisher?.RestartIce();
         }
 
-        public void UpdateRequestedVideoResolution(string sessionId, VideoResolution videoResolution)
+        public void UpdateRequestedVideoResolution(string participantSessionId, VideoResolution videoResolution)
         {
-            _videoResolutionByParticipantSessionId[sessionId] = videoResolution;
+            _videoResolutionByParticipantSessionId[participantSessionId] = videoResolution;
             QueueTracksSubscriptionRequest();
+        }
+
+        public void TrySetAudioTrackEnabled(bool isEnabled)
+        {
+            if (_publisher?.PublisherAudioTrack == null)
+            {
+                return;
+            }
+
+            _publisher.PublisherAudioTrack.Enabled = isEnabled;
+        }
+
+        public void TrySetVideoTrackEnabled(bool isEnabled)
+        {
+            if (_publisher?.PublisherVideoTrack == null)
+            {
+                return;
+            }
+
+            _publisher.PublisherVideoTrack.Enabled = isEnabled;
         }
 
         private const float TrackSubscriptionDebounceTime = 0.1f;

@@ -48,6 +48,7 @@ namespace StreamVideo.ExampleProject.UI
             if (isActive)
             {
                 ActiveCamera.Play();
+                //StreamTodo: handle in coroutine and check if the camera started
             }
 
             Debug.Log($"Changed active CAMERA from `{prevDevice}` to `{deviceName}`");

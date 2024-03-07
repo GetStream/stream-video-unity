@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.ExampleProject.UI.Devices;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,6 +47,12 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         [SerializeField]
         private TMP_InputField _joinCallIdInput;
+        
+        [SerializeField]
+        private CameraMediaDevicePanel _cameraPanel;
+
+        [SerializeField]
+        private MicrophoneMediaDevicePanel _microphonePanel;
 
         private IStreamCall _activeCall;
         private ParticipantView _currentDominantSpeakerView;
@@ -54,6 +61,12 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             _leaveBtn.onClick.AddListener(VideoManager.LeaveActiveCall);
             _endBtn.onClick.AddListener(VideoManager.EndActiveCall);
+            
+            _cameraPanel.DeviceChanged += UIManager.ChangeCamera;
+            _cameraPanel.DeviceToggled += UIManager.SetCameraActive;
+
+            _microphonePanel.DeviceChanged += UIManager.ChangeMicrophone;
+            _microphonePanel.DeviceToggled += UIManager.SetMicrophoneActive;
         }
 
         protected override void OnShow(ShowArgs showArgs)

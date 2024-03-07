@@ -23,10 +23,10 @@ using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using UnityEngine;
-using Error = Stream.Video.v1.Sfu.Events.Error;
-using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
+using SfuError = Stream.Video.v1.Sfu.Events.Error;
+using SfuICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
-using TrackTypeInternal = Stream.Video.v1.Sfu.Models.TrackType;
+using SfuTrackType = Stream.Video.v1.Sfu.Models.TrackType;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -150,6 +150,7 @@ namespace StreamVideo.Core.LowLevelClient
             DisposePublisher();
         }
 
+        //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
         public void Update()
         {
             _sfuWebSocket.Update();
@@ -240,10 +241,30 @@ namespace StreamVideo.Core.LowLevelClient
             _publisher?.RestartIce();
         }
 
-        public void UpdateRequestedVideoResolution(string sessionId, VideoResolution videoResolution)
+        public void UpdateRequestedVideoResolution(string participantSessionId, VideoResolution videoResolution)
         {
-            _videoResolutionByParticipantSessionId[sessionId] = videoResolution;
+            _videoResolutionByParticipantSessionId[participantSessionId] = videoResolution;
             QueueTracksSubscriptionRequest();
+        }
+
+        public void TrySetAudioTrackEnabled(bool isEnabled)
+        {
+            if (_publisher?.PublisherAudioTrack == null)
+            {
+                return;
+            }
+
+            _publisher.PublisherAudioTrack.Enabled = isEnabled;
+        }
+
+        public void TrySetVideoTrackEnabled(bool isEnabled)
+        {
+            if (_publisher?.PublisherVideoTrack == null)
+            {
+                return;
+            }
+
+            _publisher.PublisherVideoTrack.Enabled = isEnabled;
         }
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
@@ -255,7 +276,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IStreamClientConfig _config;
         private readonly Func<IStreamCall, HttpClient> _httpClientFactory;
 
-        private readonly List<ICETrickle> _pendingIceTrickleRequests = new List<ICETrickle>();
+        private readonly List<SfuICETrickle> _pendingIceTrickleRequests = new List<SfuICETrickle>();
         private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
 
         private readonly Dictionary<string, VideoResolution> _videoResolutionByParticipantSessionId
@@ -379,7 +400,7 @@ namespace StreamVideo.Core.LowLevelClient
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()
         {
             //StreamTodo: inject info on what tracks we want. Hardcoded audio & video but missing screenshare support
-            var trackTypes = new[] { TrackTypeInternal.Video, TrackTypeInternal.Audio };
+            var trackTypes = new[] { SfuTrackType.Video, SfuTrackType.Audio };
 
             foreach (var participant in ActiveCall.Participants)
             {
@@ -417,7 +438,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             try
             {
-                var iceTrickle = new ICETrickle
+                var iceTrickle = new SfuICETrickle
                 {
                     PeerType = streamPeerType.ToPeerType(),
                     IceCandidate = _serializer.Serialize(candidate),
@@ -456,7 +477,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void OnSfuIceTrickle(ICETrickle iceTrickle)
+        private void OnSfuIceTrickle(SfuICETrickle iceTrickle)
         {
             //StreamTodo: better to wrap in separate structure and not depend on a specific WebRTC implementation
             var iceCandidateInit = _serializer.Deserialize<RTCIceCandidateInit>(iceTrickle.IceCandidate);
@@ -628,7 +649,7 @@ namespace StreamVideo.Core.LowLevelClient
             ActiveCall.UpdateFromSfu(dominantSpeakerChanged, _cache);
         }
 
-        private void OnSfuWebSocketOnError(Error obj)
+        private void OnSfuWebSocketOnError(SfuError obj)
         {
             _logs.Error(
                 $"Sfu Error - Code: {obj.Error_.Code}, Message: {obj.Error_.Message}, ShouldRetry: {obj.Error_.ShouldRetry}");

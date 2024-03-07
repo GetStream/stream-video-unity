@@ -2,6 +2,14 @@
 {
     public interface IStreamTrack
     {
-        bool Enabled { get; }
+        /// <summary>
+        /// Event triggered when the enabled state changes
+        /// </summary>
+        event StreamTrackStateChangeHandler EnabledChanged;
+
+        /// <summary>
+        /// Is this track active.
+        /// </summary>
+        bool IsEnabled { get; }
     }
 }

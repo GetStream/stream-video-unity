@@ -24,10 +24,10 @@ namespace StreamVideo.Core.StatefulModels
 
         public bool IsPinned { get; private set; }
 
-        public bool IsScreenSharing => ScreenShareTrack?.Enabled ?? false;
+        public bool IsScreenSharing => ScreenShareTrack?.IsEnabled ?? false;
 
-        public bool IsVideoEnabled => VideoTrack?.Enabled ?? false;
-        public bool IsAudioEnabled => AudioTrack?.Enabled ?? false;
+        public bool IsVideoEnabled => VideoTrack?.IsEnabled ?? false;
+        public bool IsAudioEnabled => AudioTrack?.IsEnabled ?? false;
 
         #region Tracks
 

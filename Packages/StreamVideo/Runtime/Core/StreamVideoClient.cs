@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core.Configs;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.InternalDTO.Events;
-using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.QueryBuilders.Filters;
@@ -38,12 +38,17 @@ namespace StreamVideo.Core
         public event ConnectHandler Connected;
 
         public event CallHandler CallStarted;
+        
+        //StreamTodo: not sure if this should pass instance because we want to destroy call instance when the call is over??
         public event CallHandler CallEnded;
 
         public IStreamVideoUser LocalUser { get; private set; }
         public IStreamCall ActiveCall => InternalLowLevelClient.RtcSession.ActiveCall;
 
         public bool IsConnected => InternalLowLevelClient.ConnectionState == ConnectionState.Connected;
+        
+        public IVideoDeviceManager VideoDeviceManager { get; }
+        public IAudioDeviceManager AudioDeviceManager { get; }
 
         /// <summary>
         /// Use this method to create the Video Client. You should have only one instance of this class
@@ -186,6 +191,8 @@ namespace StreamVideo.Core
             
             InternalLowLevelClient.RtcSession.AudioInput = audioSource;
         }
+        
+        //StreamTodo: add IsActive flag to SetCameraInputSource  SetAudioInputSource SetCameraInputSource
 
         //StreamTodo: later we should accept just Texture or RenderTexture or TextureProvider
         public void SetCameraInputSource(WebCamTexture webCamTexture)
@@ -376,6 +383,9 @@ namespace StreamVideo.Core
 
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);
+            
+            VideoDeviceManager = new VideoDeviceManager(InternalLowLevelClient.RtcSession);
+            AudioDeviceManager = new AudioDeviceManager(InternalLowLevelClient.RtcSession);
 
             SubscribeTo(InternalLowLevelClient);
         }

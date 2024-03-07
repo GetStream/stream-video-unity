@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Core.QueryBuilders.Sort.Calls;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
@@ -20,11 +21,41 @@ namespace StreamVideo.Core
         /// </summary>
         event ConnectHandler Connected;
 
+        /// <summary>
+        /// Event fired when a call started.
+        /// </summary>
         event CallHandler CallStarted;
+        
+        /// <summary>
+        /// Event fired when a call ended
+        /// </summary>
         event CallHandler CallEnded;
+        
+        /// <summary>
+        /// Currently ongoing call session. This will be NULL if there's no call active.
+        /// You can subscribe to <see cref="CallStarted"/> and <see cref="CallEnded"/> events to get notified when a call is started/ended.
+        /// </summary>
         IStreamCall ActiveCall { get; }
+        
+        /// <summary>
+        /// Object representing locally connected user
+        /// </summary>
         IStreamVideoUser LocalUser { get; }
+        
+        /// <summary>
+        /// Is user currently connected to the Stream server.
+        /// </summary>
         bool IsConnected { get; }
+        
+        /// <summary>
+        /// Manager for video recording devices. Use it to interact with camera devices.
+        /// </summary>
+        IVideoDeviceManager VideoDeviceManager { get; }
+        
+        /// <summary>
+        /// Manager for audio recording devices. Use it to interact with microphone devices.
+        /// </summary>
+        IAudioDeviceManager AudioDeviceManager { get; }
 
         /// <summary>
         /// Connect user to Stream server. Returns local user object of type <see cref="IStreamVideoUser"/>
@@ -32,6 +63,9 @@ namespace StreamVideo.Core
         /// <param name="credentials">Credentials required to connect user: api_key, user_id, and user_token</param>
         Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials);
 
+        /// <summary>
+        /// Disconnect user from Stream server.
+        /// </summary>
         Task DisconnectAsync();
 
         Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,

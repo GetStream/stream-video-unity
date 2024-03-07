@@ -1,5 +1,5 @@
 ﻿using System;
-using ConnectionQualityInternalEnum = Stream.Video.v1.Sfu.Models.ConnectionQuality;
+using SfuConnectionQuality = Stream.Video.v1.Sfu.Models.ConnectionQuality;
 
 namespace StreamVideo.Core.Models.Sfu
 {
@@ -13,27 +13,27 @@ namespace StreamVideo.Core.Models.Sfu
     
     internal static class ConnectionQualityExt
     {
-        public static ConnectionQualityInternalEnum ToInternalEnum(this ConnectionQuality connectionQuality)
+        public static SfuConnectionQuality ToInternalEnum(this ConnectionQuality connectionQuality)
         {
             switch (connectionQuality)
             {
-                case ConnectionQuality.Unspecified: return ConnectionQualityInternalEnum.Unspecified;
-                case ConnectionQuality.Poor: return ConnectionQualityInternalEnum.Poor;
-                case ConnectionQuality.Good: return ConnectionQualityInternalEnum.Good;
-                case ConnectionQuality.Excellent: return ConnectionQualityInternalEnum.Excellent;
+                case ConnectionQuality.Unspecified: return SfuConnectionQuality.Unspecified;
+                case ConnectionQuality.Poor: return SfuConnectionQuality.Poor;
+                case ConnectionQuality.Good: return SfuConnectionQuality.Good;
+                case ConnectionQuality.Excellent: return SfuConnectionQuality.Excellent;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(connectionQuality), connectionQuality, null);
             }
         }
 
-        public static ConnectionQuality ToPublicEnum(this ConnectionQualityInternalEnum connectionQuality)
+        public static ConnectionQuality ToPublicEnum(this SfuConnectionQuality connectionQuality)
         {
             switch (connectionQuality)
             {
-                case ConnectionQualityInternalEnum.Unspecified: return ConnectionQuality.Unspecified;
-                case ConnectionQualityInternalEnum.Poor: return ConnectionQuality.Poor;
-                case ConnectionQualityInternalEnum.Good: return ConnectionQuality.Good;
-                case ConnectionQualityInternalEnum.Excellent: return ConnectionQuality.Excellent;
+                case SfuConnectionQuality.Unspecified: return ConnectionQuality.Unspecified;
+                case SfuConnectionQuality.Poor: return ConnectionQuality.Poor;
+                case SfuConnectionQuality.Good: return ConnectionQuality.Good;
+                case SfuConnectionQuality.Excellent: return ConnectionQuality.Excellent;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(connectionQuality), connectionQuality, null);
             }

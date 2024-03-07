@@ -8,12 +8,22 @@ using UnityEngine;
 namespace StreamVideo.ExampleProject.UI.Devices
 {
     /// <summary>
+    /// Event handler for device changed event
+    /// </summary>
+    public delegate void DeviceChangeHandler(string deviceName, bool isActive);
+
+    /// <summary>
+    /// Event handler for device toggled event
+    /// </summary>
+    public delegate void DeviceToggleHandler(bool isActive);
+
+    /// <summary>
     /// Panel that displays media device (microphone or camera) dropdown to pick the active device and a button to toggle on/off state 
     /// </summary>
     public abstract class MediaDevicePanelBase : MonoBehaviour
     {
-        public event Action DeviceChanged;
-        public event Action DeviceToggled;
+        public event DeviceChangeHandler DeviceChanged;
+        public event DeviceToggleHandler DeviceToggled;
 
         public string SelectedDeviceName { get; private set; }
         public bool IsDeviceActive { get; private set; } = true;
@@ -30,12 +40,12 @@ namespace StreamVideo.ExampleProject.UI.Devices
             _dropdown.SetValueWithoutNotify(index);
         }
 
+        // Called by Unity
         protected void Awake()
         {
             _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
 
             _deviceButton.Init(_buttonOnSprite, _buttonOffSprite);
-            _deviceButton.UpdateSprite(IsDeviceActive);
             _deviceButton.Clicked += OnDeviceButtonClicked;
 
             UpdateDevicesDropdown(GetDevicesNames().ToList());
@@ -44,6 +54,13 @@ namespace StreamVideo.ExampleProject.UI.Devices
             _refreshCoroutine = StartCoroutine(RefreshDevicesList());
         }
 
+        // Called by Unity
+        protected void Start()
+        {
+            _deviceButton.UpdateSprite(IsDeviceActive);
+        }
+
+        // Called by Unity
         protected void OnDestroy()
         {
             if (_refreshCoroutine != null)
@@ -82,14 +99,14 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
             SelectedDeviceName = deviceName;
 
-            DeviceChanged?.Invoke();
+            DeviceChanged?.Invoke(SelectedDeviceName, IsDeviceActive);
         }
 
         private void OnDeviceButtonClicked()
         {
             IsDeviceActive = !IsDeviceActive;
             _deviceButton.UpdateSprite(IsDeviceActive);
-            DeviceToggled?.Invoke();
+            DeviceToggled?.Invoke(IsDeviceActive);
         }
 
         // User can add/remove devices any time so we must constantly monitor the devices list

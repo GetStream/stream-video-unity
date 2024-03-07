@@ -29,11 +29,11 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _audioRedToggle.onValueChanged.AddListener(VideoManager.SetAudioREDundancyEncoding);
             _audioDtxToggle.onValueChanged.AddListener(VideoManager.SetAudioDtx);
             
-            _cameraPanel.DeviceChanged += OnCameraDeviceChanged;
-            _cameraPanel.DeviceToggled += OnCameraDeviceToggled;
+            _cameraPanel.DeviceChanged += UIManager.ChangeCamera;
+            _cameraPanel.DeviceToggled += UIManager.SetCameraActive;
 
-            _microphonePanel.DeviceChanged += OnMicrophoneDeviceChanged;
-            _microphonePanel.DeviceToggled += OnMicrophoneDeviceToggled;
+            _microphonePanel.DeviceChanged += UIManager.ChangeMicrophone;
+            _microphonePanel.DeviceToggled += UIManager.SetMicrophoneActive;
             
             SmartPickDefaultCamera();
             SmartPickDefaultMicrophone();
@@ -106,16 +106,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 Debug.LogException(e);
             }
         }
-
-        private void OnCameraDeviceChanged()
-            => UIManager.ChangeCamera(_cameraPanel.SelectedDeviceName, _cameraPanel.IsDeviceActive);
-
-        private void OnCameraDeviceToggled() => UIManager.SetCameraActive(_cameraPanel.IsDeviceActive);
-
-        private void OnMicrophoneDeviceChanged()
-            => UIManager.ChangeMicrophone(_microphonePanel.SelectedDeviceName, _microphonePanel.IsDeviceActive);
-
-        private void OnMicrophoneDeviceToggled() => UIManager.SetMicrophoneActive(_microphonePanel.IsDeviceActive);
 
         private void OnActiveCameraChanged(WebCamTexture activeCamera)
         {

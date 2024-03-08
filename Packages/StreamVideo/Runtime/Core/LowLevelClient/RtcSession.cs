@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Stream.Video.v1.Sfu.Events;
@@ -35,6 +34,10 @@ namespace StreamVideo.Core.LowLevelClient
     public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
 
     public delegate void ParticipantLeftHandler(string sessionId, string userId);
+    
+    //StreamTodo: Implement GeneratedApi.UpdateMuteStates
+    //StreamTodo: Implement GeneratedApi.RestartIce
+    //StreamTodo: Rename GeneratedAPI to SfuRpcApi
 
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
 
@@ -689,12 +692,14 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         //StreamTodo: implement retry strategy like in Android SDK
+        //If possible, take into account if we the update is still valid e.g. 
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
         {
-            var serializedRequest = _serializer.Serialize(request);
+
 
 #if STREAM_DEBUG_ENABLED
+            var serializedRequest = _serializer.Serialize(request);
             if (preLog)
             {
                 _logs.Warning($"[RPC REQUEST START] {debugRequestName} {serializedRequest}");
@@ -702,9 +707,10 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             var response = await rpcCallAsync(_httpClient, request);
-            var serializedResponse = _serializer.Serialize(response);
 
 #if STREAM_DEBUG_ENABLED
+            var serializedResponse = _serializer.Serialize(response);
+
             //StreamTodo: move to debug helper class
             var sb = new StringBuilder();
 

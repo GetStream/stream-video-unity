@@ -124,6 +124,9 @@ namespace StreamChat.Core.LowLevelClient.API.Internal
                     _logs.Info($"Http request failed due to expired token, connection id: {_lowLevelClient.ConnectionId}");
                     await _lowLevelClient.DisconnectAsync();
                 }
+                
+                //StreamTodo: Refactor Token refresh logic. This relies on the fact that connecting fetches fresh token. But we can probably replace the token without breaking the connection
+                //Also, add test that creates a short lived token and tests that refresh on expiry was executed. We can do it with a Token provider mock 
 
                 _logs.Info("New token required, connection state: " + _lowLevelClient.ConnectionState);
 

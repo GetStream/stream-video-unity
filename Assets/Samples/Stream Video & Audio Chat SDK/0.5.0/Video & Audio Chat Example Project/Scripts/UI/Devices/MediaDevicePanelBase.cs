@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -26,6 +25,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
         public event DeviceToggleHandler DeviceToggled;
 
         public string SelectedDeviceName { get; private set; }
+        
+        //StreamTodo: android has DeviceStatus: Enabled, Disabled, NotSelected
         public bool IsDeviceActive { get; private set; } = true;
 
         public void SelectDeviceWithoutNotify(string deviceName)

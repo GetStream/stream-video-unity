@@ -168,6 +168,9 @@ namespace StreamVideo.Core
             Destroyed?.Invoke();
         }
 
+        //StreamTodo: Consider removing this overload and exposing ConnectAsync() DisconnectAsync() only. The config would contain credentials (token or token provider), etc.
+        //Similar to Android SDK: https://getstream.io/video/docs/android/guides/client-auth/
+        
         public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials)
         {
             await InternalLowLevelClient.ConnectUserAsync(credentials);

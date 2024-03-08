@@ -189,6 +189,7 @@ namespace StreamVideo.Core.LowLevelClient
             Connected?.Invoke();
         }
 
+        // StreamTodo: Remove this overload and allow setting TokenProvider via CreateDefaultClient (config?)
         public async Task ConnectUserAsync(string apiKey, string userId, ITokenProvider tokenProvider,
             CancellationToken cancellationToken = default)
         {

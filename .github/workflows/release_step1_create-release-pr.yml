@@ -34,6 +34,9 @@ jobs:
             echo 'EOF'
           } >> $GITHUB_ENV
 
+      - name: Print changelog
+        run: echo "${{ env.CHANGELOG }}"
+
       - name: Run .NET Release Tool
         run: dotnet run --project ./ReleaseTool --version ${{ github.event.inputs.version }} --changelog "${{ env.CHANGELOG }}"
 

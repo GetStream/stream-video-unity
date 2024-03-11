@@ -88,6 +88,8 @@ internal class FileWriter
         Console.WriteLine($"Updated the package.json file in `{packageJsonFilePath}`");
     }
 
+    //StreamTodo: move this to some PackageJsonParser -> ctor would accept the path. and Parse would return readonly PackageJson with properties like Version
+    // and DisplayName that is used in samples. So we need to run git mv old_samples_path to git mv new_samples_path and samples path is Assets/Samples/DisplayName/Version  
     public JsonNode GetVersionProperty(string packageJsonFilePath, out JsonNode jsonFileNode)
     {
         var fileContents = File.ReadAllText(packageJsonFilePath);

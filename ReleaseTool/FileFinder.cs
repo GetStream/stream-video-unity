@@ -8,8 +8,9 @@ internal class FileFinder
         var changelogFilePath = FindChangelogFilePath(rootDirectory);
         var versionFilePath = FindVersionFilePath(rootDirectory);
         var packageJsonFilePath = FindPackageJsonFilePath(rootDirectory);
+        var assetsSamplesDirPath = FindAssetsSamplesDirPath(rootDirectory);
 
-        return new ReleaseFilesInfo(versionFilePath, changelogFilePath, packageJsonFilePath);
+        return new ReleaseFilesInfo(versionFilePath, changelogFilePath, packageJsonFilePath, assetsSamplesDirPath);
     }
 
     private const string PackagesDirName = "Packages";
@@ -34,6 +35,8 @@ internal class FileFinder
 
         return FindFile(packagesDir.FullName, PackageJsonFilename, SearchOption.AllDirectories);
     }
+
+    private string FindAssetsSamplesDirPath(string sdkRootDirectory) => Path.Combine(sdkRootDirectory, "Samples");
 
     /// <summary>
     /// Find SDK root directory - this is where the "Assets" directory is located
@@ -63,7 +66,7 @@ internal class FileFinder
         var packagesDir = new DirectoryInfo(Path.Combine(sdkRootDirectory, PackagesDirName));
         if (!packagesDir.Exists)
         {
-            throw new DirectoryNotFoundException($"Failed to find the `Packages` dir: `{packagesDir}`");
+            throw new DirectoryNotFoundException($"Failed to find the `{PackagesDirName}` dir: `{packagesDir}`");
         }
 
         return packagesDir;

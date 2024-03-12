@@ -1,12 +1,28 @@
-﻿using StreamVideo.Core.LowLevelClient;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using StreamVideo.Core.LowLevelClient;
+using UnityEngine;
 
 namespace StreamVideo.Core.DeviceManagers
 {
-    internal class AudioDeviceManager : DeviceManagerBase, IAudioDeviceManager
+    internal class AudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IAudioDeviceManager
     {
         internal AudioDeviceManager(RtcSession rtcSession)
             : base(rtcSession)
         {
+        }
+
+        public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
+        {
+            foreach (var device in Microphone.devices)
+            {
+                yield return new MicrophoneDeviceInfo(device);
+            }
+        }
+
+        public override Task<bool> IsDeviceStreamingAsync(MicrophoneDeviceInfo device)
+        {
+            throw new System.NotImplementedException();
         }
 
         protected override void OnSetEnabled(bool isEnabled) => RtcSession.TrySetAudioTrackEnabled(isEnabled);

@@ -254,6 +254,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (_publisher?.PublisherAudioTrack == null)
             {
+                //StreamTodo: we probably want to cache this here and use once the track is available
                 return;
             }
 

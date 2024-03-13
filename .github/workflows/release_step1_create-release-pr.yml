@@ -1,13 +1,13 @@
-﻿name: Release - Step 1 -> Create release PR
+name: Release - Step 1 -> Create release PR
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number (example: 1.2.3)'
+        description: 'Version number (semantic: major.minor.patch)'
         required: true
-      changelog:
-        description: 'Changelog (this version only + base64 encoded)'
+      changelogBase64:
+        description: 'Changelog (for last version only & base64 encoded)'
         required: true
 
 jobs:
@@ -25,20 +25,8 @@ jobs:
       - name: Build .NET Release tool
         run: dotnet build ./ReleaseTool/ReleaseTool.csproj
 
-      - name: Decode Changelog and Set as Env Variable
-        run: |
-          {
-            DECODED_CHANGELOG=$(echo "${{ github.event.inputs.changelog }}" | base64 --decode)
-            echo 'CHANGELOG<<EOF'
-            echo "$DECODED_CHANGELOG"
-            echo 'EOF'
-          } >> $GITHUB_ENV
-
-      - name: Print changelog
-        run: echo "${{ env.CHANGELOG }}"
-
       - name: Run .NET Release Tool
-        run: dotnet run --project ./ReleaseTool --version ${{ github.event.inputs.version }} --changelog "${{ env.CHANGELOG }}"
+        run: dotnet run --project ./ReleaseTool --version ${{ github.event.inputs.version }} --changelogBase64 "${{ github.event.inputs.changelogBase64 }}"
 
       - name: Create Release Branch
         run: |

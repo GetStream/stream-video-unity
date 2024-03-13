@@ -1,6 +1,8 @@
-﻿namespace StreamVideo.Core.DeviceManagers
+﻿using System;
+
+namespace StreamVideo.Core.DeviceManagers
 {
-    public interface IDeviceManager
+    public interface IDeviceManager : IDisposable
     {
         /// <summary>
         /// Is device enabled. Enabled device will stream output during the call.

@@ -5,6 +5,8 @@
     /// </summary>
     public readonly struct MicrophoneDeviceInfo
     {
+        public bool IsValid => !string.IsNullOrEmpty(Name);
+        
         public string Name { get; }
 
         public MicrophoneDeviceInfo(string name)

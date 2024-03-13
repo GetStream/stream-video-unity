@@ -82,6 +82,11 @@ namespace StreamVideo.Core.LowLevelClient
             get => _audioInput;
             set
             {
+                if (value == null)
+                {
+                    throw new ArgumentNullException();
+                }
+                
                 var prev = _audioInput;
                 _audioInput = value;
 
@@ -97,6 +102,11 @@ namespace StreamVideo.Core.LowLevelClient
             get => _videoInput;
             set
             {
+                if (value == null)
+                {
+                    throw new ArgumentNullException();
+                }
+                
                 var prev = _videoInput;
                 _videoInput = value;
 

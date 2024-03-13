@@ -387,8 +387,8 @@ namespace StreamVideo.Core
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);
             
-            VideoDeviceManager = new VideoDeviceManager(InternalLowLevelClient.RtcSession);
-            AudioDeviceManager = new AudioDeviceManager(InternalLowLevelClient.RtcSession);
+            VideoDeviceManager = new VideoDeviceManager(InternalLowLevelClient.RtcSession, this);
+            AudioDeviceManager = new AudioDeviceManager(InternalLowLevelClient.RtcSession, this);
 
             SubscribeTo(InternalLowLevelClient);
         }

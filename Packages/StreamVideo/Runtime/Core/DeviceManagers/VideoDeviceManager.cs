@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.DeviceManagers
 {
     internal class VideoDeviceManager : DeviceManagerBase<CameraDeviceInfo>, IVideoDeviceManager
     {
-        internal VideoDeviceManager(RtcSession rtcSession)
-            : base(rtcSession)
-        {
-        }
+        public override CameraDeviceInfo SelectedDevice { get; protected set; }
 
         public override IEnumerable<CameraDeviceInfo> EnumerateDevices()
         {
@@ -18,23 +17,6 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 yield return new CameraDeviceInfo(device.name, device.isFrontFacing);
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public override async Task<bool> IsDeviceStreamingAsync(CameraDeviceInfo device)
-        {
-            var camTexture = new WebCamTexture(device.Name);
-            camTexture.Play();
-            await Task.Delay(200);
-
-            // Simple check for valid texture size
-            var isStreaming = camTexture.width > 16 && camTexture.height > 16; 
-    
-            camTexture.Stop();
-            Object.Destroy(camTexture);
-            return isStreaming;
         }
 
         public void SelectDevice(CameraDeviceInfo device, int fps = 30)
@@ -53,6 +35,9 @@ namespace StreamVideo.Core.DeviceManagers
             if (newInstanceNeeded)
             {
                 _activeCamera = new WebCamTexture(device.Name, (int)resolution.Width, (int)resolution.Height, fps);
+                
+                // we probably need to make this internal so we don't end up out of sync if they select a device + set cam input source
+                Client.SetCameraInputSource(_activeCamera);
             }
             else
             {
@@ -66,12 +51,44 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 _activeCamera.Play();
             }
-            
-            //StreamTodo: set as a track input source
+        }
+        
+        internal VideoDeviceManager(RtcSession rtcSession, IStreamVideoClient client)
+            : base(rtcSession, client)
+        {
         }
 
         protected override void OnSetEnabled(bool isEnabled) => RtcSession.TrySetVideoTrackEnabled(isEnabled);
         
+        protected override async Task<bool> OnTestDeviceAsync(CameraDeviceInfo device, int msDuration)
+        {
+            var camTexture = new WebCamTexture(device.Name);
+            camTexture.Play();
+            await Task.Delay(msDuration);
+
+            // Simple check for valid texture size
+            var isStreaming = camTexture.width > 16 && camTexture.height > 16; 
+    
+            camTexture.Stop();
+            Object.Destroy(camTexture);
+            return isStreaming;
+        }
+
+        protected override void OnDisposing()
+        {
+            if (_activeCamera != null)
+            {
+                if (_activeCamera.isPlaying)
+                {
+                    _activeCamera.Stop();
+                }
+                
+                Object.Destroy(_activeCamera);
+            }
+            
+            base.OnDisposing();
+        }
+
         //StreamTodo: wrap all Unity webcam texture operations here. Enabling/Disabling tracks should manage the WebCamTexture so that users only 
         //Also take into account that user may want to provide his instance of WebCamTexture + monitor for devices list changes 
         

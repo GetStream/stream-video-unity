@@ -29,10 +29,4 @@ public class PackageParser
 
         return versionProperty;
     }
-
-    //StreamTodo: move this to some PackageJsonParser -> ctor would accept the path. and Parse would return readonly PackageJson with properties like Version
-    // and DisplayName that is used in samples. So we need to run git mv old_samples_path to git mv new_samples_path and samples path is Assets/Samples/DisplayName/Version  
-
-
-
 }

@@ -36,7 +36,7 @@ internal class FileFinder
         return FindFile(packagesDir.FullName, PackageJsonFilename, SearchOption.AllDirectories);
     }
 
-    private string FindAssetsSamplesDirPath(string sdkRootDirectory) => Path.Combine(sdkRootDirectory, "Samples");
+    private string FindAssetsSamplesDirPath(string sdkRootDirectory) => Path.Combine(sdkRootDirectory, AssetsDirName, "Samples");
 
     /// <summary>
     /// Find SDK root directory - this is where the "Assets" directory is located

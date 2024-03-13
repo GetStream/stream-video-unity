@@ -1,13 +1,19 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using ReleaseTool.PackageManifest;
 
 namespace ReleaseTool;
 
 internal class FileWriter
 {
+    public FileWriter(PackageParser packageParser)
+    {
+        _packageParser = packageParser;
+    }
+
     public void WriteVersionFile(Version version, string versionFilePath)
     {
         var sb = new StringBuilder();
@@ -43,7 +49,7 @@ internal class FileWriter
     {
         var sb = new StringBuilder();
 
-        var versionLine = $"v{version.Major}.{version.Minor}.{version.Build}:";
+        var versionLine = $"{version.Major}.{version.Minor}.{version.Build}:";
         sb.AppendLine(versionLine);
         sb.AppendLine();
 
@@ -56,7 +62,7 @@ internal class FileWriter
         {
             sb.AppendLine(line);
         }
-        
+
         sb.AppendLine();
 
         foreach (var line in oldChangelogLines)
@@ -71,9 +77,9 @@ internal class FileWriter
 
     public void WritePackageJsonFile(Version version, string packageJsonFilePath)
     {
-        GetVersionProperty(packageJsonFilePath, out var json);
+        _packageParser.GetVersionProperty(packageJsonFilePath, out var json);
 
-        json[PackageJsonVersionPropertyName] = $"{version.Major}.{version.Minor}.{version.Build}";
+        json[PackageParser.PackageJsonVersionPropertyName] = $"{version.Major}.{version.Minor}.{version.Build}";
 
         var options = new JsonSerializerOptions
         {
@@ -88,24 +94,28 @@ internal class FileWriter
         Console.WriteLine($"Updated the package.json file in `{packageJsonFilePath}`");
     }
 
-    //StreamTodo: move this to some PackageJsonParser -> ctor would accept the path. and Parse would return readonly PackageJson with properties like Version
-    // and DisplayName that is used in samples. So we need to run git mv old_samples_path to git mv new_samples_path and samples path is Assets/Samples/DisplayName/Version  
-    public JsonNode GetVersionProperty(string packageJsonFilePath, out JsonNode jsonFileNode)
+    public void MoveImportedSamples(PackageInfo packageInfo, ReleaseFilesInfo filesInfo, Version currentVersion,
+        Version newVersion)
     {
-        var fileContents = File.ReadAllText(packageJsonFilePath);
+        var currentDirPath = Path.Combine(filesInfo.AssetsSamplesDirectory, packageInfo.DisplayName,
+            currentVersion.ToString());
 
-        jsonFileNode = JsonNode.Parse(fileContents) ??
-                       throw new InvalidOperationException($"Failed to parse the JSON file: `{packageJsonFilePath}`.");
+        var currentDirMetaPath = $"{currentDirPath}.meta";
 
-        var versionProperty = jsonFileNode[PackageJsonVersionPropertyName];
-        if (versionProperty == null)
-        {
-            throw new InvalidOperationException($"Failed to find the `{PackageJsonVersionPropertyName}` property in `{
-                packageJsonFilePath}`");
-        }
-
-        return versionProperty;
+        var newDirPath = Path.Combine(filesInfo.AssetsSamplesDirectory, packageInfo.DisplayName,
+            newVersion.ToString());
+            
+        var newDirMetaPath = $"{newDirPath}.meta";
+        
+        RunCommand("git", $"mv \"{currentDirPath}\" \"{newDirPath}\"");
+        RunCommand("git", $"mv \"{currentDirMetaPath}\" \"{newDirMetaPath}\"");
     }
 
-    private const string PackageJsonVersionPropertyName = "version";
+    private readonly PackageParser _packageParser;
+    
+    private void RunCommand(string command, string args)
+    {
+        Console.WriteLine($"Run command: {command} {args}");
+        Process.Start(command, args);
+    }
 }

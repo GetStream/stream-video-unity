@@ -9,7 +9,7 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace Stream.Video.v1.Sfu.Signal {
+namespace StreamVideo.v1.Sfu.Signal {
 
   /// <summary>Holder for reflection information generated from video/sfu/signal_rpc/signal.proto</summary>
   internal static partial class SignalReflection {
@@ -75,23 +75,23 @@ namespace Stream.Video.v1.Sfu.Signal {
             "Y29tL0dldFN0cmVhbS9wcm90b2NvbC9wcm90b2J1Zi92aWRlby9zZnUvc2ln",
             "bmFsX3JwY6oCGlN0cmVhbS5WaWRlby52MS5TZnUuU2lnbmFsYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::Stream.Video.v1.Sfu.Models.ModelsReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.ICERestartRequest), global::Stream.Video.v1.Sfu.Signal.ICERestartRequest.Parser, new[]{ "SessionId", "PeerType" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.ICERestartResponse), global::Stream.Video.v1.Sfu.Signal.ICERestartResponse.Parser, new[]{ "Error" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.UpdateMuteStatesRequest), global::Stream.Video.v1.Sfu.Signal.UpdateMuteStatesRequest.Parser, new[]{ "SessionId", "MuteStates" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.UpdateMuteStatesResponse), global::Stream.Video.v1.Sfu.Signal.UpdateMuteStatesResponse.Parser, new[]{ "Error" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.TrackMuteState), global::Stream.Video.v1.Sfu.Signal.TrackMuteState.Parser, new[]{ "TrackType", "Muted" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.AudioMuteChanged), global::Stream.Video.v1.Sfu.Signal.AudioMuteChanged.Parser, new[]{ "Muted" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.VideoMuteChanged), global::Stream.Video.v1.Sfu.Signal.VideoMuteChanged.Parser, new[]{ "Muted" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.UpdateSubscriptionsRequest), global::Stream.Video.v1.Sfu.Signal.UpdateSubscriptionsRequest.Parser, new[]{ "SessionId", "Tracks" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.UpdateSubscriptionsResponse), global::Stream.Video.v1.Sfu.Signal.UpdateSubscriptionsResponse.Parser, new[]{ "Error" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails), global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails.Parser, new[]{ "UserId", "SessionId", "TrackType", "Dimension" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.SendAnswerRequest), global::Stream.Video.v1.Sfu.Signal.SendAnswerRequest.Parser, new[]{ "PeerType", "Sdp", "SessionId" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.SendAnswerResponse), global::Stream.Video.v1.Sfu.Signal.SendAnswerResponse.Parser, new[]{ "Error" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.ICETrickleResponse), global::Stream.Video.v1.Sfu.Signal.ICETrickleResponse.Parser, new[]{ "Error" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.SetPublisherRequest), global::Stream.Video.v1.Sfu.Signal.SetPublisherRequest.Parser, new[]{ "Sdp", "SessionId", "Tracks" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Signal.SetPublisherResponse), global::Stream.Video.v1.Sfu.Signal.SetPublisherResponse.Parser, new[]{ "Sdp", "SessionId", "IceRestart", "Error" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.ICERestartRequest), global::StreamVideo.v1.Sfu.Signal.ICERestartRequest.Parser, new[]{ "SessionId", "PeerType" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.ICERestartResponse), global::StreamVideo.v1.Sfu.Signal.ICERestartResponse.Parser, new[]{ "Error" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.UpdateMuteStatesRequest), global::StreamVideo.v1.Sfu.Signal.UpdateMuteStatesRequest.Parser, new[]{ "SessionId", "MuteStates" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.UpdateMuteStatesResponse), global::StreamVideo.v1.Sfu.Signal.UpdateMuteStatesResponse.Parser, new[]{ "Error" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.TrackMuteState), global::StreamVideo.v1.Sfu.Signal.TrackMuteState.Parser, new[]{ "TrackType", "Muted" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.AudioMuteChanged), global::StreamVideo.v1.Sfu.Signal.AudioMuteChanged.Parser, new[]{ "Muted" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.VideoMuteChanged), global::StreamVideo.v1.Sfu.Signal.VideoMuteChanged.Parser, new[]{ "Muted" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.UpdateSubscriptionsRequest), global::StreamVideo.v1.Sfu.Signal.UpdateSubscriptionsRequest.Parser, new[]{ "SessionId", "Tracks" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.UpdateSubscriptionsResponse), global::StreamVideo.v1.Sfu.Signal.UpdateSubscriptionsResponse.Parser, new[]{ "Error" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails), global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails.Parser, new[]{ "UserId", "SessionId", "TrackType", "Dimension" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.SendAnswerRequest), global::StreamVideo.v1.Sfu.Signal.SendAnswerRequest.Parser, new[]{ "PeerType", "Sdp", "SessionId" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.SendAnswerResponse), global::StreamVideo.v1.Sfu.Signal.SendAnswerResponse.Parser, new[]{ "Error" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.ICETrickleResponse), global::StreamVideo.v1.Sfu.Signal.ICETrickleResponse.Parser, new[]{ "Error" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.SetPublisherRequest), global::StreamVideo.v1.Sfu.Signal.SetPublisherRequest.Parser, new[]{ "Sdp", "SessionId", "Tracks" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Signal.SetPublisherResponse), global::StreamVideo.v1.Sfu.Signal.SetPublisherResponse.Parser, new[]{ "Sdp", "SessionId", "IceRestart", "Error" }, null, null, null, null)
           }));
     }
     #endregion
@@ -112,7 +112,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[0]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -157,10 +157,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "peer_type" field.</summary>
     public const int PeerTypeFieldNumber = 2;
-    private global::Stream.Video.v1.Sfu.Models.PeerType peerType_ = global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified;
+    private global::StreamVideo.v1.Sfu.Models.PeerType peerType_ = global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.PeerType PeerType {
+    public global::StreamVideo.v1.Sfu.Models.PeerType PeerType {
       get { return peerType_; }
       set {
         peerType_ = value;
@@ -192,7 +192,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     public override int GetHashCode() {
       int hash = 1;
       if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -215,7 +215,7 @@ namespace Stream.Video.v1.Sfu.Signal {
         output.WriteRawTag(10);
         output.WriteString(SessionId);
       }
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         output.WriteRawTag(16);
         output.WriteEnum((int) PeerType);
       }
@@ -233,7 +233,7 @@ namespace Stream.Video.v1.Sfu.Signal {
         output.WriteRawTag(10);
         output.WriteString(SessionId);
       }
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         output.WriteRawTag(16);
         output.WriteEnum((int) PeerType);
       }
@@ -250,7 +250,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       if (SessionId.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionId);
       }
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) PeerType);
       }
       if (_unknownFields != null) {
@@ -268,7 +268,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       if (other.SessionId.Length != 0) {
         SessionId = other.SessionId;
       }
-      if (other.PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (other.PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         PeerType = other.PeerType;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -291,7 +291,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           }
           case 16: {
-            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            PeerType = (global::StreamVideo.v1.Sfu.Models.PeerType) input.ReadEnum();
             break;
           }
         }
@@ -314,7 +314,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           }
           case 16: {
-            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            PeerType = (global::StreamVideo.v1.Sfu.Models.PeerType) input.ReadEnum();
             break;
           }
         }
@@ -338,7 +338,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[1]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[1]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -370,10 +370,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "error" field.</summary>
     public const int ErrorFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.Error error_;
+    private global::StreamVideo.v1.Sfu.Models.Error error_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Error Error {
+    public global::StreamVideo.v1.Sfu.Models.Error Error {
       get { return error_; }
       set {
         error_ = value;
@@ -467,7 +467,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       }
       if (other.error_ != null) {
         if (error_ == null) {
-          Error = new global::Stream.Video.v1.Sfu.Models.Error();
+          Error = new global::StreamVideo.v1.Sfu.Models.Error();
         }
         Error.MergeFrom(other.Error);
       }
@@ -488,7 +488,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 10: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -510,7 +510,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 10: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -536,7 +536,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[2]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[2]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -581,12 +581,12 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "mute_states" field.</summary>
     public const int MuteStatesFieldNumber = 3;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Signal.TrackMuteState> _repeated_muteStates_codec
-        = pb::FieldCodec.ForMessage(26, global::Stream.Video.v1.Sfu.Signal.TrackMuteState.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackMuteState> muteStates_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackMuteState>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Signal.TrackMuteState> _repeated_muteStates_codec
+        = pb::FieldCodec.ForMessage(26, global::StreamVideo.v1.Sfu.Signal.TrackMuteState.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackMuteState> muteStates_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackMuteState>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackMuteState> MuteStates {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackMuteState> MuteStates {
       get { return muteStates_; }
     }
 
@@ -751,7 +751,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[3]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -783,10 +783,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "error" field.</summary>
     public const int ErrorFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.Error error_;
+    private global::StreamVideo.v1.Sfu.Models.Error error_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Error Error {
+    public global::StreamVideo.v1.Sfu.Models.Error Error {
       get { return error_; }
       set {
         error_ = value;
@@ -880,7 +880,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       }
       if (other.error_ != null) {
         if (error_ == null) {
-          Error = new global::Stream.Video.v1.Sfu.Models.Error();
+          Error = new global::StreamVideo.v1.Sfu.Models.Error();
         }
         Error.MergeFrom(other.Error);
       }
@@ -901,7 +901,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -923,7 +923,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -949,7 +949,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[4]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -982,10 +982,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "track_type" field.</summary>
     public const int TrackTypeFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.TrackType trackType_ = global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified;
+    private global::StreamVideo.v1.Sfu.Models.TrackType trackType_ = global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.TrackType TrackType {
+    public global::StreamVideo.v1.Sfu.Models.TrackType TrackType {
       get { return trackType_; }
       set {
         trackType_ = value;
@@ -1028,7 +1028,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) hash ^= TrackType.GetHashCode();
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) hash ^= TrackType.GetHashCode();
       if (Muted != false) hash ^= Muted.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -1048,7 +1048,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) TrackType);
       }
@@ -1066,7 +1066,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) TrackType);
       }
@@ -1084,7 +1084,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) TrackType);
       }
       if (Muted != false) {
@@ -1102,7 +1102,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       if (other == null) {
         return;
       }
-      if (other.TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (other.TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         TrackType = other.TrackType;
       }
       if (other.Muted != false) {
@@ -1124,7 +1124,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 8: {
-            TrackType = (global::Stream.Video.v1.Sfu.Models.TrackType) input.ReadEnum();
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
           case 16: {
@@ -1147,7 +1147,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 8: {
-            TrackType = (global::Stream.Video.v1.Sfu.Models.TrackType) input.ReadEnum();
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
           case 16: {
@@ -1175,7 +1175,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[5]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1364,7 +1364,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[6]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1553,7 +1553,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[7]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1598,12 +1598,12 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "tracks" field.</summary>
     public const int TracksFieldNumber = 3;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails> _repeated_tracks_codec
-        = pb::FieldCodec.ForMessage(26, global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails> tracks_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> _repeated_tracks_codec
+        = pb::FieldCodec.ForMessage(26, global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> tracks_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails> Tracks {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> Tracks {
       get { return tracks_; }
     }
 
@@ -1768,7 +1768,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[8]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1800,10 +1800,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "error" field.</summary>
     public const int ErrorFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.Error error_;
+    private global::StreamVideo.v1.Sfu.Models.Error error_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Error Error {
+    public global::StreamVideo.v1.Sfu.Models.Error Error {
       get { return error_; }
       set {
         error_ = value;
@@ -1897,7 +1897,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       }
       if (other.error_ != null) {
         if (error_ == null) {
-          Error = new global::Stream.Video.v1.Sfu.Models.Error();
+          Error = new global::StreamVideo.v1.Sfu.Models.Error();
         }
         Error.MergeFrom(other.Error);
       }
@@ -1918,7 +1918,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -1940,7 +1940,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -1966,7 +1966,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[9]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[9]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2025,10 +2025,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "track_type" field.</summary>
     public const int TrackTypeFieldNumber = 3;
-    private global::Stream.Video.v1.Sfu.Models.TrackType trackType_ = global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified;
+    private global::StreamVideo.v1.Sfu.Models.TrackType trackType_ = global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.TrackType TrackType {
+    public global::StreamVideo.v1.Sfu.Models.TrackType TrackType {
       get { return trackType_; }
       set {
         trackType_ = value;
@@ -2037,10 +2037,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "dimension" field.</summary>
     public const int DimensionFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.VideoDimension dimension_;
+    private global::StreamVideo.v1.Sfu.Models.VideoDimension dimension_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.VideoDimension Dimension {
+    public global::StreamVideo.v1.Sfu.Models.VideoDimension Dimension {
       get { return dimension_; }
       set {
         dimension_ = value;
@@ -2075,7 +2075,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       int hash = 1;
       if (UserId.Length != 0) hash ^= UserId.GetHashCode();
       if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
-      if (TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) hash ^= TrackType.GetHashCode();
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) hash ^= TrackType.GetHashCode();
       if (dimension_ != null) hash ^= Dimension.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -2103,7 +2103,7 @@ namespace Stream.Video.v1.Sfu.Signal {
         output.WriteRawTag(18);
         output.WriteString(SessionId);
       }
-      if (TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         output.WriteRawTag(24);
         output.WriteEnum((int) TrackType);
       }
@@ -2129,7 +2129,7 @@ namespace Stream.Video.v1.Sfu.Signal {
         output.WriteRawTag(18);
         output.WriteString(SessionId);
       }
-      if (TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         output.WriteRawTag(24);
         output.WriteEnum((int) TrackType);
       }
@@ -2153,7 +2153,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       if (SessionId.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionId);
       }
-      if (TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) TrackType);
       }
       if (dimension_ != null) {
@@ -2177,12 +2177,12 @@ namespace Stream.Video.v1.Sfu.Signal {
       if (other.SessionId.Length != 0) {
         SessionId = other.SessionId;
       }
-      if (other.TrackType != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (other.TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         TrackType = other.TrackType;
       }
       if (other.dimension_ != null) {
         if (dimension_ == null) {
-          Dimension = new global::Stream.Video.v1.Sfu.Models.VideoDimension();
+          Dimension = new global::StreamVideo.v1.Sfu.Models.VideoDimension();
         }
         Dimension.MergeFrom(other.Dimension);
       }
@@ -2210,12 +2210,12 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           }
           case 24: {
-            TrackType = (global::Stream.Video.v1.Sfu.Models.TrackType) input.ReadEnum();
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
           case 34: {
             if (dimension_ == null) {
-              Dimension = new global::Stream.Video.v1.Sfu.Models.VideoDimension();
+              Dimension = new global::StreamVideo.v1.Sfu.Models.VideoDimension();
             }
             input.ReadMessage(Dimension);
             break;
@@ -2244,12 +2244,12 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           }
           case 24: {
-            TrackType = (global::Stream.Video.v1.Sfu.Models.TrackType) input.ReadEnum();
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
           case 34: {
             if (dimension_ == null) {
-              Dimension = new global::Stream.Video.v1.Sfu.Models.VideoDimension();
+              Dimension = new global::StreamVideo.v1.Sfu.Models.VideoDimension();
             }
             input.ReadMessage(Dimension);
             break;
@@ -2275,7 +2275,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[10]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2309,10 +2309,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "peer_type" field.</summary>
     public const int PeerTypeFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.PeerType peerType_ = global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified;
+    private global::StreamVideo.v1.Sfu.Models.PeerType peerType_ = global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.PeerType PeerType {
+    public global::StreamVideo.v1.Sfu.Models.PeerType PeerType {
       get { return peerType_; }
       set {
         peerType_ = value;
@@ -2368,7 +2368,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
       if (Sdp.Length != 0) hash ^= Sdp.GetHashCode();
       if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
       if (_unknownFields != null) {
@@ -2389,7 +2389,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) PeerType);
       }
@@ -2411,7 +2411,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) PeerType);
       }
@@ -2433,7 +2433,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) PeerType);
       }
       if (Sdp.Length != 0) {
@@ -2454,7 +2454,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       if (other == null) {
         return;
       }
-      if (other.PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (other.PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         PeerType = other.PeerType;
       }
       if (other.Sdp.Length != 0) {
@@ -2479,7 +2479,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 8: {
-            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            PeerType = (global::StreamVideo.v1.Sfu.Models.PeerType) input.ReadEnum();
             break;
           }
           case 18: {
@@ -2506,7 +2506,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 8: {
-            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            PeerType = (global::StreamVideo.v1.Sfu.Models.PeerType) input.ReadEnum();
             break;
           }
           case 18: {
@@ -2538,7 +2538,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[11]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[11]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2570,10 +2570,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "error" field.</summary>
     public const int ErrorFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.Error error_;
+    private global::StreamVideo.v1.Sfu.Models.Error error_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Error Error {
+    public global::StreamVideo.v1.Sfu.Models.Error Error {
       get { return error_; }
       set {
         error_ = value;
@@ -2667,7 +2667,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       }
       if (other.error_ != null) {
         if (error_ == null) {
-          Error = new global::Stream.Video.v1.Sfu.Models.Error();
+          Error = new global::StreamVideo.v1.Sfu.Models.Error();
         }
         Error.MergeFrom(other.Error);
       }
@@ -2688,7 +2688,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -2710,7 +2710,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -2736,7 +2736,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[12]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[12]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2768,10 +2768,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "error" field.</summary>
     public const int ErrorFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.Error error_;
+    private global::StreamVideo.v1.Sfu.Models.Error error_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Error Error {
+    public global::StreamVideo.v1.Sfu.Models.Error Error {
       get { return error_; }
       set {
         error_ = value;
@@ -2865,7 +2865,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       }
       if (other.error_ != null) {
         if (error_ == null) {
-          Error = new global::Stream.Video.v1.Sfu.Models.Error();
+          Error = new global::StreamVideo.v1.Sfu.Models.Error();
         }
         Error.MergeFrom(other.Error);
       }
@@ -2886,7 +2886,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -2908,7 +2908,7 @@ namespace Stream.Video.v1.Sfu.Signal {
             break;
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -2934,7 +2934,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[13]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2995,12 +2995,12 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "tracks" field.</summary>
     public const int TracksFieldNumber = 3;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Models.TrackInfo> _repeated_tracks_codec
-        = pb::FieldCodec.ForMessage(26, global::Stream.Video.v1.Sfu.Models.TrackInfo.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.TrackInfo> tracks_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.TrackInfo>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.TrackInfo> _repeated_tracks_codec
+        = pb::FieldCodec.ForMessage(26, global::StreamVideo.v1.Sfu.Models.TrackInfo.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo> tracks_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.TrackInfo> Tracks {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo> Tracks {
       get { return tracks_; }
     }
 
@@ -3189,7 +3189,7 @@ namespace Stream.Video.v1.Sfu.Signal {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[14]; }
+      get { return global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor.MessageTypes[14]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3263,10 +3263,10 @@ namespace Stream.Video.v1.Sfu.Signal {
 
     /// <summary>Field number for the "error" field.</summary>
     public const int ErrorFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.Error error_;
+    private global::StreamVideo.v1.Sfu.Models.Error error_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Error Error {
+    public global::StreamVideo.v1.Sfu.Models.Error Error {
       get { return error_; }
       set {
         error_ = value;
@@ -3408,7 +3408,7 @@ namespace Stream.Video.v1.Sfu.Signal {
       }
       if (other.error_ != null) {
         if (error_ == null) {
-          Error = new global::Stream.Video.v1.Sfu.Models.Error();
+          Error = new global::StreamVideo.v1.Sfu.Models.Error();
         }
         Error.MergeFrom(other.Error);
       }
@@ -3441,7 +3441,7 @@ namespace Stream.Video.v1.Sfu.Signal {
           }
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;
@@ -3475,7 +3475,7 @@ namespace Stream.Video.v1.Sfu.Signal {
           }
           case 34: {
             if (error_ == null) {
-              Error = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error);
             break;

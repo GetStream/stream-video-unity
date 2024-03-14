@@ -1,5 +1,5 @@
 ﻿using System;
-using Stream.Video.v1.Sfu.Models;
+using StreamVideo.v1.Sfu.Models;
 
 namespace StreamVideo.Core.LowLevelClient
 {

@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Google.Protobuf; // For ".ToByteArray()"
-using Signal = Stream.Video.v1.Sfu.Signal;
+using Signal = StreamVideo.v1.Sfu.Signal;
 
 internal class GeneratedAPI {
   public static readonly MediaTypeWithQualityHeaderValue CONTENT_TYPE_PROTOBUF = new MediaTypeWithQualityHeaderValue("application/protobuf");
@@ -71,8 +71,8 @@ internal class GeneratedAPI {
   }
 
   // SendICECandidate sends an ICE candidate to the client
-  public static async Task<Signal.ICETrickleResponse> IceTrickle(HttpClient client, Stream.Video.v1.Sfu.Models.ICETrickle req) {
-    return await DoRequest<Stream.Video.v1.Sfu.Models.ICETrickle, Signal.ICETrickleResponse>(client, "/twirp/stream.video.sfu.signal.SignalServer/IceTrickle", req, Signal.ICETrickleResponse.Parser.ParseFrom);
+  public static async Task<Signal.ICETrickleResponse> IceTrickle(HttpClient client, StreamVideo.v1.Sfu.Models.ICETrickle req) {
+    return await DoRequest<StreamVideo.v1.Sfu.Models.ICETrickle, Signal.ICETrickleResponse>(client, "/twirp/stream.video.sfu.signal.SignalServer/IceTrickle", req, Signal.ICETrickleResponse.Parser.ParseFrom);
   }
 
   // UpdateSubscribers is used to notify the SFU about the list of video subscriptions

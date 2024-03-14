@@ -1,4 +1,4 @@
-﻿using Stream.Video.v1.Sfu.Models;
+﻿using StreamVideo.v1.Sfu.Models;
 using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.StatefulModels;

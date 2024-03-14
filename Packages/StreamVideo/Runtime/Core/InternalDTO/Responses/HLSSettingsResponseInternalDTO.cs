@@ -24,9 +24,6 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Always)]
         public bool Enabled { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("layout", Required = Newtonsoft.Json.Required.Always)]
-        public LayoutSettingsInternalDTO Layout { get; set; } = new LayoutSettingsInternalDTO();
-
         [Newtonsoft.Json.JsonProperty("quality_tracks", Required = Newtonsoft.Json.Required.Always)]
         public System.Collections.Generic.List<string> QualityTracks { get; set; } = new System.Collections.Generic.List<string>();
 

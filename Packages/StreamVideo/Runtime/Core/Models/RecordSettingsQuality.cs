@@ -5,12 +5,11 @@ namespace StreamVideo.Core.Models
 {
     public enum RecordSettingsQuality
     {
-        AudioOnly = 0,
-        _360p = 1,
-        _480p = 2,
-        _720p = 3,
-        _1080p = 4,
-        _1440p = 5,
+        _360p = 0,
+        _480p = 1,
+        _720p = 2,
+        _1080p = 3,
+        _1440p = 4,
     }
 
     internal static class RecordSettingsQualityInternalEnumExt
@@ -19,7 +18,6 @@ namespace StreamVideo.Core.Models
         {
             switch (internalValue)
             {
-                case RecordSettingsQualityInternalEnum.AudioOnly: return RecordSettingsQuality.AudioOnly;
                 case RecordSettingsQualityInternalEnum._360p: return RecordSettingsQuality._360p;
                 case RecordSettingsQualityInternalEnum._480p: return RecordSettingsQuality._480p;
                 case RecordSettingsQualityInternalEnum._720p: return RecordSettingsQuality._720p;
@@ -34,7 +32,6 @@ namespace StreamVideo.Core.Models
         {
             switch (publicValue)
             {
-                case RecordSettingsQuality.AudioOnly: return RecordSettingsQualityInternalEnum.AudioOnly;
                 case RecordSettingsQuality._360p: return RecordSettingsQualityInternalEnum._360p;
                 case RecordSettingsQuality._480p: return RecordSettingsQualityInternalEnum._480p;
                 case RecordSettingsQuality._720p: return RecordSettingsQualityInternalEnum._720p;
@@ -49,7 +46,6 @@ namespace StreamVideo.Core.Models
         {
             switch (internalValue)
             {
-                case "audio-only": return RecordSettingsQuality.AudioOnly;
                 case "360p": return RecordSettingsQuality._360p;
                 case "480p": return RecordSettingsQuality._480p;
                 case "720p": return RecordSettingsQuality._720p;

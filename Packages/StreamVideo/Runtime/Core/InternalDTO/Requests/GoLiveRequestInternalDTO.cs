@@ -18,6 +18,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class GoLiveRequestInternalDTO
     {
+        [Newtonsoft.Json.JsonProperty("recording_storage_name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string RecordingStorageName { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("start_hls", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool StartHls { get; set; } = default!;
 
@@ -26,6 +29,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
 
         [Newtonsoft.Json.JsonProperty("start_transcription", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool StartTranscription { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("transcription_storage_name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string TranscriptionStorageName { get; set; } = default!;
 
     }
 

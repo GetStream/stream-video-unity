@@ -12,6 +12,7 @@ using StreamVideo.Core.Auth;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Events;
+using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient.API.Internal;
 using StreamVideo.Core.LowLevelClient.WebSockets;
@@ -267,14 +268,14 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CallRecordingStartedEventInternalDTO> InternalCallRecordingStartedEvent;
         internal event Action<CallRecordingStoppedEventInternalDTO> InternalCallRecordingStoppedEvent;
         internal event Action<BlockedUserEventInternalDTO> InternalBlockedUserEvent;
-        internal event Action<CallBroadcastingStartedEventInternalDTO> InternalCallBroadcastingStartedEvent;
-        internal event Action<CallBroadcastingStoppedEventInternalDTO> InternalCallBroadcastingStoppedEvent;
+        internal event Action<CallHLSBroadcastingStartedEventInternalDTO> InternalCallBroadcastingStartedEvent;
+        internal event Action<CallHLSBroadcastingStoppedEventInternalDTO> InternalCallBroadcastingStoppedEvent;
         internal event Action<CallRingEventInternalDTO> InternalCallRingEvent;
         internal event Action<CallSessionEndedEventInternalDTO> InternalCallSessionEndedEvent;
         internal event Action<CallSessionStartedEventInternalDTO> InternalCallSessionStartedEvent;
         internal event Action<BlockedUserEventInternalDTO> InternalCallUnblockedUserEvent;
         internal event Action<ConnectionErrorEventInternalDTO> InternalConnectionErrorEvent;
-        internal event Action<CustomVideoEventInternalDTO> InternalCustomVideoEvent;
+        internal event Action<SendEventRequestInternalDTO> InternalCustomVideoEvent;
 
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
         internal RtcSession RtcSession { get; }
@@ -426,11 +427,11 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.RegisterEventType<BlockedUserEventInternalDTO>(CoordinatorEventType.CallBlockedUser,
                 e => InternalBlockedUserEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallBroadcastingStartedEventInternalDTO>(
+            _coordinatorWS.RegisterEventType<CallHLSBroadcastingStartedEventInternalDTO>(
                 CoordinatorEventType.CallBroadcastingStarted,
                 e => InternalCallBroadcastingStartedEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CallBroadcastingStoppedEventInternalDTO>(
+            _coordinatorWS.RegisterEventType<CallHLSBroadcastingStoppedEventInternalDTO>(
                 CoordinatorEventType.CallBroadcastingStopped,
                 e => InternalCallBroadcastingStoppedEvent?.Invoke(e));
 
@@ -450,7 +451,8 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.RegisterEventType<ConnectionErrorEventInternalDTO>(CoordinatorEventType.ConnectionError,
                 e => InternalConnectionErrorEvent?.Invoke(e));
 
-            _coordinatorWS.RegisterEventType<CustomVideoEventInternalDTO>(CoordinatorEventType.Custom,
+            //StreamTodo: this was previously CustomVideoEvent that was removed from OpenAPI spec. Try to test this event to check what is being received
+            _coordinatorWS.RegisterEventType<SendEventRequestInternalDTO>(CoordinatorEventType.Custom,
                 e => InternalCustomVideoEvent?.Invoke(e));
         }
 

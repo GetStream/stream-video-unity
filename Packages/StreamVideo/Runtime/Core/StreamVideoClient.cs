@@ -136,8 +136,6 @@ namespace StreamVideo.Core
                 Create = create,
                 Data = new CallRequestInternalDTO
                 {
-                    CreatedBy = null,
-                    CreatedById = null,
                     Custom = null,
                     Members = null,
                     SettingsOverride = null,
@@ -607,12 +605,12 @@ namespace StreamVideo.Core
             // Implement handling logic for CallUnblockedUserEventInternalDTO here
         }
 
-        private void OnInternalCallBroadcastingStartedEvent(CallBroadcastingStartedEventInternalDTO eventData)
+        private void OnInternalCallBroadcastingStartedEvent(CallHLSBroadcastingStartedEventInternalDTO eventData)
         {
             //StreamTodo: Implement handling logic for CallBroadcastingStartedEventInternalDTO here
         }
 
-        private void OnInternalCallBroadcastingStoppedEvent(CallBroadcastingStoppedEventInternalDTO eventData)
+        private void OnInternalCallBroadcastingStoppedEvent(CallHLSBroadcastingStoppedEventInternalDTO eventData)
         {
             //StreamTodo: Implement handling logic for CallBroadcastingStoppedEventInternalDTO here
         }
@@ -643,7 +641,7 @@ namespace StreamVideo.Core
             // Implement handling logic for ConnectionErrorEventInternalDTO here
         }
 
-        private void OnInternalCustomVideoEvent(CustomVideoEventInternalDTO eventData)
+        private void OnInternalCustomVideoEvent(SendEventRequestInternalDTO eventData)
         {
             //StreamTodo: Implement handling logic for CustomVideoEventInternalDTO here
         }

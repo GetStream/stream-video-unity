@@ -15,24 +15,31 @@ namespace StreamVideo.Core.InternalDTO.Events
 {
     using System = global::System;
 
+    /// <summary>
+    /// This event is sent when closed captions are being sent in a call, clients should use this to show the closed captions in the call screen
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    internal partial class HealthCheckEventInternalDTO
+    internal partial class ClosedCaptionEventInternalDTO
     {
+        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
+        public string CallCid { get; set; } = default!;
+
         /// <summary>
-        /// The connection_id for this client
+        /// The closed caption object
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("connection_id", Required = Newtonsoft.Json.Required.Always)]
-        public string ConnectionId { get; set; } = default!;
+        [Newtonsoft.Json.JsonProperty("closed_caption", Required = Newtonsoft.Json.Required.Always)]
+        public CallClosedCaptionInternalDTO ClosedCaption { get; set; } = new CallClosedCaptionInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
-        /// The type of event: "health.check" in this case
+        /// The type of event: "call.closed_caption" in this case
         /// </summary>
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
-        public string Type { get; set; } = "health.check";
+        public string Type { get; set; } = "call.closed_caption";
 
     }
 
 }
+

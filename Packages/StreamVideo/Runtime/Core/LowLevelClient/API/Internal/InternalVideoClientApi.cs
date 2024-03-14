@@ -87,11 +87,11 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
             => Post<UpdateUserPermissionsRequestInternalDTO, UpdateUserPermissionsResponseInternalDTO>(
                 $"/call/{callType}/{callId}/user_permissions", updateUserPermissionsRequest);
 
-        public Task<StartBroadcastingResponseInternalDTO> StartBroadcastingAsync(StreamCallType callType, string callId)
-            => Post<StartBroadcastingResponseInternalDTO>($"/call/{callType}/{callId}/start_broadcasting");
+        public Task<StartHLSBroadcastingResponseInternalDTO> StartBroadcastingAsync(StreamCallType callType, string callId)
+            => Post<StartHLSBroadcastingResponseInternalDTO>($"/call/{callType}/{callId}/start_broadcasting");
 
-        public Task<StopBroadcastingResponseInternalDTO> StopBroadcastingAsync(StreamCallType callType, string callId)
-            => Post<StopBroadcastingResponseInternalDTO>($"/call/{callType}/{callId}/stop_broadcasting");
+        public Task<StopHLSBroadcastingResponseInternalDTO> StopBroadcastingAsync(StreamCallType callType, string callId)
+            => Post<StopHLSBroadcastingResponseInternalDTO>($"/call/{callType}/{callId}/stop_broadcasting");
 
         public Task<StartRecordingResponseInternalDTO> StartRecordingAsync(StreamCallType callType, string callId)
             => Post<StartRecordingResponseInternalDTO>($"/call/{callType}/{callId}/start_recording");

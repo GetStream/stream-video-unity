@@ -16,28 +16,28 @@ namespace StreamVideo.Core.InternalDTO.Events
     using System = global::System;
 
     /// <summary>
-    /// This event is sent when the WS connection fails
+    /// This event is sent when a call is deleted. Clients receiving this event should leave the call screen
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    internal partial class ConnectionErrorEventInternalDTO
+    internal partial class CallDeletedEventInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("connection_id", Required = Newtonsoft.Json.Required.Always)]
-        public string ConnectionId { get; set; } = default!;
+        /// <summary>
+        /// Call object
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("call", Required = Newtonsoft.Json.Required.Always)]
+        public CallResponseInternalDTO Call { get; set; } = new CallResponseInternalDTO();
+
+        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
+        public string CallCid { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
-        /// The error that caused the connection to fail
-        /// </summary>
-        [Newtonsoft.Json.JsonProperty("error", Required = Newtonsoft.Json.Required.Always)]
-        public APIErrorInternalDTO Error { get; set; } = new APIErrorInternalDTO();
-
-        /// <summary>
-        /// The type of event: "connection.ok" in this case
+        /// The type of event: "call.deleted" in this case
         /// </summary>
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
-        public string Type { get; set; } = "connection.error";
+        public string Type { get; set; } = "call.deleted";
 
     }
 

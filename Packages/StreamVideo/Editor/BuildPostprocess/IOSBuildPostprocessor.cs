@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEditor.iOS.Xcode;
 #endif
 
-namespace Editor.BuildPostprocess
+namespace StreamVideo.EditorTools.BuildPostprocess
 {
     /// <summary>
     /// This script will automatically apply the necessary build settings required by the Stream Video & Audio SDK for IOS

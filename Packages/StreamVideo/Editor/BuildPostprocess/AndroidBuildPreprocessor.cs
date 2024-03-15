@@ -5,7 +5,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace Editor.BuildPostprocess
+namespace StreamVideo.EditorTools.BuildPostprocess
 {
     /// <summary>
     /// This script will automatically apply the necessary build settings required by the Stream's Video & Audio SDK for Android

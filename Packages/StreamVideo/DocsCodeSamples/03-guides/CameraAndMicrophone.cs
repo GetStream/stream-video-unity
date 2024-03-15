@@ -2,7 +2,7 @@
 using StreamVideo.Core;
 using UnityEngine;
 
-namespace DocsCodeSamples._03_guides
+namespace StreamVideoDocsCodeSamples._03_guides
 {
     internal class CameraAndMicrophone : MonoBehaviour
     {

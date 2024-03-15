@@ -1,7 +1,7 @@
 ﻿using System;
 using StreamVideo.Core.InternalDTO.Models;
 
-namespace Core.Models
+namespace StreamVideo.Core.Models
 {
     public enum LayoutSettingsName
     {
@@ -12,7 +12,7 @@ namespace Core.Models
         Custom = 4,
     }
     
-    internal static class RecordSettingsModeExt
+    internal static class LayoutSettingsNameExt
     {
         public static LayoutSettingsNameInternalEnum ToInternalEnum(this LayoutSettingsName domainValue)
         {

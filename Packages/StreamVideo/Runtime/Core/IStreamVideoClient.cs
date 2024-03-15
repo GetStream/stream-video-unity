@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Core.QueryBuilders.Sort.Calls;
+using StreamVideo.Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.StatefulModels;

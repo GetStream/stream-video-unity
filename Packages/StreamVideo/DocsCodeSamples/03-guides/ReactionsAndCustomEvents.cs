@@ -2,7 +2,7 @@
 using System.Numerics;
 using StreamVideo.Core;
 
-namespace DocsCodeSamples._03_guides
+namespace StreamVideoDocsCodeSamples._03_guides
 {
     /// <summary>
     /// Code examples for guides/reactions-and-custom-events/ page

@@ -108,6 +108,10 @@ namespace StreamVideo.Core.Sfu
         {
             return await DoRequest<Signal.ICERestartRequest, Signal.ICERestartResponse>(client, "/twirp/stream.video.sfu.signal.SignalServer/IceRestart", req, Signal.ICERestartResponse.Parser.ParseFrom);
         }
-    }
 
+        public static async Task<Signal.SendStatsResponse> SendStats(HttpClient client, Signal.SendStatsRequest req)
+        {
+            return await DoRequest<Signal.SendStatsRequest, Signal.SendStatsResponse>(client, "/twirp/stream.video.sfu.signal.SignalServer/SendStats", req, Signal.SendStatsResponse.Parser.ParseFrom);
+        }
+    }
 }

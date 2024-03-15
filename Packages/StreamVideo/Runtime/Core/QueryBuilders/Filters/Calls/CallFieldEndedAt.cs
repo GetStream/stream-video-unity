@@ -2,7 +2,7 @@
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.StatefulModels;
 
-namespace Core.QueryBuilders.Filters.Calls
+namespace StreamVideo.Core.QueryBuilders.Filters.Calls
 {
     /// <summary>
     /// Filter by <see cref="IStreamCall.EndedAt"/>

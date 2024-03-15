@@ -3,7 +3,7 @@ using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 
-namespace Core.Models
+namespace StreamVideo.Core.Models
 {
     public sealed class LayoutSettings : IStateLoadableFrom<LayoutSettingsInternalDTO, LayoutSettings>
     {

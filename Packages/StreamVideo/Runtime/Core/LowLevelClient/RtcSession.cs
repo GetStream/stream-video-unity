@@ -26,6 +26,7 @@ using SfuError = StreamVideo.v1.Sfu.Events.Error;
 using SfuICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
+using StreamVideo.Core.Sfu;
 
 namespace StreamVideo.Core.LowLevelClient
 {

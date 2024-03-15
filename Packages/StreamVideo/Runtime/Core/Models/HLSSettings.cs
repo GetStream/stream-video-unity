@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Core.Models;
 using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;

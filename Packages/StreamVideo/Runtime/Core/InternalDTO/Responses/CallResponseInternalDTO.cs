@@ -52,7 +52,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// Custom data for this object
         /// </summary>
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
+        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("egress", Required = Newtonsoft.Json.Required.Always)]
         public EgressResponseInternalDTO Egress { get; set; } = new EgressResponseInternalDTO();

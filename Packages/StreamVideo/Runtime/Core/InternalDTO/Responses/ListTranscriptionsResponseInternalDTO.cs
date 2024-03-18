@@ -16,16 +16,13 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    internal partial class RecordSettingsResponseInternalDTO
+    internal partial class ListTranscriptionsResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("audio_only", Required = Newtonsoft.Json.Required.Always)]
-        public bool AudioOnly { get; set; } = default!;
+        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
+        public string Duration { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Always)]
-        public string Mode { get; set; } = default!;
-
-        [Newtonsoft.Json.JsonProperty("quality", Required = Newtonsoft.Json.Required.Always)]
-        public string Quality { get; set; } = default!;
+        [Newtonsoft.Json.JsonProperty("transcriptions", Required = Newtonsoft.Json.Required.Always)]
+        public System.Collections.Generic.List<CallTranscriptionInternalDTO> Transcriptions { get; set; } = new System.Collections.Generic.List<CallTranscriptionInternalDTO>();
 
     }
 

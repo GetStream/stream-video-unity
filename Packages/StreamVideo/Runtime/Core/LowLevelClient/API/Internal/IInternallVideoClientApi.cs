@@ -52,9 +52,9 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         Task<UpdateUserPermissionsResponseInternalDTO> UpdateUserPermissionsAsync(StreamCallType callType, string callId,
             UpdateUserPermissionsRequestInternalDTO updateUserPermissionsRequest);
 
-        Task<StartBroadcastingResponseInternalDTO> StartBroadcastingAsync(StreamCallType callType, string callId);
+        Task<StartHLSBroadcastingResponseInternalDTO> StartBroadcastingAsync(StreamCallType callType, string callId);
 
-        Task<StopBroadcastingResponseInternalDTO> StopBroadcastingAsync(StreamCallType callType, string callId);
+        Task<StopHLSBroadcastingResponseInternalDTO> StopBroadcastingAsync(StreamCallType callType, string callId);
 
         Task<StartRecordingResponseInternalDTO> StartRecordingAsync(StreamCallType callType, string callId);
 

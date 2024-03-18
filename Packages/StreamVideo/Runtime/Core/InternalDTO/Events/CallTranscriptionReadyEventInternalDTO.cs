@@ -15,24 +15,31 @@ namespace StreamVideo.Core.InternalDTO.Events
 {
     using System = global::System;
 
+    /// <summary>
+    /// This event is sent when call transcription is ready
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
-    internal partial class HealthCheckEventInternalDTO
+    internal partial class CallTranscriptionReadyEventInternalDTO
     {
+        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
+        public string CallCid { get; set; } = default!;
+
         /// <summary>
-        /// The connection_id for this client
+        /// The call transcription object
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("connection_id", Required = Newtonsoft.Json.Required.Always)]
-        public string ConnectionId { get; set; } = default!;
+        [Newtonsoft.Json.JsonProperty("call_transcription", Required = Newtonsoft.Json.Required.Always)]
+        public CallTranscriptionInternalDTO CallTranscription { get; set; } = new CallTranscriptionInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
-        /// The type of event: "health.check" in this case
+        /// The type of event: "call.transcription_ready" in this case
         /// </summary>
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
-        public string Type { get; set; } = "health.check";
+        public string Type { get; set; } = "call.transcription_ready";
 
     }
 
 }
+

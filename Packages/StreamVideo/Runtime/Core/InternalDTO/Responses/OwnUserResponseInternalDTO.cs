@@ -22,8 +22,8 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
-
+        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
+        
         [Newtonsoft.Json.JsonProperty("deleted_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset DeletedAt { get; set; } = default!;
 
@@ -35,6 +35,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
 
         [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Image { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Always)]
+        public string Language { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; } = default!;

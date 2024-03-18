@@ -6,9 +6,9 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Stream.Video.v1.Sfu.Events;
-using Stream.Video.v1.Sfu.Models;
-using Stream.Video.v1.Sfu.Signal;
+using StreamVideo.v1.Sfu.Events;
+using StreamVideo.v1.Sfu.Models;
+using StreamVideo.v1.Sfu.Signal;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
@@ -23,10 +23,11 @@ using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
 using Unity.WebRTC;
 using UnityEngine;
-using SfuError = Stream.Video.v1.Sfu.Events.Error;
-using SfuICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
+using SfuError = StreamVideo.v1.Sfu.Events.Error;
+using SfuICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
-using SfuTrackType = Stream.Video.v1.Sfu.Models.TrackType;
+using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
+using StreamVideo.Core.Sfu;
 #if STREAM_DEBUG_ENABLED
 using System.Text;
 #endif
@@ -719,7 +720,7 @@ namespace StreamVideo.Core.LowLevelClient
             var sb = new StringBuilder();
 
             var errorProperty = typeof(TResponse).GetProperty("Error");
-            var error = (Stream.Video.v1.Sfu.Models.Error)errorProperty.GetValue(response);
+            var error = (StreamVideo.v1.Sfu.Models.Error)errorProperty.GetValue(response);
             var errorLog = error != null ? $"<color=red>{error.Message}</color>" : "";
             var errorStatus = error != null ? "<color=red>FAILED</color>" : "<color=green>SUCCESS</color>";
             sb.AppendLine($"[RPC Request] {errorStatus} {debugRequestName} | {errorLog}");

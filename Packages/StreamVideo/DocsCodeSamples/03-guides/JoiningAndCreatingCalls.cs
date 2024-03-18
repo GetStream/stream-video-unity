@@ -4,7 +4,7 @@ using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.QueryBuilders.Filters.CallMembers;
 using StreamVideo.Core.QueryBuilders.Sort;
 
-namespace DocsCodeSamples._03_guides
+namespace StreamVideoDocsCodeSamples._03_guides
 {
     /// <summary>
     /// Code examples for guides/joining-creating-calls/ page

@@ -3,7 +3,7 @@ using StreamVideo.Core;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.StatefulModels;
 
-namespace DocsCodeSamples._03_guides
+namespace StreamVideoDocsCodeSamples._03_guides
 {
     /// <summary>
     /// Code examples for guides/permissions-and-moderation/ page

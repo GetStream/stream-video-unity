@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using StreamVideo.Core;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Models;
-using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.Http;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 
-namespace StreamChat.Core.LowLevelClient.API.Internal
+namespace StreamVideo.Core.LowLevelClient.API.Internal
 {
     /// <summary>
     /// Base Api client

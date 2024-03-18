@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Core.QueryBuilders.Filters.Calls;
-using Core.QueryBuilders.Sort.Calls;
+using StreamVideo.Core.QueryBuilders.Filters.Calls;
+using StreamVideo.Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core;
 using StreamVideo.Core.QueryBuilders.Filters;
 
-namespace DocsCodeSamples._03_guides
+namespace StreamVideoDocsCodeSamples._03_guides
 {
     /// <summary>
     /// Code examples for guides/querying-calls/ page

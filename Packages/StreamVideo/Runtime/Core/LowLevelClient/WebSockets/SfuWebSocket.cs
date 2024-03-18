@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf;
-using Stream.Video.v1.Sfu.Events;
-using Stream.Video.v1.Sfu.Models;
+using StreamVideo.v1.Sfu.Events;
+using StreamVideo.v1.Sfu.Models;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.AppInfo;
@@ -11,8 +11,8 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Websockets;
-using Error = Stream.Video.v1.Sfu.Events.Error;
-using ICETrickle = Stream.Video.v1.Sfu.Models.ICETrickle;
+using Error = StreamVideo.v1.Sfu.Events.Error;
+using ICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {

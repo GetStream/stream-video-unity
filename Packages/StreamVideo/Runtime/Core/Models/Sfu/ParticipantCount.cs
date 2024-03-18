@@ -1,6 +1,6 @@
 ﻿using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
-using SfuParticipantCount = Stream.Video.v1.Sfu.Models.ParticipantCount;
+using SfuParticipantCount = StreamVideo.v1.Sfu.Models.ParticipantCount;
 
 namespace StreamVideo.Core.Models.Sfu
 {

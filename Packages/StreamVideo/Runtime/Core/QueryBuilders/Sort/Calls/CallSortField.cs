@@ -1,7 +1,7 @@
 ﻿using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 
-namespace Core.QueryBuilders.Sort.Calls
+namespace StreamVideo.Core.QueryBuilders.Sort.Calls
 {
     /// <summary>
     /// Fields that you can use to sort <see cref="IStreamCall"/> query results when using <see cref="IStreamVideoClient.QueryCallsAsync"/>

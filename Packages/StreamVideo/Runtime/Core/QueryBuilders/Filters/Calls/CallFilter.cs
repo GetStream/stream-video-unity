@@ -1,7 +1,7 @@
 ﻿using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 
-namespace Core.QueryBuilders.Filters.Calls
+namespace StreamVideo.Core.QueryBuilders.Filters.Calls
 {
     /// <summary>
     /// Filters for <see cref="IStreamCall"/> query filters in <see cref="IStreamVideoClient.QueryCallsAsync"/>

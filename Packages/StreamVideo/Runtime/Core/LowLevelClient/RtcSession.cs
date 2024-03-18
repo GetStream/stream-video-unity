@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using StreamVideo.v1.Sfu.Events;
@@ -27,6 +28,9 @@ using SfuICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
 using StreamVideo.Core.Sfu;
+#if STREAM_DEBUG_ENABLED
+using System.Text;
+#endif
 
 namespace StreamVideo.Core.LowLevelClient
 {

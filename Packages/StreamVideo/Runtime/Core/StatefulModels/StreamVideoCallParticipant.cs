@@ -9,7 +9,7 @@ using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
 using Unity.WebRTC;
-using Participant = Stream.Video.v1.Sfu.Models.Participant;
+using Participant = StreamVideo.v1.Sfu.Models.Participant;
 
 namespace StreamVideo.Core.StatefulModels
 {

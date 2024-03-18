@@ -4,7 +4,7 @@ using StreamVideo.Core.StatefulModels.Tracks;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace DocsCodeSamples._01_basics
+namespace StreamVideoDocsCodeSamples._01_basics
 {
     internal class ParticipantView : MonoBehaviour
     {

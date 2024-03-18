@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using StreamVideo.Core;
 
-namespace DocsCodeSamples._03_guides
+namespace StreamVideoDocsCodeSamples._03_guides
 {
     internal class VideoOptimization
     {

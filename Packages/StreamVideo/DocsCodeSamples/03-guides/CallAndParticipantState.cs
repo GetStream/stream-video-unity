@@ -2,7 +2,7 @@
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 
-namespace DocsCodeSamples._03_guides
+namespace StreamVideoDocsCodeSamples._03_guides
 {
     /// <summary>
     /// Code examples for guides/call-and-participant-state/ page

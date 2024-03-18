@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Core.QueryBuilders.Sort.Calls;
+using StreamVideo.Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.InternalDTO.Events;

@@ -7,7 +7,7 @@ using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
 using UnityEngine;
 
-namespace DocsCodeSamples._01_basics
+namespace StreamVideoDocsCodeSamples._01_basics
 {
     public class VideoManager : MonoBehaviour
     {

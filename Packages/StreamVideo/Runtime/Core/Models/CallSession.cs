@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using Stream.Video.v1.Sfu.Events;
+using StreamVideo.v1.Sfu.Events;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Utils;
-using SfuCallState = Stream.Video.v1.Sfu.Models.CallState;
-using SfuParticipant = Stream.Video.v1.Sfu.Models.Participant;
-using SfuParticipantCount = Stream.Video.v1.Sfu.Models.ParticipantCount;
+using SfuCallState = StreamVideo.v1.Sfu.Models.CallState;
+using SfuParticipant = StreamVideo.v1.Sfu.Models.Participant;
+using SfuParticipantCount = StreamVideo.v1.Sfu.Models.ParticipantCount;
 
 namespace StreamVideo.Core.Models
 {

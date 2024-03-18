@@ -118,10 +118,10 @@ namespace StreamVideo.v1.Sfu.Models {
             "T05fUEVSTUlTU0lPTl9SRVZPS0VEEAISJQohVFJBQ0tfVU5QVUJMSVNIX1JF",
             "QVNPTl9NT0RFUkFUSU9OEAMqbgoMR29Bd2F5UmVhc29uEh4KGkdPX0FXQVlf",
             "UkVBU09OX1VOU1BFQ0lGSUVEEAASIAocR09fQVdBWV9SRUFTT05fU0hVVFRJ",
-            "TkdfRE9XThABEhwKGEdPX0FXQVlfUkVBU09OX1JFQkFMQU5DRRACQmVCC1Nm",
+            "TkdfRE9XThABEhwKGEdPX0FXQVlfUkVBU09OX1JFQkFMQU5DRRACQmRCC1Nm",
             "dU1vZGVsc1YxUAFaN2dpdGh1Yi5jb20vR2V0U3RyZWFtL3Byb3RvY29sL3By",
-            "b3RvYnVmL3ZpZGVvL3NmdS9tb2RlbHOqAhpTdHJlYW0uVmlkZW8udjEuU2Z1",
-            "Lk1vZGVsc2IGcHJvdG8z"));
+            "b3RvYnVmL3ZpZGVvL3NmdS9tb2RlbHOqAhlTdHJlYW1WaWRlby52MS5TZnUu",
+            "TW9kZWxzYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.StructReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.TimestampReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::StreamVideo.v1.Sfu.Models.PeerType), typeof(global::StreamVideo.v1.Sfu.Models.ConnectionQuality), typeof(global::StreamVideo.v1.Sfu.Models.VideoQuality), typeof(global::StreamVideo.v1.Sfu.Models.TrackType), typeof(global::StreamVideo.v1.Sfu.Models.ErrorCode), typeof(global::StreamVideo.v1.Sfu.Models.SdkType), typeof(global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason), typeof(global::StreamVideo.v1.Sfu.Models.GoAwayReason), }, null, new pbr::GeneratedClrTypeInfo[] {

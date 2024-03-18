@@ -109,28 +109,28 @@ namespace StreamVideo.v1.Sfu.Events {
             "TWVkaWFSZXF1ZXN0Ei0KBWNvZGVjGAIgASgLMh4uc3RyZWFtLnZpZGVvLnNm",
             "dS5tb2RlbHMuQ29kZWMiWAoRVmlkZW9NZWRpYVJlcXVlc3QSFAoMaWRlYWxf",
             "aGVpZ2h0GAEgASgFEhMKC2lkZWFsX3dpZHRoGAIgASgFEhgKEGlkZWFsX2Zy",
-            "YW1lX3JhdGUYAyABKAUixgIKEVZpZGVvTGF5ZXJTZXR0aW5nEgwKBG5hbWUY",
+            "YW1lX3JhdGUYAyABKAUi3QIKEVZpZGVvTGF5ZXJTZXR0aW5nEgwKBG5hbWUY",
             "ASABKAkSDgoGYWN0aXZlGAIgASgIEhMKC21heF9iaXRyYXRlGAMgASgFEiAK",
             "GHNjYWxlX3Jlc29sdXRpb25fZG93bl9ieRgEIAEoAhJECghwcmlvcml0eRgF",
             "IAEoDjIyLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuVmlkZW9MYXllclNldHRp",
             "bmcuUHJpb3JpdHkSLQoFY29kZWMYBiABKAsyHi5zdHJlYW0udmlkZW8uc2Z1",
-            "Lm1vZGVscy5Db2RlYyJnCghQcmlvcml0eRIdChlQUklPUklUWV9ISUdIX1VO",
-            "U1BFQ0lGSUVEEAASEAoMUFJJT1JJVFlfTE9XEAESEwoPUFJJT1JJVFlfTUVE",
-            "SVVNEAISFQoRUFJJT1JJVFlfVkVSWV9MT1cQAyK5AQoLVmlkZW9TZW5kZXIS",
-            "QAoNbWVkaWFfcmVxdWVzdBgBIAEoCzIpLnN0cmVhbS52aWRlby5zZnUuZXZl",
-            "bnQuVmlkZW9NZWRpYVJlcXVlc3QSLQoFY29kZWMYAiABKAsyHi5zdHJlYW0u",
-            "dmlkZW8uc2Z1Lm1vZGVscy5Db2RlYxI5CgZsYXllcnMYAyADKAsyKS5zdHJl",
-            "YW0udmlkZW8uc2Z1LmV2ZW50LlZpZGVvTGF5ZXJTZXR0aW5nIo4BChRDaGFu",
-            "Z2VQdWJsaXNoUXVhbGl0eRI6Cg1hdWRpb19zZW5kZXJzGAEgAygLMiMuc3Ry",
-            "ZWFtLnZpZGVvLnNmdS5ldmVudC5BdWRpb1NlbmRlchI6Cg12aWRlb19zZW5k",
-            "ZXJzGAIgAygLMiMuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5WaWRlb1NlbmRl",
-            "ciJhChFDYWxsR3JhbnRzVXBkYXRlZBI7Cg5jdXJyZW50X2dyYW50cxgBIAEo",
-            "CzIjLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkNhbGxHcmFudHMSDwoHbWVz",
-            "c2FnZRgCIAEoCSI/CgZHb0F3YXkSNQoGcmVhc29uGAEgASgOMiUuc3RyZWFt",
-            "LnZpZGVvLnNmdS5tb2RlbHMuR29Bd2F5UmVhc29uQmRCC1NmdUV2ZW50c1Yx",
-            "UAFaNmdpdGh1Yi5jb20vR2V0U3RyZWFtL3Byb3RvY29sL3Byb3RvYnVmL3Zp",
-            "ZGVvL3NmdS9ldmVudKoCGlN0cmVhbS5WaWRlby52MS5TZnUuRXZlbnRzYgZw",
-            "cm90bzM="));
+            "Lm1vZGVscy5Db2RlYxIVCg1tYXhfZnJhbWVyYXRlGAcgASgNImcKCFByaW9y",
+            "aXR5Eh0KGVBSSU9SSVRZX0hJR0hfVU5TUEVDSUZJRUQQABIQCgxQUklPUklU",
+            "WV9MT1cQARITCg9QUklPUklUWV9NRURJVU0QAhIVChFQUklPUklUWV9WRVJZ",
+            "X0xPVxADIrkBCgtWaWRlb1NlbmRlchJACg1tZWRpYV9yZXF1ZXN0GAEgASgL",
+            "Mikuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5WaWRlb01lZGlhUmVxdWVzdBIt",
+            "CgVjb2RlYxgCIAEoCzIeLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkNvZGVj",
+            "EjkKBmxheWVycxgDIAMoCzIpLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuVmlk",
+            "ZW9MYXllclNldHRpbmcijgEKFENoYW5nZVB1Ymxpc2hRdWFsaXR5EjoKDWF1",
+            "ZGlvX3NlbmRlcnMYASADKAsyIy5zdHJlYW0udmlkZW8uc2Z1LmV2ZW50LkF1",
+            "ZGlvU2VuZGVyEjoKDXZpZGVvX3NlbmRlcnMYAiADKAsyIy5zdHJlYW0udmlk",
+            "ZW8uc2Z1LmV2ZW50LlZpZGVvU2VuZGVyImEKEUNhbGxHcmFudHNVcGRhdGVk",
+            "EjsKDmN1cnJlbnRfZ3JhbnRzGAEgASgLMiMuc3RyZWFtLnZpZGVvLnNmdS5t",
+            "b2RlbHMuQ2FsbEdyYW50cxIPCgdtZXNzYWdlGAIgASgJIj8KBkdvQXdheRI1",
+            "CgZyZWFzb24YASABKA4yJS5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5Hb0F3",
+            "YXlSZWFzb25CY0ILU2Z1RXZlbnRzVjFQAVo2Z2l0aHViLmNvbS9HZXRTdHJl",
+            "YW0vcHJvdG9jb2wvcHJvdG9idWYvdmlkZW8vc2Z1L2V2ZW50qgIZU3RyZWFt",
+            "VmlkZW8udjEuU2Z1LkV2ZW50c2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor, global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
@@ -159,7 +159,7 @@ namespace StreamVideo.v1.Sfu.Events {
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioMediaRequest), global::StreamVideo.v1.Sfu.Events.AudioMediaRequest.Parser, new[]{ "ChannelCount" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioSender), global::StreamVideo.v1.Sfu.Events.AudioSender.Parser, new[]{ "MediaRequest", "Codec" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoMediaRequest), global::StreamVideo.v1.Sfu.Events.VideoMediaRequest.Parser, new[]{ "IdealHeight", "IdealWidth", "IdealFrameRate" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting), global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Parser, new[]{ "Name", "Active", "MaxBitrate", "ScaleResolutionDownBy", "Priority", "Codec" }, null, new[]{ typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority) }, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting), global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Parser, new[]{ "Name", "Active", "MaxBitrate", "ScaleResolutionDownBy", "Priority", "Codec", "MaxFramerate" }, null, new[]{ typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority) }, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoSender), global::StreamVideo.v1.Sfu.Events.VideoSender.Parser, new[]{ "MediaRequest", "Codec", "Layers" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ChangePublishQuality), global::StreamVideo.v1.Sfu.Events.ChangePublishQuality.Parser, new[]{ "AudioSenders", "VideoSenders" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated), global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated.Parser, new[]{ "CurrentGrants", "Message" }, null, null, null, null),
@@ -7117,6 +7117,11 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  /// <summary>
+  /// VideoLayerSetting is used to specify various parameters of a particular encoding in simulcast.
+  /// The parameters are specified here - https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpEncodingParameters
+  /// SDKs use these parameters sent from the server to dynamically adjust these parameters to save CPU, bandwidth
+  /// </summary>
   internal sealed partial class VideoLayerSetting : pb::IMessage<VideoLayerSetting>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -7157,6 +7162,7 @@ namespace StreamVideo.v1.Sfu.Events {
       scaleResolutionDownBy_ = other.scaleResolutionDownBy_;
       priority_ = other.priority_;
       codec_ = other.codec_ != null ? other.codec_.Clone() : null;
+      maxFramerate_ = other.maxFramerate_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -7238,6 +7244,18 @@ namespace StreamVideo.v1.Sfu.Events {
       }
     }
 
+    /// <summary>Field number for the "max_framerate" field.</summary>
+    public const int MaxFramerateFieldNumber = 7;
+    private uint maxFramerate_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint MaxFramerate {
+      get { return maxFramerate_; }
+      set {
+        maxFramerate_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -7259,6 +7277,7 @@ namespace StreamVideo.v1.Sfu.Events {
       if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(ScaleResolutionDownBy, other.ScaleResolutionDownBy)) return false;
       if (Priority != other.Priority) return false;
       if (!object.Equals(Codec, other.Codec)) return false;
+      if (MaxFramerate != other.MaxFramerate) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -7272,6 +7291,7 @@ namespace StreamVideo.v1.Sfu.Events {
       if (ScaleResolutionDownBy != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(ScaleResolutionDownBy);
       if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) hash ^= Priority.GetHashCode();
       if (codec_ != null) hash ^= Codec.GetHashCode();
+      if (MaxFramerate != 0) hash ^= MaxFramerate.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -7314,6 +7334,10 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(50);
         output.WriteMessage(Codec);
       }
+      if (MaxFramerate != 0) {
+        output.WriteRawTag(56);
+        output.WriteUInt32(MaxFramerate);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -7348,6 +7372,10 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(50);
         output.WriteMessage(Codec);
       }
+      if (MaxFramerate != 0) {
+        output.WriteRawTag(56);
+        output.WriteUInt32(MaxFramerate);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -7375,6 +7403,9 @@ namespace StreamVideo.v1.Sfu.Events {
       }
       if (codec_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Codec);
+      }
+      if (MaxFramerate != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(MaxFramerate);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -7408,6 +7439,9 @@ namespace StreamVideo.v1.Sfu.Events {
           Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
         }
         Codec.MergeFrom(other.Codec);
+      }
+      if (other.MaxFramerate != 0) {
+        MaxFramerate = other.MaxFramerate;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -7451,6 +7485,10 @@ namespace StreamVideo.v1.Sfu.Events {
             input.ReadMessage(Codec);
             break;
           }
+          case 56: {
+            MaxFramerate = input.ReadUInt32();
+            break;
+          }
         }
       }
     #endif
@@ -7491,6 +7529,10 @@ namespace StreamVideo.v1.Sfu.Events {
               Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
             }
             input.ReadMessage(Codec);
+            break;
+          }
+          case 56: {
+            MaxFramerate = input.ReadUInt32();
             break;
           }
         }

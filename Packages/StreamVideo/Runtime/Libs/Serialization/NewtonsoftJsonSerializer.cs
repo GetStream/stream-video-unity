@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -10,15 +11,41 @@ namespace StreamVideo.Libs.Serialization
     public class NewtonsoftJsonSerializer : ISerializer
     {
         public string Serialize<TType>(TType obj)
-            => JsonConvert.SerializeObject(obj, Formatting.None,
-                new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    MissingMemberHandling = MissingMemberHandling.Ignore,
-                });
+            => JsonConvert.SerializeObject(obj, Formatting.None, _defaultSettings);
 
-        public TType Deserialize<TType>(string serializedObj)
-            => JsonConvert.DeserializeObject<TType>(serializedObj);
+        public string Serialize<TType>(TType obj, ISerializationOptions serializationOptions)
+        {
+            var settings = CreateCustomSettings(serializationOptions);
+            return JsonConvert.SerializeObject(obj, Formatting.None, settings);
+        }
+
+        private JsonSerializerSettings CreateCustomSettings(ISerializationOptions serializationOptions)
+        {
+            var settings = new JsonSerializerSettings(_defaultSettings);
+
+            if (serializationOptions.IgnorePropertyHandler != null)
+            {
+                settings.ContractResolver = new IgnorePropertiesResolver(serializationOptions.IgnorePropertyHandler);
+            }
+
+            if (serializationOptions.Converters != null)
+            {
+                var jsonConverters = new List<JsonConverter>(serializationOptions.Converters.Length);
+
+                foreach (var sourceConverter in serializationOptions.Converters)
+                {
+                    var converter = new SerializationConverter(sourceConverter);
+                    jsonConverters.Add(converter);
+                }
+
+                settings.Converters = jsonConverters;
+
+            }
+
+            return settings;
+        }
+
+        public TType Deserialize<TType>(string serializedObj) => JsonConvert.DeserializeObject<TType>(serializedObj);
 
         public TTargetType TryConvertTo<TTargetType>(object serializedObj)
         {
@@ -44,7 +71,7 @@ namespace StreamVideo.Libs.Serialization
 
             try
             {
-                return (TTargetType) Convert.ChangeType(serializedObj, typeof(TTargetType));
+                return (TTargetType)Convert.ChangeType(serializedObj, typeof(TTargetType));
             }
             catch (InvalidCastException)
             {
@@ -52,8 +79,7 @@ namespace StreamVideo.Libs.Serialization
             }
         }
 
-        public object DeserializeObject(string serializedObj)
-            => JsonConvert.DeserializeObject(serializedObj);
+        public object DeserializeObject(string serializedObj) => JsonConvert.DeserializeObject(serializedObj);
 
         public bool TryPeekValue<TValue>(string serializedObj, string key, out TValue value)
         {
@@ -80,5 +106,11 @@ namespace StreamVideo.Libs.Serialization
 
             throw new Exception("Unhandled object type: " + obj.GetType());
         }
+        
+        private readonly JsonSerializerSettings _defaultSettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            MissingMemberHandling = MissingMemberHandling.Ignore,
+        };
     }
 }

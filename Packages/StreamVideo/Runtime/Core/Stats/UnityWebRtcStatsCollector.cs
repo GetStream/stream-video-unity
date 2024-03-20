@@ -14,7 +14,6 @@ namespace StreamVideo.Core.Stats
         private readonly RtcSession _rtcSession;
         private readonly ISerializer _serializer;
 
-
         public async Task<string> GetPublisherStatsJsonAsync()
         {
             var report = await _rtcSession.Publisher.GetStatsReportAsync();

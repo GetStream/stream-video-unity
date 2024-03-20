@@ -36,7 +36,7 @@ namespace StreamVideo.Core.LowLevelClient
     public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
 
     public delegate void ParticipantLeftHandler(string sessionId, string userId);
-    
+
     //StreamTodo: Implement GeneratedApi.UpdateMuteStates
     //StreamTodo: Implement GeneratedApi.RestartIce
     //StreamTodo: Rename GeneratedAPI to SfuRpcApi
@@ -71,7 +71,7 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public StreamCall ActiveCall { get; private set; }
-        
+
         public StreamPeerConnection Subscriber { get; private set; }
         public StreamPeerConnection Publisher { get; private set; }
 
@@ -179,18 +179,18 @@ namespace StreamVideo.Core.LowLevelClient
 
             TryExecuteSubscribeToTracks();
         }
-        
+
         public async Task SendWebRtcStats(SendStatsRequest request)
         {
             var response = await RpcCallAsync(request, GeneratedAPI.SendStats,
                 nameof(GeneratedAPI.SendStats));
-            
+
             if (ActiveCall == null)
             {
                 //Ignore if call ended during this request
                 return;
             }
-            
+
             if (response.Error != null)
             {
                 _logs.Error(response.Error.Message);
@@ -488,10 +488,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private async Task SendSfuStats(SendStatsRequest request)
-        {
-            RpcCallAsync(request, GeneratedAPI.SendStats, nameof(GeneratedAPI.SendStats));
-        }
+        private Task SendSfuStats(SendStatsRequest request)
+            => RpcCallAsync(request, GeneratedAPI.SendStats, nameof(GeneratedAPI.SendStats));
 
         private void OnSfuJoinResponse(JoinResponse joinResponse)
         {
@@ -726,7 +724,6 @@ namespace StreamVideo.Core.LowLevelClient
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
         {
-
             //StreamTodo: use rpcCallAsync.GetMethodInfo().Name; instead debugRequestName
 
 #if STREAM_DEBUG_ENABLED

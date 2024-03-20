@@ -128,7 +128,7 @@ namespace StreamVideo.Core.LowLevelClient
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _config = config ?? throw new ArgumentNullException(nameof(config));
 
-            _logs.Prefix = "[Stream Chat] ";
+            _logs.Prefix = "[Stream Video] ";
 
             _requestUriFactory = new RequestUriFactory(authProvider: this, connectionProvider: this, () =>
                 BuildStreamClientHeader(new UnityApplicationInfo()));

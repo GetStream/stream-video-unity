@@ -488,9 +488,6 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private Task SendSfuStats(SendStatsRequest request)
-            => RpcCallAsync(request, GeneratedAPI.SendStats, nameof(GeneratedAPI.SendStats));
-
         private void OnSfuJoinResponse(JoinResponse joinResponse)
         {
             _logs.InfoIfDebug($"Handle Sfu {nameof(JoinResponse)}");

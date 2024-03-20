@@ -9,7 +9,7 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace Stream.Video.v1.Sfu.Events {
+namespace StreamVideo.v1.Sfu.Events {
 
   /// <summary>Holder for reflection information generated from video/sfu/event/events.proto</summary>
   internal static partial class EventsReflection {
@@ -109,61 +109,61 @@ namespace Stream.Video.v1.Sfu.Events {
             "TWVkaWFSZXF1ZXN0Ei0KBWNvZGVjGAIgASgLMh4uc3RyZWFtLnZpZGVvLnNm",
             "dS5tb2RlbHMuQ29kZWMiWAoRVmlkZW9NZWRpYVJlcXVlc3QSFAoMaWRlYWxf",
             "aGVpZ2h0GAEgASgFEhMKC2lkZWFsX3dpZHRoGAIgASgFEhgKEGlkZWFsX2Zy",
-            "YW1lX3JhdGUYAyABKAUixgIKEVZpZGVvTGF5ZXJTZXR0aW5nEgwKBG5hbWUY",
+            "YW1lX3JhdGUYAyABKAUi3QIKEVZpZGVvTGF5ZXJTZXR0aW5nEgwKBG5hbWUY",
             "ASABKAkSDgoGYWN0aXZlGAIgASgIEhMKC21heF9iaXRyYXRlGAMgASgFEiAK",
             "GHNjYWxlX3Jlc29sdXRpb25fZG93bl9ieRgEIAEoAhJECghwcmlvcml0eRgF",
             "IAEoDjIyLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuVmlkZW9MYXllclNldHRp",
             "bmcuUHJpb3JpdHkSLQoFY29kZWMYBiABKAsyHi5zdHJlYW0udmlkZW8uc2Z1",
-            "Lm1vZGVscy5Db2RlYyJnCghQcmlvcml0eRIdChlQUklPUklUWV9ISUdIX1VO",
-            "U1BFQ0lGSUVEEAASEAoMUFJJT1JJVFlfTE9XEAESEwoPUFJJT1JJVFlfTUVE",
-            "SVVNEAISFQoRUFJJT1JJVFlfVkVSWV9MT1cQAyK5AQoLVmlkZW9TZW5kZXIS",
-            "QAoNbWVkaWFfcmVxdWVzdBgBIAEoCzIpLnN0cmVhbS52aWRlby5zZnUuZXZl",
-            "bnQuVmlkZW9NZWRpYVJlcXVlc3QSLQoFY29kZWMYAiABKAsyHi5zdHJlYW0u",
-            "dmlkZW8uc2Z1Lm1vZGVscy5Db2RlYxI5CgZsYXllcnMYAyADKAsyKS5zdHJl",
-            "YW0udmlkZW8uc2Z1LmV2ZW50LlZpZGVvTGF5ZXJTZXR0aW5nIo4BChRDaGFu",
-            "Z2VQdWJsaXNoUXVhbGl0eRI6Cg1hdWRpb19zZW5kZXJzGAEgAygLMiMuc3Ry",
-            "ZWFtLnZpZGVvLnNmdS5ldmVudC5BdWRpb1NlbmRlchI6Cg12aWRlb19zZW5k",
-            "ZXJzGAIgAygLMiMuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5WaWRlb1NlbmRl",
-            "ciJhChFDYWxsR3JhbnRzVXBkYXRlZBI7Cg5jdXJyZW50X2dyYW50cxgBIAEo",
-            "CzIjLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkNhbGxHcmFudHMSDwoHbWVz",
-            "c2FnZRgCIAEoCSI/CgZHb0F3YXkSNQoGcmVhc29uGAEgASgOMiUuc3RyZWFt",
-            "LnZpZGVvLnNmdS5tb2RlbHMuR29Bd2F5UmVhc29uQmRCC1NmdUV2ZW50c1Yx",
-            "UAFaNmdpdGh1Yi5jb20vR2V0U3RyZWFtL3Byb3RvY29sL3Byb3RvYnVmL3Zp",
-            "ZGVvL3NmdS9ldmVudKoCGlN0cmVhbS5WaWRlby52MS5TZnUuRXZlbnRzYgZw",
-            "cm90bzM="));
+            "Lm1vZGVscy5Db2RlYxIVCg1tYXhfZnJhbWVyYXRlGAcgASgNImcKCFByaW9y",
+            "aXR5Eh0KGVBSSU9SSVRZX0hJR0hfVU5TUEVDSUZJRUQQABIQCgxQUklPUklU",
+            "WV9MT1cQARITCg9QUklPUklUWV9NRURJVU0QAhIVChFQUklPUklUWV9WRVJZ",
+            "X0xPVxADIrkBCgtWaWRlb1NlbmRlchJACg1tZWRpYV9yZXF1ZXN0GAEgASgL",
+            "Mikuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5WaWRlb01lZGlhUmVxdWVzdBIt",
+            "CgVjb2RlYxgCIAEoCzIeLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkNvZGVj",
+            "EjkKBmxheWVycxgDIAMoCzIpLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuVmlk",
+            "ZW9MYXllclNldHRpbmcijgEKFENoYW5nZVB1Ymxpc2hRdWFsaXR5EjoKDWF1",
+            "ZGlvX3NlbmRlcnMYASADKAsyIy5zdHJlYW0udmlkZW8uc2Z1LmV2ZW50LkF1",
+            "ZGlvU2VuZGVyEjoKDXZpZGVvX3NlbmRlcnMYAiADKAsyIy5zdHJlYW0udmlk",
+            "ZW8uc2Z1LmV2ZW50LlZpZGVvU2VuZGVyImEKEUNhbGxHcmFudHNVcGRhdGVk",
+            "EjsKDmN1cnJlbnRfZ3JhbnRzGAEgASgLMiMuc3RyZWFtLnZpZGVvLnNmdS5t",
+            "b2RlbHMuQ2FsbEdyYW50cxIPCgdtZXNzYWdlGAIgASgJIj8KBkdvQXdheRI1",
+            "CgZyZWFzb24YASABKA4yJS5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5Hb0F3",
+            "YXlSZWFzb25CY0ILU2Z1RXZlbnRzVjFQAVo2Z2l0aHViLmNvbS9HZXRTdHJl",
+            "YW0vcHJvdG9jb2wvcHJvdG9idWYvdmlkZW8vc2Z1L2V2ZW50qgIZU3RyZWFt",
+            "VmlkZW8udjEuU2Z1LkV2ZW50c2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::Stream.Video.v1.Sfu.Models.ModelsReflection.Descriptor, global::Stream.Video.v1.Sfu.Signal.SignalReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor, global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.SfuEvent), global::Stream.Video.v1.Sfu.Events.SfuEvent.Parser, new[]{ "SubscriberOffer", "PublisherAnswer", "ConnectionQualityChanged", "AudioLevelChanged", "IceTrickle", "ChangePublishQuality", "ParticipantJoined", "ParticipantLeft", "DominantSpeakerChanged", "JoinResponse", "HealthCheckResponse", "TrackPublished", "TrackUnpublished", "Error", "CallGrantsUpdated", "GoAway", "IceRestart", "PinsUpdated" }, new[]{ "EventPayload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.PinsChanged), global::Stream.Video.v1.Sfu.Events.PinsChanged.Parser, new[]{ "Pins" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.Error), global::Stream.Video.v1.Sfu.Events.Error.Parser, new[]{ "Error_" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.ICETrickle), global::Stream.Video.v1.Sfu.Events.ICETrickle.Parser, new[]{ "PeerType", "IceCandidate" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.ICERestart), global::Stream.Video.v1.Sfu.Events.ICERestart.Parser, new[]{ "PeerType" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.SfuRequest), global::Stream.Video.v1.Sfu.Events.SfuRequest.Parser, new[]{ "JoinRequest", "HealthCheckRequest" }, new[]{ "RequestPayload" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.HealthCheckRequest), global::Stream.Video.v1.Sfu.Events.HealthCheckRequest.Parser, null, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.HealthCheckResponse), global::Stream.Video.v1.Sfu.Events.HealthCheckResponse.Parser, new[]{ "ParticipantCount" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.TrackPublished), global::Stream.Video.v1.Sfu.Events.TrackPublished.Parser, new[]{ "UserId", "SessionId", "Type", "Participant" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.TrackUnpublished), global::Stream.Video.v1.Sfu.Events.TrackUnpublished.Parser, new[]{ "UserId", "SessionId", "Type", "Cause", "Participant" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.JoinRequest), global::Stream.Video.v1.Sfu.Events.JoinRequest.Parser, new[]{ "Token", "SessionId", "SubscriberSdp", "ClientDetails", "Migration", "FastReconnect" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.Migration), global::Stream.Video.v1.Sfu.Events.Migration.Parser, new[]{ "FromSfuId", "AnnouncedTracks", "Subscriptions" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.JoinResponse), global::Stream.Video.v1.Sfu.Events.JoinResponse.Parser, new[]{ "CallState", "Reconnected" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.ParticipantJoined), global::Stream.Video.v1.Sfu.Events.ParticipantJoined.Parser, new[]{ "CallCid", "Participant" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.ParticipantLeft), global::Stream.Video.v1.Sfu.Events.ParticipantLeft.Parser, new[]{ "CallCid", "Participant" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.SubscriberOffer), global::Stream.Video.v1.Sfu.Events.SubscriberOffer.Parser, new[]{ "IceRestart", "Sdp" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.PublisherAnswer), global::Stream.Video.v1.Sfu.Events.PublisherAnswer.Parser, new[]{ "Sdp" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged), global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged.Parser, new[]{ "ConnectionQualityUpdates" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.ConnectionQualityInfo), global::Stream.Video.v1.Sfu.Events.ConnectionQualityInfo.Parser, new[]{ "UserId", "SessionId", "ConnectionQuality" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged), global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged.Parser, new[]{ "UserId", "SessionId" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.AudioLevel), global::Stream.Video.v1.Sfu.Events.AudioLevel.Parser, new[]{ "UserId", "SessionId", "Level", "IsSpeaking" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.AudioLevelChanged), global::Stream.Video.v1.Sfu.Events.AudioLevelChanged.Parser, new[]{ "AudioLevels" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.AudioMediaRequest), global::Stream.Video.v1.Sfu.Events.AudioMediaRequest.Parser, new[]{ "ChannelCount" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.AudioSender), global::Stream.Video.v1.Sfu.Events.AudioSender.Parser, new[]{ "MediaRequest", "Codec" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.VideoMediaRequest), global::Stream.Video.v1.Sfu.Events.VideoMediaRequest.Parser, new[]{ "IdealHeight", "IdealWidth", "IdealFrameRate" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.VideoLayerSetting), global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Parser, new[]{ "Name", "Active", "MaxBitrate", "ScaleResolutionDownBy", "Priority", "Codec" }, null, new[]{ typeof(global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority) }, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.VideoSender), global::Stream.Video.v1.Sfu.Events.VideoSender.Parser, new[]{ "MediaRequest", "Codec", "Layers" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.ChangePublishQuality), global::Stream.Video.v1.Sfu.Events.ChangePublishQuality.Parser, new[]{ "AudioSenders", "VideoSenders" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated), global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated.Parser, new[]{ "CurrentGrants", "Message" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Stream.Video.v1.Sfu.Events.GoAway), global::Stream.Video.v1.Sfu.Events.GoAway.Parser, new[]{ "Reason" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.SfuEvent), global::StreamVideo.v1.Sfu.Events.SfuEvent.Parser, new[]{ "SubscriberOffer", "PublisherAnswer", "ConnectionQualityChanged", "AudioLevelChanged", "IceTrickle", "ChangePublishQuality", "ParticipantJoined", "ParticipantLeft", "DominantSpeakerChanged", "JoinResponse", "HealthCheckResponse", "TrackPublished", "TrackUnpublished", "Error", "CallGrantsUpdated", "GoAway", "IceRestart", "PinsUpdated" }, new[]{ "EventPayload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.PinsChanged), global::StreamVideo.v1.Sfu.Events.PinsChanged.Parser, new[]{ "Pins" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.Error), global::StreamVideo.v1.Sfu.Events.Error.Parser, new[]{ "Error_" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ICETrickle), global::StreamVideo.v1.Sfu.Events.ICETrickle.Parser, new[]{ "PeerType", "IceCandidate" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ICERestart), global::StreamVideo.v1.Sfu.Events.ICERestart.Parser, new[]{ "PeerType" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.SfuRequest), global::StreamVideo.v1.Sfu.Events.SfuRequest.Parser, new[]{ "JoinRequest", "HealthCheckRequest" }, new[]{ "RequestPayload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.HealthCheckRequest), global::StreamVideo.v1.Sfu.Events.HealthCheckRequest.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.HealthCheckResponse), global::StreamVideo.v1.Sfu.Events.HealthCheckResponse.Parser, new[]{ "ParticipantCount" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.TrackPublished), global::StreamVideo.v1.Sfu.Events.TrackPublished.Parser, new[]{ "UserId", "SessionId", "Type", "Participant" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.TrackUnpublished), global::StreamVideo.v1.Sfu.Events.TrackUnpublished.Parser, new[]{ "UserId", "SessionId", "Type", "Cause", "Participant" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.JoinRequest), global::StreamVideo.v1.Sfu.Events.JoinRequest.Parser, new[]{ "Token", "SessionId", "SubscriberSdp", "ClientDetails", "Migration", "FastReconnect" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.Migration), global::StreamVideo.v1.Sfu.Events.Migration.Parser, new[]{ "FromSfuId", "AnnouncedTracks", "Subscriptions" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.JoinResponse), global::StreamVideo.v1.Sfu.Events.JoinResponse.Parser, new[]{ "CallState", "Reconnected" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ParticipantJoined), global::StreamVideo.v1.Sfu.Events.ParticipantJoined.Parser, new[]{ "CallCid", "Participant" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ParticipantLeft), global::StreamVideo.v1.Sfu.Events.ParticipantLeft.Parser, new[]{ "CallCid", "Participant" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.SubscriberOffer), global::StreamVideo.v1.Sfu.Events.SubscriberOffer.Parser, new[]{ "IceRestart", "Sdp" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.PublisherAnswer), global::StreamVideo.v1.Sfu.Events.PublisherAnswer.Parser, new[]{ "Sdp" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged), global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged.Parser, new[]{ "ConnectionQualityUpdates" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ConnectionQualityInfo), global::StreamVideo.v1.Sfu.Events.ConnectionQualityInfo.Parser, new[]{ "UserId", "SessionId", "ConnectionQuality" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged), global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged.Parser, new[]{ "UserId", "SessionId" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioLevel), global::StreamVideo.v1.Sfu.Events.AudioLevel.Parser, new[]{ "UserId", "SessionId", "Level", "IsSpeaking" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioLevelChanged), global::StreamVideo.v1.Sfu.Events.AudioLevelChanged.Parser, new[]{ "AudioLevels" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioMediaRequest), global::StreamVideo.v1.Sfu.Events.AudioMediaRequest.Parser, new[]{ "ChannelCount" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioSender), global::StreamVideo.v1.Sfu.Events.AudioSender.Parser, new[]{ "MediaRequest", "Codec" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoMediaRequest), global::StreamVideo.v1.Sfu.Events.VideoMediaRequest.Parser, new[]{ "IdealHeight", "IdealWidth", "IdealFrameRate" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting), global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Parser, new[]{ "Name", "Active", "MaxBitrate", "ScaleResolutionDownBy", "Priority", "Codec", "MaxFramerate" }, null, new[]{ typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority) }, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoSender), global::StreamVideo.v1.Sfu.Events.VideoSender.Parser, new[]{ "MediaRequest", "Codec", "Layers" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ChangePublishQuality), global::StreamVideo.v1.Sfu.Events.ChangePublishQuality.Parser, new[]{ "AudioSenders", "VideoSenders" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated), global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated.Parser, new[]{ "CurrentGrants", "Message" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.GoAway), global::StreamVideo.v1.Sfu.Events.GoAway.Parser, new[]{ "Reason" }, null, null, null, null)
           }));
     }
     #endregion
@@ -187,7 +187,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[0]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -281,8 +281,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.SubscriberOffer SubscriberOffer {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.SubscriberOffer ? (global::Stream.Video.v1.Sfu.Events.SubscriberOffer) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.SubscriberOffer SubscriberOffer {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.SubscriberOffer ? (global::StreamVideo.v1.Sfu.Events.SubscriberOffer) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.SubscriberOffer;
@@ -297,8 +297,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.PublisherAnswer PublisherAnswer {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.PublisherAnswer ? (global::Stream.Video.v1.Sfu.Events.PublisherAnswer) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.PublisherAnswer PublisherAnswer {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.PublisherAnswer ? (global::StreamVideo.v1.Sfu.Events.PublisherAnswer) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.PublisherAnswer;
@@ -314,8 +314,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged ConnectionQualityChanged {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.ConnectionQualityChanged ? (global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged ConnectionQualityChanged {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.ConnectionQualityChanged ? (global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.ConnectionQualityChanged;
@@ -330,8 +330,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.AudioLevelChanged AudioLevelChanged {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.AudioLevelChanged ? (global::Stream.Video.v1.Sfu.Events.AudioLevelChanged) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.AudioLevelChanged AudioLevelChanged {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.AudioLevelChanged ? (global::StreamVideo.v1.Sfu.Events.AudioLevelChanged) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.AudioLevelChanged;
@@ -347,8 +347,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.ICETrickle IceTrickle {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.IceTrickle ? (global::Stream.Video.v1.Sfu.Models.ICETrickle) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Models.ICETrickle IceTrickle {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.IceTrickle ? (global::StreamVideo.v1.Sfu.Models.ICETrickle) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.IceTrickle;
@@ -364,8 +364,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.ChangePublishQuality ChangePublishQuality {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.ChangePublishQuality ? (global::Stream.Video.v1.Sfu.Events.ChangePublishQuality) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.ChangePublishQuality ChangePublishQuality {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.ChangePublishQuality ? (global::StreamVideo.v1.Sfu.Events.ChangePublishQuality) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.ChangePublishQuality;
@@ -380,8 +380,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.ParticipantJoined ParticipantJoined {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.ParticipantJoined ? (global::Stream.Video.v1.Sfu.Events.ParticipantJoined) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.ParticipantJoined ParticipantJoined {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.ParticipantJoined ? (global::StreamVideo.v1.Sfu.Events.ParticipantJoined) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.ParticipantJoined;
@@ -396,8 +396,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.ParticipantLeft ParticipantLeft {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.ParticipantLeft ? (global::Stream.Video.v1.Sfu.Events.ParticipantLeft) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.ParticipantLeft ParticipantLeft {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.ParticipantLeft ? (global::StreamVideo.v1.Sfu.Events.ParticipantLeft) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.ParticipantLeft;
@@ -413,8 +413,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged DominantSpeakerChanged {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.DominantSpeakerChanged ? (global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged DominantSpeakerChanged {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.DominantSpeakerChanged ? (global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.DominantSpeakerChanged;
@@ -429,8 +429,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.JoinResponse JoinResponse {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.JoinResponse ? (global::Stream.Video.v1.Sfu.Events.JoinResponse) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.JoinResponse JoinResponse {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.JoinResponse ? (global::StreamVideo.v1.Sfu.Events.JoinResponse) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.JoinResponse;
@@ -445,8 +445,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.HealthCheckResponse HealthCheckResponse {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.HealthCheckResponse ? (global::Stream.Video.v1.Sfu.Events.HealthCheckResponse) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.HealthCheckResponse HealthCheckResponse {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.HealthCheckResponse ? (global::StreamVideo.v1.Sfu.Events.HealthCheckResponse) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.HealthCheckResponse;
@@ -461,8 +461,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.TrackPublished TrackPublished {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.TrackPublished ? (global::Stream.Video.v1.Sfu.Events.TrackPublished) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.TrackPublished TrackPublished {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.TrackPublished ? (global::StreamVideo.v1.Sfu.Events.TrackPublished) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.TrackPublished;
@@ -478,8 +478,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.TrackUnpublished TrackUnpublished {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.TrackUnpublished ? (global::Stream.Video.v1.Sfu.Events.TrackUnpublished) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.TrackUnpublished TrackUnpublished {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.TrackUnpublished ? (global::StreamVideo.v1.Sfu.Events.TrackUnpublished) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.TrackUnpublished;
@@ -495,8 +495,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.Error Error {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.Error ? (global::Stream.Video.v1.Sfu.Events.Error) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.Error Error {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.Error ? (global::StreamVideo.v1.Sfu.Events.Error) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.Error;
@@ -510,8 +510,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated CallGrantsUpdated {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.CallGrantsUpdated ? (global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated CallGrantsUpdated {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.CallGrantsUpdated ? (global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.CallGrantsUpdated;
@@ -526,8 +526,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.GoAway GoAway {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.GoAway ? (global::Stream.Video.v1.Sfu.Events.GoAway) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.GoAway GoAway {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.GoAway ? (global::StreamVideo.v1.Sfu.Events.GoAway) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.GoAway;
@@ -541,8 +541,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.ICERestart IceRestart {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.IceRestart ? (global::Stream.Video.v1.Sfu.Events.ICERestart) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.ICERestart IceRestart {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.IceRestart ? (global::StreamVideo.v1.Sfu.Events.ICERestart) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.IceRestart;
@@ -556,8 +556,8 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.PinsChanged PinsUpdated {
-      get { return eventPayloadCase_ == EventPayloadOneofCase.PinsUpdated ? (global::Stream.Video.v1.Sfu.Events.PinsChanged) eventPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.PinsChanged PinsUpdated {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.PinsUpdated ? (global::StreamVideo.v1.Sfu.Events.PinsChanged) eventPayload_ : null; }
       set {
         eventPayload_ = value;
         eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.PinsUpdated;
@@ -912,109 +912,109 @@ namespace Stream.Video.v1.Sfu.Events {
       switch (other.EventPayloadCase) {
         case EventPayloadOneofCase.SubscriberOffer:
           if (SubscriberOffer == null) {
-            SubscriberOffer = new global::Stream.Video.v1.Sfu.Events.SubscriberOffer();
+            SubscriberOffer = new global::StreamVideo.v1.Sfu.Events.SubscriberOffer();
           }
           SubscriberOffer.MergeFrom(other.SubscriberOffer);
           break;
         case EventPayloadOneofCase.PublisherAnswer:
           if (PublisherAnswer == null) {
-            PublisherAnswer = new global::Stream.Video.v1.Sfu.Events.PublisherAnswer();
+            PublisherAnswer = new global::StreamVideo.v1.Sfu.Events.PublisherAnswer();
           }
           PublisherAnswer.MergeFrom(other.PublisherAnswer);
           break;
         case EventPayloadOneofCase.ConnectionQualityChanged:
           if (ConnectionQualityChanged == null) {
-            ConnectionQualityChanged = new global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged();
+            ConnectionQualityChanged = new global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged();
           }
           ConnectionQualityChanged.MergeFrom(other.ConnectionQualityChanged);
           break;
         case EventPayloadOneofCase.AudioLevelChanged:
           if (AudioLevelChanged == null) {
-            AudioLevelChanged = new global::Stream.Video.v1.Sfu.Events.AudioLevelChanged();
+            AudioLevelChanged = new global::StreamVideo.v1.Sfu.Events.AudioLevelChanged();
           }
           AudioLevelChanged.MergeFrom(other.AudioLevelChanged);
           break;
         case EventPayloadOneofCase.IceTrickle:
           if (IceTrickle == null) {
-            IceTrickle = new global::Stream.Video.v1.Sfu.Models.ICETrickle();
+            IceTrickle = new global::StreamVideo.v1.Sfu.Models.ICETrickle();
           }
           IceTrickle.MergeFrom(other.IceTrickle);
           break;
         case EventPayloadOneofCase.ChangePublishQuality:
           if (ChangePublishQuality == null) {
-            ChangePublishQuality = new global::Stream.Video.v1.Sfu.Events.ChangePublishQuality();
+            ChangePublishQuality = new global::StreamVideo.v1.Sfu.Events.ChangePublishQuality();
           }
           ChangePublishQuality.MergeFrom(other.ChangePublishQuality);
           break;
         case EventPayloadOneofCase.ParticipantJoined:
           if (ParticipantJoined == null) {
-            ParticipantJoined = new global::Stream.Video.v1.Sfu.Events.ParticipantJoined();
+            ParticipantJoined = new global::StreamVideo.v1.Sfu.Events.ParticipantJoined();
           }
           ParticipantJoined.MergeFrom(other.ParticipantJoined);
           break;
         case EventPayloadOneofCase.ParticipantLeft:
           if (ParticipantLeft == null) {
-            ParticipantLeft = new global::Stream.Video.v1.Sfu.Events.ParticipantLeft();
+            ParticipantLeft = new global::StreamVideo.v1.Sfu.Events.ParticipantLeft();
           }
           ParticipantLeft.MergeFrom(other.ParticipantLeft);
           break;
         case EventPayloadOneofCase.DominantSpeakerChanged:
           if (DominantSpeakerChanged == null) {
-            DominantSpeakerChanged = new global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged();
+            DominantSpeakerChanged = new global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged();
           }
           DominantSpeakerChanged.MergeFrom(other.DominantSpeakerChanged);
           break;
         case EventPayloadOneofCase.JoinResponse:
           if (JoinResponse == null) {
-            JoinResponse = new global::Stream.Video.v1.Sfu.Events.JoinResponse();
+            JoinResponse = new global::StreamVideo.v1.Sfu.Events.JoinResponse();
           }
           JoinResponse.MergeFrom(other.JoinResponse);
           break;
         case EventPayloadOneofCase.HealthCheckResponse:
           if (HealthCheckResponse == null) {
-            HealthCheckResponse = new global::Stream.Video.v1.Sfu.Events.HealthCheckResponse();
+            HealthCheckResponse = new global::StreamVideo.v1.Sfu.Events.HealthCheckResponse();
           }
           HealthCheckResponse.MergeFrom(other.HealthCheckResponse);
           break;
         case EventPayloadOneofCase.TrackPublished:
           if (TrackPublished == null) {
-            TrackPublished = new global::Stream.Video.v1.Sfu.Events.TrackPublished();
+            TrackPublished = new global::StreamVideo.v1.Sfu.Events.TrackPublished();
           }
           TrackPublished.MergeFrom(other.TrackPublished);
           break;
         case EventPayloadOneofCase.TrackUnpublished:
           if (TrackUnpublished == null) {
-            TrackUnpublished = new global::Stream.Video.v1.Sfu.Events.TrackUnpublished();
+            TrackUnpublished = new global::StreamVideo.v1.Sfu.Events.TrackUnpublished();
           }
           TrackUnpublished.MergeFrom(other.TrackUnpublished);
           break;
         case EventPayloadOneofCase.Error:
           if (Error == null) {
-            Error = new global::Stream.Video.v1.Sfu.Events.Error();
+            Error = new global::StreamVideo.v1.Sfu.Events.Error();
           }
           Error.MergeFrom(other.Error);
           break;
         case EventPayloadOneofCase.CallGrantsUpdated:
           if (CallGrantsUpdated == null) {
-            CallGrantsUpdated = new global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated();
+            CallGrantsUpdated = new global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated();
           }
           CallGrantsUpdated.MergeFrom(other.CallGrantsUpdated);
           break;
         case EventPayloadOneofCase.GoAway:
           if (GoAway == null) {
-            GoAway = new global::Stream.Video.v1.Sfu.Events.GoAway();
+            GoAway = new global::StreamVideo.v1.Sfu.Events.GoAway();
           }
           GoAway.MergeFrom(other.GoAway);
           break;
         case EventPayloadOneofCase.IceRestart:
           if (IceRestart == null) {
-            IceRestart = new global::Stream.Video.v1.Sfu.Events.ICERestart();
+            IceRestart = new global::StreamVideo.v1.Sfu.Events.ICERestart();
           }
           IceRestart.MergeFrom(other.IceRestart);
           break;
         case EventPayloadOneofCase.PinsUpdated:
           if (PinsUpdated == null) {
-            PinsUpdated = new global::Stream.Video.v1.Sfu.Events.PinsChanged();
+            PinsUpdated = new global::StreamVideo.v1.Sfu.Events.PinsChanged();
           }
           PinsUpdated.MergeFrom(other.PinsUpdated);
           break;
@@ -1036,7 +1036,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            global::Stream.Video.v1.Sfu.Events.SubscriberOffer subBuilder = new global::Stream.Video.v1.Sfu.Events.SubscriberOffer();
+            global::StreamVideo.v1.Sfu.Events.SubscriberOffer subBuilder = new global::StreamVideo.v1.Sfu.Events.SubscriberOffer();
             if (eventPayloadCase_ == EventPayloadOneofCase.SubscriberOffer) {
               subBuilder.MergeFrom(SubscriberOffer);
             }
@@ -1045,7 +1045,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 18: {
-            global::Stream.Video.v1.Sfu.Events.PublisherAnswer subBuilder = new global::Stream.Video.v1.Sfu.Events.PublisherAnswer();
+            global::StreamVideo.v1.Sfu.Events.PublisherAnswer subBuilder = new global::StreamVideo.v1.Sfu.Events.PublisherAnswer();
             if (eventPayloadCase_ == EventPayloadOneofCase.PublisherAnswer) {
               subBuilder.MergeFrom(PublisherAnswer);
             }
@@ -1054,7 +1054,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 26: {
-            global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged subBuilder = new global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged();
+            global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged subBuilder = new global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged();
             if (eventPayloadCase_ == EventPayloadOneofCase.ConnectionQualityChanged) {
               subBuilder.MergeFrom(ConnectionQualityChanged);
             }
@@ -1063,7 +1063,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 34: {
-            global::Stream.Video.v1.Sfu.Events.AudioLevelChanged subBuilder = new global::Stream.Video.v1.Sfu.Events.AudioLevelChanged();
+            global::StreamVideo.v1.Sfu.Events.AudioLevelChanged subBuilder = new global::StreamVideo.v1.Sfu.Events.AudioLevelChanged();
             if (eventPayloadCase_ == EventPayloadOneofCase.AudioLevelChanged) {
               subBuilder.MergeFrom(AudioLevelChanged);
             }
@@ -1072,7 +1072,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 42: {
-            global::Stream.Video.v1.Sfu.Models.ICETrickle subBuilder = new global::Stream.Video.v1.Sfu.Models.ICETrickle();
+            global::StreamVideo.v1.Sfu.Models.ICETrickle subBuilder = new global::StreamVideo.v1.Sfu.Models.ICETrickle();
             if (eventPayloadCase_ == EventPayloadOneofCase.IceTrickle) {
               subBuilder.MergeFrom(IceTrickle);
             }
@@ -1081,7 +1081,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 50: {
-            global::Stream.Video.v1.Sfu.Events.ChangePublishQuality subBuilder = new global::Stream.Video.v1.Sfu.Events.ChangePublishQuality();
+            global::StreamVideo.v1.Sfu.Events.ChangePublishQuality subBuilder = new global::StreamVideo.v1.Sfu.Events.ChangePublishQuality();
             if (eventPayloadCase_ == EventPayloadOneofCase.ChangePublishQuality) {
               subBuilder.MergeFrom(ChangePublishQuality);
             }
@@ -1090,7 +1090,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 82: {
-            global::Stream.Video.v1.Sfu.Events.ParticipantJoined subBuilder = new global::Stream.Video.v1.Sfu.Events.ParticipantJoined();
+            global::StreamVideo.v1.Sfu.Events.ParticipantJoined subBuilder = new global::StreamVideo.v1.Sfu.Events.ParticipantJoined();
             if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantJoined) {
               subBuilder.MergeFrom(ParticipantJoined);
             }
@@ -1099,7 +1099,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 90: {
-            global::Stream.Video.v1.Sfu.Events.ParticipantLeft subBuilder = new global::Stream.Video.v1.Sfu.Events.ParticipantLeft();
+            global::StreamVideo.v1.Sfu.Events.ParticipantLeft subBuilder = new global::StreamVideo.v1.Sfu.Events.ParticipantLeft();
             if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantLeft) {
               subBuilder.MergeFrom(ParticipantLeft);
             }
@@ -1108,7 +1108,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 98: {
-            global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged subBuilder = new global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged();
+            global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged subBuilder = new global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged();
             if (eventPayloadCase_ == EventPayloadOneofCase.DominantSpeakerChanged) {
               subBuilder.MergeFrom(DominantSpeakerChanged);
             }
@@ -1117,7 +1117,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 106: {
-            global::Stream.Video.v1.Sfu.Events.JoinResponse subBuilder = new global::Stream.Video.v1.Sfu.Events.JoinResponse();
+            global::StreamVideo.v1.Sfu.Events.JoinResponse subBuilder = new global::StreamVideo.v1.Sfu.Events.JoinResponse();
             if (eventPayloadCase_ == EventPayloadOneofCase.JoinResponse) {
               subBuilder.MergeFrom(JoinResponse);
             }
@@ -1126,7 +1126,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 114: {
-            global::Stream.Video.v1.Sfu.Events.HealthCheckResponse subBuilder = new global::Stream.Video.v1.Sfu.Events.HealthCheckResponse();
+            global::StreamVideo.v1.Sfu.Events.HealthCheckResponse subBuilder = new global::StreamVideo.v1.Sfu.Events.HealthCheckResponse();
             if (eventPayloadCase_ == EventPayloadOneofCase.HealthCheckResponse) {
               subBuilder.MergeFrom(HealthCheckResponse);
             }
@@ -1135,7 +1135,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 130: {
-            global::Stream.Video.v1.Sfu.Events.TrackPublished subBuilder = new global::Stream.Video.v1.Sfu.Events.TrackPublished();
+            global::StreamVideo.v1.Sfu.Events.TrackPublished subBuilder = new global::StreamVideo.v1.Sfu.Events.TrackPublished();
             if (eventPayloadCase_ == EventPayloadOneofCase.TrackPublished) {
               subBuilder.MergeFrom(TrackPublished);
             }
@@ -1144,7 +1144,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 138: {
-            global::Stream.Video.v1.Sfu.Events.TrackUnpublished subBuilder = new global::Stream.Video.v1.Sfu.Events.TrackUnpublished();
+            global::StreamVideo.v1.Sfu.Events.TrackUnpublished subBuilder = new global::StreamVideo.v1.Sfu.Events.TrackUnpublished();
             if (eventPayloadCase_ == EventPayloadOneofCase.TrackUnpublished) {
               subBuilder.MergeFrom(TrackUnpublished);
             }
@@ -1153,7 +1153,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 146: {
-            global::Stream.Video.v1.Sfu.Events.Error subBuilder = new global::Stream.Video.v1.Sfu.Events.Error();
+            global::StreamVideo.v1.Sfu.Events.Error subBuilder = new global::StreamVideo.v1.Sfu.Events.Error();
             if (eventPayloadCase_ == EventPayloadOneofCase.Error) {
               subBuilder.MergeFrom(Error);
             }
@@ -1162,7 +1162,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 154: {
-            global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated subBuilder = new global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated();
+            global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated subBuilder = new global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated();
             if (eventPayloadCase_ == EventPayloadOneofCase.CallGrantsUpdated) {
               subBuilder.MergeFrom(CallGrantsUpdated);
             }
@@ -1171,7 +1171,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 162: {
-            global::Stream.Video.v1.Sfu.Events.GoAway subBuilder = new global::Stream.Video.v1.Sfu.Events.GoAway();
+            global::StreamVideo.v1.Sfu.Events.GoAway subBuilder = new global::StreamVideo.v1.Sfu.Events.GoAway();
             if (eventPayloadCase_ == EventPayloadOneofCase.GoAway) {
               subBuilder.MergeFrom(GoAway);
             }
@@ -1180,7 +1180,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 170: {
-            global::Stream.Video.v1.Sfu.Events.ICERestart subBuilder = new global::Stream.Video.v1.Sfu.Events.ICERestart();
+            global::StreamVideo.v1.Sfu.Events.ICERestart subBuilder = new global::StreamVideo.v1.Sfu.Events.ICERestart();
             if (eventPayloadCase_ == EventPayloadOneofCase.IceRestart) {
               subBuilder.MergeFrom(IceRestart);
             }
@@ -1189,7 +1189,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 178: {
-            global::Stream.Video.v1.Sfu.Events.PinsChanged subBuilder = new global::Stream.Video.v1.Sfu.Events.PinsChanged();
+            global::StreamVideo.v1.Sfu.Events.PinsChanged subBuilder = new global::StreamVideo.v1.Sfu.Events.PinsChanged();
             if (eventPayloadCase_ == EventPayloadOneofCase.PinsUpdated) {
               subBuilder.MergeFrom(PinsUpdated);
             }
@@ -1213,7 +1213,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            global::Stream.Video.v1.Sfu.Events.SubscriberOffer subBuilder = new global::Stream.Video.v1.Sfu.Events.SubscriberOffer();
+            global::StreamVideo.v1.Sfu.Events.SubscriberOffer subBuilder = new global::StreamVideo.v1.Sfu.Events.SubscriberOffer();
             if (eventPayloadCase_ == EventPayloadOneofCase.SubscriberOffer) {
               subBuilder.MergeFrom(SubscriberOffer);
             }
@@ -1222,7 +1222,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 18: {
-            global::Stream.Video.v1.Sfu.Events.PublisherAnswer subBuilder = new global::Stream.Video.v1.Sfu.Events.PublisherAnswer();
+            global::StreamVideo.v1.Sfu.Events.PublisherAnswer subBuilder = new global::StreamVideo.v1.Sfu.Events.PublisherAnswer();
             if (eventPayloadCase_ == EventPayloadOneofCase.PublisherAnswer) {
               subBuilder.MergeFrom(PublisherAnswer);
             }
@@ -1231,7 +1231,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 26: {
-            global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged subBuilder = new global::Stream.Video.v1.Sfu.Events.ConnectionQualityChanged();
+            global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged subBuilder = new global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged();
             if (eventPayloadCase_ == EventPayloadOneofCase.ConnectionQualityChanged) {
               subBuilder.MergeFrom(ConnectionQualityChanged);
             }
@@ -1240,7 +1240,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 34: {
-            global::Stream.Video.v1.Sfu.Events.AudioLevelChanged subBuilder = new global::Stream.Video.v1.Sfu.Events.AudioLevelChanged();
+            global::StreamVideo.v1.Sfu.Events.AudioLevelChanged subBuilder = new global::StreamVideo.v1.Sfu.Events.AudioLevelChanged();
             if (eventPayloadCase_ == EventPayloadOneofCase.AudioLevelChanged) {
               subBuilder.MergeFrom(AudioLevelChanged);
             }
@@ -1249,7 +1249,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 42: {
-            global::Stream.Video.v1.Sfu.Models.ICETrickle subBuilder = new global::Stream.Video.v1.Sfu.Models.ICETrickle();
+            global::StreamVideo.v1.Sfu.Models.ICETrickle subBuilder = new global::StreamVideo.v1.Sfu.Models.ICETrickle();
             if (eventPayloadCase_ == EventPayloadOneofCase.IceTrickle) {
               subBuilder.MergeFrom(IceTrickle);
             }
@@ -1258,7 +1258,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 50: {
-            global::Stream.Video.v1.Sfu.Events.ChangePublishQuality subBuilder = new global::Stream.Video.v1.Sfu.Events.ChangePublishQuality();
+            global::StreamVideo.v1.Sfu.Events.ChangePublishQuality subBuilder = new global::StreamVideo.v1.Sfu.Events.ChangePublishQuality();
             if (eventPayloadCase_ == EventPayloadOneofCase.ChangePublishQuality) {
               subBuilder.MergeFrom(ChangePublishQuality);
             }
@@ -1267,7 +1267,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 82: {
-            global::Stream.Video.v1.Sfu.Events.ParticipantJoined subBuilder = new global::Stream.Video.v1.Sfu.Events.ParticipantJoined();
+            global::StreamVideo.v1.Sfu.Events.ParticipantJoined subBuilder = new global::StreamVideo.v1.Sfu.Events.ParticipantJoined();
             if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantJoined) {
               subBuilder.MergeFrom(ParticipantJoined);
             }
@@ -1276,7 +1276,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 90: {
-            global::Stream.Video.v1.Sfu.Events.ParticipantLeft subBuilder = new global::Stream.Video.v1.Sfu.Events.ParticipantLeft();
+            global::StreamVideo.v1.Sfu.Events.ParticipantLeft subBuilder = new global::StreamVideo.v1.Sfu.Events.ParticipantLeft();
             if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantLeft) {
               subBuilder.MergeFrom(ParticipantLeft);
             }
@@ -1285,7 +1285,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 98: {
-            global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged subBuilder = new global::Stream.Video.v1.Sfu.Events.DominantSpeakerChanged();
+            global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged subBuilder = new global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged();
             if (eventPayloadCase_ == EventPayloadOneofCase.DominantSpeakerChanged) {
               subBuilder.MergeFrom(DominantSpeakerChanged);
             }
@@ -1294,7 +1294,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 106: {
-            global::Stream.Video.v1.Sfu.Events.JoinResponse subBuilder = new global::Stream.Video.v1.Sfu.Events.JoinResponse();
+            global::StreamVideo.v1.Sfu.Events.JoinResponse subBuilder = new global::StreamVideo.v1.Sfu.Events.JoinResponse();
             if (eventPayloadCase_ == EventPayloadOneofCase.JoinResponse) {
               subBuilder.MergeFrom(JoinResponse);
             }
@@ -1303,7 +1303,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 114: {
-            global::Stream.Video.v1.Sfu.Events.HealthCheckResponse subBuilder = new global::Stream.Video.v1.Sfu.Events.HealthCheckResponse();
+            global::StreamVideo.v1.Sfu.Events.HealthCheckResponse subBuilder = new global::StreamVideo.v1.Sfu.Events.HealthCheckResponse();
             if (eventPayloadCase_ == EventPayloadOneofCase.HealthCheckResponse) {
               subBuilder.MergeFrom(HealthCheckResponse);
             }
@@ -1312,7 +1312,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 130: {
-            global::Stream.Video.v1.Sfu.Events.TrackPublished subBuilder = new global::Stream.Video.v1.Sfu.Events.TrackPublished();
+            global::StreamVideo.v1.Sfu.Events.TrackPublished subBuilder = new global::StreamVideo.v1.Sfu.Events.TrackPublished();
             if (eventPayloadCase_ == EventPayloadOneofCase.TrackPublished) {
               subBuilder.MergeFrom(TrackPublished);
             }
@@ -1321,7 +1321,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 138: {
-            global::Stream.Video.v1.Sfu.Events.TrackUnpublished subBuilder = new global::Stream.Video.v1.Sfu.Events.TrackUnpublished();
+            global::StreamVideo.v1.Sfu.Events.TrackUnpublished subBuilder = new global::StreamVideo.v1.Sfu.Events.TrackUnpublished();
             if (eventPayloadCase_ == EventPayloadOneofCase.TrackUnpublished) {
               subBuilder.MergeFrom(TrackUnpublished);
             }
@@ -1330,7 +1330,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 146: {
-            global::Stream.Video.v1.Sfu.Events.Error subBuilder = new global::Stream.Video.v1.Sfu.Events.Error();
+            global::StreamVideo.v1.Sfu.Events.Error subBuilder = new global::StreamVideo.v1.Sfu.Events.Error();
             if (eventPayloadCase_ == EventPayloadOneofCase.Error) {
               subBuilder.MergeFrom(Error);
             }
@@ -1339,7 +1339,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 154: {
-            global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated subBuilder = new global::Stream.Video.v1.Sfu.Events.CallGrantsUpdated();
+            global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated subBuilder = new global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated();
             if (eventPayloadCase_ == EventPayloadOneofCase.CallGrantsUpdated) {
               subBuilder.MergeFrom(CallGrantsUpdated);
             }
@@ -1348,7 +1348,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 162: {
-            global::Stream.Video.v1.Sfu.Events.GoAway subBuilder = new global::Stream.Video.v1.Sfu.Events.GoAway();
+            global::StreamVideo.v1.Sfu.Events.GoAway subBuilder = new global::StreamVideo.v1.Sfu.Events.GoAway();
             if (eventPayloadCase_ == EventPayloadOneofCase.GoAway) {
               subBuilder.MergeFrom(GoAway);
             }
@@ -1357,7 +1357,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 170: {
-            global::Stream.Video.v1.Sfu.Events.ICERestart subBuilder = new global::Stream.Video.v1.Sfu.Events.ICERestart();
+            global::StreamVideo.v1.Sfu.Events.ICERestart subBuilder = new global::StreamVideo.v1.Sfu.Events.ICERestart();
             if (eventPayloadCase_ == EventPayloadOneofCase.IceRestart) {
               subBuilder.MergeFrom(IceRestart);
             }
@@ -1366,7 +1366,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 178: {
-            global::Stream.Video.v1.Sfu.Events.PinsChanged subBuilder = new global::Stream.Video.v1.Sfu.Events.PinsChanged();
+            global::StreamVideo.v1.Sfu.Events.PinsChanged subBuilder = new global::StreamVideo.v1.Sfu.Events.PinsChanged();
             if (eventPayloadCase_ == EventPayloadOneofCase.PinsUpdated) {
               subBuilder.MergeFrom(PinsUpdated);
             }
@@ -1395,7 +1395,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[1]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[1]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1427,16 +1427,16 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "pins" field.</summary>
     public const int PinsFieldNumber = 1;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Models.Pin> _repeated_pins_codec
-        = pb::FieldCodec.ForMessage(10, global::Stream.Video.v1.Sfu.Models.Pin.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.Pin> pins_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.Pin>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.Pin> _repeated_pins_codec
+        = pb::FieldCodec.ForMessage(10, global::StreamVideo.v1.Sfu.Models.Pin.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.Pin> pins_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.Pin>();
     /// <summary>
     /// the list of pins in the call.
     /// Pins are ordered in descending order (most important first).
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.Pin> Pins {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.Pin> Pins {
       get { return pins_; }
     }
 
@@ -1577,7 +1577,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[2]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[2]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1609,10 +1609,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "error" field.</summary>
     public const int Error_FieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.Error error_;
+    private global::StreamVideo.v1.Sfu.Models.Error error_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Error Error_ {
+    public global::StreamVideo.v1.Sfu.Models.Error Error_ {
       get { return error_; }
       set {
         error_ = value;
@@ -1706,7 +1706,7 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.error_ != null) {
         if (error_ == null) {
-          Error_ = new global::Stream.Video.v1.Sfu.Models.Error();
+          Error_ = new global::StreamVideo.v1.Sfu.Models.Error();
         }
         Error_.MergeFrom(other.Error_);
       }
@@ -1727,7 +1727,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 34: {
             if (error_ == null) {
-              Error_ = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error_ = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error_);
             break;
@@ -1749,7 +1749,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 34: {
             if (error_ == null) {
-              Error_ = new global::Stream.Video.v1.Sfu.Models.Error();
+              Error_ = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error_);
             break;
@@ -1775,7 +1775,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[3]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1808,10 +1808,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "peer_type" field.</summary>
     public const int PeerTypeFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.PeerType peerType_ = global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified;
+    private global::StreamVideo.v1.Sfu.Models.PeerType peerType_ = global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.PeerType PeerType {
+    public global::StreamVideo.v1.Sfu.Models.PeerType PeerType {
       get { return peerType_; }
       set {
         peerType_ = value;
@@ -1854,7 +1854,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
       if (IceCandidate.Length != 0) hash ^= IceCandidate.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -1874,7 +1874,7 @@ namespace Stream.Video.v1.Sfu.Events {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) PeerType);
       }
@@ -1892,7 +1892,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) PeerType);
       }
@@ -1910,7 +1910,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) PeerType);
       }
       if (IceCandidate.Length != 0) {
@@ -1928,7 +1928,7 @@ namespace Stream.Video.v1.Sfu.Events {
       if (other == null) {
         return;
       }
-      if (other.PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (other.PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         PeerType = other.PeerType;
       }
       if (other.IceCandidate.Length != 0) {
@@ -1950,7 +1950,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 8: {
-            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            PeerType = (global::StreamVideo.v1.Sfu.Models.PeerType) input.ReadEnum();
             break;
           }
           case 18: {
@@ -1973,7 +1973,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 8: {
-            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            PeerType = (global::StreamVideo.v1.Sfu.Models.PeerType) input.ReadEnum();
             break;
           }
           case 18: {
@@ -2001,7 +2001,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[4]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2033,10 +2033,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "peer_type" field.</summary>
     public const int PeerTypeFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.PeerType peerType_ = global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified;
+    private global::StreamVideo.v1.Sfu.Models.PeerType peerType_ = global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.PeerType PeerType {
+    public global::StreamVideo.v1.Sfu.Models.PeerType PeerType {
       get { return peerType_; }
       set {
         peerType_ = value;
@@ -2066,7 +2066,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) hash ^= PeerType.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -2085,7 +2085,7 @@ namespace Stream.Video.v1.Sfu.Events {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) PeerType);
       }
@@ -2099,7 +2099,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) PeerType);
       }
@@ -2113,7 +2113,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) PeerType);
       }
       if (_unknownFields != null) {
@@ -2128,7 +2128,7 @@ namespace Stream.Video.v1.Sfu.Events {
       if (other == null) {
         return;
       }
-      if (other.PeerType != global::Stream.Video.v1.Sfu.Models.PeerType.PublisherUnspecified) {
+      if (other.PeerType != global::StreamVideo.v1.Sfu.Models.PeerType.PublisherUnspecified) {
         PeerType = other.PeerType;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -2147,7 +2147,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 8: {
-            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            PeerType = (global::StreamVideo.v1.Sfu.Models.PeerType) input.ReadEnum();
             break;
           }
         }
@@ -2166,7 +2166,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 8: {
-            PeerType = (global::Stream.Video.v1.Sfu.Models.PeerType) input.ReadEnum();
+            PeerType = (global::StreamVideo.v1.Sfu.Models.PeerType) input.ReadEnum();
             break;
           }
         }
@@ -2193,7 +2193,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[5]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2235,8 +2235,8 @@ namespace Stream.Video.v1.Sfu.Events {
     public const int JoinRequestFieldNumber = 1;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.JoinRequest JoinRequest {
-      get { return requestPayloadCase_ == RequestPayloadOneofCase.JoinRequest ? (global::Stream.Video.v1.Sfu.Events.JoinRequest) requestPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.JoinRequest JoinRequest {
+      get { return requestPayloadCase_ == RequestPayloadOneofCase.JoinRequest ? (global::StreamVideo.v1.Sfu.Events.JoinRequest) requestPayload_ : null; }
       set {
         requestPayload_ = value;
         requestPayloadCase_ = value == null ? RequestPayloadOneofCase.None : RequestPayloadOneofCase.JoinRequest;
@@ -2247,8 +2247,8 @@ namespace Stream.Video.v1.Sfu.Events {
     public const int HealthCheckRequestFieldNumber = 2;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.HealthCheckRequest HealthCheckRequest {
-      get { return requestPayloadCase_ == RequestPayloadOneofCase.HealthCheckRequest ? (global::Stream.Video.v1.Sfu.Events.HealthCheckRequest) requestPayload_ : null; }
+    public global::StreamVideo.v1.Sfu.Events.HealthCheckRequest HealthCheckRequest {
+      get { return requestPayloadCase_ == RequestPayloadOneofCase.HealthCheckRequest ? (global::StreamVideo.v1.Sfu.Events.HealthCheckRequest) requestPayload_ : null; }
       set {
         requestPayload_ = value;
         requestPayloadCase_ = value == null ? RequestPayloadOneofCase.None : RequestPayloadOneofCase.HealthCheckRequest;
@@ -2379,13 +2379,13 @@ namespace Stream.Video.v1.Sfu.Events {
       switch (other.RequestPayloadCase) {
         case RequestPayloadOneofCase.JoinRequest:
           if (JoinRequest == null) {
-            JoinRequest = new global::Stream.Video.v1.Sfu.Events.JoinRequest();
+            JoinRequest = new global::StreamVideo.v1.Sfu.Events.JoinRequest();
           }
           JoinRequest.MergeFrom(other.JoinRequest);
           break;
         case RequestPayloadOneofCase.HealthCheckRequest:
           if (HealthCheckRequest == null) {
-            HealthCheckRequest = new global::Stream.Video.v1.Sfu.Events.HealthCheckRequest();
+            HealthCheckRequest = new global::StreamVideo.v1.Sfu.Events.HealthCheckRequest();
           }
           HealthCheckRequest.MergeFrom(other.HealthCheckRequest);
           break;
@@ -2407,7 +2407,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            global::Stream.Video.v1.Sfu.Events.JoinRequest subBuilder = new global::Stream.Video.v1.Sfu.Events.JoinRequest();
+            global::StreamVideo.v1.Sfu.Events.JoinRequest subBuilder = new global::StreamVideo.v1.Sfu.Events.JoinRequest();
             if (requestPayloadCase_ == RequestPayloadOneofCase.JoinRequest) {
               subBuilder.MergeFrom(JoinRequest);
             }
@@ -2416,7 +2416,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 18: {
-            global::Stream.Video.v1.Sfu.Events.HealthCheckRequest subBuilder = new global::Stream.Video.v1.Sfu.Events.HealthCheckRequest();
+            global::StreamVideo.v1.Sfu.Events.HealthCheckRequest subBuilder = new global::StreamVideo.v1.Sfu.Events.HealthCheckRequest();
             if (requestPayloadCase_ == RequestPayloadOneofCase.HealthCheckRequest) {
               subBuilder.MergeFrom(HealthCheckRequest);
             }
@@ -2440,7 +2440,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 10: {
-            global::Stream.Video.v1.Sfu.Events.JoinRequest subBuilder = new global::Stream.Video.v1.Sfu.Events.JoinRequest();
+            global::StreamVideo.v1.Sfu.Events.JoinRequest subBuilder = new global::StreamVideo.v1.Sfu.Events.JoinRequest();
             if (requestPayloadCase_ == RequestPayloadOneofCase.JoinRequest) {
               subBuilder.MergeFrom(JoinRequest);
             }
@@ -2449,7 +2449,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 18: {
-            global::Stream.Video.v1.Sfu.Events.HealthCheckRequest subBuilder = new global::Stream.Video.v1.Sfu.Events.HealthCheckRequest();
+            global::StreamVideo.v1.Sfu.Events.HealthCheckRequest subBuilder = new global::StreamVideo.v1.Sfu.Events.HealthCheckRequest();
             if (requestPayloadCase_ == RequestPayloadOneofCase.HealthCheckRequest) {
               subBuilder.MergeFrom(HealthCheckRequest);
             }
@@ -2478,7 +2478,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[6]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2630,7 +2630,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[7]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2662,10 +2662,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "participant_count" field.</summary>
     public const int ParticipantCountFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.ParticipantCount participantCount_;
+    private global::StreamVideo.v1.Sfu.Models.ParticipantCount participantCount_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.ParticipantCount ParticipantCount {
+    public global::StreamVideo.v1.Sfu.Models.ParticipantCount ParticipantCount {
       get { return participantCount_; }
       set {
         participantCount_ = value;
@@ -2759,7 +2759,7 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.participantCount_ != null) {
         if (participantCount_ == null) {
-          ParticipantCount = new global::Stream.Video.v1.Sfu.Models.ParticipantCount();
+          ParticipantCount = new global::StreamVideo.v1.Sfu.Models.ParticipantCount();
         }
         ParticipantCount.MergeFrom(other.ParticipantCount);
       }
@@ -2780,7 +2780,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (participantCount_ == null) {
-              ParticipantCount = new global::Stream.Video.v1.Sfu.Models.ParticipantCount();
+              ParticipantCount = new global::StreamVideo.v1.Sfu.Models.ParticipantCount();
             }
             input.ReadMessage(ParticipantCount);
             break;
@@ -2802,7 +2802,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (participantCount_ == null) {
-              ParticipantCount = new global::Stream.Video.v1.Sfu.Models.ParticipantCount();
+              ParticipantCount = new global::StreamVideo.v1.Sfu.Models.ParticipantCount();
             }
             input.ReadMessage(ParticipantCount);
             break;
@@ -2828,7 +2828,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[8]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2887,10 +2887,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "type" field.</summary>
     public const int TypeFieldNumber = 3;
-    private global::Stream.Video.v1.Sfu.Models.TrackType type_ = global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified;
+    private global::StreamVideo.v1.Sfu.Models.TrackType type_ = global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.TrackType Type {
+    public global::StreamVideo.v1.Sfu.Models.TrackType Type {
       get { return type_; }
       set {
         type_ = value;
@@ -2899,7 +2899,7 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "participant" field.</summary>
     public const int ParticipantFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.Participant participant_;
+    private global::StreamVideo.v1.Sfu.Models.Participant participant_;
     /// <summary>
     /// Participant information here is included as an optimisation
     /// for large calls where broadcasting on every participant join
@@ -2909,7 +2909,7 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Participant Participant {
+    public global::StreamVideo.v1.Sfu.Models.Participant Participant {
       get { return participant_; }
       set {
         participant_ = value;
@@ -2944,7 +2944,7 @@ namespace Stream.Video.v1.Sfu.Events {
       int hash = 1;
       if (UserId.Length != 0) hash ^= UserId.GetHashCode();
       if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
-      if (Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) hash ^= Type.GetHashCode();
+      if (Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) hash ^= Type.GetHashCode();
       if (participant_ != null) hash ^= Participant.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -2972,7 +2972,7 @@ namespace Stream.Video.v1.Sfu.Events {
         output.WriteRawTag(18);
         output.WriteString(SessionId);
       }
-      if (Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         output.WriteRawTag(24);
         output.WriteEnum((int) Type);
       }
@@ -2998,7 +2998,7 @@ namespace Stream.Video.v1.Sfu.Events {
         output.WriteRawTag(18);
         output.WriteString(SessionId);
       }
-      if (Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         output.WriteRawTag(24);
         output.WriteEnum((int) Type);
       }
@@ -3022,7 +3022,7 @@ namespace Stream.Video.v1.Sfu.Events {
       if (SessionId.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionId);
       }
-      if (Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Type);
       }
       if (participant_ != null) {
@@ -3046,12 +3046,12 @@ namespace Stream.Video.v1.Sfu.Events {
       if (other.SessionId.Length != 0) {
         SessionId = other.SessionId;
       }
-      if (other.Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (other.Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         Type = other.Type;
       }
       if (other.participant_ != null) {
         if (participant_ == null) {
-          Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+          Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
         }
         Participant.MergeFrom(other.Participant);
       }
@@ -3079,12 +3079,12 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 24: {
-            Type = (global::Stream.Video.v1.Sfu.Models.TrackType) input.ReadEnum();
+            Type = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
           case 34: {
             if (participant_ == null) {
-              Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
             }
             input.ReadMessage(Participant);
             break;
@@ -3113,12 +3113,12 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 24: {
-            Type = (global::Stream.Video.v1.Sfu.Models.TrackType) input.ReadEnum();
+            Type = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
           case 34: {
             if (participant_ == null) {
-              Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
             }
             input.ReadMessage(Participant);
             break;
@@ -3144,7 +3144,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[9]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[9]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3204,10 +3204,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "type" field.</summary>
     public const int TypeFieldNumber = 3;
-    private global::Stream.Video.v1.Sfu.Models.TrackType type_ = global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified;
+    private global::StreamVideo.v1.Sfu.Models.TrackType type_ = global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.TrackType Type {
+    public global::StreamVideo.v1.Sfu.Models.TrackType Type {
       get { return type_; }
       set {
         type_ = value;
@@ -3216,10 +3216,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "cause" field.</summary>
     public const int CauseFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason cause_ = global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason.Unspecified;
+    private global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason cause_ = global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason.Unspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason Cause {
+    public global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason Cause {
       get { return cause_; }
       set {
         cause_ = value;
@@ -3228,7 +3228,7 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "participant" field.</summary>
     public const int ParticipantFieldNumber = 5;
-    private global::Stream.Video.v1.Sfu.Models.Participant participant_;
+    private global::StreamVideo.v1.Sfu.Models.Participant participant_;
     /// <summary>
     /// Participant information here is included as an optimisation
     /// for large calls where broadcasting on every participant join
@@ -3238,7 +3238,7 @@ namespace Stream.Video.v1.Sfu.Events {
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Participant Participant {
+    public global::StreamVideo.v1.Sfu.Models.Participant Participant {
       get { return participant_; }
       set {
         participant_ = value;
@@ -3274,8 +3274,8 @@ namespace Stream.Video.v1.Sfu.Events {
       int hash = 1;
       if (UserId.Length != 0) hash ^= UserId.GetHashCode();
       if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
-      if (Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) hash ^= Type.GetHashCode();
-      if (Cause != global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason.Unspecified) hash ^= Cause.GetHashCode();
+      if (Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) hash ^= Type.GetHashCode();
+      if (Cause != global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason.Unspecified) hash ^= Cause.GetHashCode();
       if (participant_ != null) hash ^= Participant.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -3303,11 +3303,11 @@ namespace Stream.Video.v1.Sfu.Events {
         output.WriteRawTag(18);
         output.WriteString(SessionId);
       }
-      if (Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         output.WriteRawTag(24);
         output.WriteEnum((int) Type);
       }
-      if (Cause != global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason.Unspecified) {
+      if (Cause != global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason.Unspecified) {
         output.WriteRawTag(32);
         output.WriteEnum((int) Cause);
       }
@@ -3333,11 +3333,11 @@ namespace Stream.Video.v1.Sfu.Events {
         output.WriteRawTag(18);
         output.WriteString(SessionId);
       }
-      if (Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         output.WriteRawTag(24);
         output.WriteEnum((int) Type);
       }
-      if (Cause != global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason.Unspecified) {
+      if (Cause != global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason.Unspecified) {
         output.WriteRawTag(32);
         output.WriteEnum((int) Cause);
       }
@@ -3361,10 +3361,10 @@ namespace Stream.Video.v1.Sfu.Events {
       if (SessionId.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionId);
       }
-      if (Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Type);
       }
-      if (Cause != global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason.Unspecified) {
+      if (Cause != global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason.Unspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Cause);
       }
       if (participant_ != null) {
@@ -3388,15 +3388,15 @@ namespace Stream.Video.v1.Sfu.Events {
       if (other.SessionId.Length != 0) {
         SessionId = other.SessionId;
       }
-      if (other.Type != global::Stream.Video.v1.Sfu.Models.TrackType.Unspecified) {
+      if (other.Type != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
         Type = other.Type;
       }
-      if (other.Cause != global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason.Unspecified) {
+      if (other.Cause != global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason.Unspecified) {
         Cause = other.Cause;
       }
       if (other.participant_ != null) {
         if (participant_ == null) {
-          Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+          Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
         }
         Participant.MergeFrom(other.Participant);
       }
@@ -3424,16 +3424,16 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 24: {
-            Type = (global::Stream.Video.v1.Sfu.Models.TrackType) input.ReadEnum();
+            Type = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
           case 32: {
-            Cause = (global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason) input.ReadEnum();
+            Cause = (global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason) input.ReadEnum();
             break;
           }
           case 42: {
             if (participant_ == null) {
-              Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
             }
             input.ReadMessage(Participant);
             break;
@@ -3462,16 +3462,16 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 24: {
-            Type = (global::Stream.Video.v1.Sfu.Models.TrackType) input.ReadEnum();
+            Type = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
           case 32: {
-            Cause = (global::Stream.Video.v1.Sfu.Models.TrackUnpublishReason) input.ReadEnum();
+            Cause = (global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason) input.ReadEnum();
             break;
           }
           case 42: {
             if (participant_ == null) {
-              Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
             }
             input.ReadMessage(Participant);
             break;
@@ -3497,7 +3497,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[10]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3573,10 +3573,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "client_details" field.</summary>
     public const int ClientDetailsFieldNumber = 4;
-    private global::Stream.Video.v1.Sfu.Models.ClientDetails clientDetails_;
+    private global::StreamVideo.v1.Sfu.Models.ClientDetails clientDetails_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.ClientDetails ClientDetails {
+    public global::StreamVideo.v1.Sfu.Models.ClientDetails ClientDetails {
       get { return clientDetails_; }
       set {
         clientDetails_ = value;
@@ -3585,14 +3585,14 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "migration" field.</summary>
     public const int MigrationFieldNumber = 5;
-    private global::Stream.Video.v1.Sfu.Events.Migration migration_;
+    private global::StreamVideo.v1.Sfu.Events.Migration migration_;
     /// <summary>
     /// TODO: we should know if this is going to be
     /// - publishing and subscribing, or just subscribing for future routing
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.Migration Migration {
+    public global::StreamVideo.v1.Sfu.Events.Migration Migration {
       get { return migration_; }
       set {
         migration_ = value;
@@ -3783,13 +3783,13 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.clientDetails_ != null) {
         if (clientDetails_ == null) {
-          ClientDetails = new global::Stream.Video.v1.Sfu.Models.ClientDetails();
+          ClientDetails = new global::StreamVideo.v1.Sfu.Models.ClientDetails();
         }
         ClientDetails.MergeFrom(other.ClientDetails);
       }
       if (other.migration_ != null) {
         if (migration_ == null) {
-          Migration = new global::Stream.Video.v1.Sfu.Events.Migration();
+          Migration = new global::StreamVideo.v1.Sfu.Events.Migration();
         }
         Migration.MergeFrom(other.Migration);
       }
@@ -3825,14 +3825,14 @@ namespace Stream.Video.v1.Sfu.Events {
           }
           case 34: {
             if (clientDetails_ == null) {
-              ClientDetails = new global::Stream.Video.v1.Sfu.Models.ClientDetails();
+              ClientDetails = new global::StreamVideo.v1.Sfu.Models.ClientDetails();
             }
             input.ReadMessage(ClientDetails);
             break;
           }
           case 42: {
             if (migration_ == null) {
-              Migration = new global::Stream.Video.v1.Sfu.Events.Migration();
+              Migration = new global::StreamVideo.v1.Sfu.Events.Migration();
             }
             input.ReadMessage(Migration);
             break;
@@ -3870,14 +3870,14 @@ namespace Stream.Video.v1.Sfu.Events {
           }
           case 34: {
             if (clientDetails_ == null) {
-              ClientDetails = new global::Stream.Video.v1.Sfu.Models.ClientDetails();
+              ClientDetails = new global::StreamVideo.v1.Sfu.Models.ClientDetails();
             }
             input.ReadMessage(ClientDetails);
             break;
           }
           case 42: {
             if (migration_ == null) {
-              Migration = new global::Stream.Video.v1.Sfu.Events.Migration();
+              Migration = new global::StreamVideo.v1.Sfu.Events.Migration();
             }
             input.ReadMessage(Migration);
             break;
@@ -3907,7 +3907,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[11]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[11]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3953,23 +3953,23 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "announced_tracks" field.</summary>
     public const int AnnouncedTracksFieldNumber = 2;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Models.TrackInfo> _repeated_announcedTracks_codec
-        = pb::FieldCodec.ForMessage(18, global::Stream.Video.v1.Sfu.Models.TrackInfo.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.TrackInfo> announcedTracks_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.TrackInfo>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.TrackInfo> _repeated_announcedTracks_codec
+        = pb::FieldCodec.ForMessage(18, global::StreamVideo.v1.Sfu.Models.TrackInfo.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo> announcedTracks_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Models.TrackInfo> AnnouncedTracks {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo> AnnouncedTracks {
       get { return announcedTracks_; }
     }
 
     /// <summary>Field number for the "subscriptions" field.</summary>
     public const int SubscriptionsFieldNumber = 3;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails> _repeated_subscriptions_codec
-        = pb::FieldCodec.ForMessage(26, global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails> subscriptions_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> _repeated_subscriptions_codec
+        = pb::FieldCodec.ForMessage(26, global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> subscriptions_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Signal.TrackSubscriptionDetails> Subscriptions {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> Subscriptions {
       get { return subscriptions_; }
     }
 
@@ -4148,7 +4148,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[12]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[12]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4181,10 +4181,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "call_state" field.</summary>
     public const int CallStateFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.CallState callState_;
+    private global::StreamVideo.v1.Sfu.Models.CallState callState_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.CallState CallState {
+    public global::StreamVideo.v1.Sfu.Models.CallState CallState {
       get { return callState_; }
       set {
         callState_ = value;
@@ -4303,7 +4303,7 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.callState_ != null) {
         if (callState_ == null) {
-          CallState = new global::Stream.Video.v1.Sfu.Models.CallState();
+          CallState = new global::StreamVideo.v1.Sfu.Models.CallState();
         }
         CallState.MergeFrom(other.CallState);
       }
@@ -4327,7 +4327,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (callState_ == null) {
-              CallState = new global::Stream.Video.v1.Sfu.Models.CallState();
+              CallState = new global::StreamVideo.v1.Sfu.Models.CallState();
             }
             input.ReadMessage(CallState);
             break;
@@ -4353,7 +4353,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (callState_ == null) {
-              CallState = new global::Stream.Video.v1.Sfu.Models.CallState();
+              CallState = new global::StreamVideo.v1.Sfu.Models.CallState();
             }
             input.ReadMessage(CallState);
             break;
@@ -4386,7 +4386,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[13]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4431,10 +4431,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "participant" field.</summary>
     public const int ParticipantFieldNumber = 2;
-    private global::Stream.Video.v1.Sfu.Models.Participant participant_;
+    private global::StreamVideo.v1.Sfu.Models.Participant participant_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Participant Participant {
+    public global::StreamVideo.v1.Sfu.Models.Participant Participant {
       get { return participant_; }
       set {
         participant_ = value;
@@ -4544,7 +4544,7 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.participant_ != null) {
         if (participant_ == null) {
-          Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+          Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
         }
         Participant.MergeFrom(other.Participant);
       }
@@ -4569,7 +4569,7 @@ namespace Stream.Video.v1.Sfu.Events {
           }
           case 18: {
             if (participant_ == null) {
-              Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
             }
             input.ReadMessage(Participant);
             break;
@@ -4595,7 +4595,7 @@ namespace Stream.Video.v1.Sfu.Events {
           }
           case 18: {
             if (participant_ == null) {
-              Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
             }
             input.ReadMessage(Participant);
             break;
@@ -4624,7 +4624,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[14]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[14]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4669,10 +4669,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "participant" field.</summary>
     public const int ParticipantFieldNumber = 2;
-    private global::Stream.Video.v1.Sfu.Models.Participant participant_;
+    private global::StreamVideo.v1.Sfu.Models.Participant participant_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Participant Participant {
+    public global::StreamVideo.v1.Sfu.Models.Participant Participant {
       get { return participant_; }
       set {
         participant_ = value;
@@ -4782,7 +4782,7 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.participant_ != null) {
         if (participant_ == null) {
-          Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+          Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
         }
         Participant.MergeFrom(other.Participant);
       }
@@ -4807,7 +4807,7 @@ namespace Stream.Video.v1.Sfu.Events {
           }
           case 18: {
             if (participant_ == null) {
-              Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
             }
             input.ReadMessage(Participant);
             break;
@@ -4833,7 +4833,7 @@ namespace Stream.Video.v1.Sfu.Events {
           }
           case 18: {
             if (participant_ == null) {
-              Participant = new global::Stream.Video.v1.Sfu.Models.Participant();
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
             }
             input.ReadMessage(Participant);
             break;
@@ -4862,7 +4862,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[15]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[15]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5088,7 +5088,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[16]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[16]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5281,7 +5281,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[17]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[17]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5313,12 +5313,12 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "connection_quality_updates" field.</summary>
     public const int ConnectionQualityUpdatesFieldNumber = 1;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Events.ConnectionQualityInfo> _repeated_connectionQualityUpdates_codec
-        = pb::FieldCodec.ForMessage(10, global::Stream.Video.v1.Sfu.Events.ConnectionQualityInfo.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.ConnectionQualityInfo> connectionQualityUpdates_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.ConnectionQualityInfo>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Events.ConnectionQualityInfo> _repeated_connectionQualityUpdates_codec
+        = pb::FieldCodec.ForMessage(10, global::StreamVideo.v1.Sfu.Events.ConnectionQualityInfo.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.ConnectionQualityInfo> connectionQualityUpdates_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.ConnectionQualityInfo>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.ConnectionQualityInfo> ConnectionQualityUpdates {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.ConnectionQualityInfo> ConnectionQualityUpdates {
       get { return connectionQualityUpdates_; }
     }
 
@@ -5459,7 +5459,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[18]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[18]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5517,10 +5517,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "connection_quality" field.</summary>
     public const int ConnectionQualityFieldNumber = 3;
-    private global::Stream.Video.v1.Sfu.Models.ConnectionQuality connectionQuality_ = global::Stream.Video.v1.Sfu.Models.ConnectionQuality.Unspecified;
+    private global::StreamVideo.v1.Sfu.Models.ConnectionQuality connectionQuality_ = global::StreamVideo.v1.Sfu.Models.ConnectionQuality.Unspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.ConnectionQuality ConnectionQuality {
+    public global::StreamVideo.v1.Sfu.Models.ConnectionQuality ConnectionQuality {
       get { return connectionQuality_; }
       set {
         connectionQuality_ = value;
@@ -5554,7 +5554,7 @@ namespace Stream.Video.v1.Sfu.Events {
       int hash = 1;
       if (UserId.Length != 0) hash ^= UserId.GetHashCode();
       if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
-      if (ConnectionQuality != global::Stream.Video.v1.Sfu.Models.ConnectionQuality.Unspecified) hash ^= ConnectionQuality.GetHashCode();
+      if (ConnectionQuality != global::StreamVideo.v1.Sfu.Models.ConnectionQuality.Unspecified) hash ^= ConnectionQuality.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -5581,7 +5581,7 @@ namespace Stream.Video.v1.Sfu.Events {
         output.WriteRawTag(18);
         output.WriteString(SessionId);
       }
-      if (ConnectionQuality != global::Stream.Video.v1.Sfu.Models.ConnectionQuality.Unspecified) {
+      if (ConnectionQuality != global::StreamVideo.v1.Sfu.Models.ConnectionQuality.Unspecified) {
         output.WriteRawTag(24);
         output.WriteEnum((int) ConnectionQuality);
       }
@@ -5603,7 +5603,7 @@ namespace Stream.Video.v1.Sfu.Events {
         output.WriteRawTag(18);
         output.WriteString(SessionId);
       }
-      if (ConnectionQuality != global::Stream.Video.v1.Sfu.Models.ConnectionQuality.Unspecified) {
+      if (ConnectionQuality != global::StreamVideo.v1.Sfu.Models.ConnectionQuality.Unspecified) {
         output.WriteRawTag(24);
         output.WriteEnum((int) ConnectionQuality);
       }
@@ -5623,7 +5623,7 @@ namespace Stream.Video.v1.Sfu.Events {
       if (SessionId.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionId);
       }
-      if (ConnectionQuality != global::Stream.Video.v1.Sfu.Models.ConnectionQuality.Unspecified) {
+      if (ConnectionQuality != global::StreamVideo.v1.Sfu.Models.ConnectionQuality.Unspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) ConnectionQuality);
       }
       if (_unknownFields != null) {
@@ -5644,7 +5644,7 @@ namespace Stream.Video.v1.Sfu.Events {
       if (other.SessionId.Length != 0) {
         SessionId = other.SessionId;
       }
-      if (other.ConnectionQuality != global::Stream.Video.v1.Sfu.Models.ConnectionQuality.Unspecified) {
+      if (other.ConnectionQuality != global::StreamVideo.v1.Sfu.Models.ConnectionQuality.Unspecified) {
         ConnectionQuality = other.ConnectionQuality;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -5671,7 +5671,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 24: {
-            ConnectionQuality = (global::Stream.Video.v1.Sfu.Models.ConnectionQuality) input.ReadEnum();
+            ConnectionQuality = (global::StreamVideo.v1.Sfu.Models.ConnectionQuality) input.ReadEnum();
             break;
           }
         }
@@ -5698,7 +5698,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 24: {
-            ConnectionQuality = (global::Stream.Video.v1.Sfu.Models.ConnectionQuality) input.ReadEnum();
+            ConnectionQuality = (global::StreamVideo.v1.Sfu.Models.ConnectionQuality) input.ReadEnum();
             break;
           }
         }
@@ -5725,7 +5725,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[19]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[19]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5951,7 +5951,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[20]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[20]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6257,7 +6257,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[21]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[21]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6289,12 +6289,12 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "audio_levels" field.</summary>
     public const int AudioLevelsFieldNumber = 1;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Events.AudioLevel> _repeated_audioLevels_codec
-        = pb::FieldCodec.ForMessage(10, global::Stream.Video.v1.Sfu.Events.AudioLevel.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.AudioLevel> audioLevels_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.AudioLevel>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Events.AudioLevel> _repeated_audioLevels_codec
+        = pb::FieldCodec.ForMessage(10, global::StreamVideo.v1.Sfu.Events.AudioLevel.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.AudioLevel> audioLevels_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.AudioLevel>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.AudioLevel> AudioLevels {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.AudioLevel> AudioLevels {
       get { return audioLevels_; }
     }
 
@@ -6435,7 +6435,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[22]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[22]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6624,7 +6624,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[23]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[23]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6657,10 +6657,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "media_request" field.</summary>
     public const int MediaRequestFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Events.AudioMediaRequest mediaRequest_;
+    private global::StreamVideo.v1.Sfu.Events.AudioMediaRequest mediaRequest_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.AudioMediaRequest MediaRequest {
+    public global::StreamVideo.v1.Sfu.Events.AudioMediaRequest MediaRequest {
       get { return mediaRequest_; }
       set {
         mediaRequest_ = value;
@@ -6669,10 +6669,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "codec" field.</summary>
     public const int CodecFieldNumber = 2;
-    private global::Stream.Video.v1.Sfu.Models.Codec codec_;
+    private global::StreamVideo.v1.Sfu.Models.Codec codec_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Codec Codec {
+    public global::StreamVideo.v1.Sfu.Models.Codec Codec {
       get { return codec_; }
       set {
         codec_ = value;
@@ -6779,13 +6779,13 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.mediaRequest_ != null) {
         if (mediaRequest_ == null) {
-          MediaRequest = new global::Stream.Video.v1.Sfu.Events.AudioMediaRequest();
+          MediaRequest = new global::StreamVideo.v1.Sfu.Events.AudioMediaRequest();
         }
         MediaRequest.MergeFrom(other.MediaRequest);
       }
       if (other.codec_ != null) {
         if (codec_ == null) {
-          Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+          Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
         }
         Codec.MergeFrom(other.Codec);
       }
@@ -6806,14 +6806,14 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (mediaRequest_ == null) {
-              MediaRequest = new global::Stream.Video.v1.Sfu.Events.AudioMediaRequest();
+              MediaRequest = new global::StreamVideo.v1.Sfu.Events.AudioMediaRequest();
             }
             input.ReadMessage(MediaRequest);
             break;
           }
           case 18: {
             if (codec_ == null) {
-              Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+              Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
             }
             input.ReadMessage(Codec);
             break;
@@ -6835,14 +6835,14 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (mediaRequest_ == null) {
-              MediaRequest = new global::Stream.Video.v1.Sfu.Events.AudioMediaRequest();
+              MediaRequest = new global::StreamVideo.v1.Sfu.Events.AudioMediaRequest();
             }
             input.ReadMessage(MediaRequest);
             break;
           }
           case 18: {
             if (codec_ == null) {
-              Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+              Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
             }
             input.ReadMessage(Codec);
             break;
@@ -6868,7 +6868,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[24]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[24]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7117,6 +7117,11 @@ namespace Stream.Video.v1.Sfu.Events {
 
   }
 
+  /// <summary>
+  /// VideoLayerSetting is used to specify various parameters of a particular encoding in simulcast.
+  /// The parameters are specified here - https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpEncodingParameters
+  /// SDKs use these parameters sent from the server to dynamically adjust these parameters to save CPU, bandwidth
+  /// </summary>
   internal sealed partial class VideoLayerSetting : pb::IMessage<VideoLayerSetting>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -7131,7 +7136,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[25]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[25]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7157,6 +7162,7 @@ namespace Stream.Video.v1.Sfu.Events {
       scaleResolutionDownBy_ = other.scaleResolutionDownBy_;
       priority_ = other.priority_;
       codec_ = other.codec_ != null ? other.codec_.Clone() : null;
+      maxFramerate_ = other.maxFramerate_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -7216,10 +7222,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "priority" field.</summary>
     public const int PriorityFieldNumber = 5;
-    private global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority priority_ = global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified;
+    private global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority priority_ = global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority Priority {
+    public global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority Priority {
       get { return priority_; }
       set {
         priority_ = value;
@@ -7228,13 +7234,25 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "codec" field.</summary>
     public const int CodecFieldNumber = 6;
-    private global::Stream.Video.v1.Sfu.Models.Codec codec_;
+    private global::StreamVideo.v1.Sfu.Models.Codec codec_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Codec Codec {
+    public global::StreamVideo.v1.Sfu.Models.Codec Codec {
       get { return codec_; }
       set {
         codec_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "max_framerate" field.</summary>
+    public const int MaxFramerateFieldNumber = 7;
+    private uint maxFramerate_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint MaxFramerate {
+      get { return maxFramerate_; }
+      set {
+        maxFramerate_ = value;
       }
     }
 
@@ -7259,6 +7277,7 @@ namespace Stream.Video.v1.Sfu.Events {
       if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(ScaleResolutionDownBy, other.ScaleResolutionDownBy)) return false;
       if (Priority != other.Priority) return false;
       if (!object.Equals(Codec, other.Codec)) return false;
+      if (MaxFramerate != other.MaxFramerate) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -7270,8 +7289,9 @@ namespace Stream.Video.v1.Sfu.Events {
       if (Active != false) hash ^= Active.GetHashCode();
       if (MaxBitrate != 0) hash ^= MaxBitrate.GetHashCode();
       if (ScaleResolutionDownBy != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(ScaleResolutionDownBy);
-      if (Priority != global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) hash ^= Priority.GetHashCode();
+      if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) hash ^= Priority.GetHashCode();
       if (codec_ != null) hash ^= Codec.GetHashCode();
+      if (MaxFramerate != 0) hash ^= MaxFramerate.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -7306,13 +7326,17 @@ namespace Stream.Video.v1.Sfu.Events {
         output.WriteRawTag(37);
         output.WriteFloat(ScaleResolutionDownBy);
       }
-      if (Priority != global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
+      if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
         output.WriteRawTag(40);
         output.WriteEnum((int) Priority);
       }
       if (codec_ != null) {
         output.WriteRawTag(50);
         output.WriteMessage(Codec);
+      }
+      if (MaxFramerate != 0) {
+        output.WriteRawTag(56);
+        output.WriteUInt32(MaxFramerate);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -7340,13 +7364,17 @@ namespace Stream.Video.v1.Sfu.Events {
         output.WriteRawTag(37);
         output.WriteFloat(ScaleResolutionDownBy);
       }
-      if (Priority != global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
+      if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
         output.WriteRawTag(40);
         output.WriteEnum((int) Priority);
       }
       if (codec_ != null) {
         output.WriteRawTag(50);
         output.WriteMessage(Codec);
+      }
+      if (MaxFramerate != 0) {
+        output.WriteRawTag(56);
+        output.WriteUInt32(MaxFramerate);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -7370,11 +7398,14 @@ namespace Stream.Video.v1.Sfu.Events {
       if (ScaleResolutionDownBy != 0F) {
         size += 1 + 4;
       }
-      if (Priority != global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
+      if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Priority);
       }
       if (codec_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Codec);
+      }
+      if (MaxFramerate != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(MaxFramerate);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -7400,14 +7431,17 @@ namespace Stream.Video.v1.Sfu.Events {
       if (other.ScaleResolutionDownBy != 0F) {
         ScaleResolutionDownBy = other.ScaleResolutionDownBy;
       }
-      if (other.Priority != global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
+      if (other.Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
         Priority = other.Priority;
       }
       if (other.codec_ != null) {
         if (codec_ == null) {
-          Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+          Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
         }
         Codec.MergeFrom(other.Codec);
+      }
+      if (other.MaxFramerate != 0) {
+        MaxFramerate = other.MaxFramerate;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -7441,14 +7475,18 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 40: {
-            Priority = (global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority) input.ReadEnum();
+            Priority = (global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority) input.ReadEnum();
             break;
           }
           case 50: {
             if (codec_ == null) {
-              Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+              Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
             }
             input.ReadMessage(Codec);
+            break;
+          }
+          case 56: {
+            MaxFramerate = input.ReadUInt32();
             break;
           }
         }
@@ -7483,14 +7521,18 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           }
           case 40: {
-            Priority = (global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Types.Priority) input.ReadEnum();
+            Priority = (global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority) input.ReadEnum();
             break;
           }
           case 50: {
             if (codec_ == null) {
-              Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+              Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
             }
             input.ReadMessage(Codec);
+            break;
+          }
+          case 56: {
+            MaxFramerate = input.ReadUInt32();
             break;
           }
         }
@@ -7529,7 +7571,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[26]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[26]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7563,10 +7605,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "media_request" field.</summary>
     public const int MediaRequestFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Events.VideoMediaRequest mediaRequest_;
+    private global::StreamVideo.v1.Sfu.Events.VideoMediaRequest mediaRequest_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Events.VideoMediaRequest MediaRequest {
+    public global::StreamVideo.v1.Sfu.Events.VideoMediaRequest MediaRequest {
       get { return mediaRequest_; }
       set {
         mediaRequest_ = value;
@@ -7575,10 +7617,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "codec" field.</summary>
     public const int CodecFieldNumber = 2;
-    private global::Stream.Video.v1.Sfu.Models.Codec codec_;
+    private global::StreamVideo.v1.Sfu.Models.Codec codec_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.Codec Codec {
+    public global::StreamVideo.v1.Sfu.Models.Codec Codec {
       get { return codec_; }
       set {
         codec_ = value;
@@ -7587,12 +7629,12 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "layers" field.</summary>
     public const int LayersFieldNumber = 3;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Events.VideoLayerSetting> _repeated_layers_codec
-        = pb::FieldCodec.ForMessage(26, global::Stream.Video.v1.Sfu.Events.VideoLayerSetting.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.VideoLayerSetting> layers_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.VideoLayerSetting>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Events.VideoLayerSetting> _repeated_layers_codec
+        = pb::FieldCodec.ForMessage(26, global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.VideoLayerSetting> layers_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.VideoLayerSetting>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.VideoLayerSetting> Layers {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.VideoLayerSetting> Layers {
       get { return layers_; }
     }
 
@@ -7701,13 +7743,13 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.mediaRequest_ != null) {
         if (mediaRequest_ == null) {
-          MediaRequest = new global::Stream.Video.v1.Sfu.Events.VideoMediaRequest();
+          MediaRequest = new global::StreamVideo.v1.Sfu.Events.VideoMediaRequest();
         }
         MediaRequest.MergeFrom(other.MediaRequest);
       }
       if (other.codec_ != null) {
         if (codec_ == null) {
-          Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+          Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
         }
         Codec.MergeFrom(other.Codec);
       }
@@ -7729,14 +7771,14 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (mediaRequest_ == null) {
-              MediaRequest = new global::Stream.Video.v1.Sfu.Events.VideoMediaRequest();
+              MediaRequest = new global::StreamVideo.v1.Sfu.Events.VideoMediaRequest();
             }
             input.ReadMessage(MediaRequest);
             break;
           }
           case 18: {
             if (codec_ == null) {
-              Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+              Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
             }
             input.ReadMessage(Codec);
             break;
@@ -7762,14 +7804,14 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (mediaRequest_ == null) {
-              MediaRequest = new global::Stream.Video.v1.Sfu.Events.VideoMediaRequest();
+              MediaRequest = new global::StreamVideo.v1.Sfu.Events.VideoMediaRequest();
             }
             input.ReadMessage(MediaRequest);
             break;
           }
           case 18: {
             if (codec_ == null) {
-              Codec = new global::Stream.Video.v1.Sfu.Models.Codec();
+              Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
             }
             input.ReadMessage(Codec);
             break;
@@ -7802,7 +7844,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[27]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[27]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7835,23 +7877,23 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "audio_senders" field.</summary>
     public const int AudioSendersFieldNumber = 1;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Events.AudioSender> _repeated_audioSenders_codec
-        = pb::FieldCodec.ForMessage(10, global::Stream.Video.v1.Sfu.Events.AudioSender.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.AudioSender> audioSenders_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.AudioSender>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Events.AudioSender> _repeated_audioSenders_codec
+        = pb::FieldCodec.ForMessage(10, global::StreamVideo.v1.Sfu.Events.AudioSender.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.AudioSender> audioSenders_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.AudioSender>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.AudioSender> AudioSenders {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.AudioSender> AudioSenders {
       get { return audioSenders_; }
     }
 
     /// <summary>Field number for the "video_senders" field.</summary>
     public const int VideoSendersFieldNumber = 2;
-    private static readonly pb::FieldCodec<global::Stream.Video.v1.Sfu.Events.VideoSender> _repeated_videoSenders_codec
-        = pb::FieldCodec.ForMessage(18, global::Stream.Video.v1.Sfu.Events.VideoSender.Parser);
-    private readonly pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.VideoSender> videoSenders_ = new pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.VideoSender>();
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Events.VideoSender> _repeated_videoSenders_codec
+        = pb::FieldCodec.ForMessage(18, global::StreamVideo.v1.Sfu.Events.VideoSender.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.VideoSender> videoSenders_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.VideoSender>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public pbc::RepeatedField<global::Stream.Video.v1.Sfu.Events.VideoSender> VideoSenders {
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Events.VideoSender> VideoSenders {
       get { return videoSenders_; }
     }
 
@@ -8024,7 +8066,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[28]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[28]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -8057,10 +8099,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "current_grants" field.</summary>
     public const int CurrentGrantsFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.CallGrants currentGrants_;
+    private global::StreamVideo.v1.Sfu.Models.CallGrants currentGrants_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.CallGrants CurrentGrants {
+    public global::StreamVideo.v1.Sfu.Models.CallGrants CurrentGrants {
       get { return currentGrants_; }
       set {
         currentGrants_ = value;
@@ -8179,7 +8221,7 @@ namespace Stream.Video.v1.Sfu.Events {
       }
       if (other.currentGrants_ != null) {
         if (currentGrants_ == null) {
-          CurrentGrants = new global::Stream.Video.v1.Sfu.Models.CallGrants();
+          CurrentGrants = new global::StreamVideo.v1.Sfu.Models.CallGrants();
         }
         CurrentGrants.MergeFrom(other.CurrentGrants);
       }
@@ -8203,7 +8245,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (currentGrants_ == null) {
-              CurrentGrants = new global::Stream.Video.v1.Sfu.Models.CallGrants();
+              CurrentGrants = new global::StreamVideo.v1.Sfu.Models.CallGrants();
             }
             input.ReadMessage(CurrentGrants);
             break;
@@ -8229,7 +8271,7 @@ namespace Stream.Video.v1.Sfu.Events {
             break;
           case 10: {
             if (currentGrants_ == null) {
-              CurrentGrants = new global::Stream.Video.v1.Sfu.Models.CallGrants();
+              CurrentGrants = new global::StreamVideo.v1.Sfu.Models.CallGrants();
             }
             input.ReadMessage(CurrentGrants);
             break;
@@ -8263,7 +8305,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::Stream.Video.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[29]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[29]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -8295,10 +8337,10 @@ namespace Stream.Video.v1.Sfu.Events {
 
     /// <summary>Field number for the "reason" field.</summary>
     public const int ReasonFieldNumber = 1;
-    private global::Stream.Video.v1.Sfu.Models.GoAwayReason reason_ = global::Stream.Video.v1.Sfu.Models.GoAwayReason.Unspecified;
+    private global::StreamVideo.v1.Sfu.Models.GoAwayReason reason_ = global::StreamVideo.v1.Sfu.Models.GoAwayReason.Unspecified;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Stream.Video.v1.Sfu.Models.GoAwayReason Reason {
+    public global::StreamVideo.v1.Sfu.Models.GoAwayReason Reason {
       get { return reason_; }
       set {
         reason_ = value;
@@ -8328,7 +8370,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (Reason != global::Stream.Video.v1.Sfu.Models.GoAwayReason.Unspecified) hash ^= Reason.GetHashCode();
+      if (Reason != global::StreamVideo.v1.Sfu.Models.GoAwayReason.Unspecified) hash ^= Reason.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -8347,7 +8389,7 @@ namespace Stream.Video.v1.Sfu.Events {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (Reason != global::Stream.Video.v1.Sfu.Models.GoAwayReason.Unspecified) {
+      if (Reason != global::StreamVideo.v1.Sfu.Models.GoAwayReason.Unspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) Reason);
       }
@@ -8361,7 +8403,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Reason != global::Stream.Video.v1.Sfu.Models.GoAwayReason.Unspecified) {
+      if (Reason != global::StreamVideo.v1.Sfu.Models.GoAwayReason.Unspecified) {
         output.WriteRawTag(8);
         output.WriteEnum((int) Reason);
       }
@@ -8375,7 +8417,7 @@ namespace Stream.Video.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (Reason != global::Stream.Video.v1.Sfu.Models.GoAwayReason.Unspecified) {
+      if (Reason != global::StreamVideo.v1.Sfu.Models.GoAwayReason.Unspecified) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Reason);
       }
       if (_unknownFields != null) {
@@ -8390,7 +8432,7 @@ namespace Stream.Video.v1.Sfu.Events {
       if (other == null) {
         return;
       }
-      if (other.Reason != global::Stream.Video.v1.Sfu.Models.GoAwayReason.Unspecified) {
+      if (other.Reason != global::StreamVideo.v1.Sfu.Models.GoAwayReason.Unspecified) {
         Reason = other.Reason;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -8409,7 +8451,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 8: {
-            Reason = (global::Stream.Video.v1.Sfu.Models.GoAwayReason) input.ReadEnum();
+            Reason = (global::StreamVideo.v1.Sfu.Models.GoAwayReason) input.ReadEnum();
             break;
           }
         }
@@ -8428,7 +8470,7 @@ namespace Stream.Video.v1.Sfu.Events {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 8: {
-            Reason = (global::Stream.Video.v1.Sfu.Models.GoAwayReason) input.ReadEnum();
+            Reason = (global::StreamVideo.v1.Sfu.Models.GoAwayReason) input.ReadEnum();
             break;
           }
         }

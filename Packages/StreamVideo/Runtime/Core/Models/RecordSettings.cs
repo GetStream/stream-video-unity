@@ -1,11 +1,12 @@
 ﻿using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 
 namespace StreamVideo.Core.Models
 {
-    public sealed class RecordSettings : IStateLoadableFrom<RecordSettingsInternalDTO, RecordSettings>,
+    public sealed class RecordSettings : IStateLoadableFrom<RecordSettingsRequestInternalDTO, RecordSettings>,
         IStateLoadableFrom<RecordSettingsResponseInternalDTO, RecordSettings>
     {
         public bool AudioOnly { get; private set; }
@@ -15,7 +16,7 @@ namespace StreamVideo.Core.Models
         public RecordSettingsQuality Quality { get; private set; }
 
         //StreamTodo: check if this is needed, it was probably removed from OpenAPI spec
-        void IStateLoadableFrom<RecordSettingsInternalDTO, RecordSettings>.LoadFromDto(RecordSettingsInternalDTO dto,
+        void IStateLoadableFrom<RecordSettingsRequestInternalDTO, RecordSettings>.LoadFromDto(RecordSettingsRequestInternalDTO dto,
             ICache cache)
         {
             AudioOnly = dto.AudioOnly;

@@ -8,23 +8,29 @@ namespace StreamVideo.Core.LowLevelClient
     internal static class UnityWebRtcWrapperExtensions
     {
         //StreamTodo: in webRTC example they also check for _peerConnection.SignalingState != RTCSignalingState.Stable
-        public static Task<RTCSessionDescription> CreateOfferAsync(this RTCPeerConnection peerConnection) =>
-            WaitForOperationAsync(peerConnection.CreateOffer(), r => r.Desc);
-        
-        public static Task<RTCSessionDescription> CreateOfferAsync(this RTCPeerConnection peerConnection, ref RTCOfferAnswerOptions options) =>
-            WaitForOperationAsync(peerConnection.CreateOffer(ref options), r => r.Desc);
-        
-        public static Task<RTCSessionDescription> CreateAnswerAsync(this RTCPeerConnection peerConnection) =>
-            WaitForOperationAsync(peerConnection.CreateAnswer(), r => r.Desc);
-        
-        public static Task SetLocalDescriptionAsync(this RTCPeerConnection peerConnection, ref RTCSessionDescription desc) =>
-            WaitForOperationAsync(peerConnection.SetLocalDescription(ref desc));
+        public static Task<RTCSessionDescription> CreateOfferAsync(this RTCPeerConnection peerConnection)
+            => WaitForOperationAsync(peerConnection.CreateOffer(), r => r.Desc);
 
-        public static Task SetRemoteDescriptionAsync(this RTCPeerConnection peerConnection, ref RTCSessionDescription desc) =>
-            WaitForOperationAsync(peerConnection.SetRemoteDescription(ref desc));
-        
+        public static Task<RTCSessionDescription> CreateOfferAsync(this RTCPeerConnection peerConnection,
+            ref RTCOfferAnswerOptions options)
+            => WaitForOperationAsync(peerConnection.CreateOffer(ref options), r => r.Desc);
+
+        public static Task<RTCSessionDescription> CreateAnswerAsync(this RTCPeerConnection peerConnection)
+            => WaitForOperationAsync(peerConnection.CreateAnswer(), r => r.Desc);
+
+        public static Task SetLocalDescriptionAsync(this RTCPeerConnection peerConnection,
+            ref RTCSessionDescription desc)
+            => WaitForOperationAsync(peerConnection.SetLocalDescription(ref desc));
+
+        public static Task SetRemoteDescriptionAsync(this RTCPeerConnection peerConnection,
+            ref RTCSessionDescription desc)
+            => WaitForOperationAsync(peerConnection.SetRemoteDescription(ref desc));
+
+        public static Task<RTCStatsReport> GetStatsAsync(this RTCPeerConnection peerConnection)
+            => WaitForOperationAsync(peerConnection.GetStats(), r => r.Value);
+
         private static async Task<TResponse> WaitForOperationAsync<TOperation, TResponse>(
-            this TOperation asyncOperation, Func<TOperation, TResponse> response) 
+            this TOperation asyncOperation, Func<TOperation, TResponse> response)
             where TOperation : AsyncOperationBase
         {
             // StreamTodo: refactor to use coroutine runner to reduce runtime allocations
@@ -40,9 +46,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             return response(asyncOperation);
         }
-        
+
         private static async Task WaitForOperationAsync<TOperation>(
-            this TOperation asyncOperation) 
+            this TOperation asyncOperation)
             where TOperation : AsyncOperationBase
         {
             // StreamTodo: refactor to use coroutine runner to reduce runtime allocations

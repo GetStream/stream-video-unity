@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using Core.Models;
-using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
@@ -8,18 +7,16 @@ using StreamVideo.Core.Utils;
 
 namespace StreamVideo.Core.Models
 {
-    public sealed class HLSSettings : IStateLoadableFrom<HLSSettingsInternalDTO, HLSSettings>,
+    public sealed class HLSSettings : IStateLoadableFrom<HLSSettingsRequestInternalDTO, HLSSettings>,
         IStateLoadableFrom<HLSSettingsResponseInternalDTO, HLSSettings>
     {
         public bool AutoOn { get; private set; }
 
         public bool Enabled { get; private set; }
-        
-        public LayoutSettings Layout { get; private set; }
 
         public IReadOnlyList<string> QualityTracks => _qualityTracks;
 
-        void IStateLoadableFrom<HLSSettingsInternalDTO, HLSSettings>.LoadFromDto(HLSSettingsInternalDTO dto,
+        void IStateLoadableFrom<HLSSettingsRequestInternalDTO, HLSSettings>.LoadFromDto(HLSSettingsRequestInternalDTO dto,
             ICache cache)
         {
             AutoOn = dto.AutoOn;
@@ -31,7 +28,6 @@ namespace StreamVideo.Core.Models
         {
             AutoOn = dto.AutoOn;
             Enabled = dto.Enabled;
-            Layout = cache.TryUpdateOrCreateFromDto(Layout, dto.Layout);
             _qualityTracks.TryReplaceValuesFromDto(dto.QualityTracks);
         }
 

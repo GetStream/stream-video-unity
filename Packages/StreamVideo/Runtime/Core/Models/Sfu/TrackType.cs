@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Unity.WebRTC;
-using SfuTrackType = Stream.Video.v1.Sfu.Models.TrackType;
+using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
 using OriginalNameAttr = Google.Protobuf.Reflection.OriginalNameAttribute;
 
 namespace StreamVideo.Core.Models.Sfu

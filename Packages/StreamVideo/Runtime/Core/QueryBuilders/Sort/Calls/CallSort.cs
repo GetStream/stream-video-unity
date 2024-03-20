@@ -2,7 +2,7 @@
 using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.StatefulModels;
 
-namespace Core.QueryBuilders.Sort.Calls
+namespace StreamVideo.Core.QueryBuilders.Sort.Calls
 {
     /// <summary>
     /// Sort object for <see cref="IStreamCall"/> query: <see cref="IStreamVideoClient.QueryCallsAsync"/>

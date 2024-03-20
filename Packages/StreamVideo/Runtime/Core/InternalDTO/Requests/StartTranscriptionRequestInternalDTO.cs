@@ -18,6 +18,8 @@ namespace StreamVideo.Core.InternalDTO.Requests
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class StartTranscriptionRequestInternalDTO
     {
+        [Newtonsoft.Json.JsonProperty("transcription_external_storage", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string TranscriptionExternalStorage { get; set; } = default!;
 
     }
 

@@ -1,7 +1,7 @@
 ﻿using StreamVideo.Core;
 using StreamVideo.Libs.Auth;
 
-namespace DocsCodeSamples.Other
+namespace StreamVideoDocsCodeSamples.Other
 {
     internal class GithubRepoCodeExamples
     {

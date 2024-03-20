@@ -23,7 +23,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
 
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public TranscriptionSettingsRequestModeInternalEnum Mode { get; set; } = default!;
+        public TranscriptionSettingsModeInternalEnum Mode { get; set; } = default!;
 
     }
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using SfuConnectionQuality = Stream.Video.v1.Sfu.Models.ConnectionQuality;
+using SfuConnectionQuality = StreamVideo.v1.Sfu.Models.ConnectionQuality;
 
 namespace StreamVideo.Core.Models.Sfu
 {

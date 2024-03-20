@@ -28,8 +28,8 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// Custom member response data
         /// </summary>
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Always)]
-        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
-
+        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
+        
         /// <summary>
         /// Date/time of deletion
         /// </summary>

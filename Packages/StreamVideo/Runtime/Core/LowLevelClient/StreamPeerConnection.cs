@@ -197,6 +197,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        public Task<RTCStatsReport> GetStatsReportAsync() => _peerConnection.GetStatsAsync();
+
         public void Dispose()
         {
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;

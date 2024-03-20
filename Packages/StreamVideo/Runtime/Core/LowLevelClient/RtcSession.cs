@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using StreamVideo.v1.Sfu.Events;
@@ -28,9 +27,7 @@ using SfuICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
 using StreamVideo.Core.Sfu;
-#if STREAM_DEBUG_ENABLED
-using System.Text;
-#endif
+using StreamVideo.Core.Stats;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -39,7 +36,7 @@ namespace StreamVideo.Core.LowLevelClient
     public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
 
     public delegate void ParticipantLeftHandler(string sessionId, string userId);
-    
+
     //StreamTodo: Implement GeneratedApi.UpdateMuteStates
     //StreamTodo: Implement GeneratedApi.RestartIce
     //StreamTodo: Rename GeneratedAPI to SfuRpcApi
@@ -74,6 +71,9 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public StreamCall ActiveCall { get; private set; }
+
+        public StreamPeerConnection Subscriber { get; private set; }
+        public StreamPeerConnection Publisher { get; private set; }
 
         #region IInputProvider
 
@@ -146,6 +146,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             //StreamTodo: SFU WS should be created here so that RTC session owns it
             _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
+
+            var statsCollector = new UnityWebRtcStatsCollector(this, _serializer);
+            _statsSender = new WebRtcStatsSender(this, statsCollector, _timeService, _logs);
         }
 
         public void Dispose()
@@ -162,7 +165,8 @@ namespace StreamVideo.Core.LowLevelClient
         public void Update()
         {
             _sfuWebSocket.Update();
-            _publisher?.Update();
+            Publisher?.Update();
+            _statsSender.Update();
 
             //StreamTodo: we could remove this if we'd maintain a collection of tracks and update them directly
             if (ActiveCall != null)
@@ -174,6 +178,23 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             TryExecuteSubscribeToTracks();
+        }
+
+        public async Task SendWebRtcStats(SendStatsRequest request)
+        {
+            var response = await RpcCallAsync(request, GeneratedAPI.SendStats,
+                nameof(GeneratedAPI.SendStats));
+
+            if (ActiveCall == null)
+            {
+                //Ignore if call ended during this request
+                return;
+            }
+
+            if (response.Error != null)
+            {
+                _logs.Error(response.Error.Message);
+            }
         }
 
         //StreamTodo: solve this dependency better
@@ -210,7 +231,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             // We don't set initial offer as local. Later on we set generated answer as a local
-            var offer = await _subscriber.CreateOfferAsync();
+            var offer = await Subscriber.CreateOfferAsync();
 
             _sfuWebSocket.SetSessionData(SessionId, offer.sdp, sfuUrl, sfuToken);
             await _sfuWebSocket.ConnectAsync();
@@ -245,8 +266,8 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: call by call.reconnectOrSwitchSfu()
         public void Reconnect()
         {
-            _subscriber?.RestartIce();
-            _publisher?.RestartIce();
+            Subscriber?.RestartIce();
+            Publisher?.RestartIce();
         }
 
         public void UpdateRequestedVideoResolution(string participantSessionId, VideoResolution videoResolution)
@@ -257,22 +278,22 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void TrySetAudioTrackEnabled(bool isEnabled)
         {
-            if (_publisher?.PublisherAudioTrack == null)
+            if (Publisher?.PublisherAudioTrack == null)
             {
                 return;
             }
 
-            _publisher.PublisherAudioTrack.Enabled = isEnabled;
+            Publisher.PublisherAudioTrack.Enabled = isEnabled;
         }
 
         public void TrySetVideoTrackEnabled(bool isEnabled)
         {
-            if (_publisher?.PublisherVideoTrack == null)
+            if (Publisher?.PublisherVideoTrack == null)
             {
                 return;
             }
 
-            _publisher.PublisherVideoTrack.Enabled = isEnabled;
+            Publisher.PublisherVideoTrack.Enabled = isEnabled;
         }
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
@@ -283,6 +304,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly ITimeService _timeService;
         private readonly IStreamClientConfig _config;
         private readonly Func<IStreamCall, HttpClient> _httpClientFactory;
+        private readonly WebRtcStatsSender _statsSender;
 
         private readonly List<SfuICETrickle> _pendingIceTrickleRequests = new List<SfuICETrickle>();
         private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
@@ -293,8 +315,6 @@ namespace StreamVideo.Core.LowLevelClient
         private HttpClient _httpClient;
         private CallingState _callState;
 
-        private StreamPeerConnection _subscriber;
-        private StreamPeerConnection _publisher;
         private ICache _cache;
 
         private float _lastTrackSubscriptionRequestTime;
@@ -311,10 +331,10 @@ namespace StreamVideo.Core.LowLevelClient
             _pendingIceTrickleRequests.Clear();
             _videoResolutionByParticipantSessionId.Clear();
 
-            _subscriber?.Dispose();
-            _subscriber = null;
-            _publisher?.Dispose();
-            _publisher = null;
+            Subscriber?.Dispose();
+            Subscriber = null;
+            Publisher?.Dispose();
+            Publisher = null;
 
             ActiveCall = null;
 
@@ -493,10 +513,10 @@ namespace StreamVideo.Core.LowLevelClient
             switch (iceTrickle.PeerType.ToStreamPeerType())
             {
                 case StreamPeerType.Publisher:
-                    _publisher.AddIceCandidate(iceCandidateInit);
+                    Publisher.AddIceCandidate(iceCandidateInit);
                     break;
                 case StreamPeerType.Subscriber:
-                    _subscriber.AddIceCandidate(iceCandidateInit);
+                    Subscriber.AddIceCandidate(iceCandidateInit);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -526,16 +546,16 @@ namespace StreamVideo.Core.LowLevelClient
                     sdp = subscriberOffer.Sdp
                 };
 
-                await _subscriber.SetRemoteDescriptionAsync(rtcSessionDescription);
-                _subscriber.ThrowDisposedDuringOperationIfNull();
+                await Subscriber.SetRemoteDescriptionAsync(rtcSessionDescription);
+                Subscriber.ThrowDisposedDuringOperationIfNull();
 
-                var answer = await _subscriber.CreateAnswerAsync();
-                _subscriber.ThrowDisposedDuringOperationIfNull();
+                var answer = await Subscriber.CreateAnswerAsync();
+                Subscriber.ThrowDisposedDuringOperationIfNull();
 
                 //StreamTodo: mangle SDP
 
-                await _subscriber.SetLocalDescriptionAsync(ref answer);
-                _subscriber.ThrowDisposedDuringOperationIfNull();
+                await Subscriber.SetLocalDescriptionAsync(ref answer);
+                Subscriber.ThrowDisposedDuringOperationIfNull();
 
                 var sendAnswerRequest = new SendAnswerRequest
                 {
@@ -701,7 +721,7 @@ namespace StreamVideo.Core.LowLevelClient
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
         {
-
+            //StreamTodo: use rpcCallAsync.GetMethodInfo().Name; instead debugRequestName
 
 #if STREAM_DEBUG_ENABLED
             var serializedRequest = _serializer.Serialize(request);
@@ -717,7 +737,7 @@ namespace StreamVideo.Core.LowLevelClient
             var serializedResponse = _serializer.Serialize(response);
 
             //StreamTodo: move to debug helper class
-            var sb = new StringBuilder();
+            var sb = new System.Text.StringBuilder();
 
             var errorProperty = typeof(TResponse).GetProperty("Error");
             var error = (StreamVideo.v1.Sfu.Models.Error)errorProperty.GetValue(response);
@@ -767,14 +787,14 @@ namespace StreamVideo.Core.LowLevelClient
 
             try
             {
-                if (_publisher.SignalingState != RTCSignalingState.Stable)
+                if (Publisher.SignalingState != RTCSignalingState.Stable)
                 {
                     _logs.Error(
-                        $"{nameof(_publisher.SignalingState)} state is not stable, current state: {_publisher.SignalingState}");
+                        $"{nameof(Publisher.SignalingState)} state is not stable, current state: {Publisher.SignalingState}");
                 }
 
-                var offer = await _publisher.CreateOfferAsync();
-                _publisher.ThrowDisposedDuringOperationIfNull();
+                var offer = await Publisher.CreateOfferAsync();
+                Publisher.ThrowDisposedDuringOperationIfNull();
 
                 //StreamTodo: ignored the _config.Audio.EnableRed because with current webRTC version this modification causes a crash
                 //We're also forcing the red codec in the StreamPeerConnection but atm this results in "InvalidModification"
@@ -791,8 +811,8 @@ namespace StreamVideo.Core.LowLevelClient
                         $"Modified SDP, enable red: {_config.Audio.EnableRed}, enable DTX: {_config.Audio.EnableDtx} ");
                 }
 
-                await _publisher.SetLocalDescriptionAsync(ref offer);
-                _publisher.ThrowDisposedDuringOperationIfNull();
+                await Publisher.SetLocalDescriptionAsync(ref offer);
+                Publisher.ThrowDisposedDuringOperationIfNull();
 
                 // //StreamTodo: timeout + break if we're disconnecting/reconnecting
                 // while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
@@ -820,13 +840,13 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
                 var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher));
-                _publisher.ThrowDisposedDuringOperationIfNull();
+                Publisher.ThrowDisposedDuringOperationIfNull();
 
 #if STREAM_DEBUG_ENABLED
                 _logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
 #endif
 
-                await _publisher.SetRemoteDescriptionAsync(new RTCSessionDescription()
+                await Publisher.SetRemoteDescriptionAsync(new RTCSessionDescription()
                 {
                     type = RTCSdpType.Answer,
                     sdp = result.Sdp
@@ -845,7 +865,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             var lines = sdp.Split("\n");
             var mediaStreamRecord
-                = lines.Single(l => l.StartsWith($"a=msid:{_publisher.PublisherVideoMediaStream.Id}"));
+                = lines.Single(l => l.StartsWith($"a=msid:{Publisher.PublisherVideoMediaStream.Id}"));
             var parts = mediaStreamRecord.Split(" ");
             var result = parts[1];
 
@@ -857,7 +877,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private IEnumerable<TrackInfo> GetPublisherTracks(string sdp)
         {
-            var transceivers = _publisher.GetTransceivers().ToArray();
+            var transceivers = Publisher.GetTransceivers().ToArray();
 
             //StreamTodo: investigate why this return no results
             // var senderTracks = _publisher.GetTransceivers().Where(t
@@ -884,7 +904,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (t.Sender.Track.Kind == TrackKind.Video)
                 {
-                    var videoLayers = GetPublisherVideoLayers(_publisher.VideoSender.GetParameters().encodings,
+                    var videoLayers = GetPublisherVideoLayers(Publisher.VideoSender.GetParameters().encodings,
                         _publisherVideoSettings);
                     trackInfo.Layers.AddRange(videoLayers);
 
@@ -1031,20 +1051,20 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
-            _subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers,
+            Subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers,
                 this, _config.Audio, _publisherVideoSettings);
-            _subscriber.IceTrickled += OnIceTrickled;
-            _subscriber.StreamAdded += OnSubscriberStreamAdded;
+            Subscriber.IceTrickled += OnIceTrickled;
+            Subscriber.StreamAdded += OnSubscriberStreamAdded;
         }
 
         private void DisposeSubscriber()
         {
-            if (_subscriber != null)
+            if (Subscriber != null)
             {
-                _subscriber.IceTrickled -= OnIceTrickled;
-                _subscriber.StreamAdded -= OnSubscriberStreamAdded;
-                _subscriber.Dispose();
-                _subscriber = null;
+                Subscriber.IceTrickled -= OnIceTrickled;
+                Subscriber.StreamAdded -= OnSubscriberStreamAdded;
+                Subscriber.Dispose();
+                Subscriber = null;
             }
         }
 
@@ -1056,20 +1076,20 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: Handle default settings -> speaker off, mic off, cam off
             var callSettings = ActiveCall.Settings;
 
-            _publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers,
+            Publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers,
                 this, _config.Audio, _publisherVideoSettings);
-            _publisher.IceTrickled += OnIceTrickled;
-            _publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
+            Publisher.IceTrickled += OnIceTrickled;
+            Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
         }
 
         private void DisposePublisher()
         {
-            if (_publisher != null)
+            if (Publisher != null)
             {
-                _publisher.IceTrickled -= OnIceTrickled;
-                _publisher.NegotiationNeeded -= OnPublisherNegotiationNeeded;
-                _publisher.Dispose();
-                _publisher = null;
+                Publisher.IceTrickled -= OnIceTrickled;
+                Publisher.NegotiationNeeded -= OnPublisherNegotiationNeeded;
+                Publisher.Dispose();
+                Publisher = null;
             }
         }
 

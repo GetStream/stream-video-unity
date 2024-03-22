@@ -14,5 +14,7 @@
         /// Converters used during serialization
         /// </summary>
         ISerializationConverter[] Converters { get; }
+
+        SerializationNamingStrategy? NamingStrategy { get; set; }
     }
 }

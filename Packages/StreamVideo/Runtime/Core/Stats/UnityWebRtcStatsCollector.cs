@@ -39,7 +39,8 @@ namespace StreamVideo.Core.Stats
                 Converters = new ISerializationConverter[]
                 {
                     new EnumValueConverter()
-                }
+                },
+                NamingStrategy = SerializationNamingStrategy.CamelCase
             };
         }
 

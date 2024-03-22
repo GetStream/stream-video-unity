@@ -23,9 +23,9 @@ namespace StreamVideo.Libs.Serialization
         {
             var settings = new JsonSerializerSettings(_defaultSettings);
 
-            if (serializationOptions.IgnorePropertyHandler != null)
+            if (serializationOptions.IgnorePropertyHandler != null || serializationOptions.NamingStrategy != null)
             {
-                settings.ContractResolver = new IgnorePropertiesResolver(serializationOptions.IgnorePropertyHandler);
+                settings.ContractResolver = new JsonContractResolver(serializationOptions);
             }
 
             if (serializationOptions.Converters != null)

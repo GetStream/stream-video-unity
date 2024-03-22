@@ -5,12 +5,11 @@ using StreamVideo.Core.LowLevelClient;
 
 namespace StreamVideo.Core.DeviceManagers
 {
-    internal abstract class DeviceManagerBase<TDeviceInfo> : IDeviceManager
+    internal abstract class DeviceManagerBase<TDeviceInfo> : IDeviceManager<TDeviceInfo>
     {
         public bool IsEnabled { get; private set; } = true;
         
-        //StreamTodo: check this warning about nullable type
-        public abstract TDeviceInfo? SelectedDevice { get; protected set; }
+        public abstract TDeviceInfo SelectedDevice { get; protected set; }
 
         public void Enable() => SetEnabled(true);
 
@@ -22,20 +21,8 @@ namespace StreamVideo.Core.DeviceManagers
             OnSetEnabled(isEnabled);
         }
 
-        /// <summary>
-        /// Enumerate all available devices. This list contains all devices exposed by the underlying OS.
-        /// </summary>
         public abstract IEnumerable<TDeviceInfo> EnumerateDevices();
 
-        /// <summary>
-        /// Check if the device is capturing data.
-        /// This can be useful when there are multiple devices available and we want to filter out the ones that actually work.
-        /// For example, on Windows/Mac/Linux there can be many virtual cameras provided by various installed software that are not capturing any data.
-        /// You usually want to present all available devices to users but it may be a good idea to show working devices first or try to enable a first working device.
-        /// </summary>
-        /// <param name="device">Device obtained from <see cref="EnumerateDevices"/></param>
-        /// <param name="duration"></param>
-        /// <returns>True if device is providing captured data</returns>
         public Task<bool> TestDeviceAsync(TDeviceInfo device, float duration = 0.2f)
         {
             if (duration >= 0f || duration > 20f)

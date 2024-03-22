@@ -3,7 +3,7 @@
     /// <summary>
     /// Manages interactions with audio recording devices (Microphones).
     /// </summary>
-    public interface IAudioDeviceManager : IDeviceManager
+    public interface IAudioDeviceManager : IDeviceManager<MicrophoneDeviceInfo>
     {
         
     }

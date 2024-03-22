@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using UnityEngine;
@@ -15,7 +14,7 @@ namespace StreamVideo.Core.DeviceManagers
         {
             foreach (var device in WebCamTexture.devices)
             {
-                yield return new CameraDeviceInfo(device.name, device.isFrontFacing);
+                yield return new CameraDeviceInfo(device.name, device.isFrontFacing, this);
             }
         }
 
@@ -51,6 +50,16 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 _activeCamera.Play();
             }
+        }
+
+        /// <summary>
+        /// Inject your own instance of <see cref="WebCamTexture"/> to be used as an active camera.
+        /// Use this only if you need to control the instance of <see cref="WebCamTexture"/>. Otherwise, simply use the <see cref="SelectDevice"/>
+        /// </summary>
+        /// <param name="webCamTexture"></param>
+        private void SetRawWebCamTexture(WebCamTexture webCamTexture)
+        {
+            //StreamTodo: implement and expose
         }
         
         internal VideoDeviceManager(RtcSession rtcSession, IStreamVideoClient client)

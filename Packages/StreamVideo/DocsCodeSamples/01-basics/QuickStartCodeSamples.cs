@@ -126,7 +126,7 @@ namespace StreamVideoDocsCodeSamples._01_basics
         {
             // Obtain reference to an AudioSource that will be used a source of audio
             var audioSource = GetComponent<AudioSource>();
-            _client.SetAudioInputSource(audioSource);
+            //_client.SetAudioInputSource(audioSource);
         }
 
         public void BindMicrophoneToAudioSource()
@@ -153,7 +153,7 @@ namespace StreamVideoDocsCodeSamples._01_basics
         {
 // Obtain reference to a WebCamTexture that will be used a source of video
             var webCamTexture = GetComponent<WebCamTexture>();
-            _client.SetCameraInputSource(webCamTexture);
+            //_client.SetCameraInputSource(webCamTexture);
         }
 
         public void BindCameraToWebCamTexture()
@@ -172,7 +172,7 @@ namespace StreamVideoDocsCodeSamples._01_basics
             activeCamera.Play();
 
 // Set WebCamTexture in Stream's Client - this WebCamTexture will be the video source in video calls
-            _client.SetCameraInputSource(activeCamera);
+            //_client.SetCameraInputSource(activeCamera);
         }
 
         private IStreamVideoClient _client;

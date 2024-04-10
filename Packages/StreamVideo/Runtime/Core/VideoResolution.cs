@@ -6,7 +6,7 @@ namespace StreamVideo.Core
     /// <summary>
     /// Video resolution
     ///
-    /// Create a custom resolution or use one of the predefined:
+    /// You can create a custom resolution or use one of the predefined:
     /// - <see cref="Res_1080p"/> FullHD -> 1920x1080
     /// - <see cref="Res_720p"/> HD -> 1280x720
     /// - <see cref="Res_480p"/> SD -> 640x480

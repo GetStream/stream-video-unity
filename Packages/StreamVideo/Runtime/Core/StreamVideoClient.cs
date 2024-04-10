@@ -183,7 +183,7 @@ namespace StreamVideo.Core
 
         public Task DisconnectAsync() => InternalLowLevelClient.DisconnectAsync();
 
-        public void SetAudioInputSource(AudioSource audioSource)
+        void IInternalStreamVideoClient.SetAudioInputSource(AudioSource audioSource)
         {
             if (audioSource == null)
             {
@@ -196,7 +196,7 @@ namespace StreamVideo.Core
         //StreamTodo: add IsActive flag to SetCameraInputSource  SetAudioInputSource SetCameraInputSource
 
         //StreamTodo: later we should accept just Texture or RenderTexture or TextureProvider
-        public void SetCameraInputSource(WebCamTexture webCamTexture)
+        void IInternalStreamVideoClient.SetCameraInputSource(WebCamTexture webCamTexture)
         {
             if (webCamTexture == null)
             {
@@ -206,10 +206,10 @@ namespace StreamVideo.Core
             InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;
         }
 
-        public void SetCameraInputSource(Camera sceneCamera)
-        {
-            InternalLowLevelClient.RtcSession.VideoSceneInput = sceneCamera;
-        }
+        // public void SetCameraInputSource(Camera sceneCamera)
+        // {
+        //     InternalLowLevelClient.RtcSession.VideoSceneInput = sceneCamera;
+        // }
 
         public async Task<QueryCallsResult> QueryCallsAsync(IEnumerable<IFieldFilterRule> filters = null,
             CallSort sort = null, int limit = 25, string prev = null, string next = null, bool watch = false)

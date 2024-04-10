@@ -45,12 +45,12 @@ namespace StreamVideo.ExampleProject.UI
         {
             _localWebCamTexture = localWebCamTexture;
             
-            if (_localParticipantRenderTexture != null)
-            {
-                // Dispose previous texture 
-                _localParticipantRenderTexture.Release();
-                _localParticipantRenderTexture = null;
-            }
+            // if (_localParticipantRenderTexture != null)
+            // {
+            //     // Dispose previous texture 
+            //     _localParticipantRenderTexture.Release();
+            //     _localParticipantRenderTexture = null;
+            // }
 
             if (localWebCamTexture == null)
             {
@@ -58,11 +58,11 @@ namespace StreamVideo.ExampleProject.UI
                 return;
             }
             
-            _localParticipantRenderTexture = new RenderTexture(localWebCamTexture.width, localWebCamTexture.height, 0, RenderTextureFormat.Default);
-            _localParticipantRenderTexture.Create();
+            // _localParticipantRenderTexture = new RenderTexture(localWebCamTexture.width, localWebCamTexture.height, 0, RenderTextureFormat.Default);
+            // _localParticipantRenderTexture.Create();
 
             // we set RenderTexture a a RawImage.texture because the RenderTexture will receive video stream from the local camera
-            _video.texture = _localParticipantRenderTexture;
+            _video.texture = localWebCamTexture;
         }
         
         // Called by Unity Engine
@@ -76,7 +76,7 @@ namespace StreamVideo.ExampleProject.UI
         {
             if (_localWebCamTexture != null)
             {
-                Graphics.Blit(_localWebCamTexture, _localParticipantRenderTexture);
+                //Graphics.Blit(_localWebCamTexture, _localParticipantRenderTexture);
             }
 
             var rect = _videoRectTransform.rect;
@@ -115,7 +115,7 @@ namespace StreamVideo.ExampleProject.UI
         private Color32 _defaultSpeakerFrameColor;
 
         private AudioSource _audioSource;
-        private RenderTexture _localParticipantRenderTexture;
+        //private RenderTexture _localParticipantRenderTexture;
         private WebCamTexture _localWebCamTexture;
         private RectTransform _videoRectTransform;
         private Vector2 _lastVideoRenderedSize;

@@ -20,7 +20,7 @@ namespace StreamVideoDocsCodeSamples._03_guides
             inputAudioSource.loop = true;
             inputAudioSource.Play();
 
-            _client.SetAudioInputSource(inputAudioSource);
+            //_client.SetAudioInputSource(inputAudioSource);
         }
 
         public void ChangeMicrophoneDevice()
@@ -48,7 +48,7 @@ namespace StreamVideoDocsCodeSamples._03_guides
             activeCamera.Play();
 
             // Set WebCamTexture in Stream's Client - this WebCamTexture will be the video source in video calls
-            _client.SetCameraInputSource(activeCamera);
+            //_client.SetCameraInputSource(activeCamera);
         }
 
         public void ChangeVideoDevice()
@@ -72,7 +72,7 @@ namespace StreamVideoDocsCodeSamples._03_guides
             // Call Play() in order to start capturing the video
             activeCamera.Play();
             
-            _client.SetCameraInputSource(activeCamera);
+            //_client.SetCameraInputSource(activeCamera);
         }
 
         private IStreamVideoClient _client;

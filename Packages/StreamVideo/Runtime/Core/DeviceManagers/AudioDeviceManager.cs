@@ -9,8 +9,6 @@ namespace StreamVideo.Core.DeviceManagers
 {
     internal class AudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IAudioDeviceManager
     {
-        public override MicrophoneDeviceInfo SelectedDevice { get; protected set; }
-
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
         {
             foreach (var device in Microphone.devices)
@@ -19,23 +17,25 @@ namespace StreamVideo.Core.DeviceManagers
             }
         }
 
-        protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msDuration)
+        protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msTimeout)
         {
             const int sampleRate = 44100;
-            var maxRecordingTime = (int)Math.Ceiling(msDuration / 1000f);
+            var maxRecordingTime = (int)Math.Ceiling(msTimeout / 1000f);
+            
             var clip = Microphone.Start(device.Name, true, maxRecordingTime, sampleRate);
             if (clip == null)
             {
                 return false;
             }
 
-            await Task.Delay(msDuration);
+            //StreamTodo: check in loop and exit early if device is working already
+            await Task.Delay(msTimeout);
 
             //StreamTodo: should we check Microphone.IsRecording? Also some sources add this after Mic.Start() while (!(Microphone.GetPosition(null) > 0)) { }
 
             var data = new float[clip.samples * clip.channels];
             clip.GetData(data, 0);
-            bool hasData = false;
+            var hasData = false;
             foreach (var sample in data)
             {
                 if (sample != 0f)
@@ -77,7 +77,7 @@ namespace StreamVideo.Core.DeviceManagers
         
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio
         
-        internal AudioDeviceManager(RtcSession rtcSession, IStreamVideoClient client)
+        internal AudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client)
             : base(rtcSession, client)
         {
         }

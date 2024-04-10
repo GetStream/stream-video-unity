@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.StatefulModels;
+using UnityEngine;
 
 namespace StreamVideo.Core
 {
@@ -40,5 +41,9 @@ namespace StreamVideo.Core
 
         Task SetParticipantCustomDataAsync(IStreamVideoCallParticipant participant,
             Dictionary<string, object> internalDictionary);
+
+        void SetAudioInputSource(AudioSource audioSource);
+
+        void SetCameraInputSource(WebCamTexture webCamTexture);
     }
 }

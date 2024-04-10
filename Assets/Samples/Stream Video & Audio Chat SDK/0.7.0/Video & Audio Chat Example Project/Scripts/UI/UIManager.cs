@@ -53,7 +53,7 @@ namespace StreamVideo.ExampleProject.UI
 
             Debug.Log($"Changed active CAMERA from `{prevDevice}` to `{deviceName}`");
 
-            _videoManager.Client?.SetCameraInputSource(ActiveCamera);
+            //_videoManager.Client?.SetCameraInputSource(ActiveCamera);
 
             ActiveCameraChanged?.Invoke(ActiveCamera);
         }
@@ -113,8 +113,8 @@ namespace StreamVideo.ExampleProject.UI
 
         protected void Start()
         {
-            _videoManager.Client.SetAudioInputSource(_inputAudioSource);
-            _videoManager.Client.SetCameraInputSource(ActiveCamera);
+            //_videoManager.Client.SetAudioInputSource(_inputAudioSource);
+            //_videoManager.Client.SetCameraInputSource(ActiveCamera);
             
             ShowMainScreen();
         }

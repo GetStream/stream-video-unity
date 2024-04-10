@@ -38,13 +38,13 @@ namespace StreamVideo.Core.DeviceManagers
 
         /// <summary>
         /// Check if the device is capturing data.
-        /// This can be useful when there are multiple devices available and we want to filter out the ones that actually work.
-        /// For example, on Windows/Mac/Linux there can be many virtual cameras provided by various installed software that are not capturing any data.
-        /// You usually want to present all available devices to users but it may be a good idea to show working devices first or try to enable a first working device.
+        /// This can be useful when there are multiple devices available and you want to filter out the ones that actually work.
+        /// For example, on Windows/Mac/Linux there can be many virtual cameras that are not capturing any data.
+        /// You usually want to show all available devices to users but it may be a good idea to show working devices first or enable a first working device by default.
         /// </summary>
-        /// <param name="device">Device obtained from <see cref="DeviceManagerBase{TDeviceInfo}.EnumerateDevices"/></param>
-        /// <param name="duration"></param>
+        /// <param name="device">Device to test. You can obtain them from <see cref="DeviceManagerBase{TDeviceInfo}.EnumerateDevices"/></param>
+        /// <param name="timeout">How long the test will wait for camera input.</param>
         /// <returns>True if device is providing captured data</returns>
-        Task<bool> TestDeviceAsync(TDeviceInfo device, float duration = 0.2f);
+        Task<bool> TestDeviceAsync(TDeviceInfo device, float timeout = 0.2f);
     }
 }

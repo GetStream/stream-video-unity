@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using UnityEngine;
@@ -6,9 +7,18 @@ using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.DeviceManagers
 {
+    // StreamTodo: write tests:
+    /* - change in video res & FPS needs to be reflected in sent video
+- If you disable track before call it should stay disabled during the call
+- disabling camera should disable the video track (same with mic)
+- enabling the camera should enable the video track again (same with mic)
+- changing a disabled camera should not enable it
+- test that monitoring for video devices works and deviceAdded, deviceRemoved events are fired accordingly
+- test that enabling device triggers capturing and disabling stops capturing
+*/
     internal class VideoDeviceManager : DeviceManagerBase<CameraDeviceInfo>, IVideoDeviceManager
     {
-        public override CameraDeviceInfo SelectedDevice { get; protected set; }
+        public bool IsCapturing => _activeCamera != null && _activeCamera.isPlaying;
 
         public override IEnumerable<CameraDeviceInfo> EnumerateDevices()
         {
@@ -21,10 +31,15 @@ namespace StreamVideo.Core.DeviceManagers
         public void SelectDevice(CameraDeviceInfo device, int fps = 30)
             => SelectDevice(device, VideoResolution.Res_720p, fps);
 
-        public void SelectDevice(CameraDeviceInfo device, VideoResolution resolution, int fps = 30)
+        public void SelectDevice(CameraDeviceInfo device, VideoResolution requestedResolution, int requestedFPS = 30)
         {
-            var deviceChanged = _activeCamera == null || _activeCamera.name != device.Name;
-            var newInstanceNeeded = IsNewInstanceNeeded(device, resolution);
+            if (!device.IsValid)
+            {
+                throw new ArgumentException($"{nameof(device)} argument is not valid. The device name is empty.");
+            }
+            
+            var deviceChanged = SelectedDevice != device;
+            var newInstanceNeeded = IsNewInstanceNeeded(device, requestedResolution);
             
             if (_activeCamera != null && _activeCamera.isPlaying)
             {
@@ -33,7 +48,8 @@ namespace StreamVideo.Core.DeviceManagers
 
             if (newInstanceNeeded)
             {
-                _activeCamera = new WebCamTexture(device.Name, (int)resolution.Width, (int)resolution.Height, fps);
+                _activeCamera = new WebCamTexture(device.Name, (int)requestedResolution.Width, (int)requestedResolution.Height, requestedFPS);
+                SelectedDevice = device;
                 
                 // we probably need to make this internal so we don't end up out of sync if they select a device + set cam input source
                 Client.SetCameraInputSource(_activeCamera);
@@ -43,6 +59,7 @@ namespace StreamVideo.Core.DeviceManagers
                 if (deviceChanged)
                 {
                     _activeCamera.deviceName = device.Name;
+                    SelectedDevice = device;
                 }
             }
 
@@ -59,21 +76,23 @@ namespace StreamVideo.Core.DeviceManagers
         /// <param name="webCamTexture"></param>
         private void SetRawWebCamTexture(WebCamTexture webCamTexture)
         {
-            //StreamTodo: implement and expose
+            //StreamTodo: implement and make public
         }
         
-        internal VideoDeviceManager(RtcSession rtcSession, IStreamVideoClient client)
+        internal VideoDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client)
             : base(rtcSession, client)
         {
         }
 
         protected override void OnSetEnabled(bool isEnabled) => RtcSession.TrySetVideoTrackEnabled(isEnabled);
         
-        protected override async Task<bool> OnTestDeviceAsync(CameraDeviceInfo device, int msDuration)
+        protected override async Task<bool> OnTestDeviceAsync(CameraDeviceInfo device, int msTimeout)
         {
             var camTexture = new WebCamTexture(device.Name);
             camTexture.Play();
-            await Task.Delay(msDuration);
+            
+            //StreamTodo: check in loop and exit early if device is working already
+            await Task.Delay(msTimeout);
 
             // Simple check for valid texture size
             var isStreaming = camTexture.width > 16 && camTexture.height > 16; 

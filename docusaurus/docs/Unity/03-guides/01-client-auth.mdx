@@ -53,11 +53,10 @@ public class VideoClient : MonoBehaviour
 
 ### Generating a token
 
-* Tokens need to be generated server side. You can use our server side SDKs to quickly add support for this.
-Typically you integrate this into the part of your codebase where you login or register users.
-The tokens provide a way to authenticate a user or give access to a specific set of calls.
+Tokens provide a way to authenticate a user or give access to a specific set of calls. They're similar to passwords but offer more flexibility, allowing you to set the expiry date. For security reasons, tokens need to be generated server-side.
+Typically, you integrate this into the part of your codebase where you login or register users. You can use our server-side SDKs to easily add support for this. Follow our server-side SDKs [installation](https://getstream.io/video/docs/api/#installation) and [creating-users-and-user-tokens](https://getstream.io/video/docs/api/#creating-users-and-user-tokens) sections for more information.
 
-* Here's a valid user and token to help you get started on the client side, before integrating with your backend API.
+Here's a valid user and token to help you get started on the client side before integrating with your backend API:
 
 <TokenSnippet sampleApp='meeting' displayStyle='credentials'/>
 

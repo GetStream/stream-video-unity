@@ -29,7 +29,9 @@ namespace StreamVideo.Core.DeviceManagers
         public static bool operator !=(CameraDeviceInfo left, CameraDeviceInfo right) => !left.Equals(right);
 
         public Task<bool> TestDeviceAsync() => _videoDeviceManager.TestDeviceAsync(this);
-        
+
+        public override string ToString() => $"Camera Device - {Name}";
+
         internal bool IsValid => !string.IsNullOrEmpty(Name);
 
         private readonly IVideoDeviceManager _videoDeviceManager;

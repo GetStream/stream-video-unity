@@ -44,7 +44,7 @@ namespace StreamVideo.Core.DeviceManagers
 
         public Task<bool> TestDeviceAsync(TDeviceInfo device, float timeout = 0.2f)
         {
-            if (timeout >= 0f || timeout > 20f)
+            if (timeout <= 0f || timeout > 20f)
             {
                 throw new ArgumentOutOfRangeException(
                     $"'{nameof(timeout)}' argument must be between 0 and 20 seconds, given: {timeout}");

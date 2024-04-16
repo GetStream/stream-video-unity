@@ -9,6 +9,8 @@ namespace StreamVideo.Core.DeviceManagers
 {
     internal class AudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IAudioDeviceManager
     {
+        public bool IsCapturing => SelectedDevice.IsValid && Microphone.IsRecording(SelectedDevice.Name);
+        
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
         {
             foreach (var device in Microphone.devices)
@@ -48,6 +50,13 @@ namespace StreamVideo.Core.DeviceManagers
             return hasData;
         }
 
+        /// <summary>
+        /// Select microphone device to capture audio input. Available microphone devices are listed in <see cref="EnumerateDevices"/>.
+        /// You can check the currently selected audio device with <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDevice"/>, and
+        /// get notified when the selected device changes by subscribing to <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDeviceChanged"/>.
+        /// </summary>
+        /// <param name="device"></param>
+        /// <exception cref="ArgumentException">Thrown when the provided device has an invalid name</exception>
         public void SelectDevice(MicrophoneDeviceInfo device)
         {
             if (!device.IsValid)
@@ -119,8 +128,10 @@ namespace StreamVideo.Core.DeviceManagers
 
             _targetAudioSourceContainer = new GameObject()
             {
-                name = $"{nameof(AudioDeviceManager)} - Microphone Buffer",
-#if !STREAM_DEBUG_ENABLED
+                name = $"[Stream][{nameof(AudioDeviceManager)}] Microphone Buffer",
+#if STREAM_DEBUG_ENABLED
+                hideFlags = HideFlags.DontSave
+#else
                 hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave
 #endif
             };
@@ -132,12 +143,14 @@ namespace StreamVideo.Core.DeviceManagers
         
         private void TryStopRecording()
         {
-            if (SelectedDevice.IsValid)
+            if (!SelectedDevice.IsValid)
             {
-                if (Microphone.IsRecording(SelectedDevice.Name))
-                {
-                    Microphone.End(SelectedDevice.Name);
-                }
+                return;
+            }
+            
+            if (Microphone.IsRecording(SelectedDevice.Name))
+            {
+                Microphone.End(SelectedDevice.Name);
             }
         }
     }

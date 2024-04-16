@@ -83,6 +83,12 @@ namespace StreamVideo.Core
         /// </summary>
         Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId);
 
+        /// <summary>
+        /// Get a call with a specified Type and ID. If such a call doesn't exist, it will be created.
+        /// </summary>
+        /// <param name="callType">Call type - this defines the permissions and other settings for the call. Read more in the <a href="https://getstream.io/video/docs/unity/guides/call-types/">Call Types Docs</a></param>
+        /// <param name="callId">Call ID</param>
+        /// <returns>Call object of type: <see cref="IStreamCall"/></returns>
         Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId);
 
         /// <summary>

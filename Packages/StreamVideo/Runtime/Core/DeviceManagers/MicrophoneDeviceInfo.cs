@@ -23,6 +23,8 @@ namespace StreamVideo.Core.DeviceManagers
         public static bool operator ==(MicrophoneDeviceInfo left, MicrophoneDeviceInfo right) => left.Equals(right);
 
         public static bool operator !=(MicrophoneDeviceInfo left, MicrophoneDeviceInfo right) => !left.Equals(right);
+        
+        public override string ToString() => $"Microphone Device - {Name}";
 
         internal bool IsValid => !string.IsNullOrEmpty(Name);
     }

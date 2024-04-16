@@ -9,6 +9,9 @@ using StreamVideo.Core.State;
 
 namespace StreamVideo.Core.StatefulModels
 {
+    /// <summary>
+    /// Represents a call session where participants can share audio and video streams.
+    /// </summary>
     public interface IStreamCall : IStreamStatefulModel, IHasCustomData
     {
         /// <summary>
@@ -284,14 +287,14 @@ namespace StreamVideo.Core.StatefulModels
         Task SendCustomEventAsync(Dictionary<string, object> eventData);
 
         /// <summary>
-        /// Pin this participant locally. This will take effect on this client only.
+        /// Pin this participant locally. This will take effect on this device only.
         /// You can get all pinned participants with <see cref="StreamCall.PinnedParticipants"/>
         /// </summary>
         /// <param name="participant">Participant to pin</param>
         void PinLocally(IStreamVideoCallParticipant participant);
 
         /// <summary>
-        /// Unpin this participant locally. This will take effect on this client only.
+        /// Unpin this participant locally. This will take effect on this device only.
         /// You can get all pinned participants with <see cref="PinnedParticipants"/>
         /// </summary>
         /// <param name="participant">Participant to unpin</param>

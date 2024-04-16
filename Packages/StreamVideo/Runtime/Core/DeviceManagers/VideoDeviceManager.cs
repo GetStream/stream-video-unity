@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.DeviceManagers
@@ -51,7 +53,6 @@ namespace StreamVideo.Core.DeviceManagers
                 _activeCamera = new WebCamTexture(device.Name, (int)requestedResolution.Width, (int)requestedResolution.Height, requestedFPS);
                 SelectedDevice = device;
                 
-                // we probably need to make this internal so we don't end up out of sync if they select a device + set cam input source
                 Client.SetCameraInputSource(_activeCamera);
             }
             else
@@ -68,6 +69,13 @@ namespace StreamVideo.Core.DeviceManagers
                 _activeCamera.Play();
             }
         }
+
+        /// <summary>
+        /// Get the instance of <see cref="WebCamTexture"/> for the selected device. This is useful if you want to 
+        ///
+        /// This can change whenever a selected device is changed. Subscribe to <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDeviceChanged"/> to get notified when the selected device changes.
+        /// </summary>
+        public WebCamTexture GetSelectedDeviceWebCamTexture() => _activeCamera;
 
         /// <summary>
         /// Inject your own instance of <see cref="WebCamTexture"/> to be used as an active camera.
@@ -88,18 +96,84 @@ namespace StreamVideo.Core.DeviceManagers
         
         protected override async Task<bool> OnTestDeviceAsync(CameraDeviceInfo device, int msTimeout)
         {
-            var camTexture = new WebCamTexture(device.Name);
-            camTexture.Play();
-            
-            //StreamTodo: check in loop and exit early if device is working already
-            await Task.Delay(msTimeout);
+            WebCamTexture camTexture = null;
+            try
+            {
+                camTexture = new WebCamTexture(device.Name);
+                
+                // This can fail and the only result will be Unity logging "Could not start graph" and "Could not pause pControl" - these are logs and not exceptions.
+                camTexture.Play();
 
-            // Simple check for valid texture size
-            var isStreaming = camTexture.width > 16 && camTexture.height > 16; 
-    
-            camTexture.Stop();
-            Object.Destroy(camTexture);
-            return isStreaming;
+                if (_stopwatch == null)
+                {
+                    _stopwatch = new Stopwatch();
+                }
+
+                _stopwatch.Stop();
+                _stopwatch.Reset();
+                _stopwatch.Start();
+
+                var isCapturing = false;
+
+                //Investigate https://forum.unity.com/threads/get-webcamtexture-pixel-data-without-using-getpixels32.1315821/
+
+                Color[] frame1 = null, frame2 = null;
+
+                while (_stopwatch.ElapsedMilliseconds < msTimeout)
+                {
+                    //StreamTodo: this does not guarantee that camera is capturing data
+                    if (camTexture.didUpdateThisFrame)
+                    {
+                        var frame = camTexture.GetPixels();
+                        
+                        if (frame1 == null)
+                        {
+                            if (!IsFrameBlack(frame))
+                            {
+                                frame1 = frame;
+                                Debug.Log(
+                                    $"TEST DEVICE - {device.Name} - Frame 1 SET after {_stopwatch.ElapsedMilliseconds}");
+                                
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            if (!IsFrameBlack(frame))
+                            {
+                                frame2 = frame;
+                                Debug.Log(
+                                    $"TEST DEVICE - {device.Name} - Frame 2 SET after {_stopwatch.ElapsedMilliseconds}");
+                            }
+                        }
+                    }
+
+                    if (frame1 != null && frame2 != null && !AreFramesEqual(frame1, frame2))
+                    {
+                        Debug.Log(
+                            $"TEST DEVICE - {device.Name} - Frame ARE DIFFERENT after {_stopwatch.ElapsedMilliseconds}");
+                        isCapturing = true;
+                        break;
+                    }
+
+                    await Task.Delay(1);
+                }
+                
+                return isCapturing;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("AAAAAAAAAAAAAAAAAAAAAAAA " + e.Message);
+                return false;
+            }
+            finally
+            {
+                if (camTexture != null)
+                {
+                    camTexture.Stop();
+                    Object.Destroy(camTexture);
+                }
+            }
         }
 
         protected override void OnDisposing()
@@ -124,12 +198,45 @@ namespace StreamVideo.Core.DeviceManagers
         //We could also favor front camera on mobile devices
         
         private WebCamTexture _activeCamera;
-        
+        private Stopwatch _stopwatch;
+
         private bool IsNewInstanceNeeded(CameraDeviceInfo device, VideoResolution resolution, int fps = 30)
         {
             return _activeCamera == null || _activeCamera.requestedWidth != resolution.Width ||
                    _activeCamera.requestedHeight != resolution.Height ||
                    Mathf.Abs(_activeCamera.requestedFPS - fps) < 0.01f;
+        }
+        
+        private static bool AreFramesEqual(IReadOnlyList<Color> frame1, IReadOnlyList<Color> frame2)
+        {
+            if (frame1.Count != frame2.Count)
+            {
+                return false;
+            }
+
+            for (var i = 0; i < frame1.Count; i++)
+            {
+                if (frame1[i] != frame2[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool IsFrameBlack(IReadOnlyList<Color> frame1)
+        {
+            for (var i = 0; i < frame1.Count; i++)
+            {
+                //StreamTodo: perhaps check if the whole frame is same color. Some virtual camera can be e.g. orange
+                if (frame1[i] != Color.black)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

@@ -3,6 +3,8 @@ using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using StreamVideo.Core;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Tests.Shared;
 using UnityEngine;
@@ -36,10 +38,8 @@ namespace StreamVideo.Tests.Runtime
         {
             var streamCall = await clientA.JoinRandomCallAsync();
 
-            var webCamTexture = DisposableAssetsProvider.WebCamTextureFactory.Create(WebCamTexture.devices.First().name, 1920, 1080, 20);
-            webCamTexture.Play();
-
-            clientA.Client.SetCameraInputSource(webCamTexture);
+            var cameraDevice = await TryGetFirstWorkingCameraDeviceAsync(clientA.Client);
+            clientA.Client.VideoDeviceManager.SelectDevice(cameraDevice);
 
             var call = await clientB.Client.JoinCallAsync(streamCall.Type, streamCall.Id, create: false, ring: false,
                 notify: false);
@@ -63,6 +63,19 @@ namespace StreamVideo.Tests.Runtime
             }
 
             Assert.IsNotNull(streamTrack);
+        }
+
+        //StreamTodo: put this in VideoDeviceManager
+        private static async Task<CameraDeviceInfo> TryGetFirstWorkingCameraDeviceAsync(IStreamVideoClient client)
+        {
+            var cameraManager = client.VideoDeviceManager;
+            foreach (var cameraDevice in cameraManager.EnumerateDevices())
+            {
+                var isWorking = await cameraManager.TestDeviceAsync(cameraDevice, 0.5f);
+                Debug.Log($"TEST DEVICE {cameraDevice} - {isWorking}");
+            }
+
+            return cameraManager.EnumerateDevices().First(d => d.Name.Contains("Logi") && d.Name.Contains("Capture"));
         }
         
         [UnityTest]
@@ -90,10 +103,8 @@ namespace StreamVideo.Tests.Runtime
             };
             
             // First participant - enable video track
-            var webCamTexture = DisposableAssetsProvider.WebCamTextureFactory.Create(WebCamTexture.devices.First().name, 1920, 1080, 20);
-            webCamTexture.Play();
-
-            clientA.Client.SetCameraInputSource(webCamTexture);
+            var cameraDevice = await TryGetFirstWorkingCameraDeviceAsync(clientA.Client);
+            clientA.Client.VideoDeviceManager.SelectDevice(cameraDevice);
             
             // Wait for event
             await WaitForConditionAsync(() => streamTrack != null);

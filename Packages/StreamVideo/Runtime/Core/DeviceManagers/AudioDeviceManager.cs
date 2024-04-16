@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Libs.Logs;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -9,8 +10,6 @@ namespace StreamVideo.Core.DeviceManagers
 {
     internal class AudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IAudioDeviceManager
     {
-        public bool IsCapturing => SelectedDevice.IsValid && Microphone.IsRecording(SelectedDevice.Name);
-        
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
         {
             foreach (var device in Microphone.devices)
@@ -80,14 +79,14 @@ namespace StreamVideo.Core.DeviceManagers
 
             if (IsEnabled)
             {
-                targetAudioSource.Play();
+                Enable();
             }
         }
         
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio
         
-        internal AudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client)
-            : base(rtcSession, client)
+        internal AudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
+            : base(rtcSession, client, logs)
         {
         }
 
@@ -96,6 +95,11 @@ namespace StreamVideo.Core.DeviceManagers
             if (isEnabled && SelectedDevice.IsValid && !GetOrCreateTargetAudioSource().isPlaying)
             {
                 GetOrCreateTargetAudioSource().Play();
+            }
+
+            if (!isEnabled)
+            {
+                TryStopRecording();
             }
             
             RtcSession.TrySetAudioTrackEnabled(isEnabled);
@@ -126,7 +130,7 @@ namespace StreamVideo.Core.DeviceManagers
                 return _targetAudioSource;
             }
 
-            _targetAudioSourceContainer = new GameObject()
+            _targetAudioSourceContainer = new GameObject
             {
                 name = $"[Stream][{nameof(AudioDeviceManager)}] Microphone Buffer",
 #if STREAM_DEBUG_ENABLED

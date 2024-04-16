@@ -83,7 +83,7 @@ namespace StreamVideo.Tests.Shared
 
             Debug.Log($"Client connected in {timer.Elapsed.TotalSeconds:F2} seconds");
         }
-        
+
         private class DemoCredentialsApiResponse
         {
             public string UserId;

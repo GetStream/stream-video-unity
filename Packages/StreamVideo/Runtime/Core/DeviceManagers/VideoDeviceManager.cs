@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Libs.Logs;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.DeviceManagers
@@ -20,8 +20,6 @@ namespace StreamVideo.Core.DeviceManagers
 */
     internal class VideoDeviceManager : DeviceManagerBase<CameraDeviceInfo>, IVideoDeviceManager
     {
-        public bool IsCapturing => _activeCamera != null && _activeCamera.isPlaying;
-
         public override IEnumerable<CameraDeviceInfo> EnumerateDevices()
         {
             foreach (var device in WebCamTexture.devices)
@@ -52,8 +50,6 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 _activeCamera = new WebCamTexture(device.Name, (int)requestedResolution.Width, (int)requestedResolution.Height, requestedFPS);
                 SelectedDevice = device;
-                
-                Client.SetCameraInputSource(_activeCamera);
             }
             else
             {
@@ -66,10 +62,11 @@ namespace StreamVideo.Core.DeviceManagers
 
             if (IsEnabled)
             {
-                _activeCamera.Play();
+                Enable();
             }
         }
 
+        //StreamTodo: better to not expose this and make fake tracks for local user. This way every participant is processed exactly the same
         /// <summary>
         /// Get the instance of <see cref="WebCamTexture"/> for the selected device. This is useful if you want to 
         ///
@@ -77,23 +74,27 @@ namespace StreamVideo.Core.DeviceManagers
         /// </summary>
         public WebCamTexture GetSelectedDeviceWebCamTexture() => _activeCamera;
 
-        /// <summary>
-        /// Inject your own instance of <see cref="WebCamTexture"/> to be used as an active camera.
-        /// Use this only if you need to control the instance of <see cref="WebCamTexture"/>. Otherwise, simply use the <see cref="SelectDevice"/>
-        /// </summary>
-        /// <param name="webCamTexture"></param>
-        private void SetRawWebCamTexture(WebCamTexture webCamTexture)
-        {
-            //StreamTodo: implement and make public
-        }
-        
-        internal VideoDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client)
-            : base(rtcSession, client)
+        internal VideoDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
+            : base(rtcSession, client, logs)
         {
         }
 
-        protected override void OnSetEnabled(bool isEnabled) => RtcSession.TrySetVideoTrackEnabled(isEnabled);
-        
+        protected override void OnSetEnabled(bool isEnabled)
+        {
+            if (isEnabled && _activeCamera != null && !_activeCamera.isPlaying)
+            {
+                _activeCamera.Play();
+                Client.SetCameraInputSource(_activeCamera);
+            }
+
+            if (!isEnabled && _activeCamera != null)
+            {
+                _activeCamera.Stop();
+            }
+            
+            RtcSession.TrySetVideoTrackEnabled(isEnabled);
+        }
+
         protected override async Task<bool> OnTestDeviceAsync(CameraDeviceInfo device, int msTimeout)
         {
             WebCamTexture camTexture = null;
@@ -115,13 +116,13 @@ namespace StreamVideo.Core.DeviceManagers
 
                 var isCapturing = false;
 
-                //Investigate https://forum.unity.com/threads/get-webcamtexture-pixel-data-without-using-getpixels32.1315821/
+                //StreamTodo: Investigate https://forum.unity.com/threads/get-webcamtexture-pixel-data-without-using-getpixels32.1315821/
 
                 Color[] frame1 = null, frame2 = null;
 
                 while (_stopwatch.ElapsedMilliseconds < msTimeout)
                 {
-                    //StreamTodo: this does not guarantee that camera is capturing data
+                    //WebCamTexture.didUpdateThisFrame does not guarantee that camera is capturing data. We need to compare frames
                     if (camTexture.didUpdateThisFrame)
                     {
                         var frame = camTexture.GetPixels();
@@ -131,9 +132,6 @@ namespace StreamVideo.Core.DeviceManagers
                             if (!IsFrameBlack(frame))
                             {
                                 frame1 = frame;
-                                Debug.Log(
-                                    $"TEST DEVICE - {device.Name} - Frame 1 SET after {_stopwatch.ElapsedMilliseconds}");
-                                
                                 continue;
                             }
                         }
@@ -142,16 +140,12 @@ namespace StreamVideo.Core.DeviceManagers
                             if (!IsFrameBlack(frame))
                             {
                                 frame2 = frame;
-                                Debug.Log(
-                                    $"TEST DEVICE - {device.Name} - Frame 2 SET after {_stopwatch.ElapsedMilliseconds}");
                             }
                         }
                     }
 
                     if (frame1 != null && frame2 != null && !AreFramesEqual(frame1, frame2))
                     {
-                        Debug.Log(
-                            $"TEST DEVICE - {device.Name} - Frame ARE DIFFERENT after {_stopwatch.ElapsedMilliseconds}");
                         isCapturing = true;
                         break;
                     }
@@ -163,7 +157,7 @@ namespace StreamVideo.Core.DeviceManagers
             }
             catch (Exception e)
             {
-                Debug.LogError("AAAAAAAAAAAAAAAAAAAAAAAA " + e.Message);
+                Logs.Error(e.Message);
                 return false;
             }
             finally
@@ -191,12 +185,6 @@ namespace StreamVideo.Core.DeviceManagers
             base.OnDisposing();
         }
 
-        //StreamTodo: wrap all Unity webcam texture operations here. Enabling/Disabling tracks should manage the WebCamTexture so that users only 
-        //Also take into account that user may want to provide his instance of WebCamTexture + monitor for devices list changes 
-        
-        //StreamTodo: add AutoDetectActiveDevice() method -> will sample each device and pick the first that delivers data
-        //We could also favor front camera on mobile devices
-        
         private WebCamTexture _activeCamera;
         private Stopwatch _stopwatch;
 
@@ -229,14 +217,14 @@ namespace StreamVideo.Core.DeviceManagers
         {
             for (var i = 0; i < frame1.Count; i++)
             {
-                //StreamTodo: perhaps check if the whole frame is same color. Some virtual camera can be e.g. orange
+                //StreamTodo: perhaps check if the whole frame is same color. In one case a virtual camera was solid orange
                 if (frame1[i] != Color.black)
                 {
-                    return true;
+                    return false;
                 }
             }
 
-            return false;
+            return true;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace StreamVideo.Core.DeviceManagers
         /// <summary>
         /// Currently selected device. This device will be used to capture data.
         /// </summary>
-        public TDeviceInfo SelectedDevice { get; }
+        TDeviceInfo SelectedDevice { get; }
 
         /// <summary>
         /// START capturing data from the <see cref="SelectedDevice"/>. Before calling this method you must first use <see cref="SetEnabled"/>

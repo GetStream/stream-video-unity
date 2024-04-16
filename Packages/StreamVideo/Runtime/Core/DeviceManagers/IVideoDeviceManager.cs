@@ -1,4 +1,6 @@
-﻿namespace StreamVideo.Core.DeviceManagers
+﻿using UnityEngine;
+
+namespace StreamVideo.Core.DeviceManagers
 {
     /// <summary>
     /// Manages interactions with video recording devices - Cameras.
@@ -16,5 +18,12 @@
         /// <param name="requestedResolution">Requested video resolution for the captured video. If the requested resolution is not supported by the camera, the closest available one will be selected.</param>
         /// <param name="requestedFPS">Requested frame rate for the captured video. If the requested FPS is not supported by the camera, the closets available one will be selected</param>
         void SelectDevice(CameraDeviceInfo device, VideoResolution requestedResolution, int requestedFPS = 30);
+
+        /// <summary>
+        /// Get the instance of <see cref="WebCamTexture"/> for the selected device. This is useful if you want to 
+        ///
+        /// This can change whenever a selected device is changed. Subscribe to <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDeviceChanged"/> to get notified when the selected device changes.
+        /// </summary>
+        WebCamTexture GetSelectedDeviceWebCamTexture();
     }
 }

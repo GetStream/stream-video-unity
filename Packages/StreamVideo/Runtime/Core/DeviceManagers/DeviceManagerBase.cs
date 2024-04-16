@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Libs.Logs;
 
 namespace StreamVideo.Core.DeviceManagers
 {
@@ -55,16 +56,19 @@ namespace StreamVideo.Core.DeviceManagers
 
         public void Dispose() => OnDisposing();
 
-        internal DeviceManagerBase(RtcSession rtcSession, IInternalStreamVideoClient client)
+        internal DeviceManagerBase(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
         {
             RtcSession = rtcSession ?? throw new ArgumentNullException(nameof(rtcSession));
             Client = client ?? throw new ArgumentNullException(nameof(client));
+            Logs = logs ?? throw new ArgumentNullException(nameof(logs));
 
             //StreamTodo: react to when video & audio streams become available and disable them if IsEnabled was set to false before the call
         }
 
         protected RtcSession RtcSession { get; }
         protected IInternalStreamVideoClient Client { get; }
+        protected ILogs Logs { get; }
+
 
         protected abstract void OnSetEnabled(bool isEnabled);
 

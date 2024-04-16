@@ -30,8 +30,8 @@ namespace StreamVideo.Core.InternalDTO.Events
         /// <summary>
         /// The error that caused the connection to fail
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("error", Required = Newtonsoft.Json.Required.Always)]
-        public APIErrorInternalDTO Error { get; set; } = new APIErrorInternalDTO();
+        [Newtonsoft.Json.JsonProperty("error", Required = Newtonsoft.Json.Required.AllowNull)]
+        public APIErrorInternalDTO? Error { get; set; } = default!;
 
         /// <summary>
         /// The type of event: "connection.ok" in this case

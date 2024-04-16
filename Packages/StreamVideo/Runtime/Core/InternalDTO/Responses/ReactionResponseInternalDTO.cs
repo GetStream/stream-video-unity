@@ -18,8 +18,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class ReactionResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default,
-            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("emoji_code", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]

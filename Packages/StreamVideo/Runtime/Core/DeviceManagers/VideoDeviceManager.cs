@@ -20,6 +20,7 @@ namespace StreamVideo.Core.DeviceManagers
 */
     internal class VideoDeviceManager : DeviceManagerBase<CameraDeviceInfo>, IVideoDeviceManager
     {
+        //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<CameraDeviceInfo> EnumerateDevices()
         {
             foreach (var device in WebCamTexture.devices)

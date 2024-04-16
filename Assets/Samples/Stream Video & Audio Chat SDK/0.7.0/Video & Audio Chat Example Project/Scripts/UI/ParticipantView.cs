@@ -85,6 +85,8 @@ namespace StreamVideo.ExampleProject.UI
             {
                 _lastVideoRenderedSize = videoRenderedSize;
                 var videoResolution = new VideoResolution((int)videoRenderedSize.x, (int)videoRenderedSize.y);
+                
+                // To optimize bandwidth we always request the video resolution that matches what we're actually rendering
                 Participant.UpdateRequestedVideoResolution(videoResolution);
                 Debug.Log($"Rendered resolution changed for participant `{Participant.UserId}`. Requested video resolution update to: {videoResolution}");
             }

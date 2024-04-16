@@ -1,4 +1,5 @@
 using System;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.ExampleProject.UI.Screens;
 using UnityEngine;
@@ -9,53 +10,31 @@ namespace StreamVideo.ExampleProject.UI
     {
         public event Action<WebCamTexture> ActiveCameraChanged;
 
-        public WebCamTexture ActiveCamera { get; private set; }
-        public AudioSource InputAudioSource => _inputAudioSource;
+        //public WebCamTexture ActiveCamera { get; private set; }
+        //public AudioSource InputAudioSource => _inputAudioSource;
         public Camera InputSceneSource => _inputSceneCamera;
 
-        public void ChangeMicrophone(string deviceName, bool isActive)
+        public void ChangeMicrophone(MicrophoneDeviceInfo device, bool isActive)
         {
-            if (!string.IsNullOrEmpty(_selectedMicrophoneDeviceName))
-            {
-                StopAudioRecording();
-            }
+            var prevDevice = _videoManager.Client.AudioDeviceManager.SelectedDevice.Name ?? "None";
+            _selectedMicrophoneDeviceName = device.Name;
 
-            var prevDevice = _selectedMicrophoneDeviceName ?? "None";
-            _selectedMicrophoneDeviceName = deviceName;
-
-            if (isActive)
-            {
-                StartAudioRecording();
-            }
-
+            _videoManager.Client.AudioDeviceManager.SelectDevice(device);
+            
             Debug.Log(
                 $"Changed selected MICROPHONE from `{prevDevice}` to `{_selectedMicrophoneDeviceName}`. Recording: {isActive}");
         }
 
-        public void ChangeCamera(string deviceName, bool isActive)
+        public void ChangeCamera(CameraDeviceInfo device, bool isActive)
         {
-            var prevDevice = ActiveCamera != null ? ActiveCamera.deviceName : "None";
-
-            if (ActiveCamera == null)
-            {
-                ActiveCamera = new WebCamTexture(deviceName, _senderVideoWidth, _senderVideoHeight, _senderVideoFps);
-            }
-
-            // Camera needs to be stopped before changing the deviceName
-            ActiveCamera.Stop();
-            ActiveCamera.deviceName = deviceName;
-
-            if (isActive)
-            {
-                ActiveCamera.Play();
-                //StreamTodo: handle in coroutine and check if the camera started
-            }
-
-            Debug.Log($"Changed active CAMERA from `{prevDevice}` to `{deviceName}`");
-
-            //_videoManager.Client?.SetCameraInputSource(ActiveCamera);
-
-            ActiveCameraChanged?.Invoke(ActiveCamera);
+            var cameraManager = _videoManager.Client.VideoDeviceManager;
+            var prevDevice = cameraManager.SelectedDevice.Name ?? "None";
+        
+            cameraManager.SelectDevice(device);
+        
+            Debug.Log($"Changed active CAMERA from `{prevDevice}` to `{device}`");
+        
+            ActiveCameraChanged?.Invoke(cameraManager.GetSelectedDeviceWebCamTexture());
         }
 
         /// <summary>
@@ -64,14 +43,6 @@ namespace StreamVideo.ExampleProject.UI
         public void SetMicrophoneActive(bool isActive)
         {
             _videoManager.Client.AudioDeviceManager.SetEnabled(isActive);
-            
-            if (isActive)
-            {
-                StartAudioRecording();
-                return;
-            }
-
-            StopAudioRecording();
         }
 
         /// <summary>
@@ -83,13 +54,11 @@ namespace StreamVideo.ExampleProject.UI
             
             if (isActive)
             {
-                ActiveCamera.Play();
-                Debug.Log($"Camera recording started for `{ActiveCamera.deviceName}`");
+                Debug.Log($"Camera recording started for `{_videoManager.Client.VideoDeviceManager.SelectedDevice.Name}`");
                 return;
             }
             
-            ActiveCamera.Stop();
-            Debug.Log($"Camera recording stopped for `{ActiveCamera.deviceName}`");
+            Debug.Log($"Camera recording stopped for `{_videoManager.Client.VideoDeviceManager.SelectedDevice.Name}`");
         }
 
         public void Log(string message, LogType type)
@@ -113,9 +82,6 @@ namespace StreamVideo.ExampleProject.UI
 
         protected void Start()
         {
-            //_videoManager.Client.SetAudioInputSource(_inputAudioSource);
-            //_videoManager.Client.SetCameraInputSource(ActiveCamera);
-            
             ShowMainScreen();
         }
 
@@ -138,9 +104,6 @@ namespace StreamVideo.ExampleProject.UI
         private int _senderVideoFps = 30;
 
         [SerializeField]
-        private AudioSource _inputAudioSource;
-
-        [SerializeField]
         private Camera _inputSceneCamera;
 
         [SerializeField]
@@ -154,42 +117,6 @@ namespace StreamVideo.ExampleProject.UI
         private void OnCallStarted(IStreamCall call) => ShowCallScreen(call);
 
         private void OnCallEnded() => ShowMainScreen();
-
-        private void StartAudioRecording()
-        {
-            if (_inputAudioSource == null)
-            {
-                Debug.LogError("Audio recording failed. Input Audio Source is null");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(_selectedMicrophoneDeviceName))
-            {
-                Debug.LogError("Audio recording failed. No microphone device selected.");
-                return;
-            }
-
-            //StreamTodo: should the volume be 0 so we never hear input from our own microphone?
-            _inputAudioSource.clip
-                = Microphone.Start(_selectedMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
-            _inputAudioSource.loop = true;
-            _inputAudioSource.Play();
-
-            Debug.Log($"Audio recording started for `{_selectedMicrophoneDeviceName}`");
-        }
-
-        private void StopAudioRecording()
-        {
-            var isRecording = !string.IsNullOrEmpty(_selectedMicrophoneDeviceName) &&
-                              Microphone.IsRecording(_selectedMicrophoneDeviceName);
-            if (!isRecording)
-            {
-                return;
-            }
-
-            Microphone.End(_selectedMicrophoneDeviceName);
-            Debug.Log($"Audio recording stopped for `{_selectedMicrophoneDeviceName}`");
-        }
 
         private void ShowMainScreen()
         {

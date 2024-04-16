@@ -5,6 +5,6 @@
     /// </summary>
     public interface IAudioDeviceManager : IDeviceManager<MicrophoneDeviceInfo>
     {
-        
+        void SelectDevice(MicrophoneDeviceInfo device);
     }
 }

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace StreamVideo.Core.DeviceManagers
 {
-    public interface IDeviceManager<TDeviceInfo> : IDisposable
+    public interface IDeviceManager<TDeviceInfo> : IDisposable where TDeviceInfo : struct
     {
         /// <summary>
         /// Is device enabled. Enabled device will stream output during the call.

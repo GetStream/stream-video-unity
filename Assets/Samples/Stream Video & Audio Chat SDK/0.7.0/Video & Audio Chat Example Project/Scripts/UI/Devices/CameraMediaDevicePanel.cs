@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
+using StreamVideo.Core.DeviceManagers;
 
 namespace StreamVideo.ExampleProject.UI.Devices
 {
-    public class CameraMediaDevicePanel : MediaDevicePanelBase
+    public class CameraMediaDevicePanel : MediaDevicePanelBase<CameraDeviceInfo>
     {
-        protected override IEnumerable<string> GetDevicesNames() => WebCamTexture.devices.Select(d => d.name);
+        protected override IEnumerable<CameraDeviceInfo> GetDevices() => Client.VideoDeviceManager.EnumerateDevices();
+
+        protected override string GetDeviceName(CameraDeviceInfo device) => device.Name;
     }
 }

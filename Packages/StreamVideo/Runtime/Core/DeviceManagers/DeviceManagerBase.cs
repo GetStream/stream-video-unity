@@ -9,7 +9,7 @@ namespace StreamVideo.Core.DeviceManagers
     public delegate void
         SelectedDeviceChangeHandler<in TDeviceInfo>(TDeviceInfo previousDevice, TDeviceInfo currentDevice);
 
-    internal abstract class DeviceManagerBase<TDeviceInfo> : IDeviceManager<TDeviceInfo>
+    internal abstract class DeviceManagerBase<TDeviceInfo> : IDeviceManager<TDeviceInfo> where TDeviceInfo : struct
     {
         public event SelectedDeviceChangeHandler<TDeviceInfo> SelectedDeviceChanged;
 

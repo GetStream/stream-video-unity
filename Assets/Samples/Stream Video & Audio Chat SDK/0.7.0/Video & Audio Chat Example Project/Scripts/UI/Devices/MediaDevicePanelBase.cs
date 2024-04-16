@@ -1,16 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using StreamVideo.Core;
 using TMPro;
 using UnityEngine;
 
 namespace StreamVideo.ExampleProject.UI.Devices
 {
-    /// <summary>
-    /// Event handler for device changed event
-    /// </summary>
-    public delegate void DeviceChangeHandler(string deviceName, bool isActive);
-
     /// <summary>
     /// Event handler for device toggled event
     /// </summary>
@@ -19,27 +16,39 @@ namespace StreamVideo.ExampleProject.UI.Devices
     /// <summary>
     /// Panel that displays media device (microphone or camera) dropdown to pick the active device and a button to toggle on/off state 
     /// </summary>
-    public abstract class MediaDevicePanelBase : MonoBehaviour
+    public abstract class MediaDevicePanelBase<TDevice> : MonoBehaviour
     {
+        /// <summary>
+        /// Event handler for device changed event
+        /// </summary>
+        public delegate void DeviceChangeHandler(TDevice deviceName, bool isActive);
+        
         public event DeviceChangeHandler DeviceChanged;
         public event DeviceToggleHandler DeviceToggled;
 
-        public string SelectedDeviceName { get; private set; }
+        public TDevice SelectedDevice { get; private set; }
         
         //StreamTodo: android has DeviceStatus: Enabled, Disabled, NotSelected
         public bool IsDeviceActive { get; private set; } = true;
 
-        public void SelectDeviceWithoutNotify(string deviceName)
+        public void Init(IStreamVideoClient client)
         {
-            var index = _deviceNames.IndexOf(deviceName);
+            Client = client ?? throw new ArgumentNullException(nameof(client));
+        }
+
+        public void SelectDeviceWithoutNotify(TDevice device)
+        {
+            var index = _devices.IndexOf(device);
             if (index == -1)
             {
-                Debug.LogError($"Failed to find index for device: {deviceName}");
+                Debug.LogError($"Failed to find index for device: {device}");
                 return;
             }
 
             _dropdown.SetValueWithoutNotify(index);
         }
+        
+        protected IStreamVideoClient Client { get; private set; }
 
         // Called by Unity
         protected void Awake()
@@ -49,7 +58,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
             _deviceButton.Init(_buttonOnSprite, _buttonOffSprite);
             _deviceButton.Clicked += OnDeviceButtonClicked;
 
-            UpdateDevicesDropdown(GetDevicesNames().ToList());
+            UpdateDevicesDropdown(GetDevices());
             
             _refreshDeviceInterval = new WaitForSeconds(0.5f);
             _refreshCoroutine = StartCoroutine(RefreshDevicesList());
@@ -70,7 +79,9 @@ namespace StreamVideo.ExampleProject.UI.Devices
             }
         }
 
-        protected abstract IEnumerable<string> GetDevicesNames();
+        protected abstract IEnumerable<TDevice> GetDevices();
+
+        protected abstract string GetDeviceName(TDevice device);
 
         [SerializeField]
         private Sprite _buttonOnSprite;
@@ -86,21 +97,21 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private Coroutine _refreshCoroutine;
         private YieldInstruction _refreshDeviceInterval;
-        private readonly List<string> _deviceNames = new List<string>();
+        private readonly List<TDevice> _devices = new List<TDevice>();
 
         private void OnDropdownValueChanged(int optionIndex)
         {
-            var deviceName = _deviceNames.ElementAt(optionIndex);
+            var deviceName = _devices.ElementAt(optionIndex);
             if (deviceName == null)
             {
                 Debug.LogError($"Failed to select device with index: {optionIndex}. Available devices: " +
-                               string.Join(", ", _deviceNames));
+                               string.Join(", ", _devices));
                 return;
             }
 
-            SelectedDeviceName = deviceName;
+            SelectedDevice = deviceName;
 
-            DeviceChanged?.Invoke(SelectedDeviceName, IsDeviceActive);
+            DeviceChanged?.Invoke(SelectedDevice, IsDeviceActive);
         }
 
         private void OnDeviceButtonClicked()
@@ -115,11 +126,11 @@ namespace StreamVideo.ExampleProject.UI.Devices
         {
             while (true)
             {
-                var availableDevices = GetDevicesNames().ToList();
-                var devicesChanged = !_deviceNames.SequenceEqual(availableDevices);
+                var availableDevices = GetDevices().ToList();
+                var devicesChanged = !_devices.SequenceEqual(availableDevices);
                 if (devicesChanged)
                 {
-                    var prevDevicesLog = string.Join(", ", _deviceNames);
+                    var prevDevicesLog = string.Join(", ", _devices);
                     var newDevicesLog = string.Join(", ", availableDevices);
                     Debug.Log($"Device list changed. Previous: {prevDevicesLog}, Current: {newDevicesLog}");
 
@@ -130,17 +141,17 @@ namespace StreamVideo.ExampleProject.UI.Devices
             }
         }
 
-        private void UpdateDevicesDropdown(List<string> devices)
+        private void UpdateDevicesDropdown(IEnumerable<TDevice> devices)
         {
-            _deviceNames.Clear();
-            _deviceNames.AddRange(devices);
+            _devices.Clear();
+            _devices.AddRange(devices);
 
             _dropdown.ClearOptions();
-            _dropdown.AddOptions(devices);
+            _dropdown.AddOptions(devices.Select(GetDeviceName).ToList());
 
-            if (!string.IsNullOrEmpty(SelectedDeviceName) && !devices.Contains(SelectedDeviceName))
+            if (SelectedDevice != null && !devices.Contains(SelectedDevice))
             {
-                Debug.LogError($"Previously active device was unplugged: {SelectedDeviceName}");
+                Debug.LogError($"Previously active device was unplugged: {SelectedDevice}");
                 //StreamTodo: handle case when user unplugged active device
             }
         }

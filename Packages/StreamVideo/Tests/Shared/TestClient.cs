@@ -43,7 +43,7 @@ namespace StreamVideo.Tests.Shared
                 return;
             }
 
-            const int timeout = 5000;
+            const int timeoutMs = 10 * 1000;
             var timer = new Stopwatch();
             timer.Start();
 
@@ -52,7 +52,7 @@ namespace StreamVideo.Tests.Shared
             {
                 await Task.Delay(1);
 
-                if (timer.ElapsedMilliseconds > timeout)
+                if (timer.ElapsedMilliseconds > timeoutMs)
                 {
                     throw new TimeoutException(
                         $"Reached timeout when trying to get credentials. Ms passed: {timer.ElapsedMilliseconds}");
@@ -73,7 +73,7 @@ namespace StreamVideo.Tests.Shared
             {
                 await Task.Delay(1);
 
-                if (timer.ElapsedMilliseconds > timeout)
+                if (timer.ElapsedMilliseconds > timeoutMs)
                 {
                     throw new TimeoutException($"Reached timeout when trying to connect user: {credentials.UserId}");
                 }

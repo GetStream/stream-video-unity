@@ -28,6 +28,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("mic_default_on", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool MicDefaultOn { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("noise_cancellation", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public NoiseCancellationSettingsRequestInternalDTO NoiseCancellation { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("opus_dtx_enabled", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool OpusDtxEnabled { get; set; } = default!;
 

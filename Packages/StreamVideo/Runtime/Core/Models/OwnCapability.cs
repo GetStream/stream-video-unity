@@ -29,6 +29,7 @@ namespace StreamVideo.Core.Models
         UpdateCallMember = 21,
         UpdateCallPermissions = 22,
         UpdateCallSettings = 23,
+        EnableNoiseCancellation = 24,
     }
 
     internal static class OwnCapabilityExt
@@ -61,6 +62,7 @@ namespace StreamVideo.Core.Models
                 case OwnCapability.UpdateCallMember: return OwnCapabilityInternalEnum.UpdateCallMember;
                 case OwnCapability.UpdateCallPermissions: return OwnCapabilityInternalEnum.UpdateCallPermissions;
                 case OwnCapability.UpdateCallSettings: return OwnCapabilityInternalEnum.UpdateCallSettings;
+                case OwnCapability.EnableNoiseCancellation: return OwnCapabilityInternalEnum.EnableNoiseCancellation;
                 default: throw new ArgumentOutOfRangeException(nameof(ownCapability), ownCapability, null);
             }
         }
@@ -93,6 +95,7 @@ namespace StreamVideo.Core.Models
                 case OwnCapabilityInternalEnum.UpdateCallMember: return OwnCapability.UpdateCallMember;
                 case OwnCapabilityInternalEnum.UpdateCallPermissions: return OwnCapability.UpdateCallPermissions;
                 case OwnCapabilityInternalEnum.UpdateCallSettings: return OwnCapability.UpdateCallSettings;
+                case OwnCapabilityInternalEnum.EnableNoiseCancellation: return OwnCapability.EnableNoiseCancellation;
                 default: throw new ArgumentOutOfRangeException(nameof(ownCapability), ownCapability, null);
             }
         }

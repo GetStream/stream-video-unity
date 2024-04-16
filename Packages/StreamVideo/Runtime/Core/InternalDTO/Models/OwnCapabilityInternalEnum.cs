@@ -31,68 +31,71 @@ namespace StreamVideo.Core.InternalDTO.Models
         [System.Runtime.Serialization.EnumMember(Value = @"create-reaction")]
         CreateReaction = 2,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"enable-noise-cancellation")]
+        EnableNoiseCancellation = 3,
+
         [System.Runtime.Serialization.EnumMember(Value = @"end-call")]
-        EndCall = 3,
+        EndCall = 4,
 
         [System.Runtime.Serialization.EnumMember(Value = @"join-backstage")]
-        JoinBackstage = 4,
+        JoinBackstage = 5,
 
         [System.Runtime.Serialization.EnumMember(Value = @"join-call")]
-        JoinCall = 5,
+        JoinCall = 6,
 
         [System.Runtime.Serialization.EnumMember(Value = @"join-ended-call")]
-        JoinEndedCall = 6,
+        JoinEndedCall = 7,
 
         [System.Runtime.Serialization.EnumMember(Value = @"mute-users")]
-        MuteUsers = 7,
+        MuteUsers = 8,
 
         [System.Runtime.Serialization.EnumMember(Value = @"pin-for-everyone")]
-        PinForEveryone = 8,
+        PinForEveryone = 9,
 
         [System.Runtime.Serialization.EnumMember(Value = @"read-call")]
-        ReadCall = 9,
+        ReadCall = 10,
 
         [System.Runtime.Serialization.EnumMember(Value = @"remove-call-member")]
-        RemoveCallMember = 10,
+        RemoveCallMember = 11,
 
         [System.Runtime.Serialization.EnumMember(Value = @"screenshare")]
-        Screenshare = 11,
+        Screenshare = 12,
 
         [System.Runtime.Serialization.EnumMember(Value = @"send-audio")]
-        SendAudio = 12,
+        SendAudio = 13,
 
         [System.Runtime.Serialization.EnumMember(Value = @"send-video")]
-        SendVideo = 13,
+        SendVideo = 14,
 
         [System.Runtime.Serialization.EnumMember(Value = @"start-broadcast-call")]
-        StartBroadcastCall = 14,
+        StartBroadcastCall = 15,
 
         [System.Runtime.Serialization.EnumMember(Value = @"start-record-call")]
-        StartRecordCall = 15,
+        StartRecordCall = 16,
 
         [System.Runtime.Serialization.EnumMember(Value = @"start-transcription-call")]
-        StartTranscriptionCall = 16,
+        StartTranscriptionCall = 17,
 
         [System.Runtime.Serialization.EnumMember(Value = @"stop-broadcast-call")]
-        StopBroadcastCall = 17,
+        StopBroadcastCall = 18,
 
         [System.Runtime.Serialization.EnumMember(Value = @"stop-record-call")]
-        StopRecordCall = 18,
+        StopRecordCall = 19,
 
         [System.Runtime.Serialization.EnumMember(Value = @"stop-transcription-call")]
-        StopTranscriptionCall = 19,
+        StopTranscriptionCall = 20,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call")]
-        UpdateCall = 20,
+        UpdateCall = 21,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call-member")]
-        UpdateCallMember = 21,
+        UpdateCallMember = 22,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call-permissions")]
-        UpdateCallPermissions = 22,
+        UpdateCallPermissions = 23,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call-settings")]
-        UpdateCallSettings = 23,
+        UpdateCallSettings = 24,
 
     }
 

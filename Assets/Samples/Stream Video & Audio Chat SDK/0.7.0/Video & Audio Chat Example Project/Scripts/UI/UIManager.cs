@@ -73,6 +73,8 @@ namespace StreamVideo.ExampleProject.UI
 
         protected void Awake()
         {
+            _videoManager.Init();
+            
             _videoManager.CallStarted += OnCallStarted;
             _videoManager.CallEnded += OnCallEnded;
 

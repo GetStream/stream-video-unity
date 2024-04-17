@@ -17,6 +17,18 @@ namespace StreamVideo.ExampleProject
         public event Action CallEnded;
 
         public IStreamVideoClient Client { get; private set; }
+        
+        public void Init()
+        {
+            _clientConfig = new StreamClientConfig
+            {
+                LogLevel = StreamLogLevel.Debug,
+            };
+            
+            Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
+            Client.CallStarted += OnCallStarted;
+            Client.CallEnded += OnCallEnded;
+        }
 
         /// <summary>
         /// Join the Call with a given ID. We can either create it or try to join only.
@@ -64,18 +76,6 @@ namespace StreamVideo.ExampleProject
         /// Read <see cref="IStreamAudioConfig.EnableRed"/>
         /// </summary>
         public void SetAudioREDundancyEncoding(bool value) => _clientConfig.Audio.EnableRed = value;
-
-        protected void Awake()
-        {
-            _clientConfig = new StreamClientConfig
-            {
-                LogLevel = StreamLogLevel.Debug,
-            };
-            
-            Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
-            Client.CallStarted += OnCallStarted;
-            Client.CallEnded += OnCallEnded;
-        }
 
         protected async void Start()
         {

@@ -16,7 +16,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
     /// <summary>
     /// Panel that displays media device (microphone or camera) dropdown to pick the active device and a button to toggle on/off state 
     /// </summary>
-    public abstract class MediaDevicePanelBase<TDevice> : MonoBehaviour
+    public abstract class MediaDevicePanelBase<TDevice> : MonoBehaviour where TDevice : struct
     {
         /// <summary>
         /// Event handler for device changed event
@@ -34,6 +34,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
         public void Init(IStreamVideoClient client)
         {
             Client = client ?? throw new ArgumentNullException(nameof(client));
+            
+            UpdateDevicesDropdown(GetDevices());
         }
 
         public void SelectDeviceWithoutNotify(TDevice device)
@@ -57,8 +59,6 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
             _deviceButton.Init(_buttonOnSprite, _buttonOffSprite);
             _deviceButton.Clicked += OnDeviceButtonClicked;
-
-            UpdateDevicesDropdown(GetDevices());
             
             _refreshDeviceInterval = new WaitForSeconds(0.5f);
             _refreshCoroutine = StartCoroutine(RefreshDevicesList());
@@ -102,7 +102,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
         private void OnDropdownValueChanged(int optionIndex)
         {
             var deviceName = _devices.ElementAt(optionIndex);
-            if (deviceName == null)
+            if (deviceName.Equals(default))
             {
                 Debug.LogError($"Failed to select device with index: {optionIndex}. Available devices: " +
                                string.Join(", ", _devices));
@@ -126,6 +126,11 @@ namespace StreamVideo.ExampleProject.UI.Devices
         {
             while (true)
             {
+                while (Client == null)
+                {
+                    yield return _refreshDeviceInterval;
+                }
+                
                 var availableDevices = GetDevices().ToList();
                 var devicesChanged = !_devices.SequenceEqual(availableDevices);
                 if (devicesChanged)
@@ -149,7 +154,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
             _dropdown.ClearOptions();
             _dropdown.AddOptions(devices.Select(GetDeviceName).ToList());
 
-            if (SelectedDevice != null && !devices.Contains(SelectedDevice))
+            if (!EqualityComparer<TDevice>.Default.Equals(SelectedDevice, default) && !devices.Contains(SelectedDevice))
             {
                 Debug.LogError($"Previously active device was unplugged: {SelectedDevice}");
                 //StreamTodo: handle case when user unplugged active device

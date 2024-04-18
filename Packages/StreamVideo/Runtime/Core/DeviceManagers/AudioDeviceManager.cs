@@ -74,6 +74,10 @@ namespace StreamVideo.Core.DeviceManagers
                 = Microphone.Start(SelectedDevice.Name, true, 3, AudioSettings.outputSampleRate);
             targetAudioSource.loop = true;
             
+#if STREAM_DEBUG_ENABLED
+            Logs.Info($"Changed microphone device to: {SelectedDevice}");
+#endif
+            
             //StreamTodo: in some cases starting the mic recording before the call was causing the recorded audio being played in speakers
             //I think the reason was that AudioSource was being captured by an AudioListener but once I've joined the call, this disappeared
             //Check if we can have this AudioSource to be ignored by AudioListener's or otherwise mute it when there is not active call session

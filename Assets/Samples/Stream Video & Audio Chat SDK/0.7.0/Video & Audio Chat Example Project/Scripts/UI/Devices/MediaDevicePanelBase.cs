@@ -14,10 +14,11 @@ namespace StreamVideo.ExampleProject.UI.Devices
     public abstract class MediaDevicePanelBase<TDevice> : MonoBehaviour 
         where TDevice : struct
     {
-        public void Init(IStreamVideoClient client)
+        public void Init(IStreamVideoClient client, UIManager uiManager)
         {
             Client = client ?? throw new ArgumentNullException(nameof(client));
-            
+            UIManager = uiManager ? uiManager : throw new ArgumentNullException(nameof(uiManager));
+
             UpdateDevicesDropdown(GetDevices());
             
             OnInit();
@@ -93,6 +94,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private Coroutine _refreshCoroutine;
         private YieldInstruction _refreshDeviceInterval;
+        protected UIManager UIManager { get; private set; }
 
         private void OnDropdownValueChanged(int optionIndex)
         {

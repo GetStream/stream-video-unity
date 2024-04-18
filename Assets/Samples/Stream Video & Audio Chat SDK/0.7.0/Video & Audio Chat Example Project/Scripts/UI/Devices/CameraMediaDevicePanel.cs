@@ -6,7 +6,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
     public class CameraMediaDevicePanel : MediaDevicePanelBase<CameraDeviceInfo>
     {
         protected override CameraDeviceInfo SelectedDevice => Client.VideoDeviceManager.SelectedDevice;
-        
+
         protected override bool IsDeviceEnabled
         {
             get => Client.VideoDeviceManager.IsEnabled;
@@ -17,16 +17,18 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         protected override string GetDeviceName(CameraDeviceInfo device) => device.Name;
 
-        protected override void ChangeDevice(CameraDeviceInfo device) => Client.VideoDeviceManager.SelectDevice(device);
+        protected override void ChangeDevice(CameraDeviceInfo device)
+            => Client.VideoDeviceManager.SelectDevice(device, UIManager.SenderVideoResolution,
+                UIManager.SenderVideoFps);
 
         protected override void OnInit()
         {
             base.OnInit();
-            
+
             Client.VideoDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
         }
 
-        private void OnSelectedDeviceChanged(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice) 
+        private void OnSelectedDeviceChanged(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice)
             => SelectDeviceWithoutNotify(currentDevice);
     }
 }

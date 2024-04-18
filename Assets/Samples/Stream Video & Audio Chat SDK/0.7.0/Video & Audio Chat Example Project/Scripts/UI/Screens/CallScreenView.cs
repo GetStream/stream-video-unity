@@ -62,8 +62,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _leaveBtn.onClick.AddListener(VideoManager.LeaveActiveCall);
             _endBtn.onClick.AddListener(VideoManager.EndActiveCall);
 
-            _cameraPanel.Init(VideoManager.Client);
-            _microphonePanel.Init(VideoManager.Client);
+            _cameraPanel.Init(VideoManager.Client, UIManager);
+            _microphonePanel.Init(VideoManager.Client, UIManager);
         }
 
         protected override void OnShow(ShowArgs showArgs)

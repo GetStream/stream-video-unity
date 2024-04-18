@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using StreamVideo.Core;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.ExampleProject.UI.Screens;
@@ -14,6 +15,9 @@ namespace StreamVideo.ExampleProject.UI
         public event Action<WebCamTexture> LocalCameraChanged;
 
         public Camera InputSceneSource => _inputSceneCamera;
+        
+        public VideoResolution SenderVideoResolution => new VideoResolution(_senderVideoWidth, _senderVideoHeight);
+        public int SenderVideoFps => _senderVideoFps;
 
         protected void Awake()
         {

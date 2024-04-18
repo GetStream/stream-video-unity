@@ -28,8 +28,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _audioRedToggle.onValueChanged.AddListener(VideoManager.SetAudioREDundancyEncoding);
             _audioDtxToggle.onValueChanged.AddListener(VideoManager.SetAudioDtx);
             
-            _cameraPanel.Init(VideoManager.Client);
-            _microphonePanel.Init(VideoManager.Client);
+            _cameraPanel.Init(VideoManager.Client, UIManager);
+            _microphonePanel.Init(VideoManager.Client, UIManager);
         }
         
         protected override void OnShow(CallScreenView.ShowArgs showArgs)

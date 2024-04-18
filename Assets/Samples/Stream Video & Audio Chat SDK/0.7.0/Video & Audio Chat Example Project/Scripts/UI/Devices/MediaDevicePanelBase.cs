@@ -26,8 +26,20 @@ namespace StreamVideo.ExampleProject.UI.Devices
         public event DeviceChangeHandler DeviceChanged;
         public event DeviceToggleHandler DeviceToggled;
 
-        public TDevice SelectedDevice { get; private set; }
-        
+        public TDevice SelectedDevice
+        {
+            get => _selectedDevice;
+            protected set
+            {
+                if (EqualityComparer<TDevice>.Default.Equals(_selectedDevice, value))
+                {
+                    return;
+                }
+                _selectedDevice = value;
+                DeviceChanged?.Invoke(_selectedDevice, IsDeviceActive);
+            }
+        }
+
         //StreamTodo: android has DeviceStatus: Enabled, Disabled, NotSelected
         public bool IsDeviceActive { get; private set; } = true;
 
@@ -36,6 +48,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
             Client = client ?? throw new ArgumentNullException(nameof(client));
             
             UpdateDevicesDropdown(GetDevices());
+
+            OnInit();
         }
 
         public void SelectDeviceWithoutNotify(TDevice device)
@@ -78,11 +92,18 @@ namespace StreamVideo.ExampleProject.UI.Devices
                 StopCoroutine(_refreshCoroutine);
             }
         }
+        
+        protected virtual void OnInit()
+        {
+            
+        }
 
         protected abstract IEnumerable<TDevice> GetDevices();
 
         protected abstract string GetDeviceName(TDevice device);
 
+        private readonly List<TDevice> _devices = new List<TDevice>();
+        
         [SerializeField]
         private Sprite _buttonOnSprite;
 
@@ -97,7 +118,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private Coroutine _refreshCoroutine;
         private YieldInstruction _refreshDeviceInterval;
-        private readonly List<TDevice> _devices = new List<TDevice>();
+        private TDevice _selectedDevice;
 
         private void OnDropdownValueChanged(int optionIndex)
         {
@@ -110,8 +131,6 @@ namespace StreamVideo.ExampleProject.UI.Devices
             }
 
             SelectedDevice = deviceName;
-
-            DeviceChanged?.Invoke(SelectedDevice, IsDeviceActive);
         }
 
         private void OnDeviceButtonClicked()

@@ -53,6 +53,20 @@ namespace StreamVideo.Core.DeviceManagers
 
             return OnTestDeviceAsync(device, (int)(timeout * 1000));
         }
+        
+        public async Task<TDeviceInfo?> TryFindFirstWorkingDeviceAsync(float testTimeoutPerDevice = 0.2f)
+        {
+            foreach (var device in EnumerateDevices())
+            {
+                var isWorking = await TestDeviceAsync(device, testTimeoutPerDevice);
+                if (isWorking)
+                {
+                    return device;
+                }
+            }
+
+            return null;
+        }
 
         public void Dispose() => OnDisposing();
 

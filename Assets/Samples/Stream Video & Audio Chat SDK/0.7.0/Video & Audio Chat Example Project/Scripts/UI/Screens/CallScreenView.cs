@@ -61,15 +61,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             _leaveBtn.onClick.AddListener(VideoManager.LeaveActiveCall);
             _endBtn.onClick.AddListener(VideoManager.EndActiveCall);
-            
+
             _cameraPanel.Init(VideoManager.Client);
             _microphonePanel.Init(VideoManager.Client);
-            
-            _cameraPanel.DeviceChanged += UIManager.ChangeCamera;
-            _cameraPanel.DeviceToggled += UIManager.SetCameraActive;
-
-            _microphonePanel.DeviceChanged += UIManager.ChangeMicrophone;
-            _microphonePanel.DeviceToggled += UIManager.SetMicrophoneActive;
         }
 
         protected override void OnShow(ShowArgs showArgs)
@@ -96,7 +90,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             _activeCall.SortedParticipantsUpdated += SortParticipantViews;
 
-            UIManager.ActiveCameraChanged += OnActiveCameraChanged;
+            UIManager.LocalCameraChanged += OnLocalCameraChanged;
 
             // Show active call ID so user can copy it and send others to join
             _joinCallIdInput.text = _activeCall.Id;
@@ -115,7 +109,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             RemoveAllParticipants();
 
-            UIManager.ActiveCameraChanged -= OnActiveCameraChanged;
+            UIManager.LocalCameraChanged -= OnLocalCameraChanged;
         }
 
         private void OnDominantSpeakerChanged(IStreamVideoCallParticipant currentDominantSpeaker,
@@ -229,7 +223,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _participantSessionIdToView.Clear();
         }
 
-        private void OnActiveCameraChanged(WebCamTexture activeCamera)
+        private void OnLocalCameraChanged(WebCamTexture activeCamera)
         {
             // Input Camera changed so let's update the preview for local participant
             var localParticipant

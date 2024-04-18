@@ -1,31 +1,32 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using StreamVideo.Core.DeviceManagers;
-using UnityEngine;
 
 namespace StreamVideo.ExampleProject.UI.Devices
 {
     public class MicrophoneMediaDevicePanel : MediaDevicePanelBase<MicrophoneDeviceInfo>
     {
+        protected override MicrophoneDeviceInfo SelectedDevice => Client.AudioDeviceManager.SelectedDevice;
+        
+        protected override bool IsDeviceEnabled
+        {
+            get => Client.AudioDeviceManager.IsEnabled;
+            set => Client.AudioDeviceManager.SetEnabled(value);
+        }
+
         protected override IEnumerable<MicrophoneDeviceInfo> GetDevices() => Client.AudioDeviceManager.EnumerateDevices();
 
         protected override string GetDeviceName(MicrophoneDeviceInfo device) => device.Name;
-
+        
+        protected override void ChangeDevice(MicrophoneDeviceInfo device) => Client.AudioDeviceManager.SelectDevice(device);
+        
         protected override void OnInit()
         {
             base.OnInit();
-
-            // Select first microphone by default
-            var microphoneDevice = Client.AudioDeviceManager.EnumerateDevices().FirstOrDefault();
-            if (microphoneDevice == default)
-            {
-                Debug.LogError("No microphone found");
-                return;
-            }
             
-            SelectDeviceWithoutNotify(microphoneDevice);
-            SelectedDevice = microphoneDevice;
-            
+            Client.AudioDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
         }
+
+        private void OnSelectedDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice) 
+            => SelectDeviceWithoutNotify(currentDevice);
     }
 }

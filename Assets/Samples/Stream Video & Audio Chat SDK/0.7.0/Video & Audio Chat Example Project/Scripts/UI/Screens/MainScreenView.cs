@@ -30,22 +30,16 @@ namespace StreamVideo.ExampleProject.UI.Screens
             
             _cameraPanel.Init(VideoManager.Client);
             _microphonePanel.Init(VideoManager.Client);
-            
-            _cameraPanel.DeviceChanged += UIManager.ChangeCamera;
-            _cameraPanel.DeviceToggled += UIManager.SetCameraActive;
-
-            _microphonePanel.DeviceChanged += UIManager.ChangeMicrophone;
-            _microphonePanel.DeviceToggled += UIManager.SetMicrophoneActive;
         }
         
         protected override void OnShow(CallScreenView.ShowArgs showArgs)
         {
-            UIManager.ActiveCameraChanged += OnActiveCameraChanged;
+            UIManager.LocalCameraChanged += OnLocalCameraChanged;
         }
 
         protected override void OnHide()
         {
-            UIManager.ActiveCameraChanged -= OnActiveCameraChanged;
+            UIManager.LocalCameraChanged -= OnLocalCameraChanged;
         }
 
         [SerializeField]
@@ -81,7 +75,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             {
                 if (string.IsNullOrEmpty(_joinCallIdInput.text))
                 {
-                    Log("`Call ID` is required when trying to join a call", LogType.Error);
+                    Debug.LogError("`Call ID` is required when trying to join a call");
                     return;
                 }
 
@@ -106,7 +100,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             }
         }
 
-        private void OnActiveCameraChanged(WebCamTexture activeCamera)
+        private void OnLocalCameraChanged(WebCamTexture activeCamera)
         {
             _localCameraImage.texture = activeCamera;
         }

@@ -30,7 +30,7 @@ namespace StreamVideo.Core.DeviceManagers
 
         public Task<bool> TestDeviceAsync() => _videoDeviceManager.TestDeviceAsync(this);
 
-        public override string ToString() => $"Camera Device - {Name}";
+        public override string ToString() => string.IsNullOrEmpty(Name) ? "None" : Name;
 
         internal bool IsValid => !string.IsNullOrEmpty(Name);
 

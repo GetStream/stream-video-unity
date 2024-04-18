@@ -9,46 +9,17 @@ using UnityEngine;
 namespace StreamVideo.ExampleProject.UI.Devices
 {
     /// <summary>
-    /// Event handler for device toggled event
-    /// </summary>
-    public delegate void DeviceToggleHandler(bool isActive);
-
-    /// <summary>
     /// Panel that displays media device (microphone or camera) dropdown to pick the active device and a button to toggle on/off state 
     /// </summary>
-    public abstract class MediaDevicePanelBase<TDevice> : MonoBehaviour where TDevice : struct
+    public abstract class MediaDevicePanelBase<TDevice> : MonoBehaviour 
+        where TDevice : struct
     {
-        /// <summary>
-        /// Event handler for device changed event
-        /// </summary>
-        public delegate void DeviceChangeHandler(TDevice deviceName, bool isActive);
-        
-        public event DeviceChangeHandler DeviceChanged;
-        public event DeviceToggleHandler DeviceToggled;
-
-        public TDevice SelectedDevice
-        {
-            get => _selectedDevice;
-            protected set
-            {
-                if (EqualityComparer<TDevice>.Default.Equals(_selectedDevice, value))
-                {
-                    return;
-                }
-                _selectedDevice = value;
-                DeviceChanged?.Invoke(_selectedDevice, IsDeviceActive);
-            }
-        }
-
-        //StreamTodo: android has DeviceStatus: Enabled, Disabled, NotSelected
-        public bool IsDeviceActive { get; private set; } = true;
-
         public void Init(IStreamVideoClient client)
         {
             Client = client ?? throw new ArgumentNullException(nameof(client));
             
             UpdateDevicesDropdown(GetDevices());
-
+            
             OnInit();
         }
 
@@ -81,7 +52,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
         // Called by Unity
         protected void Start()
         {
-            _deviceButton.UpdateSprite(IsDeviceActive);
+            _deviceButton.UpdateSprite(IsDeviceEnabled);
         }
 
         // Called by Unity
@@ -99,8 +70,12 @@ namespace StreamVideo.ExampleProject.UI.Devices
         }
 
         protected abstract IEnumerable<TDevice> GetDevices();
+        protected abstract TDevice SelectedDevice { get; }
+        protected abstract bool IsDeviceEnabled { get; set; }
 
         protected abstract string GetDeviceName(TDevice device);
+
+        protected abstract void ChangeDevice(TDevice device);
 
         private readonly List<TDevice> _devices = new List<TDevice>();
         
@@ -118,26 +93,24 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private Coroutine _refreshCoroutine;
         private YieldInstruction _refreshDeviceInterval;
-        private TDevice _selectedDevice;
 
         private void OnDropdownValueChanged(int optionIndex)
         {
-            var deviceName = _devices.ElementAt(optionIndex);
-            if (deviceName.Equals(default))
+            var device = _devices.ElementAt(optionIndex);
+            if (device.Equals(default))
             {
                 Debug.LogError($"Failed to select device with index: {optionIndex}. Available devices: " +
                                string.Join(", ", _devices));
                 return;
             }
 
-            SelectedDevice = deviceName;
+            ChangeDevice(device);
         }
 
         private void OnDeviceButtonClicked()
         {
-            IsDeviceActive = !IsDeviceActive;
-            _deviceButton.UpdateSprite(IsDeviceActive);
-            DeviceToggled?.Invoke(IsDeviceActive);
+            IsDeviceEnabled = !IsDeviceEnabled;
+            _deviceButton.UpdateSprite(IsDeviceEnabled);
         }
 
         // User can add/remove devices any time so we must constantly monitor the devices list

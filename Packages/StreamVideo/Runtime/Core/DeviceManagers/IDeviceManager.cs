@@ -42,21 +42,21 @@ namespace StreamVideo.Core.DeviceManagers
         IEnumerable<TDeviceInfo> EnumerateDevices();
 
         /// <summary>
-        /// Check if the device is capturing data.
+        /// Check if the device is capturing any data.
         /// This can be useful when there are multiple devices available and you want to filter out the ones that actually work.
-        /// For example, on Windows/Mac/Linux there can be many virtual cameras/microphones that are not capturing any data.
+        /// For example, on Windows/Mac/Linux there can be many virtual cameras/microphones available that are not capturing any data.
         /// You typically want to present all available devices to users but you may want to show working devices first or enable the first working device by default.
         /// </summary>
         /// <param name="device">Device to test. You can obtain them from <see cref="DeviceManagerBase{TDeviceInfo}.EnumerateDevices"/></param>
-        /// <param name="timeout">How long the test will wait for camera input.</param>
+        /// <param name="timeout">How long the test will wait for camera input. Please not that depending on OS and the device there can be delay in starting the device. Timeout below 0.5 seconds can not be enough for some device.</param>
         /// <returns>True if device is providing captured data</returns>
-        Task<bool> TestDeviceAsync(TDeviceInfo device, float timeout = 0.2f);
+        Task<bool> TestDeviceAsync(TDeviceInfo device, float timeout = 1f);
 
         /// <summary>
         /// Iterates over all available devices and performs <see cref="TestDeviceAsync"/> on each until the first working device is found
         /// </summary>
         /// <param name="testTimeoutPerDevice"></param>
         /// <returns>First found working device of NULL if none of the devices worked</returns>
-        Task<TDeviceInfo?> TryFindFirstWorkingDeviceAsync(float testTimeoutPerDevice = 0.2f);
+        Task<TDeviceInfo?> TryFindFirstWorkingDeviceAsync(float testTimeoutPerDevice = 1f);
     }
 }

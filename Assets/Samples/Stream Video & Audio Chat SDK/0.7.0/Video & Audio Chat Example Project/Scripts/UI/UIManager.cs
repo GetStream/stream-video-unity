@@ -14,8 +14,6 @@ namespace StreamVideo.ExampleProject.UI
     {
         public event Action<WebCamTexture> LocalCameraChanged;
 
-        public Camera InputSceneSource => _inputSceneCamera;
-        
         public VideoResolution SenderVideoResolution => new VideoResolution(_senderVideoWidth, _senderVideoHeight);
         public int SenderVideoFps => _senderVideoFps;
 
@@ -63,15 +61,10 @@ namespace StreamVideo.ExampleProject.UI
         private int _senderVideoFps = 30;
 
         [SerializeField]
-        private Camera _inputSceneCamera;
-
-        [SerializeField]
         private CallScreenView _callScreen;
 
         [SerializeField]
         private MainScreenView _mainScreen;
-
-        private string _selectedMicrophoneDeviceName;
 
         private void OnCallStarted(IStreamCall call) => ShowCallScreen(call);
 

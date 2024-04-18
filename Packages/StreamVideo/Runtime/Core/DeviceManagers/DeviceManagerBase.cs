@@ -43,7 +43,7 @@ namespace StreamVideo.Core.DeviceManagers
 
         public abstract IEnumerable<TDeviceInfo> EnumerateDevices();
 
-        public Task<bool> TestDeviceAsync(TDeviceInfo device, float timeout = 0.2f)
+        public Task<bool> TestDeviceAsync(TDeviceInfo device, float timeout = 1f)
         {
             if (timeout <= 0f || timeout > 20f)
             {
@@ -54,7 +54,7 @@ namespace StreamVideo.Core.DeviceManagers
             return OnTestDeviceAsync(device, (int)(timeout * 1000));
         }
         
-        public async Task<TDeviceInfo?> TryFindFirstWorkingDeviceAsync(float testTimeoutPerDevice = 0.2f)
+        public async Task<TDeviceInfo?> TryFindFirstWorkingDeviceAsync(float testTimeoutPerDevice = 1f)
         {
             foreach (var device in EnumerateDevices())
             {

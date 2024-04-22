@@ -29,10 +29,10 @@ namespace StreamVideo.Core.DeviceManagers
             }
         }
 
-        public void SelectDevice(CameraDeviceInfo device, int fps = 30)
-            => SelectDevice(device, VideoResolution.Res_720p, fps);
+        public void SelectDevice(CameraDeviceInfo device, bool enable, int fps = 30)
+            => SelectDevice(device, VideoResolution.Res_720p, enable, fps);
 
-        public void SelectDevice(CameraDeviceInfo device, VideoResolution requestedResolution, int requestedFPS = 30)
+        public void SelectDevice(CameraDeviceInfo device, VideoResolution requestedResolution, bool enable, int requestedFPS = 30)
         {
             if (!device.IsValid)
             {
@@ -61,10 +61,7 @@ namespace StreamVideo.Core.DeviceManagers
                 }
             }
 
-            if (IsEnabled)
-            {
-                Enable();
-            }
+            SetEnabled(enable);
         }
 
         //StreamTodo: better to not expose this and make fake tracks for local user. This way every participant is processed exactly the same

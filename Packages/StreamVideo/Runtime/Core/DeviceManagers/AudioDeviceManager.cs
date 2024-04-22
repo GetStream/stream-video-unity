@@ -57,7 +57,7 @@ namespace StreamVideo.Core.DeviceManagers
         /// </summary>
         /// <param name="device"></param>
         /// <exception cref="ArgumentException">Thrown when the provided device has an invalid name</exception>
-        public void SelectDevice(MicrophoneDeviceInfo device)
+        public void SelectDevice(MicrophoneDeviceInfo device, bool enable)
         {
             if (!device.IsValid)
             {
@@ -82,10 +82,7 @@ namespace StreamVideo.Core.DeviceManagers
             //I think the reason was that AudioSource was being captured by an AudioListener but once I've joined the call, this disappeared
             //Check if we can have this AudioSource to be ignored by AudioListener's or otherwise mute it when there is not active call session
 
-            if (IsEnabled)
-            {
-                Enable();
-            }
+            SetEnabled(enable);
         }
         
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio

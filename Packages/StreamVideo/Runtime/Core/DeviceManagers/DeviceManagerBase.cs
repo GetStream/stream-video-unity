@@ -13,7 +13,7 @@ namespace StreamVideo.Core.DeviceManagers
     {
         public event SelectedDeviceChangeHandler<TDeviceInfo> SelectedDeviceChanged;
 
-        public bool IsEnabled { get; private set; } = true;
+        public bool IsEnabled { get; private set; }
 
         public TDeviceInfo SelectedDevice
         {
@@ -37,6 +37,11 @@ namespace StreamVideo.Core.DeviceManagers
 
         public void SetEnabled(bool isEnabled)
         {
+            if (IsEnabled == isEnabled)
+            {
+                return;
+            }
+
             IsEnabled = isEnabled;
             OnSetEnabled(isEnabled);
         }
@@ -53,7 +58,7 @@ namespace StreamVideo.Core.DeviceManagers
 
             return OnTestDeviceAsync(device, (int)(timeout * 1000));
         }
-        
+
         public async Task<TDeviceInfo?> TryFindFirstWorkingDeviceAsync(float testTimeoutPerDevice = 1f)
         {
             foreach (var device in EnumerateDevices())
@@ -91,7 +96,7 @@ namespace StreamVideo.Core.DeviceManagers
         protected virtual void OnDisposing()
         {
         }
-        
+
         private TDeviceInfo _selectedDevice;
     }
 }

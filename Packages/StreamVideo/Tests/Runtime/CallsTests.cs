@@ -39,7 +39,7 @@ namespace StreamVideo.Tests.Runtime
 
             var cameraDevice = await TestUtils.TryGetFirstWorkingCameraDeviceAsync(clientA.Client);
             Debug.Log("Selected camera device: " + cameraDevice);
-            clientA.Client.VideoDeviceManager.SelectDevice(cameraDevice);
+            clientA.Client.VideoDeviceManager.SelectDevice(cameraDevice, enable: true);
 
             var call = await clientB.Client.JoinCallAsync(streamCall.Type, streamCall.Id, create: false,
                 ring: false,
@@ -87,7 +87,7 @@ namespace StreamVideo.Tests.Runtime
 
             // First participant - enable video track
             var cameraDevice = await TestUtils.TryGetFirstWorkingCameraDeviceAsync(clientA.Client);
-            clientA.Client.VideoDeviceManager.SelectDevice(cameraDevice);
+            clientA.Client.VideoDeviceManager.SelectDevice(cameraDevice, enable: true);
 
             // Wait for event
             await WaitForConditionAsync(() => streamTrack != null);

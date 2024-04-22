@@ -104,7 +104,7 @@ namespace StreamVideo.ExampleProject.UI
                 return;
             }
 
-            _videoManager.Client.VideoDeviceManager.SelectDevice(workingDevice.Value);
+            _videoManager.Client.VideoDeviceManager.SelectDevice(workingDevice.Value, enable: false);
         }
 
         private Task TrySelectFirstMicrophoneAsync()
@@ -117,7 +117,7 @@ namespace StreamVideo.ExampleProject.UI
                 return Task.CompletedTask;
             }
             
-            _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice);
+            _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice, enable: false);
             return Task.CompletedTask;
         }
     }

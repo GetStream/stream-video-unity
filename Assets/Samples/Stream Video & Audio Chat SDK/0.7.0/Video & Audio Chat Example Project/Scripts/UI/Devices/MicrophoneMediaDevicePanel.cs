@@ -17,7 +17,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         protected override string GetDeviceName(MicrophoneDeviceInfo device) => device.Name;
         
-        protected override void ChangeDevice(MicrophoneDeviceInfo device) => Client.AudioDeviceManager.SelectDevice(device);
+        protected override void ChangeDevice(MicrophoneDeviceInfo device) => Client.AudioDeviceManager.SelectDevice(device, IsDeviceEnabled);
         
         protected override void OnInit()
         {

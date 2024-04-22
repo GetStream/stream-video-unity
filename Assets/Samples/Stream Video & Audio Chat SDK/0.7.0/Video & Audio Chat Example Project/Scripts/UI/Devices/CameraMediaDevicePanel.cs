@@ -18,7 +18,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
         protected override string GetDeviceName(CameraDeviceInfo device) => device.Name;
 
         protected override void ChangeDevice(CameraDeviceInfo device)
-            => Client.VideoDeviceManager.SelectDevice(device, UIManager.SenderVideoResolution,
+            => Client.VideoDeviceManager.SelectDevice(device, UIManager.SenderVideoResolution, IsDeviceEnabled,
                 UIManager.SenderVideoFps);
 
         protected override void OnInit()

@@ -22,7 +22,7 @@ namespace StreamVideo.Core.DeviceManagers
         TDeviceInfo SelectedDevice { get; }
 
         /// <summary>
-        /// START capturing data from the <see cref="SelectedDevice"/>. Before calling this method you must first use <see cref="SetEnabled"/>
+        /// START capturing data from the <see cref="SelectedDevice"/>.
         /// </summary>
         void Enable();
 

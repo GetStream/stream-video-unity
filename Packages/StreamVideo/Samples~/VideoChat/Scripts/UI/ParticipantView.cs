@@ -45,24 +45,14 @@ namespace StreamVideo.ExampleProject.UI
         {
             _localWebCamTexture = localWebCamTexture;
             
-            if (_localParticipantRenderTexture != null)
-            {
-                // Dispose previous texture 
-                _localParticipantRenderTexture.Release();
-                _localParticipantRenderTexture = null;
-            }
-
             if (localWebCamTexture == null)
             {
                 _video.texture = null;
                 return;
             }
             
-            _localParticipantRenderTexture = new RenderTexture(localWebCamTexture.width, localWebCamTexture.height, 0, RenderTextureFormat.Default);
-            _localParticipantRenderTexture.Create();
-
             // we set RenderTexture a a RawImage.texture because the RenderTexture will receive video stream from the local camera
-            _video.texture = _localParticipantRenderTexture;
+            _video.texture = localWebCamTexture;
         }
         
         // Called by Unity Engine
@@ -74,17 +64,14 @@ namespace StreamVideo.ExampleProject.UI
         // Called by Unity Engine
         protected void Update()
         {
-            if (_localWebCamTexture != null)
-            {
-                Graphics.Blit(_localWebCamTexture, _localParticipantRenderTexture);
-            }
-
             var rect = _videoRectTransform.rect;
             var videoRenderedSize = new Vector2(rect.width, rect.height);
             if (videoRenderedSize != _lastVideoRenderedSize)
             {
                 _lastVideoRenderedSize = videoRenderedSize;
                 var videoResolution = new VideoResolution((int)videoRenderedSize.x, (int)videoRenderedSize.y);
+                
+                // To optimize bandwidth we always request the video resolution that matches what we're actually rendering
                 Participant.UpdateRequestedVideoResolution(videoResolution);
                 Debug.Log($"Rendered resolution changed for participant `{Participant.UserId}`. Requested video resolution update to: {videoResolution}");
             }
@@ -115,7 +102,7 @@ namespace StreamVideo.ExampleProject.UI
         private Color32 _defaultSpeakerFrameColor;
 
         private AudioSource _audioSource;
-        private RenderTexture _localParticipantRenderTexture;
+        //private RenderTexture _localParticipantRenderTexture;
         private WebCamTexture _localWebCamTexture;
         private RectTransform _videoRectTransform;
         private Vector2 _lastVideoRenderedSize;

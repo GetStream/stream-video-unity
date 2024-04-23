@@ -45,22 +45,12 @@ namespace StreamVideo.ExampleProject.UI
         {
             _localWebCamTexture = localWebCamTexture;
             
-            // if (_localParticipantRenderTexture != null)
-            // {
-            //     // Dispose previous texture 
-            //     _localParticipantRenderTexture.Release();
-            //     _localParticipantRenderTexture = null;
-            // }
-
             if (localWebCamTexture == null)
             {
                 _video.texture = null;
                 return;
             }
             
-            // _localParticipantRenderTexture = new RenderTexture(localWebCamTexture.width, localWebCamTexture.height, 0, RenderTextureFormat.Default);
-            // _localParticipantRenderTexture.Create();
-
             // we set RenderTexture a a RawImage.texture because the RenderTexture will receive video stream from the local camera
             _video.texture = localWebCamTexture;
         }
@@ -74,11 +64,6 @@ namespace StreamVideo.ExampleProject.UI
         // Called by Unity Engine
         protected void Update()
         {
-            if (_localWebCamTexture != null)
-            {
-                //Graphics.Blit(_localWebCamTexture, _localParticipantRenderTexture);
-            }
-
             var rect = _videoRectTransform.rect;
             var videoRenderedSize = new Vector2(rect.width, rect.height);
             if (videoRenderedSize != _lastVideoRenderedSize)

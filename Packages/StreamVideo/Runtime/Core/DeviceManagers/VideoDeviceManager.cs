@@ -60,6 +60,13 @@ namespace StreamVideo.Core.DeviceManagers
                     SelectedDevice = device;
                 }
             }
+            
+            if (IsEnabled && enable && _activeCamera != null && !_activeCamera.isPlaying)
+            {
+                //OnSetEnabled will not trigger because IsEnabled value didn't change
+                _activeCamera.Play();
+                Client.SetCameraInputSource(_activeCamera);
+            }
 
             SetEnabled(enable);
         }

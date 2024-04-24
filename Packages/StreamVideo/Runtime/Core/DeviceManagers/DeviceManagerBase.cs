@@ -6,14 +6,31 @@ using StreamVideo.Libs.Logs;
 
 namespace StreamVideo.Core.DeviceManagers
 {
+    public delegate void DeviceEnabledChangeHandler(bool isEnabled);
+    
     public delegate void
         SelectedDeviceChangeHandler<in TDeviceInfo>(TDeviceInfo previousDevice, TDeviceInfo currentDevice);
 
     internal abstract class DeviceManagerBase<TDeviceInfo> : IDeviceManager<TDeviceInfo> where TDeviceInfo : struct
     {
+        public event DeviceEnabledChangeHandler IsEnabledChanged;
+        
         public event SelectedDeviceChangeHandler<TDeviceInfo> SelectedDeviceChanged;
 
-        public bool IsEnabled { get; private set; }
+        public bool IsEnabled
+        {
+            get => _isEnabled;
+            private set
+            {
+                if (value == _isEnabled)
+                {
+                    return;
+                }
+                
+                _isEnabled = value;
+                IsEnabledChanged?.Invoke(IsEnabled);
+            }
+        }
 
         public TDeviceInfo SelectedDevice
         {
@@ -98,5 +115,6 @@ namespace StreamVideo.Core.DeviceManagers
         }
 
         private TDeviceInfo _selectedDevice;
+        private bool _isEnabled;
     }
 }

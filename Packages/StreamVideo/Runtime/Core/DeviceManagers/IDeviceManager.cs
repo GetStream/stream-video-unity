@@ -7,6 +7,11 @@ namespace StreamVideo.Core.DeviceManagers
     public interface IDeviceManager<TDeviceInfo> : IDisposable where TDeviceInfo : struct
     {
         /// <summary>
+        /// Event triggered when the <see cref="IsEnabled"/> changes.
+        /// </summary>
+        event DeviceEnabledChangeHandler IsEnabledChanged;
+
+        /// <summary>
         /// Event triggered when the <see cref="SelectedDevice"/> changes.
         /// </summary>
         event SelectedDeviceChangeHandler<TDeviceInfo> SelectedDeviceChanged;

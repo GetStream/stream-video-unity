@@ -31,7 +31,7 @@ namespace StreamVideo.ExampleProject.UI
             _callScreen.Init(_videoManager, uiManager: this);
             
             TrySelectFirstWorkingCameraAsync().LogIfFailed();
-            TrySelectFirstMicrophoneAsync().LogIfFailed();
+            TrySelectFirstMicrophone();
         }
 
         protected void Start() => ShowMainScreen();
@@ -97,28 +97,42 @@ namespace StreamVideo.ExampleProject.UI
         
         private async Task TrySelectFirstWorkingCameraAsync()
         {
-            var workingDevice = await _videoManager.Client.VideoDeviceManager.TryFindFirstWorkingDeviceAsync();
-            if (!workingDevice.HasValue)
+            if (!_videoManager.Client.VideoDeviceManager.EnumerateDevices().Any())
             {
-                Debug.LogError("No working camera found");
+                Debug.LogError("No camera devices found! Video streaming will not work. Please ensure that a camera device is plugged in.");
                 return;
             }
-
-            _videoManager.Client.VideoDeviceManager.SelectDevice(workingDevice.Value, enable: false);
+            
+            var workingDevice = await _videoManager.Client.VideoDeviceManager.TryFindFirstWorkingDeviceAsync();
+            if (workingDevice.HasValue)
+            {
+                _videoManager.Client.VideoDeviceManager.SelectDevice(workingDevice.Value, enable: false);
+                return;
+            }
+            
+            Debug.LogWarning("No working camera found. Falling back to first device.");
+            
+            var firstDevice = _videoManager.Client.VideoDeviceManager.EnumerateDevices().FirstOrDefault();
+            if (firstDevice == default)
+            {
+                Debug.LogError("No camera devices found! Video streaming will not work. Please ensure that a camera device is plugged in.");
+                return;
+            }
+            
+            _videoManager.Client.VideoDeviceManager.SelectDevice(firstDevice, enable: false);
         }
 
-        private Task TrySelectFirstMicrophoneAsync()
+        private void TrySelectFirstMicrophone()
         {
             // Select first microphone by default
             var microphoneDevice = _videoManager.Client.AudioDeviceManager.EnumerateDevices().FirstOrDefault();
             if (microphoneDevice == default)
             {
-                Debug.LogError("No microphone found");
-                return Task.CompletedTask;
+                Debug.LogError("No microphone devices found! Audio streaming will not work. Please ensure that a microphone device is plugged in.");
+                return;
             }
             
             _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice, enable: false);
-            return Task.CompletedTask;
         }
     }
 }

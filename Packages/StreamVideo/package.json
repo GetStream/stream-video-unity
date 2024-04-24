@@ -7,7 +7,7 @@
   "documentationUrl": "https://getstream.io/video/docs/unity/",
   "licensesUrl": "https://github.com/GetStream/stream-video-unity/blob/main/LICENSE",
   "dependencies": {
-    "com.unity.webrtc": "3.0.0-pre.7",
+    "com.unity.webrtc": "3.0.0-pre.6",
     "com.unity.nuget.newtonsoft-json": "3.2.0"
   },
   "keywords": [

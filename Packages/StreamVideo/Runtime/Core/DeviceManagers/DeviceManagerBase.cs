@@ -67,10 +67,13 @@ namespace StreamVideo.Core.DeviceManagers
 
         public Task<bool> TestDeviceAsync(TDeviceInfo device, float timeout = 1f)
         {
-            if (timeout <= 0f || timeout > 20f)
+            const float MinTimeout = 0f;
+            const float MaxTimeout = 20f;
+            
+            if (timeout <= MinTimeout || timeout > MaxTimeout)
             {
                 throw new ArgumentOutOfRangeException(
-                    $"'{nameof(timeout)}' argument must be between 0 and 20 seconds, given: {timeout}");
+                    $"'{nameof(timeout)}' argument must be between {MinTimeout} and {MaxTimeout} seconds, given: {timeout}");
             }
 
             return OnTestDeviceAsync(device, (int)(timeout * 1000));

@@ -27,6 +27,13 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
             Client.VideoDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
         }
+        
+        protected override void OnDestroying()
+        {
+            Client.VideoDeviceManager.SelectedDeviceChanged -= OnSelectedDeviceChanged;
+            
+            base.OnDestroying();
+        }
 
         private void OnSelectedDeviceChanged(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice)
             => SelectDeviceWithoutNotify(currentDevice);

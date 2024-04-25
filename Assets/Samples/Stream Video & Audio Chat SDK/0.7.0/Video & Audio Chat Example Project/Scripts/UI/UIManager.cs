@@ -30,8 +30,8 @@ namespace StreamVideo.ExampleProject.UI
             _mainScreen.Init(_videoManager, uiManager: this);
             _callScreen.Init(_videoManager, uiManager: this);
             
-            TrySelectFirstWorkingCameraAsync().LogIfFailed();
-            TrySelectFirstMicrophone();
+            SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed();
+            SelectFirstMicrophone();
         }
 
         protected void Start() => ShowMainScreen();
@@ -95,7 +95,7 @@ namespace StreamVideo.ExampleProject.UI
             LocalCameraChanged?.Invoke(webCamTexture);
         }
         
-        private async Task TrySelectFirstWorkingCameraAsync()
+        private async Task SelectFirstWorkingCameraOrDefaultAsync()
         {
             if (!_videoManager.Client.VideoDeviceManager.EnumerateDevices().Any())
             {
@@ -122,7 +122,7 @@ namespace StreamVideo.ExampleProject.UI
             _videoManager.Client.VideoDeviceManager.SelectDevice(firstDevice, enable: false);
         }
 
-        private void TrySelectFirstMicrophone()
+        private void SelectFirstMicrophone()
         {
             // Select first microphone by default
             var microphoneDevice = _videoManager.Client.AudioDeviceManager.EnumerateDevices().FirstOrDefault();

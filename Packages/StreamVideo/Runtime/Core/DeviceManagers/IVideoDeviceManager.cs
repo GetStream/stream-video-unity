@@ -2,6 +2,7 @@
 
 namespace StreamVideo.Core.DeviceManagers
 {
+    //StreamTodo: revise setting 3D Scene Camera as a video source
     /// <summary>
     /// Manages interactions with video recording devices - Cameras.
     /// </summary>

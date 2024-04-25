@@ -511,7 +511,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return new VideoResolution(maxResolution.Width, maxResolution.Height);
             }
 
-            return VideoResolution.Res_720p;
+            return VideoResolution.Res_1080p;
         }
 
         private VideoStreamTrack CreatePublisherVideoTrack()

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace StreamVideo.Core.DeviceManagers
 {
-    public interface IDeviceManager<TDeviceInfo> : IDisposable where TDeviceInfo : struct
+    public interface IDeviceManager<TDeviceInfo> where TDeviceInfo : struct
     {
         /// <summary>
         /// Event triggered when the <see cref="IsEnabled"/> changes.

@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.QueryBuilders.Sort.Calls;
@@ -8,7 +7,6 @@ using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.VideoClientInstanceRunner;
-using UnityEngine;
 
 namespace StreamVideo.Core
 {
@@ -71,12 +69,6 @@ namespace StreamVideo.Core
 
         Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify);
-
-        //StreamTodo: revise setting 3D Scene Camera as a video source
-        /// <summary>
-        /// Set the source for sending VIDEO or rendered Scene Camera. You can pass any scene camera and the video will be sent to other participants.
-        /// </summary>
-        //void SetCameraInputSource(Camera sceneCamera);
 
         /// <summary>
         /// Will return null if the call doesn't exist

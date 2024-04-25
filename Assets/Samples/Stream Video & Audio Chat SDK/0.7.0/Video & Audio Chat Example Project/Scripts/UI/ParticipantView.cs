@@ -43,15 +43,12 @@ namespace StreamVideo.ExampleProject.UI
         /// </summary>
         public void SetLocalCameraSource(WebCamTexture localWebCamTexture)
         {
-            _localWebCamTexture = localWebCamTexture;
-            
             if (localWebCamTexture == null)
             {
                 _video.texture = null;
                 return;
             }
             
-            // we set RenderTexture a a RawImage.texture because the RenderTexture will receive video stream from the local camera
             _video.texture = localWebCamTexture;
         }
         
@@ -102,8 +99,6 @@ namespace StreamVideo.ExampleProject.UI
         private Color32 _defaultSpeakerFrameColor;
 
         private AudioSource _audioSource;
-        //private RenderTexture _localParticipantRenderTexture;
-        private WebCamTexture _localWebCamTexture;
         private RectTransform _videoRectTransform;
         private Vector2 _lastVideoRenderedSize;
 

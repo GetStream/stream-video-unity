@@ -59,6 +59,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
         // Called by Unity
         protected void OnDestroy()
         {
+            OnDestroying();
+            
             if (_refreshCoroutine != null)
             {
                 StopCoroutine(_refreshCoroutine);
@@ -70,9 +72,15 @@ namespace StreamVideo.ExampleProject.UI.Devices
             
         }
 
+        protected virtual void OnDestroying()
+        {
+            
+        }
+
         protected abstract IEnumerable<TDevice> GetDevices();
         protected abstract TDevice SelectedDevice { get; }
         protected abstract bool IsDeviceEnabled { get; set; }
+        protected UIManager UIManager { get; private set; }
 
         protected abstract string GetDeviceName(TDevice device);
 
@@ -94,7 +102,6 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private Coroutine _refreshCoroutine;
         private YieldInstruction _refreshDeviceInterval;
-        protected UIManager UIManager { get; private set; }
 
         private void OnDropdownValueChanged(int optionIndex)
         {

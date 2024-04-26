@@ -3,134 +3,329 @@ title: Camera & Microphone
 description: Docs on sending & receiving 
 ---
 
-This page shortly describes how to send **Audio** and **Video** data to other participants.
+This page details how to interact with **Microphone** and **Camera** devices to transmit audio and video streams to other call participants. Handling camera and microphone inputs in Unity can be challenging; however, Stream's Video SDK for Unity simplifies the process by managing the complexities internally, facilitating easy interaction with these devices.
 
-Before you can set audio and video input sources you need to set up an instance of `StreamVideoClient`. Follow the [Client & Auth](../03-guides/01-client-auth.mdx) guide to learn how to do it.
+## Interacting with Microphone
 
-## Setup sending Audio
+All interactions with microphone devices are handled by the `AudioDeviceManager` that can be accessed via `_client.AudioDeviceManager`. The `_client` field is an instance of `IStreamVideoClient`; if you haven't setup the video chat client yet, you can follow the [Client & Auth](../03-guides/01-client-auth.mdx) guide to learn how to do it.
 
-In order to send audio data you need to set an instance of [AudioSource](https://docs.unity3d.com/ScriptReference/AudioSource.html) as an **input source** by calling the `SetAudioInputSource` method on the instance of `StreamVideoClient`.
+#### List available microphone devices
 
-```csharp
-_client.SetAudioInputSource(audioSource); // audioSource is of type AudioSource
-```
-
-### Handle microphone input in Unity
-
-The way you start streaming audio from a microphone device is by calling Unity's `Microphone.Start` method and providing the microphone device name.
-You obtain the microphone device name from Unity's `Microphone.devices` array.
+All available microphone devices can be accessed with `AudioDeviceManager.EnumerateDevices()`. This method returns the `IEnumerable<MicrophoneDeviceInfo>`.
+The `MicrophoneDeviceInfo` is a struct representing a single device. You can access the name of the device by the `Name` property.
 
 ```csharp
-// Obtain reference to an AudioSource that will be used a source of audio
-var inputAudioSource = GetComponent<AudioSource>();
+var microphones = _client.AudioDeviceManager.EnumerateDevices();
 
-// Get a valid microphone device name.
-// You usually want to populate a dropdown list with Microphone.devices so that the user can pick which device should be used
-_activeMicrophoneDeviceName = Microphone.devices.First();
-
-inputAudioSource.clip
-    = Microphone.Start(_activeMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
-inputAudioSource.loop = true;
-inputAudioSource.Play();
-
-_client.SetAudioInputSource(inputAudioSource);
+foreach (var mic in microphones)
+{
+    Debug.Log(mic.Name); // Get microphone name
+}
 ```
 
-#### Change microphone device during the call
+#### Select microphone
 
-Here's an example of how to change the active microphone device:
+**Declaration**
+`public void SelectDevice(MicrophoneDeviceInfo device, bool enable)`
+
+| --- | --- |
+| `device` | Microphone to select |
+| `enable` | Enabled device is capturing audio input |
 
 ```csharp
-// Stop previously active microphone
-Microphone.End(_activeMicrophoneDeviceName);
-
-// Obtain reference to an AudioSource that was setup as an input source
-var inputAudioSource = GetComponent<AudioSource>();
-
-inputAudioSource.clip = Microphone.Start(newMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
+_client.AudioDeviceManager.SelectDevice(microphone, enable: true);
 ```
 
-In case you need to use a different reference to `AudioSource`, you can simply call the `_client.SetAudioInputSource` again, and the audio track will be updated with the new audio input:
-```csharp
-_client.SetAudioInputSource(inputAudioSource);
-```
+#### Get selected microphone
 
-#### Additional Notes
-
-- For standalone platforms like **Windows** or **macOS** you'd usually implement a dropdown menu populated with `Microphone.devices` so that the user can pick which microphone device should be used. The reason for this is that on standalone platforms there can be multiple microphone devices plugged in.
-- For mobile platforms like **Android** or **iOS** microphone devices are handled by the OS, so you usually just pick the first device.
-- You should handle the case where user does not have a microphone device at all and the `Microphone.devices` array is empty.
-- For mobile platforms like **Android** or **iOS** it's best to request a permission to access the microphone and handle the case where user did not grant the permission to use it. Read more in [Unity's docs](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html)
-
-Please refer to Unity's documentation for more information on how to use **Microphone** devices:
-* [Microphone.devices](https://docs.unity3d.com/ScriptReference/Microphone-devices.html)
-* [Microphone.Start](https://docs.unity3d.com/ScriptReference/Microphone.Start.html)
-* [Microphone.End](https://docs.unity3d.com/ScriptReference/Microphone.End.html)
-
-## Setup sending Video
-
-In order to send video data you need to set an instance of [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html) as a **video source** by calling the `SetCameraInputSource` method on the instance of `StreamVideoClient`.
+You get the currently selected microphone device via `AudioDeviceManager.SelectedDevice`. Please note, that the returned `MicrophoneDeviceInfo` is a struct meaning
 
 ```csharp
-_client.SetCameraInputSource(activeCamera); // activeCamera is of type WebCamTexture
+var selectedMicrophone = _client.AudioDeviceManager.SelectedDevice;
 ```
 
-### Handle camera device input in Unity
+#### Start/Stop audio capturing
 
-They way you start streaming video from a camera device is by creating a `WebCamTexture` instance using the camera device name (obtained from `WebCamTexture.devices`) and calling `Play()` on the `WebCamTexture` instance.
+Once a device is selected, you can start/stop the audio capturing with the `Enable()`, `Disable()`, or `SetEnabled(bool isEnabled)` methods.
 
 ```csharp
-// Obtain a camera device
-var cameraDevice = WebCamTexture.devices.First();
+// Enable device to start capturing microphone input
+_client.AudioDeviceManager.Enable();
 
-// Use device name to create a new WebCamTexture instance
-var activeCamera = new WebCamTexture(cameraDevice.name, 1920, 1080, 24);
+// Disable device to stop capturing microphone input
+_client.AudioDeviceManager.Disable();
 
-// Call Play() in order to start capturing the video
-activeCamera.Play();
-
-// Set WebCamTexture in Stream's Client - this WebCamTexture will be the video source in video calls
-_client.SetCameraInputSource(activeCamera);
+// Set the enabled state by passing a boolean argument
+_client.AudioDeviceManager.SetEnabled(true);
 ```
 
-The video resolution and FPS parameters you set in your `WebCamTexture` instance will be used for the video publishing settings. In the above example, the video will aim to be streamed at 1080p (1920x1080) resolution and 24 frames per second.
+#### Check if microphone is enabled
 
-:::note
-
-Stream service will dynamically adjust the video resolution and FPS parameters based on the network traffic. The ultimate goal is to ensure a smooth video experience without video stuttering. The settings you provide are the maximum aimed for if the network conditions allow it.
-
-:::
-
-#### Change camera device during the call
-
-The most efficient way to change the camera device is to update the `deviceName` property on the instance of `WebCamTexture` that was previously set as an input source via `_client.SetCameraInputSource`:
+Enabled device is actively capturing audio input from a selected microphone.
 
 ```csharp
-_activeCamera.Stop();
-_activeCamera.deviceName = newDeviceName;
-_activeCamera.Play();
+var isDeviceEnabled = _client.AudioDeviceManager.IsEnabled;
 ```
 
-In case you need to use a different reference to `WebCamTexture`, you can simply call the `_client.SetCameraInputSource` again, and the video track will be updated with the new camera input:
+#### Events
+
+The `SelectedDeviceChanged` and `IsEnabledChanged` events are triggered when a new device is selected or a device enabled state changes respectively.
+
 ```csharp
-_client.SetCameraInputSource(activeCamera);
+public void AudioDeviceManagerEvents()
+{
+    // Triggered when the selected devices changes
+    _client.AudioDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
+
+    // Triggered when the IsEnabled property changes
+    _client.AudioDeviceManager.IsEnabledChanged += OnIsEnabledChanged;
+}
+
+private void OnIsEnabledChanged(bool isEnabled) { }
+
+private void OnSelectedDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice) { }
 ```
 
-#### Additional Notes
+### Android & iOS
 
-- For standalone platforms like **Windows** or **macOS** you'd usually implement a dropdown menu populated with `WebCamTexture.devices` so that the user can pick which camera device should be used.
-- For mobile platforms like **Android** or **iOS** there are usually two cameras available: `Front` and `Back` cameras. Depending on your use case you may either want to automatically select the `Front` camera or allow user to toggle between the `Front` and the `Back` cameras.
-- You should handle the case where user does not have a camera device at all and the `WebCamTexture.devices` array is empty.
-- For mobile platforms like **Android** or **iOS** it's best to request a permission to access the camera and handle the case where user did not grant the permission to use it. Read more in [Unity's docs](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html)
+Users must grant permission to use the Microphone device for platforms like Android and IOS. Otherwise, capturing audio will not work. Typical patterns are requesting permissions when the application starts or when a user attempts to enable audio capturing.
 
-:::note
+#### iOS and WebGL
 
-For Android, if you're setting the **WebCamTexture** resolution, you need to set the resolution as a multiple of 16x16 as required by webRTC
+You can request permission to use a microphone device on iOS and WebGL platforms by using Unity's [RequestUserAuthorization](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html):
 
-:::
+```csharp
+// Request permission to use the Microphone
+Application.RequestUserAuthorization(UserAuthorization.Microphone);
 
-Please refer to Unity's documentation for more information on how to use **Camera** devices:
-* [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html)
-* [WebCamTexture.devices](https://docs.unity3d.com/ScriptReference/WebCamTexture-devices.html)
-* [WebCamTexture.Play](https://docs.unity3d.com/ScriptReference/WebCamTexture.Play.html)
-* [WebCamTexture.Stop](https://docs.unity3d.com/ScriptReference/WebCamTexture.Stop.html)
+// Check if user granted microphone permission
+if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
+{
+    // Notify user that microphone permission was not granted and the microphone capturing will not work.
+}
+```
+
+#### Android
+
+For the Android platform, Unity recommends using the [Permission.RequestUserPermission](https://docs.unity3d.com/ScriptReference/Android.Permission.RequestUserPermission.html):
+
+```csharp
+// Request microphone permissions
+Permission.RequestUserPermission(Permission.Microphone);
+
+// Check if user granted microphone permission
+if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
+{
+    // Notify user that microphone permission was not granted and the microphone capturing will not work.
+}
+```
+
+## Interacting with Web Camera
+
+All interactions with camera devices are handled by the `VideoDeviceManager` that can be accessed via `_client.VideoDeviceManager`. The `_client` field is an instance of `IStreamVideoClient`; if you haven't setup the video chat client yet, you can follow the [Client & Auth](../03-guides/01-client-auth.mdx) guide to learn how to do it.
+
+
+#### List available camera devices
+
+All available microphone devices can be accessed with `AudioDeviceManager.EnumerateDevices()`. This method returns the `IEnumerable<MicrophoneDeviceInfo>`.
+The `MicrophoneDeviceInfo` is a struct representing a single device. You can access the name of the device by the `Name` property.
+
+```csharp
+var cameras = _client.VideoDeviceManager.EnumerateDevices();
+
+foreach (var camera in cameras)
+{
+Debug.Log(camera.Name); // Get camera name
+}
+```
+
+#### Select camera
+
+**Declaration**
+`public void SelectDevice(CameraDeviceInfo device, bool enable, int fps = 30)`
+
+| --- | --- |
+| `device` | Camera to select |
+| `enable` | Enabled device is capturing video input |
+| `fps` | (OPTIONAL) How many frames per second should the video be captured. The default value is `30` |
+
+```csharp
+_client.VideoDeviceManager.SelectDevice(camera, enable: true);
+_client.VideoDeviceManager.SelectDevice(camera, enable: true, requestedFPS: 24);
+```
+
+**Declaration**
+`public void SelectDevice(CameraDeviceInfo device, VideoResolution requestedResolution, bool enable, int requestedFPS = 30)`
+
+| --- | --- |
+| `device` | Camera to select |
+| `enable` | Enabled device is capturing video input |
+| `requestedResolution` | At what resolution should the video be captured |
+| `fps` | (OPTIONAL) How many frames per second should the video be captured. The default value is `30` |
+
+```csharp
+_client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_720p, enable: true);
+_client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_720p, enable: true, requestedFPS: 30);
+```
+
+The `VideoResolution` argument type contains multiple predefined resolutions:
+| Value | Resolution |
+| `VideoResolution.Res_144p` | 256x144 |
+| `VideoResolution.Res_240p` | 320x240 |
+| `VideoResolution.Res_360p` | 480x360 |
+| `VideoResolution.Res_480p` | 640x480 |
+| `VideoResolution.Res_720p` | 1280x720 |
+| `VideoResolution.Res_1080p` | 1920x1080 |
+| `new VideoResolution(int width, int height` | custom resolution |
+
+```csharp
+_client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_144p, enable: true);
+_client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_240p, enable: true);
+_client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_360p, enable: true);
+_client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_480p, enable: true);
+_client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_720p, enable: true);
+_client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_1080p, enable: true);
+_client.VideoDeviceManager.SelectDevice(camera, new VideoResolution(500, 500), enable: true);
+```
+
+#### Requested resolution and FPS
+
+Please note that the video resolution and the FPS are the requested values passed to the camera device. Each device has it's own limitations and in case the passed values are not supported by the device the closest possible value will be selected.
+
+#### Get Selected Camera
+
+You can retrieve the currently selected camera device using `VideoDeviceManager.SelectedDevice`:
+
+```csharp
+public void GetSelectedCamera()
+{
+    var selectedCamera = _client.VideoDeviceManager.SelectedDevice;
+}
+```
+
+#### Start/Stop Camera Capturing
+
+Once a camera device is selected, you can start or stop the video capturing using the `Enable()`, `Disable()`, or `SetEnabled(bool isEnabled)` methods.
+
+```csharp
+public void StartStopCamera()
+{
+    // Enable device to start capturing camera input
+    _client.VideoDeviceManager.Enable();
+
+    // Disable device to stop capturing camera input
+    _client.VideoDeviceManager.Disable();
+
+    // Set the enabled state by passing a boolean argument
+    _client.VideoDeviceManager.SetEnabled(true);
+}
+```
+
+#### Check if Camera is Enabled
+
+Check if the camera is enabled and actively capturing video input:
+
+```csharp
+public void CheckCameraStatus()
+{
+    // Check if currently selected device is enabled
+    var isDeviceEnabled = _client.VideoDeviceManager.IsEnabled;
+}
+```
+
+#### Get Local Participant Camera Preview
+
+For the local participant there will be no video and audio track defined in the `IStreamVideoCallParticipant` object because those streams are not being received from the remote servers like for all remote participants. If you'd wish to present the local participant video stream you get a reference to the instance of `WebCamTexture` associated with the selected device via `_client.VideoDeviceManager.GetSelectedDeviceWebCamTexture()`.
+
+```csharp
+var webCamTexture = _client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
+
+// You can attach this texture to RawImage UI Component
+GetComponent<RawImage>().texture = webCamTexture;
+```
+
+Please note that the instance of `WebCamTexture` may change every time a new device is selected therefore you should subscribe to the `SelectedDeviceChanged` event:
+```csharp
+public void GetLocalParticipantVideoPreviewFull()
+{
+    // Triggered when the selected devices changes
+    _client.VideoDeviceManager.SelectedDeviceChanged += UpdateLocalParticipantPreview;
+}
+
+private void UpdateLocalParticipantPreview(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice)
+{
+    var webCamTexture = _client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
+
+    // You can attach this texture to RawImage UI Component
+    GetComponent<RawImage>().texture = webCamTexture;
+}
+```
+
+#### Check if camera is enabled
+
+```csharp
+public void CheckCameraStatus()
+{
+    // Check if currently selected device is enabled
+    var isDeviceEnabled = _client.VideoDeviceManager.IsEnabled;
+}
+```
+
+#### Events
+
+`SelectedDeviceChanged` and `IsEnabledChanged` events occur when a new device is selected or the device's enabled state changes.
+
+```csharp
+public void VideoDeviceManagerEvents()
+{
+    // Triggered when the selected devices changes
+    _client.VideoDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
+
+    // Triggered when the IsEnabled property changes
+    _client.VideoDeviceManager.IsEnabledChanged += OnIsEnabledChanged;
+}
+
+private void OnIsEnabledChanged(bool isEnabled) { }
+
+private void OnSelectedDeviceChanged(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice) { }
+```
+
+### Android & iOS
+
+Users must grant permission to use the Camera device on Android and iOS platforms. Permissions are typically requested when the application starts or when a user attempts to enable video capturing.
+
+#### iOS and WebGL
+
+For iOS and WebGL platforms, you can request camera permission using Unity's `RequestUserAuthorization`:
+
+```csharp
+public void CameraIOSPermissions()
+{
+    // Request permission to use the Camera
+    Application.RequestUserAuthorization(UserAuthorization.WebCam);
+
+    // Check if user granted camera permission
+    if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
+    {
+        // Notify user that camera permission was not granted and the camera capturing will not work.
+    }
+}
+```
+
+#### Android
+
+On Android, request camera permissions using `Permission.RequestUserPermission`:
+
+```csharp
+public void CameraAndroidPermissions()
+{
+    // Request camera permissions
+    Permission.RequestUserPermission(Permission.Camera);
+
+    // Check if user granted camera permission
+    if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
+    {
+        // Notify user that camera permission was not granted and the camera capturing will not work.
+    }
+}
+```

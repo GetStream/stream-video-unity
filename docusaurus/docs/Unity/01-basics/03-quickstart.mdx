@@ -72,6 +72,8 @@ var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ri
 
 ## Capture Audio from a Microphone
 
+The `AudioDeviceManager` manages all interactions with camera devices. Below are several fundamental operations; for a comprehensive list, please visit our [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) documentation section.
+
 List available microphone devices:
 ```csharp
 var microphones = _client.AudioDeviceManager.EnumerateDevices();
@@ -100,45 +102,13 @@ _client.AudioDeviceManager.Enable();
 _client.AudioDeviceManager.Disable();
 ```
 
-### Permission to use the Microphone
+#### Android & iOS platforms
 
-Users must grant permission to use the Microphone device for platforms like Android and IOS. Otherwise, capturing audio will not work. Typical patterns are requesting permissions when the application starts or when a user attempts to enable audio capturing.
-
-### iOS and WebGL
-
-You can request permission to use a microphone device on iOS and WebGL platforms by using Unity's [RequestUserAuthorization](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html):
-
-```csharp
-// Request permission to use the Microphone
-Application.RequestUserAuthorization(UserAuthorization.Microphone);
-
-// Check if user granted microphone permission
-if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
-{
-    // Notify user that microphone permission was not granted and the microphone capturing will not work.
-}
-```
-
-### Android
-
-For the Android platform, Unity recommends using the [Permission.RequestUserPermission](https://docs.unity3d.com/ScriptReference/Android.Permission.RequestUserPermission.html):
-
-```csharp
-// Request microphone permissions
-Permission.RequestUserPermission(Permission.Microphone);
-
-// Check if user granted microphone permission
-if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
-{
-    // Notify user that microphone permission was not granted and the microphone capturing will not work.
-}
-```
-
-#### Read more
-
-Read more about working with microphone in the [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) docs section.
+For platforms like Android and iOS, the user needs to grant permission to access the microphone devices. You can read more about requesting permissions in the [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) docs section.
 
 ## Capture Video from a Web Camera
+
+The `VideoDeviceManager` manages all interactions with camera devices. Below are several fundamental operations; for a comprehensive list, please visit our [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) documentation section.
 
 List available camera devices:
 ```csharp
@@ -168,43 +138,9 @@ _client.VideoDeviceManager.Enable();
 _client.VideoDeviceManager.Disable();
 ```
 
-### Permission to use the Microphone
+#### Android & iOS platforms
 
-Users must grant permission to use the Microphone device for platforms like Android and IOS. Otherwise, capturing audio will not work. Typical patterns are requesting permissions when the application starts or when a user attempts to enable video capturing.
-
-### iOS and WebGL
-
-You can request permission to use a microphone device on iOS and WebGL platforms by using Unity's [RequestUserAuthorization](https://docs.unity3d.com/ScriptReference/Application.RequestUserAuthorization.html):
-
-```csharp
-// Request camera permissions
-Application.RequestUserAuthorization(UserAuthorization.WebCam);
-
-// Check if user granted camera permission
-if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
-{
-    // Notify user that camera permission was not granted and the camera capturing will not work.
-}
-```
-
-### Android
-
-For the Android platform, Unity recommends using the [Permission.RequestUserPermission](https://docs.unity3d.com/ScriptReference/Android.Permission.RequestUserPermission.html):
-
-```csharp
-// Request camera permissions
-Permission.RequestUserPermission(Permission.Camera);
-
-// Check if user granted camera permission
-if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
-{
-    // Notify user that camera permission was not granted and the camera capturing will not work.
-}
-```
-
-#### Read more
-
-Read more about working with camera in the [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) docs section.
+For platforms like Android and iOS, a user needs to grant permission to access the camera devices. You can read more about requesting permissions in the [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) docs section.
 
 ## Handling participants
 

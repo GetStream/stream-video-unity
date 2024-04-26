@@ -29,8 +29,8 @@ namespace StreamVideo.Core.DeviceManagers
             }
         }
 
-        public void SelectDevice(CameraDeviceInfo device, bool enable, int fps = 30)
-            => SelectDevice(device, VideoResolution.Res_720p, enable, fps);
+        public void SelectDevice(CameraDeviceInfo device, bool enable, int requestedFPS = 30)
+            => SelectDevice(device, VideoResolution.Res_720p, enable, requestedFPS);
 
         public void SelectDevice(CameraDeviceInfo device, VideoResolution requestedResolution, bool enable, int requestedFPS = 30)
         {

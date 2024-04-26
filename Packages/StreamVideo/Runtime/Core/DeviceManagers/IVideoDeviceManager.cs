@@ -15,8 +15,8 @@ namespace StreamVideo.Core.DeviceManagers
         /// </summary>
         /// <param name="device">Camera device</param>
         /// <param name="enable">Enable this device (Start Capturing Video)</param>
-        /// <param name="fps">Requested frame rate for the captured video. If the requested FPS is not supported by the camera, the closets available value will be selected</param>
-        void SelectDevice(CameraDeviceInfo device, bool enable, int fps = 30);
+        /// <param name="requestedFPS">Requested frame rate for the captured video. If the requested FPS is not supported by the camera, the closets available value will be selected</param>
+        void SelectDevice(CameraDeviceInfo device, bool enable, int requestedFPS = 30);
 
         /// <summary>
         /// Select a camera device for video capturing.

@@ -28,6 +28,7 @@ foreach (var mic in microphones)
 **Declaration**
 `public void SelectDevice(MicrophoneDeviceInfo device, bool enable)`
 
+| Argument | Description |
 | --- | --- |
 | `device` | Microphone to select |
 | `enable` | Enabled device is capturing audio input |
@@ -144,6 +145,7 @@ Debug.Log(camera.Name); // Get camera name
 **Declaration**
 `public void SelectDevice(CameraDeviceInfo device, bool enable, int fps = 30)`
 
+| Argument | Description |
 | --- | --- |
 | `device` | Camera to select |
 | `enable` | Enabled device is capturing video input |
@@ -157,6 +159,7 @@ _client.VideoDeviceManager.SelectDevice(camera, enable: true, requestedFPS: 24);
 **Declaration**
 `public void SelectDevice(CameraDeviceInfo device, VideoResolution requestedResolution, bool enable, int requestedFPS = 30)`
 
+| Argument | Description |
 | --- | --- |
 | `device` | Camera to select |
 | `enable` | Enabled device is capturing video input |
@@ -169,7 +172,9 @@ _client.VideoDeviceManager.SelectDevice(camera, VideoResolution.Res_720p, enable
 ```
 
 The `VideoResolution` argument type contains multiple predefined resolutions:
+
 | Value | Resolution |
+| --- | --- |
 | `VideoResolution.Res_144p` | 256x144 |
 | `VideoResolution.Res_240p` | 320x240 |
 | `VideoResolution.Res_360p` | 480x360 |

@@ -18,13 +18,13 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class ICEServerInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default)]
         public string Password { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("urls", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("urls", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> Urls { get; set; } = new System.Collections.Generic.List<string>();
 
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Default)]
         public string Username { get; set; } = default!;
 
     }

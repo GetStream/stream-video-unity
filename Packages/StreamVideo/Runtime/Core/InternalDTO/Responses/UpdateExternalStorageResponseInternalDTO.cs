@@ -18,22 +18,22 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class UpdateExternalStorageResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("bucket", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("bucket", Required = Newtonsoft.Json.Required.Default)]
         public string Bucket { get; set; } = default!;
 
         /// <summary>
         /// Duration of the request in human-readable format
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
         public string Name { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("path", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("path", Required = Newtonsoft.Json.Required.Default)]
         public string Path { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Default)]
         public string Type { get; set; } = default!;
 
     }

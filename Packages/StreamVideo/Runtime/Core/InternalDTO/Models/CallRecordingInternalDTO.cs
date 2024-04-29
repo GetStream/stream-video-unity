@@ -21,16 +21,16 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CallRecordingInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("end_time", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("end_time", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset EndTime { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("filename", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("filename", Required = Newtonsoft.Json.Required.Default)]
         public string Filename { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("start_time", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("start_time", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset StartTime { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.Default)]
         public string Url { get; set; } = default!;
 
     }

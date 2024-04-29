@@ -18,16 +18,16 @@ namespace StreamVideo.Core.InternalDTO.Requests
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class AzureRequestInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("abs_account_name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("abs_account_name", Required = Newtonsoft.Json.Required.Default)]
         public string AbsAccountName { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("abs_client_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("abs_client_id", Required = Newtonsoft.Json.Required.Default)]
         public string AbsClientId { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("abs_client_secret", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("abs_client_secret", Required = Newtonsoft.Json.Required.Default)]
         public string AbsClientSecret { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("abs_tenant_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("abs_tenant_id", Required = Newtonsoft.Json.Required.Default)]
         public string AbsTenantId { get; set; } = default!;
 
     }

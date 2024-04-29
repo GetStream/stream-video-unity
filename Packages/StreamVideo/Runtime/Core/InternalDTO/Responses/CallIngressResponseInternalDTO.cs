@@ -18,7 +18,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CallIngressResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("rtmp", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("rtmp", Required = Newtonsoft.Json.Required.Default)]
         public RTMPIngressInternalDTO Rtmp { get; set; } = new RTMPIngressInternalDTO();
 
     }

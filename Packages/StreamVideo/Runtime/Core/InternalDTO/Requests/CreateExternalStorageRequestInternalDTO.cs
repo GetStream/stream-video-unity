@@ -24,19 +24,19 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("azure_blob", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public AzureRequestInternalDTO AzureBlob { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("bucket", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("bucket", Required = Newtonsoft.Json.Required.Default)]
         public string Bucket { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("gcs_credentials", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string GcsCredentials { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
         public string Name { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("path", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Path { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("storage_type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("storage_type", Required = Newtonsoft.Json.Required.Default)]
         public string StorageType { get; set; } = default!;
 
     }

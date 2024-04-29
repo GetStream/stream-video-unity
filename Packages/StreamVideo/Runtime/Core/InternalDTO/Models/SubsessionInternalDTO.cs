@@ -18,13 +18,13 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class SubsessionInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("sfu_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("sfu_id", Required = Newtonsoft.Json.Required.Default)]
         public string SfuId { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("ts_ended_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("ts_ended_at", Required = Newtonsoft.Json.Required.Default)]
         public long TsEndedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("ts_joined_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("ts_joined_at", Required = Newtonsoft.Json.Required.Default)]
         public long TsJoinedAt { get; set; } = default!;
 
     }

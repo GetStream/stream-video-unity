@@ -18,7 +18,7 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class GeofenceSettingsInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("names", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("names", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> Names { get; set; } = new System.Collections.Generic.List<string>();
 
     }

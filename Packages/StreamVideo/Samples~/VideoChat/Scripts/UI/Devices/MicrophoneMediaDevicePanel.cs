@@ -26,6 +26,13 @@ namespace StreamVideo.ExampleProject.UI.Devices
             Client.AudioDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
         }
 
+        protected override void OnDestroying()
+        {
+            Client.AudioDeviceManager.SelectedDeviceChanged -= OnSelectedDeviceChanged;
+            
+            base.OnDestroying();
+        }
+
         private void OnSelectedDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice) 
             => SelectDeviceWithoutNotify(currentDevice);
     }

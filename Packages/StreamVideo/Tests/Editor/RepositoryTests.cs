@@ -4,10 +4,11 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using StreamVideo.Tests.Editor;
-using UnityEditor.PackageManager;
+using StreamVideo.Tests.Shared;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -17,20 +18,13 @@ namespace Tests.Editor
     {
         [UnityTest]
         public IEnumerator Imported_samples_match_package_source_samples()
+            => Imported_samples_match_package_source_samples_Async().RunAsIEnumerator();
+
+        public async Task Imported_samples_match_package_source_samples_Async()
         {
-            const string packageName = "io.getstream.video";
             var fileComparer = new SimpleFileCompare();
 
-            var listPackagesRequest = Client.List();
-
-            while (!listPackagesRequest.IsCompleted)
-            {
-                yield return null;
-            }
-
-            // Get unity package
-            var packages = listPackagesRequest.Result;
-            var streamVideoUnityPackage = packages.First(p => p.name == packageName);
+            var streamVideoUnityPackage = await TestUtils.GetStreamVideoPackageInfo();
             var packageSourcePath = streamVideoUnityPackage.resolvedPath;
             var displayName = streamVideoUnityPackage.displayName;
             var version = streamVideoUnityPackage.version;
@@ -93,6 +87,56 @@ namespace Tests.Editor
 
                 Assert.IsTrue(isSequenceEqual);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator Dtos_do_not_contain_json_required_always_flag()
+            => Dtos_do_not_contain_json_required_always_flag_Async().RunAsIEnumerator();
+
+        private async Task Dtos_do_not_contain_json_required_always_flag_Async()
+        {
+            var streamVideoUnityPackage = await TestUtils.GetStreamVideoPackageInfo();
+            var packageSourcePath = streamVideoUnityPackage.resolvedPath;
+
+            var internalDtosDirectory = Path.Combine(packageSourcePath, "Runtime", "Core", "InternalDTO");
+
+            const string internalDtoNamespace = "namespace StreamVideo.Core.InternalDTO";
+            const string sfuNamespace = "namespace StreamVideo.v1.Sfu";
+            var sfuNamespaces = new string[] { "namespace StreamVideo.v1.Sfu", "StreamVideo.Core.Sfu" };
+            const string jsonAlwaysRequiredFlag = "Newtonsoft.Json.Required.Always";
+
+            var files = Directory.GetFiles(internalDtosDirectory, "*.cs", SearchOption.AllDirectories);
+
+            var sb = new StringBuilder();
+            sb.AppendLine("These files contain invalid json flag:");
+            var anyFailed = false;
+            foreach (var file in files)
+            {
+                var content = await File.ReadAllTextAsync(file);
+
+                var isDtoNamespace = content.Contains(internalDtoNamespace);
+                var isSfuNamespace = sfuNamespaces.Any(content.Contains);
+                Assert.IsTrue(isDtoNamespace || isSfuNamespace);
+
+                if (isSfuNamespace)
+                {
+                    continue;
+                }
+
+                if (content.Contains(jsonAlwaysRequiredFlag))
+                {
+                    anyFailed = true;
+                    sb.AppendLine(
+                        $"- File: `{file}` contains `{jsonAlwaysRequiredFlag}` flag. This should be changed to `Newtonsoft.Json.Required.Default`. Otherwise, the deserialization is too strict and may fail after API changes.");
+                }
+            }
+
+            if (anyFailed)
+            {
+                Debug.Log(sb.ToString());
+            }
+
+            Assert.IsFalse(anyFailed);
         }
     }
 }

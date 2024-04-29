@@ -18,10 +18,10 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class StatsInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("average_seconds", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("average_seconds", Required = Newtonsoft.Json.Required.Default)]
         public float AverageSeconds { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("max_seconds", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("max_seconds", Required = Newtonsoft.Json.Required.Default)]
         public float MaxSeconds { get; set; } = default!;
 
     }

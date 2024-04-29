@@ -18,13 +18,13 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class LayoutSettingsInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("external_app_url", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("external_app_url", Required = Newtonsoft.Json.Required.Default)]
         public string ExternalAppUrl { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("external_css_url", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("external_css_url", Required = Newtonsoft.Json.Required.Default)]
         public string ExternalCssUrl { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public LayoutSettingsNameInternalEnum Name { get; set; } = default!;
 

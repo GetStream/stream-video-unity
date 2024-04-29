@@ -21,28 +21,28 @@ namespace StreamVideo.Core.InternalDTO.Events
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CallSessionParticipantLeftEventInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Default)]
         public string CallCid { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// The participant that left the session
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("participant", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("participant", Required = Newtonsoft.Json.Required.Default)]
         public CallParticipantResponseInternalDTO Participant { get; set; } = new CallParticipantResponseInternalDTO();
 
         /// <summary>
         /// Call session ID
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("session_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("session_id", Required = Newtonsoft.Json.Required.Default)]
         public string SessionId { get; set; } = default!;
 
         /// <summary>
         /// The type of event: "call.session_participant_left" in this case
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Default)]
         public string Type { get; set; } = "call.session_participant_left";
 
     }

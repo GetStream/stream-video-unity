@@ -18,26 +18,26 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class AudioSettingsInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("access_request_enabled", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("access_request_enabled", Required = Newtonsoft.Json.Required.Default)]
         public bool AccessRequestEnabled { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("default_device", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("default_device", Required = Newtonsoft.Json.Required.Default)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public AudioSettingsDefaultDeviceInternalEnum DefaultDevice { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("mic_default_on", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("mic_default_on", Required = Newtonsoft.Json.Required.Default)]
         public bool MicDefaultOn { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("noise_cancellation", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public NoiseCancellationSettingsInternalDTO NoiseCancellation { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("opus_dtx_enabled", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("opus_dtx_enabled", Required = Newtonsoft.Json.Required.Default)]
         public bool OpusDtxEnabled { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("redundant_coding_enabled", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("redundant_coding_enabled", Required = Newtonsoft.Json.Required.Default)]
         public bool RedundantCodingEnabled { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("speaker_default_on", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("speaker_default_on", Required = Newtonsoft.Json.Required.Default)]
         public bool SpeakerDefaultOn { get; set; } = default!;
 
     }

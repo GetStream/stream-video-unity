@@ -21,7 +21,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Duration of the request in human-readable format
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("next", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
@@ -30,7 +30,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("prev", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Prev { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("reports", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("reports", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<CallStatsReportSummaryResponseInternalDTO> Reports { get; set; } = new System.Collections.Generic.List<CallStatsReportSummaryResponseInternalDTO>();
 
     }

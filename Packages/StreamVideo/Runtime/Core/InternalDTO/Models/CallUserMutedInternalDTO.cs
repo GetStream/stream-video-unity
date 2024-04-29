@@ -21,22 +21,22 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CallUserMutedInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Default)]
         public string CallCid { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("from_user_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("from_user_id", Required = Newtonsoft.Json.Required.Default)]
         public string FromUserId { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("muted_user_ids", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("muted_user_ids", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> MutedUserIds { get; set; } = new System.Collections.Generic.List<string>();
 
         /// <summary>
         /// The type of event: "call.user_muted" in this case
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Default)]
         public string Type { get; set; } = "call.user_muted";
 
     }

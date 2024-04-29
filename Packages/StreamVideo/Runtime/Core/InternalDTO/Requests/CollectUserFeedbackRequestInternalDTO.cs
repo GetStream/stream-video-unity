@@ -27,13 +27,13 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("reason", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Reason { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("sdk", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("sdk", Required = Newtonsoft.Json.Required.Default)]
         public string Sdk { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("sdk_version", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("sdk_version", Required = Newtonsoft.Json.Required.Default)]
         public string SdkVersion { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("user_session_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user_session_id", Required = Newtonsoft.Json.Required.Default)]
         public string UserSessionId { get; set; } = default!;
 
     }

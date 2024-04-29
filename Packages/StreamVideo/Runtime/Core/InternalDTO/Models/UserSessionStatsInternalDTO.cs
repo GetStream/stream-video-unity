@@ -36,7 +36,7 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("device_version", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string DeviceVersion { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("freeze_duration_seconds", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("freeze_duration_seconds", Required = Newtonsoft.Json.Required.Default)]
         public float FreezeDurationSeconds { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("geolocation", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
@@ -72,22 +72,22 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("os_version", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string OsVersion { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("packet_loss_fraction", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("packet_loss_fraction", Required = Newtonsoft.Json.Required.Default)]
         public float PacketLossFraction { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("publishing_audio_codec", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string PublishingAudioCodec { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("publishing_duration_seconds", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("publishing_duration_seconds", Required = Newtonsoft.Json.Required.Default)]
         public int PublishingDurationSeconds { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("quality_score", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("quality_score", Required = Newtonsoft.Json.Required.Default)]
         public float QualityScore { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("receiving_audio_codec", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string ReceivingAudioCodec { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("receiving_duration_seconds", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("receiving_duration_seconds", Required = Newtonsoft.Json.Required.Default)]
         public int ReceivingDurationSeconds { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("sdk", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
@@ -102,10 +102,10 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("timeline", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public CallTimelineInternalDTO Timeline { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("total_pixels_in", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("total_pixels_in", Required = Newtonsoft.Json.Required.Default)]
         public int TotalPixelsIn { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("total_pixels_out", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("total_pixels_out", Required = Newtonsoft.Json.Required.Default)]
         public int TotalPixelsOut { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("webrtc_version", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]

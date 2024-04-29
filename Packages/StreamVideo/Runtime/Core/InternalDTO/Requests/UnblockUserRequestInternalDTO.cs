@@ -21,7 +21,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         /// <summary>
         /// the user to unblock
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Default)]
         public string UserId { get; set; } = default!;
 
     }

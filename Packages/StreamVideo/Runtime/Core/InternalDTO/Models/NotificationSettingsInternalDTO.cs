@@ -18,19 +18,19 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class NotificationSettingsInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("call_live_started", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("call_live_started", Required = Newtonsoft.Json.Required.Default)]
         public EventNotificationSettingsInternalDTO CallLiveStarted { get; set; } = new EventNotificationSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("call_notification", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("call_notification", Required = Newtonsoft.Json.Required.Default)]
         public EventNotificationSettingsInternalDTO CallNotification { get; set; } = new EventNotificationSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("call_ring", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("call_ring", Required = Newtonsoft.Json.Required.Default)]
         public EventNotificationSettingsInternalDTO CallRing { get; set; } = new EventNotificationSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Default)]
         public bool Enabled { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("session_started", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("session_started", Required = Newtonsoft.Json.Required.Default)]
         public EventNotificationSettingsInternalDTO SessionStarted { get; set; } = new EventNotificationSettingsInternalDTO();
 
     }

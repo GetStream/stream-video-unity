@@ -18,19 +18,19 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class OwnUserResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
         
         [Newtonsoft.Json.JsonProperty("deleted_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset DeletedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("devices", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("devices", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<DeviceInternalDTO> Devices { get; set; } = new System.Collections.Generic.List<DeviceInternalDTO>();
 
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Default)]
         public string Id { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
@@ -39,13 +39,13 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Default)]
         public string Role { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("teams", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("teams", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> Teams { get; set; } = new System.Collections.Generic.List<string>();
 
-        [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset UpdatedAt { get; set; } = default!;
 
     }

@@ -18,16 +18,16 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class SFULocationResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("coordinates", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("coordinates", Required = Newtonsoft.Json.Required.Default)]
         public CoordinatesInternalDTO Coordinates { get; set; } = new CoordinatesInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("datacenter", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("datacenter", Required = Newtonsoft.Json.Required.Default)]
         public string Datacenter { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Default)]
         public string Id { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("location", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("location", Required = Newtonsoft.Json.Required.Default)]
         public LocationInternalDTO Location { get; set; } = new LocationInternalDTO();
 
     }

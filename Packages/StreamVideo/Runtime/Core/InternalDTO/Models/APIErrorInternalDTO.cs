@@ -21,25 +21,25 @@ namespace StreamVideo.Core.InternalDTO.Models
         /// <summary>
         /// Response HTTP status code
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("StatusCode", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("StatusCode", Required = Newtonsoft.Json.Required.Default)]
         public int StatusCode { get; set; } = default!;
 
         /// <summary>
         /// API error code
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("code", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("code", Required = Newtonsoft.Json.Required.Default)]
         public int Code { get; set; } = default!;
 
         /// <summary>
         /// Additional error-specific information
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("details", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("details", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<int> Details { get; set; } = new System.Collections.Generic.List<int>();
 
         /// <summary>
         /// Request duration
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 
         /// <summary>
@@ -51,13 +51,13 @@ namespace StreamVideo.Core.InternalDTO.Models
         /// <summary>
         /// Message describing an error
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("message", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("message", Required = Newtonsoft.Json.Required.Default)]
         public string Message { get; set; } = default!;
 
         /// <summary>
         /// URL with additional information
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("more_info", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("more_info", Required = Newtonsoft.Json.Required.Default)]
         public string MoreInfo { get; set; } = default!;
 
     }

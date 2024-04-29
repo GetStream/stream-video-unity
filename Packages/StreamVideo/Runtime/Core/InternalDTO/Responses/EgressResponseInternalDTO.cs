@@ -18,13 +18,13 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class EgressResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Default)]
         public bool Broadcasting { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("hls", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public EgressHLSResponseInternalDTO Hls { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("rtmps", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("rtmps", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<EgressRTMPResponseInternalDTO> Rtmps { get; set; } = new System.Collections.Generic.List<EgressRTMPResponseInternalDTO>();
 
     }

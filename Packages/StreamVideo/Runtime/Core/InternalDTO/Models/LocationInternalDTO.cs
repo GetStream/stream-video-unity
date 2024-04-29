@@ -18,13 +18,13 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class LocationInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("continent_code", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("continent_code", Required = Newtonsoft.Json.Required.Default)]
         public string ContinentCode { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("country_iso_code", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("country_iso_code", Required = Newtonsoft.Json.Required.Default)]
         public string CountryIsoCode { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("subdivision_iso_code", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("subdivision_iso_code", Required = Newtonsoft.Json.Required.Default)]
         public string SubdivisionIsoCode { get; set; } = default!;
 
     }

@@ -21,10 +21,10 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// List of devices
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("devices", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("devices", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<DeviceInternalDTO> Devices { get; set; } = new System.Collections.Generic.List<DeviceInternalDTO>();
 
-        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 
     }

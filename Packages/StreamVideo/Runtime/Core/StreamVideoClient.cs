@@ -47,8 +47,8 @@ namespace StreamVideo.Core
 
         public bool IsConnected => InternalLowLevelClient.ConnectionState == ConnectionState.Connected;
         
-        public IVideoDeviceManager VideoDeviceManager { get; }
-        public IAudioDeviceManager AudioDeviceManager { get; }
+        public IStreamVideoDeviceManager VideoDeviceManager { get; }
+        public IStreamAudioDeviceManager AudioDeviceManager { get; }
 
         /// <summary>
         /// Use this method to create the Video Client. You should have only one instance of this class
@@ -385,8 +385,8 @@ namespace StreamVideo.Core
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);
             
-            VideoDeviceManager = new VideoDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
-            AudioDeviceManager = new AudioDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
+            VideoDeviceManager = new StreamVideoDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
+            AudioDeviceManager = new StreamAudioDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
 
             SubscribeTo(InternalLowLevelClient);
         }

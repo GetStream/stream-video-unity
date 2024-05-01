@@ -11,7 +11,7 @@ namespace StreamVideo.Core.DeviceManagers
         public string Name { get; }
         public bool IsFrontFacing { get; }
 
-        public CameraDeviceInfo(string name, bool isFrontFacing, IVideoDeviceManager videoDeviceManager)
+        public CameraDeviceInfo(string name, bool isFrontFacing, IStreamVideoDeviceManager videoDeviceManager)
         {
             _videoDeviceManager = videoDeviceManager;
             Name = name;
@@ -34,6 +34,6 @@ namespace StreamVideo.Core.DeviceManagers
 
         internal bool IsValid => !string.IsNullOrEmpty(Name);
 
-        private readonly IVideoDeviceManager _videoDeviceManager;
+        private readonly IStreamVideoDeviceManager _videoDeviceManager;
     }
 }

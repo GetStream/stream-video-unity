@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.DeviceManagers
 {
-    internal class AudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IAudioDeviceManager
+    internal class StreamAudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IStreamAudioDeviceManager
     {
         //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
@@ -87,7 +87,7 @@ namespace StreamVideo.Core.DeviceManagers
         
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio
         
-        internal AudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
+        internal StreamAudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
             : base(rtcSession, client, logs)
         {
         }
@@ -134,7 +134,7 @@ namespace StreamVideo.Core.DeviceManagers
 
             _targetAudioSourceContainer = new GameObject
             {
-                name = $"[Stream][{nameof(AudioDeviceManager)}] Microphone Buffer",
+                name = $"[Stream][{nameof(StreamAudioDeviceManager)}] Microphone Buffer",
 #if STREAM_DEBUG_ENABLED
                 hideFlags = HideFlags.DontSave
 #else

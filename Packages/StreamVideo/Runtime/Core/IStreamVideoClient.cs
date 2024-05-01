@@ -49,12 +49,12 @@ namespace StreamVideo.Core
         /// <summary>
         /// Manager for video recording devices. Use it to interact with camera devices.
         /// </summary>
-        IVideoDeviceManager VideoDeviceManager { get; }
+        IStreamVideoDeviceManager VideoDeviceManager { get; }
         
         /// <summary>
         /// Manager for audio recording devices. Use it to interact with microphone devices.
         /// </summary>
-        IAudioDeviceManager AudioDeviceManager { get; }
+        IStreamAudioDeviceManager AudioDeviceManager { get; }
 
         /// <summary>
         /// Connect user to Stream server. Returns local user object of type <see cref="IStreamVideoUser"/>

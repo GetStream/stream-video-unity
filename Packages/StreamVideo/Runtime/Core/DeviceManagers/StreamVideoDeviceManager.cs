@@ -18,7 +18,7 @@ namespace StreamVideo.Core.DeviceManagers
 - test that monitoring for video devices works and deviceAdded, deviceRemoved events are fired accordingly
 - test that enabling device triggers capturing and disabling stops capturing
 */
-    internal class VideoDeviceManager : DeviceManagerBase<CameraDeviceInfo>, IVideoDeviceManager
+    internal class StreamVideoDeviceManager : DeviceManagerBase<CameraDeviceInfo>, IStreamVideoDeviceManager
     {
         //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<CameraDeviceInfo> EnumerateDevices()
@@ -79,7 +79,7 @@ namespace StreamVideo.Core.DeviceManagers
         /// </summary>
         public WebCamTexture GetSelectedDeviceWebCamTexture() => _activeCamera;
 
-        internal VideoDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
+        internal StreamVideoDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
             : base(rtcSession, client, logs)
         {
         }

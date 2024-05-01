@@ -3,7 +3,7 @@
     /// <summary>
     /// Manages interactions with audio recording devices (Microphones).
     /// </summary>
-    public interface IAudioDeviceManager : IDeviceManager<MicrophoneDeviceInfo>
+    public interface IStreamAudioDeviceManager : IDeviceManager<MicrophoneDeviceInfo>
     {
         /// <summary>
         /// Select a microphone device for audio capturing.

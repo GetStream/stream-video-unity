@@ -18,16 +18,16 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class RecordSettingsResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("audio_only", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("audio_only", Required = Newtonsoft.Json.Required.Default)]
         public bool AudioOnly { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("layout", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("layout", Required = Newtonsoft.Json.Required.Default)]
         public LayoutSettingsInternalDTO Layout { get; set; } = new LayoutSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default)]
         public string Mode { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("quality", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("quality", Required = Newtonsoft.Json.Required.Default)]
         public string Quality { get; set; } = default!;
 
     }

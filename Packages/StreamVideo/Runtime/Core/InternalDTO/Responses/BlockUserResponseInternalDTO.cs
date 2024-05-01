@@ -21,7 +21,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Duration of the request in human-readable format
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 
     }

@@ -18,7 +18,7 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class BackstageSettingsInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Default)]
         public bool Enabled { get; set; } = default!;
 
     }

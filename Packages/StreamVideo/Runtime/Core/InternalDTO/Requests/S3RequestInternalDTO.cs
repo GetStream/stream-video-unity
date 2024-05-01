@@ -21,7 +21,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("s3_api_key", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string S3ApiKey { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("s3_region", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("s3_region", Required = Newtonsoft.Json.Required.Default)]
         public string S3Region { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("s3_secret", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]

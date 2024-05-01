@@ -18,16 +18,16 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CallParticipantResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("joined_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("joined_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset JoinedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Default)]
         public string Role { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Default)]
         public UserResponseInternalDTO User { get; set; } = new UserResponseInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("user_session_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user_session_id", Required = Newtonsoft.Json.Required.Default)]
         public string UserSessionId { get; set; } = default!;
 
     }

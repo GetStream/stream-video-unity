@@ -28,22 +28,22 @@ namespace StreamVideo.Core.InternalDTO.Events
         [Newtonsoft.Json.JsonProperty("blocked_by_user", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public UserResponseInternalDTO BlockedByUser { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Default)]
         public string CallCid { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// The type of event: "call.blocked_user" in this case
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Default)]
         public string Type { get; set; } = "call.blocked_user";
 
         /// <summary>
         /// The user that was blocked
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Default)]
         public UserResponseInternalDTO User { get; set; } = new UserResponseInternalDTO();
 
     }

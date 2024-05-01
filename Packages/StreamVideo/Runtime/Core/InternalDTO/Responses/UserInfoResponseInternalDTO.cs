@@ -18,16 +18,16 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class UserInfoResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
         public object Custom { get; set; } = new object();
 
-        [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Default)]
         public string Image { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
         public string Name { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("roles", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("roles", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> Roles { get; set; } = new System.Collections.Generic.List<string>();
 
     }

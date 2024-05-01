@@ -18,34 +18,34 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CallSettingsResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("audio", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("audio", Required = Newtonsoft.Json.Required.Default)]
         public AudioSettingsInternalDTO Audio { get; set; } = new AudioSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("backstage", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("backstage", Required = Newtonsoft.Json.Required.Default)]
         public BackstageSettingsInternalDTO Backstage { get; set; } = new BackstageSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Default)]
         public BroadcastSettingsResponseInternalDTO Broadcasting { get; set; } = new BroadcastSettingsResponseInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("geofencing", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("geofencing", Required = Newtonsoft.Json.Required.Default)]
         public GeofenceSettingsInternalDTO Geofencing { get; set; } = new GeofenceSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.Default)]
         public RecordSettingsResponseInternalDTO Recording { get; set; } = new RecordSettingsResponseInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("ring", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("ring", Required = Newtonsoft.Json.Required.Default)]
         public RingSettingsInternalDTO Ring { get; set; } = new RingSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("screensharing", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("screensharing", Required = Newtonsoft.Json.Required.Default)]
         public ScreensharingSettingsInternalDTO Screensharing { get; set; } = new ScreensharingSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("thumbnails", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("thumbnails", Required = Newtonsoft.Json.Required.Default)]
         public ThumbnailsSettingsInternalDTO Thumbnails { get; set; } = new ThumbnailsSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("transcription", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("transcription", Required = Newtonsoft.Json.Required.Default)]
         public TranscriptionSettingsInternalDTO Transcription { get; set; } = new TranscriptionSettingsInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("video", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("video", Required = Newtonsoft.Json.Required.Default)]
         public VideoSettingsInternalDTO Video { get; set; } = new VideoSettingsInternalDTO();
 
     }

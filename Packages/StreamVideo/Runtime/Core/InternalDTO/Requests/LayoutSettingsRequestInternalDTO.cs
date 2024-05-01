@@ -24,7 +24,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("external_css_url", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string ExternalCssUrl { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public LayoutSettingsRequestNameInternalEnum Name { get; set; } = default!;
 

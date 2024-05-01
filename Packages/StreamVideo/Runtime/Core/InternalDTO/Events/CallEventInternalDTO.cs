@@ -18,19 +18,19 @@ namespace StreamVideo.Core.InternalDTO.Events
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CallEventInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("description", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("description", Required = Newtonsoft.Json.Required.Default)]
         public string Description { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("end_timestamp", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("end_timestamp", Required = Newtonsoft.Json.Required.Default)]
         public long EndTimestamp { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("severity", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("severity", Required = Newtonsoft.Json.Required.Default)]
         public int Severity { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("timestamp", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("timestamp", Required = Newtonsoft.Json.Required.Default)]
         public int Timestamp { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Default)]
         public string Type { get; set; } = default!;
 
     }

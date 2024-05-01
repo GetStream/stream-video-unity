@@ -27,7 +27,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Role { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Default)]
         public string UserId { get; set; } = default!;
 
     }

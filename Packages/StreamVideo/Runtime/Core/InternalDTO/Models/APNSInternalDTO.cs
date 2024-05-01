@@ -18,10 +18,10 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class APNSInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("body", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("body", Required = Newtonsoft.Json.Required.Default)]
         public string Body { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("title", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("title", Required = Newtonsoft.Json.Required.Default)]
         public string Title { get; set; } = default!;
 
     }

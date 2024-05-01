@@ -18,7 +18,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class RequestPermissionRequestInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("permissions", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("permissions", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> Permissions { get; set; } = new System.Collections.Generic.List<string>();
 
     }

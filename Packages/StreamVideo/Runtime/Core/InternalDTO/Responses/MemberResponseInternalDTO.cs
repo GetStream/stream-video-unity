@@ -21,13 +21,13 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Date/time of creation
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
         /// Custom member response data
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
         
         /// <summary>
@@ -42,13 +42,13 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Date/time of the last update
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset UpdatedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Default)]
         public UserResponseInternalDTO User { get; set; } = new UserResponseInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Default)]
         public string UserId { get; set; } = default!;
 
     }

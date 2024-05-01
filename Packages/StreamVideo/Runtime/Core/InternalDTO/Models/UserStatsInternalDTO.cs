@@ -18,10 +18,10 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class UserStatsInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("info", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("info", Required = Newtonsoft.Json.Required.Default)]
         public UserInfoResponseInternalDTO Info { get; set; } = new UserInfoResponseInternalDTO();
 
-        [Newtonsoft.Json.JsonProperty("session_stats", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("session_stats", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.Dictionary<string, UserSessionStatsInternalDTO> SessionStats { get; set; } = new System.Collections.Generic.Dictionary<string, UserSessionStatsInternalDTO>();
 
     }

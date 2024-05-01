@@ -27,7 +27,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("data", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public CallRequestInternalDTO Data { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("location", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("location", Required = Newtonsoft.Json.Required.Default)]
         public string Location { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("members_limit", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]

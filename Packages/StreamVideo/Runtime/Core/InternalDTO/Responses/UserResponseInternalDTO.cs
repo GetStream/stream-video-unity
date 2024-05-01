@@ -21,10 +21,10 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// <summary>
         /// Date/time of creation
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
         
         /// <summary>
@@ -33,28 +33,28 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("deleted_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset DeletedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Default)]
         public string Id { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Image { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Default)]
         public string Language { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Default)]
         public string Role { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("teams", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("teams", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> Teams { get; set; } = new System.Collections.Generic.List<string>();
 
         /// <summary>
         /// Date/time of the last update
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset UpdatedAt { get; set; } = default!;
 
     }

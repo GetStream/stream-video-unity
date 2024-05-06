@@ -3,9 +3,9 @@ title: Installation
 description: Install the SDK for video calling
 ---
 
-1. Open Unity's Package Manager by selecting from the top bar **Window -> Package Manager**.
+1. Open Unity's Package Manager by selecting from the top bar **Window -> Package Manager**.<br />
 ![Open Unity's Package Manager](../assets/basics-installation-01.png)
-2. Click the **+** button in the top left corner and select the **Add package from git URL...**
+2. Click the **+** button in the top left corner and select the **Add package from git URL...**<br />
 ![Select "add package from git URL..."](../assets/basics-installation-02.png)
 3. Paste in the following url and click the **Add** button:
 ```
@@ -13,21 +13,9 @@ https://github.com/GetStream/stream-video-unity.git?path=/Packages/StreamVideo
 ``` 
 ![Select "add package from git URL..."](../assets/basics-installation-03.png)
 
-After the package import is complete, **Stream's Video SDK for Unity** should be available in your project.
+After the import is complete, the **Stream's Video SDK for Unity** package should appear in the **Packages** window.
 
-## Using a specific SDK version
+## Assembly Definitions
 
-We recommend always using the most recent version of the SDK. However, in rare cases, you may want to use a particular version of the SDK.
-In such case, you need to append the `#` symbol, followed by the version number, to the package URL as shown below:
-```
-https://github.com/GetStream/stream-video-unity.git?path=/Packages/StreamVideo#v0.5.0
-```
-Here, the version `v0.5.0` will be imported, even if a newer version is available.
-
-You can find all available versions on our [Releases page](https://github.com/GetStream/stream-video-unity/releases).
-
-:::caution
-
-Importing the package with a version defined will lock this version indefinitely. The **Update** button in Unity's package manager will not update the package, and the only way to upgrade will be to remove the package and add it again without the version suffix.
-
-:::
+If you're using [Unity's Assembly Definitions](https://docs.unity3d.com/Manual/ScriptCompilationAssemblyDefinitionFiles.html) in your project, you need to add a reference to the `StreamVideo.Core` assembly in the assembly inspector as shown in below:
+![Add reference to StreamVideo.Core assembly in your assembly definition](../assets/basics-installation-04.png)

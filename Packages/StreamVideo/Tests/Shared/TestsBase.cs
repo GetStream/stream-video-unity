@@ -13,8 +13,9 @@ using Debug = UnityEngine.Debug;
 namespace StreamVideo.Tests.Shared
 {
     public delegate Task SingleClientTestHandler(ITestClient client);
+
     public delegate Task TwoClientsTestHandler(ITestClient client1, ITestClient client2);
-    
+
     public class TestsBase
     {
         [OneTimeSetUp]
@@ -47,7 +48,7 @@ namespace StreamVideo.Tests.Shared
             {
                 return (true, TimeSpan.Zero);
             }
-            
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             while (stopwatch.ElapsedMilliseconds < timeoutMs)
@@ -59,25 +60,26 @@ namespace StreamVideo.Tests.Shared
                     return (true, stopwatch.Elapsed);
                 }
             }
-            
+
             return (false, stopwatch.Elapsed);
         }
-        
+
         protected static IEnumerator ConnectAndExecute(Func<Task> test)
         {
             yield return ConnectAndExecuteAsync(_ => test()).RunAsIEnumerator();
         }
-        
+
         protected static IEnumerator ConnectAndExecute(SingleClientTestHandler test)
         {
             yield return ConnectAndExecuteAsync(clients => test(clients[0]), clientsToSpawn: 1).RunAsIEnumerator();
         }
-        
-        protected static IEnumerator ConnectAndExecute(TwoClientsTestHandler test)
+
+        protected static IEnumerator ConnectAndExecute(TwoClientsTestHandler test, bool ignoreFailingMessages = false)
         {
-            yield return ConnectAndExecuteAsync(clients => test(clients[0], clients[1]), clientsToSpawn: 2).RunAsIEnumerator();
+            yield return ConnectAndExecuteAsync(clients => test(clients[0], clients[1]), clientsToSpawn: 2)
+                .RunAsIEnumerator(ignoreFailingMessages: ignoreFailingMessages);
         }
-        
+
         private static async Task ConnectAndExecuteAsync(Func<ITestClient[], Task> test, int clientsToSpawn = 1)
         {
             var clients = await StreamTestClientProvider.Instance.GetConnectedTestClientsAsync(clientsToSpawn);
@@ -110,7 +112,8 @@ namespace StreamVideo.Tests.Shared
 
             if (!completed)
             {
-                throw new AggregateException($"Failed all attempts. Last Exception: {exceptions.Last().Message} ", exceptions);
+                throw new AggregateException($"Failed all attempts. Last Exception: {exceptions.Last().Message} ",
+                    exceptions);
             }
         }
     }

@@ -70,86 +70,77 @@ var callId = "my-call-id";
 var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
 ```
 
+## Capture Audio from a Microphone
 
-## Setting Audio Input
+The `AudioDeviceManager` manages all interactions with camera devices. Below are several fundamental operations; for a comprehensive list, please visit our [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) documentation section.
 
-#### Bind microphone device to a `AudioSource` component
-
-This code will get the first microphone device from Unity's `Microphone.devices` list and stream it's input into a `AudioSource` component.
-
+List available microphone devices:
 ```csharp
-// Obtain reference to an AudioSource that will be used a source of audio
-var inputAudioSource = GetComponent<AudioSource>();
+var microphones = _client.AudioDeviceManager.EnumerateDevices();
 
-// Get a valid microphone device name.
-// You usually want to populate a dropdown list with Microphone.devices so that the user can pick which device should be used
-_activeMicrophoneDeviceName = Microphone.devices.First();
-
-inputAudioSource.clip
-    = Microphone.Start(_activeMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
-inputAudioSource.loop = true;
-inputAudioSource.Play();
+foreach (var mic in microphones)
+{
+    Debug.Log(mic.Name);
+}
 ```
 
-- For standalone platforms like Windows, macOS, and Linux, you usually want to provide the user with a dropdown menu populated from the `Microphone.devices` so that the user can select the active microphone.
-- For mobile platforms like Android or IOS the underlying OS is controlling the devices and the `Microphone.devices`
-
-Please also note that on mobile platforms you need to request appropriate [User Permissions](https://docs.unity3d.com/ScriptReference/Android.Permission.RequestUserPermission.html) in order to make use of the Microphone and the Camera.
-
-#### Set `AudioSource` component as an Input Source for Audio.
-
-You can provide any `AudioSource` component as an input for audio. All you need to do is call the `_client.SetAudioInputSource(audioSource)` method as in the following example:
+Select active device:
 ```csharp
-// Obtain reference to an AudioSource that will be used a source of audio
-var audioSource = GetComponent<AudioSource>();
-_client.SetAudioInputSource(audioSource);
+var firstMicrophone = microphones.First();
+
+// Select microphone device to capture audio input. `enable` argument determines whether audio capturing should start
+_client.AudioDeviceManager.SelectDevice(firstMicrophone, enable: true);
 ```
-Now the provided `AudioSource` will be used as an audio input for audio communication in calls.
+The `enable` argument determines whether audio capture should start for this device.
 
-Please note that the `AudioSrouce` does not necessarily need to be associated with a microphone device. This is indeed the most common use case but the `AudioSource` in fact serves as an audio buffer, so you can implement many other use cases with how the audio input is gathered.
-
-#### Read more
-
-Please refer to Unity's documentation for more information on how to use Microphone devices:
-* [Microphone.devices](https://docs.unity3d.com/ScriptReference/Microphone-devices.html)
-* [Microphone.Start](https://docs.unity3d.com/ScriptReference/Microphone.Start.html)
-* [Microphone.End](https://docs.unity3d.com/ScriptReference/Microphone.End.html)
-
-## Setting Video Input
-
-You can use Unity's [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html) to interact with the camera device.
-
-Once you select the camera device you should create a new instance of `WebCamTexture` and call `Play()` on it.
-
-Now you can set the `WebCamTexture` as a video input with `_client.SetCameraInputSource(activeCamera);` as shown in the following example:
+You can start/stop audio capturing with:
 ```csharp
-// Obtain a camera device
-var cameraDevice = WebCamTexture.devices.First();
+// Start audio capturing
+_client.AudioDeviceManager.Enable();
 
-var width = 1920;
-var height = 1080;
-var fps = 30;
-
-// Use device name to create a new WebCamTexture instance
-var activeCamera = new WebCamTexture(cameraDevice.name, width, height, fps);
-
-// Call Play() in order to start capturing the video
-activeCamera.Play();
-
-// Set WebCamTexture in Stream's Client - this WebCamTexture will be the video source in video calls
-_client.SetCameraInputSource(activeCamera);
+// Stop audio capturing
+_client.AudioDeviceManager.Disable();
 ```
 
-- For standalone platforms like Windows, macOS, and Linux, you usually want to provide the user with a dropdown menu populated from the `WebCamTexture.devices` so that the user can select the active camera.
-- On mobile platforms like Android or IOS there will usually be two camera devices present in the `WebCamTexture.devices`: The front camera and the back camera. So you may either select the front camera automatically or give user an option to toggle between front and back cameras depending on your use case.
+#### Android & iOS platforms
 
-#### Read more
+For platforms like Android and iOS, the user needs to grant permission to access the microphone devices. You can read more about requesting permissions in the [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) docs section.
 
-Please refer to Unity's documentation for more information on how to use Camera devices:
-* [WebCamTexture](https://docs.unity3d.com/ScriptReference/WebCamTexture.html)
-* [WebCamTexture.devices](https://docs.unity3d.com/ScriptReference/WebCamTexture-devices.html)
-* [WebCamTexture.Play](https://docs.unity3d.com/ScriptReference/WebCamTexture.Play.html)
-* [WebCamTexture.Stop](https://docs.unity3d.com/ScriptReference/WebCamTexture.Stop.html)
+## Capture Video from a Web Camera
+
+The `VideoDeviceManager` manages all interactions with camera devices. Below are several fundamental operations; for a comprehensive list, please visit our [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) documentation section.
+
+List available camera devices:
+```csharp
+var cameras = _client.VideoDeviceManager.EnumerateDevices();
+
+foreach (var cam in cameras)
+{
+    Debug.Log(cam.Name);
+}
+```
+
+Select active device:
+```csharp
+var firstCamera = cameras.First();
+
+// Select camera device to capture video input. `enable` argument determines whether video capturing should start
+_client.VideoDeviceManager.SelectDevice(firstCamera, enable: true);
+```
+The `enable` argument determines whether video capture should start immediately for this device.
+
+You can start/stop video capturing with:
+```csharp
+// Start video capturing
+_client.VideoDeviceManager.Enable();
+
+// Stop video capturing
+_client.VideoDeviceManager.Disable();
+```
+
+#### Android & iOS platforms
+
+For platforms like Android and iOS, a user needs to grant permission to access the camera devices. You can read more about requesting permissions in the [Camera & Microphone](https://getstream.io/video/docs/unity/guides/camera-and-microphone/) docs section.
 
 ## Handling participants
 

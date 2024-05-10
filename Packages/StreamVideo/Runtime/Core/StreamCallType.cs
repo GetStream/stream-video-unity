@@ -3,7 +3,8 @@
 namespace StreamVideo.Core
 {
     /// <summary>
-    /// Call type defines permission settings. You can set permissions for each type in <see cref="https://dashboard.getstream.io/"/>
+    /// Call type defines permission settings. You can set permissions for each type in <a href="https://dashboard.getstream.io/">Stream Dashboard</a>.
+    /// Read more about the call types in the <a href="https://getstream.io/video/docs/unity/guides/call-types/">Call Types Docs</a>
     /// </summary>
     public readonly struct StreamCallType
     {
@@ -25,7 +26,7 @@ namespace StreamVideo.Core
         public static StreamCallType Livestream => new StreamCallType("livestream");
 
         /// <summary>
-        /// ** Use for development only! ** everything enabled, permissions open
+        /// ** Use for development only! ** should only be used for testing, permissions are open and everything is enabled (use carefully)
         /// </summary>
         public static StreamCallType Development => new StreamCallType("development");
 

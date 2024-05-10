@@ -533,7 +533,7 @@ namespace StreamVideo.Core.LowLevelClient
                 $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
 #endif
 
-            return new VideoStreamTrack(_mediaInputProvider.VideoInput);
+            return new VideoStreamTrack(_publisherVideoTrackTexture);
         }
 
         //StreamTodo: CreatePublisherVideoTrackFromSceneCamera() is not used in any path

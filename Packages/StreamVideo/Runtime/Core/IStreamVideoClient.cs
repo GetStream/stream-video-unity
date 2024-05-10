@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.QueryBuilders.Sort.Calls;
@@ -8,7 +7,6 @@ using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.VideoClientInstanceRunner;
-using UnityEngine;
 
 namespace StreamVideo.Core
 {
@@ -51,12 +49,12 @@ namespace StreamVideo.Core
         /// <summary>
         /// Manager for video recording devices. Use it to interact with camera devices.
         /// </summary>
-        IVideoDeviceManager VideoDeviceManager { get; }
+        IStreamVideoDeviceManager VideoDeviceManager { get; }
         
         /// <summary>
         /// Manager for audio recording devices. Use it to interact with microphone devices.
         /// </summary>
-        IAudioDeviceManager AudioDeviceManager { get; }
+        IStreamAudioDeviceManager AudioDeviceManager { get; }
 
         /// <summary>
         /// Connect user to Stream server. Returns local user object of type <see cref="IStreamVideoUser"/>
@@ -73,29 +71,16 @@ namespace StreamVideo.Core
             bool notify);
 
         /// <summary>
-        /// Set the source for sending AUDIO. Check out the docs to learn on how to capture audio from a Microphone device https://getstream.io/video/docs/unity/guides/camera-and-microphone/
-        /// </summary>
-        /// <param name="audioSource"></param>
-        void SetAudioInputSource(AudioSource audioSource);
-
-        /// <summary>
-        /// Set the source for sending VIDEO from a Camera device.
-        /// Video resolution and FPS (frames per second) defined in the passed <see cref="webCamTexture"/> will be used to define the max resolution and FPS of the published video
-        /// Check out the docs to learn how to setup capturing video from a camera device https://getstream.io/video/docs/unity/guides/camera-and-microphone/
-        /// </summary>
-        /// <param name="webCamTexture"></param>
-        void SetCameraInputSource(WebCamTexture webCamTexture);
-
-        /// <summary>
-        /// Set the source for sending VIDEO or rendered Scene Camera. You can pass any scene camera and the video will be sent to other participants.
-        /// </summary>
-        void SetCameraInputSource(Camera sceneCamera);
-
-        /// <summary>
         /// Will return null if the call doesn't exist
         /// </summary>
         Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId);
 
+        /// <summary>
+        /// Get a call with a specified Type and ID. If such a call doesn't exist, it will be created.
+        /// </summary>
+        /// <param name="callType">Call type - this defines the permissions and other settings for the call. Read more in the <a href="https://getstream.io/video/docs/unity/guides/call-types/">Call Types Docs</a></param>
+        /// <param name="callId">Call ID</param>
+        /// <returns>Call object of type: <see cref="IStreamCall"/></returns>
         Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId);
 
         /// <summary>

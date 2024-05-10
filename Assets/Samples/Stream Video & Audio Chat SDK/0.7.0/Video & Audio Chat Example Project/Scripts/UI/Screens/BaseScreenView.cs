@@ -51,8 +51,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected abstract void OnHide();
 
-        protected void Log(string message, LogType type) => UIManager.Log(message, type);
-
         private GameObject _gameObject;
     }
 }

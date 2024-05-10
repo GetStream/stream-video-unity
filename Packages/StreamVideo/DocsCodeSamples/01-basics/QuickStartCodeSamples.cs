@@ -4,6 +4,7 @@ using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using UnityEngine;
+using UnityEngine.Android;
 using UnityEngine.UI;
 
 namespace StreamVideoDocsCodeSamples._01_basics
@@ -33,7 +34,7 @@ namespace StreamVideoDocsCodeSamples._01_basics
             var callType = StreamCallType.Default; // Call type affects default permissions
             var callId = "my-call-id";
 
-// Notice that we pass create argument as true - this will create the call if it doesn't already exist
+            // Notice that we pass create argument as true - this will create the call if it doesn't already exist
             var streamCall = await _client.JoinCallAsync(callType, callId, create: true, ring: true, notify: false);
         }
 
@@ -42,7 +43,7 @@ namespace StreamVideoDocsCodeSamples._01_basics
             var callType = StreamCallType.Default; // Call type affects default permissions
             var callId = "my-call-id";
 
-// Notice that we pass create argument as false - if the call doesn't exist the join attempt will fail
+            // Notice that we pass create argument as false - if the call doesn't exist the join attempt will fail
             var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
         }
 
@@ -50,13 +51,13 @@ namespace StreamVideoDocsCodeSamples._01_basics
         {
             var callType = StreamCallType.Default; // Call type affects default permissions
             var callId = "my-call-id";
-            
+
             var streamCall = await _client.JoinCallAsync(callType, callId, create: false, ring: true, notify: false);
-            
+
             // Subscribe to events to get notified that streamCall.Participants collection changed
             streamCall.ParticipantJoined += OnParticipantJoined;
             streamCall.ParticipantLeft += OnParticipantLeft;
-            
+
             // Iterate through current participants
             foreach (var participant in streamCall.Participants)
             {
@@ -106,73 +107,133 @@ namespace StreamVideoDocsCodeSamples._01_basics
 
                     // This assumes that this gameObject contains the AudioSource component but it's not a requirement. You can obtain the AudioSource reference in your preferred way
                     var audioSource = GetComponent<AudioSource>();
-                        
+
                     // This AudioSource will receive audio from the participant
                     streamAudioTrack.SetAudioSourceTarget(audioSource);
                     break;
 
                 case StreamVideoTrack streamVideoTrack:
-                    
+
                     // This assumes that this gameObject contains the RawImage component but it's not a requirement. You can obtain the RawImage reference in your preferred way
                     var rawImage = GetComponent<RawImage>();
-                        
+
                     // This RawImage will receive video from the participant
                     streamVideoTrack.SetRenderTarget(rawImage);
                     break;
             }
         }
 
-        public void SetAudioInput()
+        public void ListAvailableMicrophoneDevices()
         {
-            // Obtain reference to an AudioSource that will be used a source of audio
-            var audioSource = GetComponent<AudioSource>();
-            _client.SetAudioInputSource(audioSource);
+            var microphones = _client.AudioDeviceManager.EnumerateDevices();
+
+            foreach (var mic in microphones)
+            {
+                Debug.Log(mic.Name);
+            }
         }
 
-        public void BindMicrophoneToAudioSource()
+        public void SelectAudioCapturingDevice()
         {
-            // Obtain reference to an AudioSource that will be used a source of audio
-            var inputAudioSource = GetComponent<AudioSource>();
+            // Enumerate available microphone devices
+            var microphones = _client.AudioDeviceManager.EnumerateDevices();
 
-            // Get a valid microphone device name.
-            // You usually want to populate a dropdown list with Microphone.devices so that the user can pick which device should be used
-            _activeMicrophoneDeviceName = Microphone.devices.First();
+            foreach (var mic in microphones)
+            {
+                Debug.Log(mic.Name);
+            }
 
-            inputAudioSource.clip
-                = Microphone.Start(_activeMicrophoneDeviceName, true, 3, AudioSettings.outputSampleRate);
-            inputAudioSource.loop = true;
-            inputAudioSource.Play();
+            var firstMicrophone = microphones.First();
+
+            // Select microphone device to capture audio input. `enable` argument determines whether audio capturing should start
+            _client.AudioDeviceManager.SelectDevice(firstMicrophone, enable: true);
         }
 
-        public void StopAudioRecording()
+        public void StartStopAudioRecording()
         {
-            Microphone.End(_activeMicrophoneDeviceName);
+            // Start audio capturing
+            _client.AudioDeviceManager.Enable();
+
+            // Stop audio capturing
+            _client.AudioDeviceManager.Disable();
         }
 
-        public void SetVideoInput()
+        public void RequestMicrophonePermissionsIOSandWebGL()
         {
-// Obtain reference to a WebCamTexture that will be used a source of video
-            var webCamTexture = GetComponent<WebCamTexture>();
-            _client.SetCameraInputSource(webCamTexture);
+            // Request microphone permissions
+            Application.RequestUserAuthorization(UserAuthorization.Microphone);
+
+            // Check if user granted microphone permission
+            if (!Application.HasUserAuthorization(UserAuthorization.Microphone))
+            {
+                // Notify user that microphone permission was not granted and the microphone capturing will not work.
+            }
         }
 
-        public void BindCameraToWebCamTexture()
+        public void RequestMicrophonePermissionsAndroid()
         {
-// Obtain a camera device
-            var cameraDevice = WebCamTexture.devices.First();
+            // Request microphone permissions
+            Permission.RequestUserPermission(Permission.Microphone);
 
-            var width = 1920;
-            var height = 1080;
-            var fps = 30;
+            // Check if user granted microphone permission
+            if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
+            {
+                // Notify user that microphone permission was not granted and the microphone capturing will not work.
+            }
+        }
 
-// Use device name to create a new WebCamTexture instance
-            var activeCamera = new WebCamTexture(cameraDevice.name, width, height, fps);
+        public void ListAvailableCameraDevices()
+        {
+            var cameras = _client.VideoDeviceManager.EnumerateDevices();
 
-// Call Play() in order to start capturing the video
-            activeCamera.Play();
+            foreach (var cam in cameras)
+            {
+                Debug.Log(cam.Name);
+            }
+        }
 
-// Set WebCamTexture in Stream's Client - this WebCamTexture will be the video source in video calls
-            _client.SetCameraInputSource(activeCamera);
+        public void SelectVideoCapturingDevice()
+        {
+            // Enumerate available camera devices
+            var cameras = _client.VideoDeviceManager.EnumerateDevices();
+
+            var firstCamera = cameras.First();
+
+            // Select camera device to capture video input. `enable` argument determines whether video capturing should start
+            _client.VideoDeviceManager.SelectDevice(firstCamera, enable: true);
+        }
+
+        public void StartStopVideoCapturing()
+        {
+            // Start video capturing
+            _client.VideoDeviceManager.Enable();
+
+            // Stop video capturing
+            _client.VideoDeviceManager.Disable();
+        }
+
+        public void RequestCameraPermissionsIOSandWebGL()
+        {
+            // Request camera permissions
+            Application.RequestUserAuthorization(UserAuthorization.WebCam);
+
+            // Check if user granted camera permission
+            if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
+            {
+                // Notify user that camera permission was not granted and the camera capturing will not work.
+            }
+        }
+
+        public void RequestCameraPermissionsAndroid()
+        {
+            // Request camera permissions
+            Permission.RequestUserPermission(Permission.Camera);
+
+            // Check if user granted camera permission
+            if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
+            {
+                // Notify user that camera permission was not granted and the camera capturing will not work.
+            }
         }
 
         private IStreamVideoClient _client;

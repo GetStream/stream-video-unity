@@ -61,12 +61,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             _leaveBtn.onClick.AddListener(VideoManager.LeaveActiveCall);
             _endBtn.onClick.AddListener(VideoManager.EndActiveCall);
-            
-            _cameraPanel.DeviceChanged += UIManager.ChangeCamera;
-            _cameraPanel.DeviceToggled += UIManager.SetCameraActive;
 
-            _microphonePanel.DeviceChanged += UIManager.ChangeMicrophone;
-            _microphonePanel.DeviceToggled += UIManager.SetMicrophoneActive;
+            _cameraPanel.Init(VideoManager.Client, UIManager);
+            _microphonePanel.Init(VideoManager.Client, UIManager);
         }
 
         protected override void OnShow(ShowArgs showArgs)
@@ -93,7 +90,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             _activeCall.SortedParticipantsUpdated += SortParticipantViews;
 
-            UIManager.ActiveCameraChanged += OnActiveCameraChanged;
+            UIManager.LocalCameraChanged += OnLocalCameraChanged;
 
             // Show active call ID so user can copy it and send others to join
             _joinCallIdInput.text = _activeCall.Id;
@@ -112,7 +109,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             RemoveAllParticipants();
 
-            UIManager.ActiveCameraChanged -= OnActiveCameraChanged;
+            UIManager.LocalCameraChanged -= OnLocalCameraChanged;
         }
 
         private void OnDominantSpeakerChanged(IStreamVideoCallParticipant currentDominantSpeaker,
@@ -156,7 +153,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
             if (participant.IsLocalParticipant)
             {
                 // Set input camera as a video source for local participant - we won't receive OnTrack event for local participant
-                view.SetLocalCameraSource(UIManager.ActiveCamera);
+                var webCamTexture = VideoManager.Client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
+                view.SetLocalCameraSource(webCamTexture);
+                //StreamTodo: this will invalidate each time WebCamTexture is internally replaced so we need a better way to expose this
             }
 
             if (sortParticipantViews)
@@ -224,7 +223,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _participantSessionIdToView.Clear();
         }
 
-        private void OnActiveCameraChanged(WebCamTexture activeCamera)
+        private void OnLocalCameraChanged(WebCamTexture activeCamera)
         {
             // Input Camera changed so let's update the preview for local participant
             var localParticipant

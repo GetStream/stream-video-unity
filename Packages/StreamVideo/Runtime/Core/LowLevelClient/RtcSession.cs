@@ -87,6 +87,16 @@ namespace StreamVideo.Core.LowLevelClient
             get => _audioInput;
             set
             {
+                if (value == null)
+                {
+                    throw new ArgumentNullException();
+                }
+
+                if (value == _audioInput)
+                {
+                    return;
+                }
+                
                 var prev = _audioInput;
                 _audioInput = value;
 
@@ -102,6 +112,16 @@ namespace StreamVideo.Core.LowLevelClient
             get => _videoInput;
             set
             {
+                if (value == null)
+                {
+                    throw new ArgumentNullException();
+                }
+
+                if (value == _videoInput)
+                {
+                    return;
+                }
+                
                 var prev = _videoInput;
                 _videoInput = value;
 
@@ -280,6 +300,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (Publisher?.PublisherAudioTrack == null)
             {
+                //StreamTodo: we probably want to cache this here and use once the track is available
                 return;
             }
 
@@ -290,6 +311,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (Publisher?.PublisherVideoTrack == null)
             {
+                //StreamTodo: we probably want to cache this here and use once the track is available
                 return;
             }
 

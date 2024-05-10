@@ -41,6 +41,7 @@ namespace StreamVideo.Core.StatefulModels
         /// Is this participant currently the most actively speaking participant.
         /// </summary>
         bool IsDominantSpeaker { get; }
+        
         string UserId { get; }
         
         /// <summary>

@@ -7,9 +7,8 @@ using StreamVideo.EditorTools.Builders;
 using StreamVideo.EditorTools.DefineSymbols;
 using UnityEditor;
 using UnityEngine;
-using AndroidExternalToolsSettings = UnityEditor.Android.AndroidExternalToolsSettings;
 #if UNITY_ANDROID
-using UnityEditor.Android;
+using AndroidExternalToolsSettings = UnityEditor.Android.AndroidExternalToolsSettings;
 #endif
 
 namespace StreamVideo.EditorTools

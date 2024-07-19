@@ -122,7 +122,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          buildMethod: StreamChat.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag
+          buildMethod: StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag
           customImage: ${{ env.DOCKER_TAG }}
 
       - name: Run Tests (Attempt 1)
@@ -216,7 +216,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          buildMethod: StreamChat.EditorTools.StreamEditorTools.BuildSampleApp
+          buildMethod: StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp
           customParameters: -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }} -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }} -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath $(pwd)/SampleAppBuild/${{ env.BUILD_NAME }}
           customImage: ${{ env.DOCKER_TAG }}
           allowDirtyBuild: true #Needed because the import process may update ProjectSettings

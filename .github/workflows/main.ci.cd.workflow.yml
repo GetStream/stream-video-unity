@@ -80,7 +80,7 @@ jobs:
               echo "Unsupported platform"
               exit 1
             fi
-            elif [ "${{ matrix.unity_version }}" == '2022' ]; then
+          elif [ "${{ matrix.unity_version }}" == '2022' ]; then
             if [ "${{ matrix.target_platform }}" == 'android' ]; then
               TAG='unityci/editor:ubuntu-2022.3.36f1-android-3.1.0'
             elif [ "${{ matrix.target_platform }}" == 'ios' ]; then
@@ -89,7 +89,6 @@ jobs:
               echo "Unsupported platform"
               exit 1
             fi
-          else
           else
             echo "Unsupported Unity version"
             exit 1

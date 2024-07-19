@@ -179,6 +179,7 @@ namespace StreamVideo.Core
         //StreamTodo: change public to explicit interface
         public void Update() => InternalLowLevelClient.Update();
 
+        //StreamTodo: change public to explicit interface
         public IEnumerator WebRTCUpdateCoroutine() => WebRTC.Update();
 
         public Task DisconnectAsync() => InternalLowLevelClient.DisconnectAsync();

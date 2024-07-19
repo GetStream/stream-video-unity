@@ -1,13 +1,15 @@
 ﻿using System;
 using System.IO;
+using StreamVideo.Libs.Auth;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 namespace StreamVideo.EditorTools.Builders
 {
     public class StreamAppBuilder
     {
-        public void BuildSampleApp(BuildSettings settings)
+        public BuildReport BuildSampleApp(BuildSettings settings, AuthCredentials authCredentials)
         {
             var buildTarget = GetBuildTargetFromGroup(settings.BuildTargetGroup);
 
@@ -35,9 +37,10 @@ namespace StreamVideo.EditorTools.Builders
 
             Debug.Log("Building sample app with settings: " + settings);
 
-            BuildPipeline.BuildPlayer(options);
+            return BuildPipeline.BuildPlayer(options);
         }
 
+        //StreamTodo: Do not hardcode
         private const string SampleAppSceneGuid = "2e20276ba7f7641ae944f77c47a6d9da";
 
         private static BuildTarget GetBuildTargetFromGroup(BuildTargetGroup buildTargetGroup)

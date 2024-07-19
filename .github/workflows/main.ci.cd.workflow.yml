@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         target_platform: [android, ios]
-        unity_version: [2020, 2021]
+        unity_version: [2021, 2022]
         dotnet_version: [NET_4_x, STANDARD_2_x]
         compiler: [mono, il2cpp]
 
@@ -80,6 +80,16 @@ jobs:
               echo "Unsupported platform"
               exit 1
             fi
+            elif [ "${{ matrix.unity_version }}" == '2022' ]; then
+            if [ "${{ matrix.target_platform }}" == 'android' ]; then
+              TAG='unityci/editor:ubuntu-2022.3.36f1-android-3.1.0'
+            elif [ "${{ matrix.target_platform }}" == 'ios' ]; then
+              TAG='unityci/editor:ubuntu-2022.3.36f1-ios-3.1.0'
+            else
+              echo "Unsupported platform"
+              exit 1
+            fi
+          else
           else
             echo "Unsupported Unity version"
             exit 1

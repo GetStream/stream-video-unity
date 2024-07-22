@@ -1,10 +1,11 @@
 ﻿using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 
 namespace StreamVideo.Core.Models
 {
-    public sealed class VideoSettings : IStateLoadableFrom<VideoSettingsInternalDTO, VideoSettings>
+    public sealed class VideoSettings : IStateLoadableFrom<VideoSettingsResponseInternalDTO, VideoSettings>
     {
         public bool AccessRequestEnabled { get; private set;}
 
@@ -16,7 +17,7 @@ namespace StreamVideo.Core.Models
 
         public TargetResolution TargetResolution { get; private set;}
 
-        void IStateLoadableFrom<VideoSettingsInternalDTO, VideoSettings>.LoadFromDto(VideoSettingsInternalDTO dto, ICache cache)
+        void IStateLoadableFrom<VideoSettingsResponseInternalDTO, VideoSettings>.LoadFromDto(VideoSettingsResponseInternalDTO dto, ICache cache)
         {
             AccessRequestEnabled = dto.AccessRequestEnabled;
             CameraDefaultOn = dto.CameraDefaultOn;

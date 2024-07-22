@@ -18,12 +18,24 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class OwnUserResponseInternalDTO
     {
+        [Newtonsoft.Json.JsonProperty("banned", Required = Newtonsoft.Json.Required.Default)]
+        public bool Banned { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("blocked_user_ids", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.List<string> BlockedUserIds { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("channel_mutes", Required = Newtonsoft.Json.Required.Default)]
+        public System.Collections.Generic.List<ChannelMuteInternalDTO?> ChannelMutes { get; set; } = new System.Collections.Generic.List<ChannelMuteInternalDTO?>();
+
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
-        
+
+        [Newtonsoft.Json.JsonProperty("deactivated_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset DeactivatedAt { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("deleted_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset DeletedAt { get; set; } = default!;
 
@@ -36,14 +48,50 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Image { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("invisible", Required = Newtonsoft.Json.Required.Default)]
+        public bool Invisible { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Default)]
+        public string Language { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("last_active", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset LastActive { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("latest_hidden_channels", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.List<string> LatestHiddenChannels { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("mutes", Required = Newtonsoft.Json.Required.Default)]
+        public System.Collections.Generic.List<UserMuteResponseInternalDTO?> Mutes { get; set; } = new System.Collections.Generic.List<UserMuteResponseInternalDTO?>();
+
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("online", Required = Newtonsoft.Json.Required.Default)]
+        public bool Online { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("privacy_settings", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public PrivacySettingsResponseInternalDTO PrivacySettings { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("push_notifications", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public PushNotificationSettingsResponseInternalDTO PushNotifications { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("revoke_tokens_issued_before", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset RevokeTokensIssuedBefore { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Default)]
         public string Role { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("teams", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> Teams { get; set; } = new System.Collections.Generic.List<string>();
+
+        [Newtonsoft.Json.JsonProperty("total_unread_count", Required = Newtonsoft.Json.Required.Default)]
+        public int TotalUnreadCount { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("unread_channels", Required = Newtonsoft.Json.Required.Default)]
+        public int UnreadChannels { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("unread_threads", Required = Newtonsoft.Json.Required.Default)]
+        public int UnreadThreads { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset UpdatedAt { get; set; } = default!;

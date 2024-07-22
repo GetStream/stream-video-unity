@@ -33,6 +33,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("live_started_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset LiveStartedAt { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("missed_by", Required = Newtonsoft.Json.Required.Default)]
+        public System.Collections.Generic.Dictionary<string, System.DateTimeOffset> MissedBy { get; set; } = new System.Collections.Generic.Dictionary<string, System.DateTimeOffset>();
+
         [Newtonsoft.Json.JsonProperty("participants", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<CallParticipantResponseInternalDTO> Participants { get; set; } = new System.Collections.Generic.List<CallParticipantResponseInternalDTO>();
 
@@ -44,6 +47,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
 
         [Newtonsoft.Json.JsonProperty("started_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset StartedAt { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("timer_ends_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset TimerEndsAt { get; set; } = default!;
 
     }
 

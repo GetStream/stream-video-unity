@@ -16,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Events
     using System = global::System;
 
     /// <summary>
-    /// This event is sent when a call is updated, clients should use this update the local state of the call. 
+    /// This event is sent when a call is updated, clients should use this update the local state of the call.
     /// <br/>This event also contains the capabilities by role for the call, clients should update the own_capability for the current.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]

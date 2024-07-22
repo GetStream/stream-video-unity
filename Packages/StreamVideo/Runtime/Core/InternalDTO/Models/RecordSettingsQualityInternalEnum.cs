@@ -19,23 +19,35 @@ namespace StreamVideo.Core.InternalDTO.Models
     internal enum RecordSettingsQualityInternalEnum
     {
 
-        [System.Runtime.Serialization.EnumMember(Value = @"audio-only")]
-        AudioOnly = 0,
-
         [System.Runtime.Serialization.EnumMember(Value = @"360p")]
-        _360p = 1,
+        _360p = 0,
 
         [System.Runtime.Serialization.EnumMember(Value = @"480p")]
-        _480p = 2,
+        _480p = 1,
 
         [System.Runtime.Serialization.EnumMember(Value = @"720p")]
-        _720p = 3,
+        _720p = 2,
 
         [System.Runtime.Serialization.EnumMember(Value = @"1080p")]
-        _1080p = 4,
+        _1080p = 3,
 
         [System.Runtime.Serialization.EnumMember(Value = @"1440p")]
-        _1440p = 5,
+        _1440p = 4,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"portrait-360x640")]
+        Portrait360x640 = 5,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"portrait-480x854")]
+        Portrait480x854 = 6,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"portrait-720x1280")]
+        Portrait720x1280 = 7,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"portrait-1080x1920")]
+        Portrait1080x1920 = 8,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"portrait-1440x2560")]
+        Portrait1440x2560 = 9,
 
     }
 

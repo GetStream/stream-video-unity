@@ -18,11 +18,14 @@ namespace StreamVideo.Core.InternalDTO.Requests
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class RingSettingsRequestInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("auto_cancel_timeout_ms", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("auto_cancel_timeout_ms", Required = Newtonsoft.Json.Required.Default)]
         public int AutoCancelTimeoutMs { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("incoming_call_timeout_ms", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("incoming_call_timeout_ms", Required = Newtonsoft.Json.Required.Default)]
         public int IncomingCallTimeoutMs { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("missed_call_timeout_ms", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int MissedCallTimeoutMs { get; set; } = default!;
 
     }
 

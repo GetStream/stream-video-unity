@@ -287,7 +287,7 @@ namespace StreamVideo.Core.StatefulModels
         public async Task<QueryMembersResult> QueryMembersAsync(IEnumerable<IFieldFilterRule> filters = null,
             CallMemberSort sort = null, int limit = 25, string prev = null, string next = null)
         {
-            var request = new QueryMembersRequestInternalDTO
+            var request = new QueryCallMembersRequestInternalDTO
             {
                 FilterConditions = filters?.Select(_ => _.GenerateFilterEntry()).ToDictionary(x => x.Key, x => x.Value),
                 Id = Id,
@@ -333,7 +333,7 @@ namespace StreamVideo.Core.StatefulModels
                 });
 
         public Task SendCustomEventAsync(Dictionary<string, object> eventData)
-            => LowLevelClient.InternalVideoClientApi.SendEventAsync(Type, Id, new SendEventRequestInternalDTO
+            => LowLevelClient.InternalVideoClientApi.SendEventAsync(Type, Id, new SendCallEventRequestInternalDTO
             {
                 Custom = eventData
             });

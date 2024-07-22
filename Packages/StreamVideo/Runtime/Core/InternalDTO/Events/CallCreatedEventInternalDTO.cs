@@ -16,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Events
     using System = global::System;
 
     /// <summary>
-    /// This event is sent when a call is created. Clients receiving this event should check if the ringing 
+    /// This event is sent when a call is created. Clients receiving this event should check if the ringing
     /// <br/>field is set to true and if so, show the call screen
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]

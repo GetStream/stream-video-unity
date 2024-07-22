@@ -21,8 +21,14 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("info", Required = Newtonsoft.Json.Required.Default)]
         public UserInfoResponseInternalDTO Info { get; set; } = new UserInfoResponseInternalDTO();
 
+        [Newtonsoft.Json.JsonProperty("min_event_ts", Required = Newtonsoft.Json.Required.Default)]
+        public int MinEventTs { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("rating", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int Rating { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("session_stats", Required = Newtonsoft.Json.Required.Default)]
-        public System.Collections.Generic.Dictionary<string, UserSessionStatsInternalDTO> SessionStats { get; set; } = new System.Collections.Generic.Dictionary<string, UserSessionStatsInternalDTO>();
+        public System.Collections.Generic.List<UserSessionStatsInternalDTO> SessionStats { get; set; } = new System.Collections.Generic.List<UserSessionStatsInternalDTO>();
 
     }
 

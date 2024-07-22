@@ -45,6 +45,9 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("push_provider_name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string PushProviderName { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Default)]
+        public string UserId { get; set; } = default!;
+
         /// <summary>
         /// When true the token is for Apple VoIP push notifications
         /// </summary>

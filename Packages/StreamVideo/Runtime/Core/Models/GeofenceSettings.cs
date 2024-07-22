@@ -1,16 +1,16 @@
 ﻿using System.Collections.Generic;
-using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.Utils;
 
 namespace StreamVideo.Core.Models
 {
-    public sealed class GeofenceSettings : IStateLoadableFrom<GeofenceSettingsInternalDTO, GeofenceSettings>
+    public sealed class GeofenceSettings : IStateLoadableFrom<GeofenceSettingsResponseInternalDTO, GeofenceSettings>
     {
         public IReadOnlyList<string> Names => _names;
 
-        void IStateLoadableFrom<GeofenceSettingsInternalDTO, GeofenceSettings>.LoadFromDto(GeofenceSettingsInternalDTO dto, ICache cache)
+        void IStateLoadableFrom<GeofenceSettingsResponseInternalDTO, GeofenceSettings>.LoadFromDto(GeofenceSettingsResponseInternalDTO dto, ICache cache)
         {
             _names.TryReplaceValuesFromDto(dto.Names);
         }

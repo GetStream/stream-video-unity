@@ -18,8 +18,11 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class VideoQualityInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("resolution", Required = Newtonsoft.Json.Required.Default)]
-        public VideoResolutionInternalDTO Resolution { get; set; } = new VideoResolutionInternalDTO();
+        [Newtonsoft.Json.JsonProperty("resolution", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public VideoResolutionInternalDTO Resolution { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("usage_type", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string UsageType { get; set; } = default!;
 
     }
 

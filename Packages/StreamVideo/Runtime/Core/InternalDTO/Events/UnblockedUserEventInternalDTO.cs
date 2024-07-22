@@ -16,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Events
     using System = global::System;
 
     /// <summary>
-    /// This event is sent when a user is unblocked on a call, 
+    /// This event is sent when a user is unblocked on a call,
     /// <br/>this can be useful to notify the user that they can now join the call again
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]

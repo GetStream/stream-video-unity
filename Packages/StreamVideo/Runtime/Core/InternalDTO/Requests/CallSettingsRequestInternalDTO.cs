@@ -30,6 +30,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("geofencing", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public GeofenceSettingsRequestInternalDTO Geofencing { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("limits", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public LimitsSettingsRequestInternalDTO Limits { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public RecordSettingsRequestInternalDTO Recording { get; set; } = default!;
 

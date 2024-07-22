@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 
@@ -23,8 +24,8 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         Task<UnblockUserResponseInternalDTO> UnblockUserAsync(StreamCallType callType, string callId,
             UnblockUserRequestInternalDTO unblockUserRequest);
 
-        Task<SendEventResponseInternalDTO> SendEventAsync(StreamCallType callType, string callId,
-            SendEventRequestInternalDTO sendEventRequest);
+        Task<SendCallEventResponseInternalDTO> SendEventAsync(StreamCallType callType, string callId,
+            SendCallEventRequestInternalDTO sendEventRequest);
 
         Task<GoLiveResponseInternalDTO> GoLiveAsync(StreamCallType callType, string callId);
 
@@ -64,7 +65,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
 
         Task<StopTranscriptionResponseInternalDTO> StopTranscriptionAsync(StreamCallType callType, string callId);
 
-        Task<QueryMembersResponseInternalDTO> QueryMembersAsync(QueryMembersRequestInternalDTO queryMembersRequest);
+        Task<QueryCallMembersResponseInternalDTO> QueryMembersAsync(QueryCallMembersRequestInternalDTO queryMembersRequest);
 
         Task<QueryCallsResponseInternalDTO> QueryCallsAsync(QueryCallsRequestInternalDTO queryCallsRequest);
 
@@ -78,6 +79,6 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
 
         Task<CreateGuestResponseInternalDTO> CreateGuestAsync(CreateGuestRequestInternalDTO createGuestRequest);
 
-        Task<ResponseInternalDTO> VideoConnectAsync(WSAuthMessageRequestInternalDTO authMessageRequest);
+        Task<ResponseInternalDTO> VideoConnectAsync(WSAuthMessageInternalDTO authMessageRequest);
     }
 }

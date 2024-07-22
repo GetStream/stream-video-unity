@@ -31,7 +31,7 @@ namespace StreamVideo.Core.InternalDTO.Events
         /// Custom data for this object
         /// </summary>
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
-        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = new System.Collections.Generic.Dictionary<string, object>();
+        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
 
         /// <summary>
         /// The type of event, "custom" in this case

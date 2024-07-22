@@ -16,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Events
     using System = global::System;
 
     /// <summary>
-    /// This event is sent to call participants to notify when a user is blocked on a call, clients can use this event to show a notification. 
+    /// This event is sent to call participants to notify when a user is blocked on a call, clients can use this event to show a notification.
     /// <br/>If the user is the current user, the client should leave the call screen as well
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]

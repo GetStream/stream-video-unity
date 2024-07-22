@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.Web;
@@ -42,9 +43,9 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
             UnblockUserRequestInternalDTO unblockUserRequest)
             => Post<UnblockUserRequestInternalDTO, UnblockUserResponseInternalDTO>($"/call/{callType}/{callId}/unblock", unblockUserRequest);
 
-        public Task<SendEventResponseInternalDTO> SendEventAsync(StreamCallType callType, string callId,
-            SendEventRequestInternalDTO sendEventRequest)
-            => Post<SendEventRequestInternalDTO, SendEventResponseInternalDTO>($"/call/{callType}/{callId}/event", sendEventRequest);
+        public Task<SendCallEventResponseInternalDTO> SendEventAsync(StreamCallType callType, string callId,
+            SendCallEventRequestInternalDTO sendEventRequest)
+            => Post<SendCallEventRequestInternalDTO, SendCallEventResponseInternalDTO>($"/call/{callType}/{callId}/event", sendEventRequest);
 
         public Task<GoLiveResponseInternalDTO> GoLiveAsync(StreamCallType callType, string callId)
             => Post<GoLiveResponseInternalDTO>($"/call/{callType}/{callId}/go_live");
@@ -104,8 +105,8 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         public Task<StopTranscriptionResponseInternalDTO> StopTranscriptionAsync(StreamCallType callType, string callId)
             => Post<StopTranscriptionResponseInternalDTO>($"/call/{callType}/{callId}/stop_transcription");
 
-        public Task<QueryMembersResponseInternalDTO> QueryMembersAsync(QueryMembersRequestInternalDTO queryMembersRequest)
-            => Post<QueryMembersRequestInternalDTO, QueryMembersResponseInternalDTO>($"/call/members", queryMembersRequest);
+        public Task<QueryCallMembersResponseInternalDTO> QueryMembersAsync(QueryCallMembersRequestInternalDTO queryMembersRequest)
+            => Post<QueryCallMembersRequestInternalDTO, QueryCallMembersResponseInternalDTO>($"/call/members", queryMembersRequest);
 
         public Task<QueryCallsResponseInternalDTO> QueryCallsAsync(QueryCallsRequestInternalDTO queryCallsRequest)
             => Post<QueryCallsRequestInternalDTO, QueryCallsResponseInternalDTO>($"/calls", queryCallsRequest);
@@ -130,8 +131,8 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         public Task<CreateGuestResponseInternalDTO> CreateGuestAsync(CreateGuestRequestInternalDTO createGuestRequest)
             => Post<CreateGuestRequestInternalDTO, CreateGuestResponseInternalDTO>($"/guest", createGuestRequest);
         
-        public Task<ResponseInternalDTO> VideoConnectAsync(WSAuthMessageRequestInternalDTO authMessageRequest)
-            => Post<WSAuthMessageRequestInternalDTO, ResponseInternalDTO>($"/video/connect", authMessageRequest);
+        public Task<ResponseInternalDTO> VideoConnectAsync(WSAuthMessageInternalDTO authMessageRequest)
+            => Post<WSAuthMessageInternalDTO, ResponseInternalDTO>($"/video/connect", authMessageRequest);
 
         private const string UserIdParamKey = "user_id";
         private const string IdParamKey = "id";

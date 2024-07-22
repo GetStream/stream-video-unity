@@ -641,7 +641,7 @@ namespace StreamVideo.Core
             // Implement handling logic for ConnectionErrorEventInternalDTO here
         }
 
-        private void OnInternalCustomVideoEvent(SendEventRequestInternalDTO eventData)
+        private void OnInternalCustomVideoEvent(SendCallEventRequestInternalDTO eventData)
         {
             //StreamTodo: Implement handling logic for CustomVideoEventInternalDTO here
         }

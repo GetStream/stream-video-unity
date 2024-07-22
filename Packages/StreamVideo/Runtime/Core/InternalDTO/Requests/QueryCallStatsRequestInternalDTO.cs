@@ -19,7 +19,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
     internal partial class QueryCallStatsRequestInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("filter_conditions", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public object FilterConditions { get; set; } = default!;
+        public System.Collections.Generic.Dictionary<string, object> FilterConditions { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("limit", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int Limit { get; set; } = default!;
@@ -31,7 +31,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         public string Prev { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("sort", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.List<SortParamRequestInternalDTO?> Sort { get; set; } = default!;
+        public System.Collections.Generic.List<SortParamInternalDTO?> Sort { get; set; } = default!;
 
     }
 

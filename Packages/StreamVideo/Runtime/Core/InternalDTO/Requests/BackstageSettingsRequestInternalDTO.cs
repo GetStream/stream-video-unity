@@ -21,6 +21,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Enabled { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("join_ahead_time_seconds", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int JoinAheadTimeSeconds { get; set; } = default!;
+
     }
 
 }

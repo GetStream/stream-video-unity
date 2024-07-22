@@ -21,14 +21,23 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Default)]
         public string CallCid { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("call_duration_seconds", Required = Newtonsoft.Json.Required.Default)]
+        public int CallDurationSeconds { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("call_session_id", Required = Newtonsoft.Json.Required.Default)]
         public string CallSessionId { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("call_status", Required = Newtonsoft.Json.Required.Default)]
         public string CallStatus { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset CreatedAt { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("first_stats_time", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset FirstStatsTime { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("quality_score", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int QualityScore { get; set; } = default!;
 
     }
 

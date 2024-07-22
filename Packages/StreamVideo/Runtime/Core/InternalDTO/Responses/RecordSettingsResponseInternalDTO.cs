@@ -21,9 +21,6 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("audio_only", Required = Newtonsoft.Json.Required.Default)]
         public bool AudioOnly { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("layout", Required = Newtonsoft.Json.Required.Default)]
-        public LayoutSettingsInternalDTO Layout { get; set; } = new LayoutSettingsInternalDTO();
-
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default)]
         public string Mode { get; set; } = default!;
 

@@ -22,7 +22,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public CallResponseInternalDTO Call { get; set; } = new CallResponseInternalDTO();
 
         /// <summary>
-        /// Duration of the request in human-readable format
+        /// Duration of the request in milliseconds
         /// </summary>
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;

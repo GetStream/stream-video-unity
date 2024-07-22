@@ -72,6 +72,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("ingress", Required = Newtonsoft.Json.Required.Default)]
         public CallIngressResponseInternalDTO Ingress { get; set; } = new CallIngressResponseInternalDTO();
 
+        [Newtonsoft.Json.JsonProperty("join_ahead_time_seconds", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int JoinAheadTimeSeconds { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("recording", Required = Newtonsoft.Json.Required.Default)]
         public bool Recording { get; set; } = default!;
 

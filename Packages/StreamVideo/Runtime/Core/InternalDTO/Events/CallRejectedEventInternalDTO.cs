@@ -30,6 +30,9 @@ namespace StreamVideo.Core.InternalDTO.Events
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("reason", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Reason { get; set; } = default!;
+
         /// <summary>
         /// The type of event: "call.rejected" in this case
         /// </summary>

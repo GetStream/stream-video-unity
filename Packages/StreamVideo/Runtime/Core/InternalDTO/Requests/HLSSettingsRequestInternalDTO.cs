@@ -24,11 +24,8 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool Enabled { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("layout", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public LayoutSettingsRequestInternalDTO Layout { get; set; } = default!;
-
-        [Newtonsoft.Json.JsonProperty("quality_tracks", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.List<string> QualityTracks { get; set; } = default!;
+        [Newtonsoft.Json.JsonProperty("quality_tracks", Required = Newtonsoft.Json.Required.Default)]
+        public System.Collections.Generic.List<string> QualityTracks { get; set; } = new System.Collections.Generic.List<string>();
 
     }
 

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.InternalDTO.Events;
+using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.Models;
@@ -76,7 +77,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 #endif
 
             //StreamTodo: handle TokenProvider
-            var authMessage = new WSAuthMessageRequestInternalDTO()
+            var authMessage = new WSAuthMessageInternalDTO()
             {
                 Token = AuthProvider.UserToken,
                 UserDetails = new ConnectUserDetailsRequestInternalDTO

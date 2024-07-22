@@ -57,6 +57,9 @@ namespace StreamVideo.Core.InternalDTO.Events
         [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Default)]
         public UserResponseInternalDTO User { get; set; } = new UserResponseInternalDTO();
 
+        [Newtonsoft.Json.JsonProperty("video", Required = Newtonsoft.Json.Required.Default)]
+        public bool Video { get; set; } = default!;
+
     }
 
 }

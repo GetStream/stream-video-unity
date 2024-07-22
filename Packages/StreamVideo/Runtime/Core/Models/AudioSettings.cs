@@ -1,10 +1,11 @@
 ﻿using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 
 namespace StreamVideo.Core.Models
 {
-    public sealed class AudioSettings : IStateLoadableFrom<AudioSettingsInternalDTO, AudioSettings>
+    public sealed class AudioSettings : IStateLoadableFrom<AudioSettingsResponseInternalDTO, AudioSettings>
     {
         public bool AccessRequestEnabled { get; private set;}
 
@@ -18,7 +19,7 @@ namespace StreamVideo.Core.Models
 
         public bool SpeakerDefaultOn { get; private set;}
 
-        void IStateLoadableFrom<AudioSettingsInternalDTO, AudioSettings>.LoadFromDto(AudioSettingsInternalDTO dto, ICache cache)
+        void IStateLoadableFrom<AudioSettingsResponseInternalDTO, AudioSettings>.LoadFromDto(AudioSettingsResponseInternalDTO dto, ICache cache)
         {
             AccessRequestEnabled = dto.AccessRequestEnabled;
             DefaultDevice = dto.DefaultDevice.ToPublicEnum();

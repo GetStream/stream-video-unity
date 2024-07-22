@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 
 
@@ -31,18 +32,18 @@ namespace StreamVideo.Core.QueryBuilders.Sort
             return Instance;
         }
 
-        internal List<SortParamRequestInternalDTO> ToSortParamRequestList()
+        internal List<SortParamInternalDTO> ToSortParamRequestList()
         {
             if (_order.Count == 0)
             {
                 return null;
             }
 
-            var sortParams = new List<SortParamRequestInternalDTO>();
+            var sortParams = new List<SortParamInternalDTO>();
 
             foreach (var entry in _order)
             {
-                sortParams.Add(new SortParamRequestInternalDTO
+                sortParams.Add(new SortParamInternalDTO
                 {
                     Direction = entry.Direction,
                     Field = ToUnderlyingFieldName(entry.Field),

@@ -18,9 +18,15 @@ namespace StreamVideo.Core.InternalDTO.Requests
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class PinRequestInternalDTO
     {
+        /// <summary>
+        /// the session ID of the user who pinned the message
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("session_id", Required = Newtonsoft.Json.Required.Default)]
         public string SessionId { get; set; } = default!;
 
+        /// <summary>
+        /// the user ID of the user who pinned the message
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Default)]
         public string UserId { get; set; } = default!;
 

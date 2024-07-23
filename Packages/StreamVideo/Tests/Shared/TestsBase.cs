@@ -9,7 +9,6 @@ using NUnit.Framework;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Tests.Shared.DisposableAssets;
 using UnityEngine;
-using UnityEngine.Device;
 using UnityEngine.TestTools;
 using Debug = UnityEngine.Debug;
 
@@ -21,11 +20,9 @@ namespace StreamVideo.Tests.Shared
 
     public class TestsBase
     {
-        [OneTimeSetUp]
-        public void OneTimeUp()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void SetupTestsConditionalFlags()
         {
-            StreamTestClientProvider.Instance.AddLock(this);
-
             if (!IgnoreConditionKeyNoCameraDeviceIsSet)
             {
                 var value = WebCamTexture.devices.Length == 0;
@@ -33,6 +30,12 @@ namespace StreamVideo.Tests.Shared
                 Debug.Log($"Setting up conditional ignore key `{IgnoreConditionNoCameraKey}`: {value}");
                 IgnoreConditionKeyNoCameraDeviceIsSet = true;
             }
+        }
+        
+        [OneTimeSetUp]
+        public void OneTimeUp()
+        {
+            StreamTestClientProvider.Instance.AddLock(this);
         }
 
         [OneTimeTearDown]

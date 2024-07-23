@@ -28,8 +28,9 @@ namespace StreamVideo.Tests.Shared
 
             if (!IgnoreConditionKeyNoCameraDeviceIsSet)
             {
-                ConditionalIgnoreAttribute.AddConditionalIgnoreMapping(IgnoreConditionNoCameraKey,
-                    WebCamTexture.devices.Length == 0);
+                var value = WebCamTexture.devices.Length == 0;
+                ConditionalIgnoreAttribute.AddConditionalIgnoreMapping(IgnoreConditionNoCameraKey,value);
+                Debug.Log($"Setting up conditional ignore key `{IgnoreConditionNoCameraKey}`: {value}");
                 IgnoreConditionKeyNoCameraDeviceIsSet = true;
             }
         }

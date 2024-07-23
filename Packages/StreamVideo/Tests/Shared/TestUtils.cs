@@ -34,7 +34,7 @@ namespace StreamVideo.Tests.Shared
 
             if (task.IsFaulted)
             {
-                throw task.Exception;
+                throw UnwrapAggregateException(task.Exception);
             }
 
             onSuccess?.Invoke();
@@ -68,6 +68,17 @@ namespace StreamVideo.Tests.Shared
             // Get unity package
             var packages = listPackagesRequest.Result;
             return packages.First(p => p.name == StreamVideoPackageName);
+        }
+        
+        private static Exception UnwrapAggregateException(Exception exception)
+        {
+            if (exception is AggregateException aggregateException &&
+                aggregateException.InnerExceptions.Count == 1)
+            {
+                return aggregateException.InnerExceptions[0];
+            }
+
+            return exception;
         }
     }
 }

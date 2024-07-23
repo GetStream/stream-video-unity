@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Tests.Shared.DisposableAssets;
+using UnityEngine;
+using UnityEngine.Device;
+using UnityEngine.TestTools;
 using Debug = UnityEngine.Debug;
 
 namespace StreamVideo.Tests.Shared
@@ -22,6 +25,13 @@ namespace StreamVideo.Tests.Shared
         public void OneTimeUp()
         {
             StreamTestClientProvider.Instance.AddLock(this);
+
+            if (!IgnoreConditionKeyNoCameraDeviceIsSet)
+            {
+                ConditionalIgnoreAttribute.AddConditionalIgnoreMapping(IgnoreConditionNoCameraKey,
+                    WebCamTexture.devices.Length == 0);
+                IgnoreConditionKeyNoCameraDeviceIsSet = true;
+            }
         }
 
         [OneTimeTearDown]
@@ -39,6 +49,10 @@ namespace StreamVideo.Tests.Shared
             await StreamTestClientProvider.Instance.LeaveAllActiveCallsAsync();
             DisposableAssetsProvider.DisposeInstances();
         }
+
+        protected const string IgnoreConditionNoCameraKey = "IgnoreIfNoCameraDevice";
+
+        protected const string IgnoreConditionNoCameraReason = "Camera device is not available";
 
         protected DisposableAssetsProvider DisposableAssetsProvider { get; } = new DisposableAssetsProvider();
 
@@ -79,6 +93,8 @@ namespace StreamVideo.Tests.Shared
             yield return ConnectAndExecuteAsync(clients => test(clients[0], clients[1]), clientsToSpawn: 2)
                 .RunAsIEnumerator(ignoreFailingMessages: ignoreFailingMessages);
         }
+
+        private static bool IgnoreConditionKeyNoCameraDeviceIsSet;
 
         private static async Task ConnectAndExecuteAsync(Func<ITestClient[], Task> test, int clientsToSpawn = 1)
         {

@@ -63,7 +63,7 @@ namespace StreamVideo.Tests.Runtime
             Assert.IsNotNull(streamTrack);
         }
 
-        [UnityTest]
+        [UnityTest, ConditionalIgnore(IgnoreConditionNoCameraKey, IgnoreConditionNoCameraReason)]
         public IEnumerator When_client_enables_video_during_call_expect_other_client_receiving_video_track()
             => ConnectAndExecute(When_client_enables_video_during_call_expect_other_client_receiving_video_track_Async,
                 ignoreFailingMessages: true);

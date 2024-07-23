@@ -27,7 +27,7 @@ namespace StreamVideo.Tests.Runtime
             Assert.AreEqual(2, call.Participants.Count);
         }
 
-        [UnityTest]
+        [UnityTest, ConditionalIgnore(IgnoreConditionNoCameraKey, IgnoreConditionNoCameraReason)]
         public IEnumerator When_client_joins_call_with_video_expect_receiving_video_track()
             => ConnectAndExecute(When_client_joins_call_with_video_expect_receiving_video_track_Async,
                 ignoreFailingMessages: true);

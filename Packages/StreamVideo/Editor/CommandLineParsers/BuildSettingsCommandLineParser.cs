@@ -41,14 +41,14 @@ namespace StreamVideo.EditorTools.CommandLineParsers
                     out var apiCompatibility))
             {
                 throw new ArgumentException(
-                    $"Failed to parse argument: `{args[BuildTargetPlatformArgKey]}` to enum: {typeof(BuildTargetPlatform)}");
+                    $"Failed to parse argument: `{args[ApiCompatibilityArgKey]}` to enum: {typeof(BuildTargetPlatform)}");
             }
 
             if (!TryParseEnum<ScriptingBackend>(args[ScriptingBackendArgKey], ignoreCase: true,
                     out var scriptingBackend))
             {
                 throw new ArgumentException(
-                    $"Failed to parse argument: `{args[BuildTargetPlatformArgKey]}` to enum: {typeof(BuildTargetPlatform)}");
+                    $"Failed to parse argument: `{args[ScriptingBackendArgKey]}` to enum: {typeof(BuildTargetPlatform)}");
             }
 
             var buildTargetGroup = GetBuildTargetGroup(targetPlatform);

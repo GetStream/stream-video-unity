@@ -16,7 +16,7 @@ jobs:
         target_platform: [android, ios]
         unity_version: [2021, 2022]
         dotnet_version: [NET_4_x, STANDARD_2_x]
-        compiler: [mono, il2cpp]
+        compiler: [il2cpp] #no `mono` since Unity's webRTC requires il2cpp
 
     steps:
       - name: Checkout repository

@@ -30,21 +30,21 @@ namespace StreamVideo.EditorTools.CommandLineParsers
                 throw new ArgumentException($"Missing argument: `{missingArgsInfo}`");
             }
 
-            if (!Enum.TryParse<BuildTargetPlatform>(args[BuildTargetPlatformArgKey], ignoreCase: true,
+            if (!TryParseEnum<BuildTargetPlatform>(args[BuildTargetPlatformArgKey], ignoreCase: true,
                     out var targetPlatform))
             {
                 throw new ArgumentException(
                     $"Failed to parse argument: `{args[BuildTargetPlatformArgKey]}` to enum: {typeof(BuildTargetPlatform)}");
             }
 
-            if (!Enum.TryParse<ApiCompatibility>(args[ApiCompatibilityArgKey], ignoreCase: true,
+            if (!TryParseEnum<ApiCompatibility>(args[ApiCompatibilityArgKey], ignoreCase: true,
                     out var apiCompatibility))
             {
                 throw new ArgumentException(
                     $"Failed to parse argument: `{args[BuildTargetPlatformArgKey]}` to enum: {typeof(BuildTargetPlatform)}");
             }
 
-            if (!Enum.TryParse<ScriptingBackend>(args[ScriptingBackendArgKey], ignoreCase: true,
+            if (!TryParseEnum<ScriptingBackend>(args[ScriptingBackendArgKey], ignoreCase: true,
                     out var scriptingBackend))
             {
                 throw new ArgumentException(
@@ -181,6 +181,12 @@ namespace StreamVideo.EditorTools.CommandLineParsers
                 default:
                     throw new ArgumentOutOfRangeException(nameof(scriptingBackend), scriptingBackend, null);
             }
+        }
+        
+        private static bool TryParseEnum<TEnum>(string rawValue, bool ignoreCase, out TEnum value) where TEnum : struct
+        {
+            Debug.Log($"Try parse `{rawValue}` to enum of type `{typeof(TEnum)}`");
+            return Enum.TryParse(rawValue, ignoreCase, out value);
         }
     }
 }

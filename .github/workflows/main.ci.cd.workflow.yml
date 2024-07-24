@@ -208,6 +208,10 @@ jobs:
       - name: List changes
         run: |
           git diff
+          
+      - name: Print Free Disk Space
+        run: |
+          df -m
 
       - name: Build Sample Project
         uses: game-ci/unity-builder@v4

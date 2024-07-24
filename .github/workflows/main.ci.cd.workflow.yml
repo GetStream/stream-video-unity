@@ -201,7 +201,7 @@ jobs:
 
       - name: Free Disk space
         uses: jlumbroso/free-disk-space@v1.2.0
-        if: matrix.target_platform == 'android' || matrix.target_platform == 'ios'
+        if: matrix.target_platform == 'android'
         with:
           dotnet: false
 

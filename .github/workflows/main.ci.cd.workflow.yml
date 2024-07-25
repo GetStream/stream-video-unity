@@ -13,10 +13,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target_platform: [android, ios]
-        unity_version: [2020, 2021]
+        target_platform: [android] #TODO: investigate why ubuntu/ios fails on Unity's internal build post-process cp operation (jira PBE-5316)
+        unity_version: [2021, 2022]
         dotnet_version: [NET_4_x, STANDARD_2_x]
-        compiler: [mono, il2cpp]
+        compiler: [il2cpp] #no `mono` since Unity's webRTC requires il2cpp
 
     steps:
       - name: Checkout repository
@@ -80,6 +80,15 @@ jobs:
               echo "Unsupported platform"
               exit 1
             fi
+          elif [ "${{ matrix.unity_version }}" == '2022' ]; then
+            if [ "${{ matrix.target_platform }}" == 'android' ]; then
+              TAG='unityci/editor:ubuntu-2022.3.36f1-android-3.1.0'
+            elif [ "${{ matrix.target_platform }}" == 'ios' ]; then
+              TAG='unityci/editor:ubuntu-2022.3.36f1-ios-3.1.0'
+            else
+              echo "Unsupported platform"
+              exit 1
+            fi
           else
             echo "Unsupported Unity version"
             exit 1
@@ -113,7 +122,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          buildMethod: StreamChat.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag
+          buildMethod: StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag
           customImage: ${{ env.DOCKER_TAG }}
 
       - name: Run Tests (Attempt 1)
@@ -199,6 +208,10 @@ jobs:
       - name: List changes
         run: |
           git diff
+          
+      - name: Print Free Disk Space
+        run: |
+          df -m
 
       - name: Build Sample Project
         uses: game-ci/unity-builder@v4
@@ -207,7 +220,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          buildMethod: StreamChat.EditorTools.StreamEditorTools.BuildSampleApp
+          buildMethod: StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp
           customParameters: -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }} -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }} -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath $(pwd)/SampleAppBuild/${{ env.BUILD_NAME }}
           customImage: ${{ env.DOCKER_TAG }}
           allowDirtyBuild: true #Needed because the import process may update ProjectSettings

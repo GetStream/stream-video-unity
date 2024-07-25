@@ -12,7 +12,7 @@ using UnityEngine;
 namespace StreamVideo.Tests.Shared
 {
     /// <summary>
-    /// Maintains global instance of stream chat client to be shared across all tests and disposes them once all of the tests are finished.
+    /// Maintains global instance of stream chat client to be shared across all tests and disposes them once all the tests are finished.
     /// This allows a single <see cref="IStreamVideoClient"/> instance to be shared across all test groups.
     /// Every test group should call <see cref="AddLock"/> when starting tests and <see cref="ReleaseLockAsync"/> when done. Once all locks are released the client will be disconnected and disposed.
     /// </summary>

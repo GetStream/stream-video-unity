@@ -204,6 +204,31 @@ namespace StreamVideo.ExampleProject
         {
             _activeCall = call;
             CallStarted?.Invoke(call);
+
+            InitTestCameraStream();
+        }
+
+        private void InitTestCameraStream()
+        {
+            var testCameras = GameObject.FindGameObjectsWithTag("TestCamera");
+            if (testCameras.Length == 0)
+            {
+                Debug.LogError("Failed to find test camera");
+                return;
+            }
+
+            var testCamera = testCameras[0];
+            var cam = testCamera.GetComponent<Camera>();
+            if (cam == null)
+            {
+                Debug.LogError("Failed to find camera");
+                return;
+            }
+
+            var renderTexture = StreamVideoClient.CreateRenderTextureForVideo(1920, 1080);
+            cam.targetTexture = renderTexture;
+
+            _activeCall.AddCustomVideoTrack(renderTexture, 24);
         }
 
         private void OnCallEnded(IStreamCall call)

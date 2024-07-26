@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject.UI
 {
+    //StreamTodo: move to screens
     public class ParticipantView : MonoBehaviour
     {
         public IStreamVideoCallParticipant Participant { get; private set; }

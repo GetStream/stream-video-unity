@@ -6,6 +6,7 @@ using StreamVideo.Core.Models;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
+using UnityEngine;
 
 namespace StreamVideo.Core.StatefulModels
 {
@@ -317,5 +318,20 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         /// <returns>True if participant is pinned remotely</returns>
         bool IsPinned(IStreamVideoCallParticipant participant);
+
+        /// <summary>
+        /// Add custom video track to the call. This will be sent to all participants.
+        /// You can use this to video stream from custom sources like screenshare or Unity's <a href="https://docs.unity3d.com/ScriptReference/Camera.html">Camera</a> component.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="frameRate"></param>
+        /// <returns>Unique handle assigned to this track. You can use it to remove the track with <see cref="RemoveCustomVideoTrack"/></returns>
+        CustomTrackHandle AddCustomVideoTrack(RenderTexture source, uint frameRate);
+
+        /// <summary>
+        /// Remove custom video track. Use the handle returned from <see cref="AddCustomVideoTrack"/>
+        /// </summary>
+        /// <param name="handle"></param>
+        void RemoveCustomVideoTrack(CustomTrackHandle handle);
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
 using Unity.WebRTC;
@@ -20,7 +21,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
-        
+
         public event Action<VideoStreamTrack> PublisherVideoTrackChanged;
         public event Action<AudioStreamTrack> PublisherAudioTrackChanged;
 
@@ -92,6 +93,8 @@ namespace StreamVideo.Core.LowLevelClient
                 _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
                 _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
                 _mediaInputProvider.VideoInputChanged += OnVideoInputChanged;
+                _mediaInputProvider.VideoSourceAdded += OnVideoSourceAdded;
+                _mediaInputProvider.VideoSourceRemoved += OnVideoSourceRemoved;
             }
 
             var rtcIceServers = new List<RTCIceServer>();
@@ -137,6 +140,14 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
         }
+
+        private void OnVideoSourceRemoved(CustomTrackHandle trackHandle)
+        {
+            // StreamTodo: handle removing video source
+        }
+
+        private void OnVideoSourceAdded((CustomTrackHandle handle, RenderTexture source, uint frameRate) obj)
+            => CreatePublisherCustomVideoTransceiver(obj.source, obj.frameRate);
 
         public void RestartIce() => _peerConnection.RestartIce();
 
@@ -204,6 +215,8 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
+            _mediaInputProvider.VideoSourceAdded -= OnVideoSourceAdded;
+            _mediaInputProvider.VideoSourceRemoved -= OnVideoSourceRemoved;
 
             _peerConnection.OnIceCandidate -= OnIceCandidate;
             _peerConnection.OnIceConnectionChange -= OnIceConnectionChange;
@@ -417,6 +430,25 @@ namespace StreamVideo.Core.LowLevelClient
             VideoSender = _videoTransceiver.Sender;
         }
 
+        private void CreatePublisherCustomVideoTransceiver(RenderTexture source, uint frameRate)
+        {
+            var videoTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Video, new PublisherVideoSettings()
+            {
+                MaxResolution = new VideoResolution(source.width, source.height),
+                FrameRate = frameRate
+            });
+
+            var mediaStream = new MediaStream();
+            var videoTrack = new VideoStreamTrack(source);
+            mediaStream.AddTrack(videoTrack);
+
+            videoTransceiverInit.streams = new[] { mediaStream };
+
+            var transceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
+
+            ForceCodec(transceiver, VideoCodecKeyH264, TrackKind.Video);
+        }
+
         private void ReplaceActiveVideoTrack(VideoStreamTrack videoTrack)
         {
             PublisherVideoMediaStream.AddTrack(videoTrack);
@@ -524,20 +556,24 @@ namespace StreamVideo.Core.LowLevelClient
 
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+            var graphicsFormat = WebRTC.GetSupportedGraphicsFormat(gfxType);
 
             var res = GetPublisherResolution();
             _publisherVideoTrackTexture = new RenderTexture((int)res.Width, (int)res.Height, 0, format);
 
+
 #if STREAM_DEBUG_ENABLED
             Debug.LogWarning(
-                $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
+                $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: " +
+                $"{_mediaInputProvider.VideoInput.isReadable}, expectedGraphicsFormat: {graphicsFormat}, " +
+                $"givenGraphicsFormat: {_mediaInputProvider.VideoInput.graphicsFormat}");
 #endif
 
             return new VideoStreamTrack(_publisherVideoTrackTexture);
         }
 
         //StreamTodo: CreatePublisherVideoTrackFromSceneCamera() is not used in any path
-        private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()
+        private VideoStreamTrack CreateCustomPublisherVideoTrack(RenderTexture source)
         {
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
@@ -546,7 +582,7 @@ namespace StreamVideo.Core.LowLevelClient
             _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
 
             var track = _mediaInputProvider.VideoSceneInput.CaptureStreamTrack(1920, 1080);
-            return track;
+            return new VideoStreamTrack(source);
         }
 
         private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack(_mediaInputProvider.AudioInput);

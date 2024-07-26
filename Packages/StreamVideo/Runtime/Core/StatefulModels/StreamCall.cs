@@ -16,6 +16,7 @@ using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
+using UnityEngine;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 
 namespace StreamVideo.Core.StatefulModels
@@ -386,6 +387,12 @@ namespace StreamVideo.Core.StatefulModels
             capabilities = _capabilitiesByRole[role];
             return true;
         }
+
+        public CustomTrackHandle AddCustomVideoTrack(RenderTexture source, uint frameRate)
+            => Client.InternalLowLevelClient.RtcSession.AddCustomVideoSource(source, frameRate);
+
+        public void RemoveCustomVideoTrack(CustomTrackHandle handle)
+            => Client.InternalLowLevelClient.RtcSession.RemoveCustomVideoSource(handle);
 
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)

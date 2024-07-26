@@ -80,6 +80,9 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action<AudioSource> AudioInputChanged;
         public event Action<WebCamTexture> VideoInputChanged;
         public event Action<Camera> VideoSceneInputChanged;
+        
+        public event Action<(CustomTrackHandle handle, RenderTexture source, uint frameRate)> VideoSourceAdded;
+        public event Action<CustomTrackHandle> VideoSourceRemoved;
 
         //StreamTodo: move IInputProvider elsewhere. it's for easy testing only
         public AudioSource AudioInput
@@ -96,7 +99,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
                 var prev = _audioInput;
                 _audioInput = value;
 
@@ -121,7 +124,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
                 var prev = _videoInput;
                 _videoInput = value;
 
@@ -198,6 +201,33 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             TryExecuteSubscribeToTracks();
+        }
+
+        public CustomTrackHandle AddCustomVideoSource(RenderTexture texture, uint frameRate)
+        {
+            var gfxType = SystemInfo.graphicsDeviceType;
+            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+
+            if (texture.format != format)
+            {
+                throw new ArgumentException($"Unsupported RenderTexture format. Please create texture with {nameof(StreamVideoClient.CreateRenderTextureForVideo)} to obtain a valid format for video streaming");
+            }
+            
+            var handle = new CustomTrackHandle(Guid.NewGuid().ToString());
+            _customVideoSources.Add(handle, texture);
+            VideoSourceAdded?.Invoke((handle, texture, frameRate));
+            return handle;
+        }
+
+        public bool RemoveCustomVideoSource(CustomTrackHandle handle)
+        {
+            var success = _customVideoSources.Remove(handle);
+            if (success)
+            {
+                VideoSourceRemoved?.Invoke(handle);
+            }
+
+            return success;
         }
 
         public async Task SendWebRtcStats(SendStatsRequest request)
@@ -333,6 +363,9 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly Dictionary<string, VideoResolution> _videoResolutionByParticipantSessionId
             = new Dictionary<string, VideoResolution>();
+        
+        private readonly Dictionary<CustomTrackHandle, RenderTexture> _customVideoSources
+            = new Dictionary<CustomTrackHandle, RenderTexture>();
 
         private HttpClient _httpClient;
         private CallingState _callState;
@@ -352,6 +385,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             _pendingIceTrickleRequests.Clear();
             _videoResolutionByParticipantSessionId.Clear();
+            _customVideoSources.Clear();
 
             Subscriber?.Dispose();
             Subscriber = null;
@@ -375,7 +409,7 @@ namespace StreamVideo.Core.LowLevelClient
          * - we retry when:
          * -- error isn't permanent, SFU didn't change, the mute/publish state didn't change
          * -- we cap at 30 retries to prevent endless loops
-        */
+         */
         private void QueueTracksSubscriptionRequest()
         {
             if (_trackSubscriptionRequested)

@@ -206,6 +206,14 @@ namespace StreamVideo.Core
 
             InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;
         }
+        
+        public static RenderTexture CreateRenderTextureForVideo(int width, int height)
+        {
+            var gfxType = SystemInfo.graphicsDeviceType;
+            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+
+            return new RenderTexture(width, height, 0, format);
+        }
 
         // public void SetCameraInputSource(Camera sceneCamera)
         // {

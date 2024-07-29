@@ -10,8 +10,8 @@ namespace StreamVideo.Core.LowLevelClient
         event Action<WebCamTexture> VideoInputChanged;
         event Action<Camera> VideoSceneInputChanged;
         
-        event Action<(CustomTrackHandle handle, RenderTexture source, uint frameRate)> VideoSourceAdded;
-        event Action<CustomTrackHandle> VideoSourceRemoved;
+        event Action<(CustomTrackHandle handle, RenderTexture source, uint frameRate)> CustomVideoSourceAdded;
+        event Action<CustomTrackHandle> CustomVideoSourceRemoved;
         
         AudioSource AudioInput { get; }
         WebCamTexture VideoInput { get; }

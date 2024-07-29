@@ -93,8 +93,8 @@ namespace StreamVideo.Core.LowLevelClient
                 _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
                 _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
                 _mediaInputProvider.VideoInputChanged += OnVideoInputChanged;
-                _mediaInputProvider.VideoSourceAdded += OnVideoSourceAdded;
-                _mediaInputProvider.VideoSourceRemoved += OnVideoSourceRemoved;
+                _mediaInputProvider.CustomVideoSourceAdded += OnCustomVideoSourceAdded;
+                _mediaInputProvider.CustomVideoSourceRemoved += OnCustomVideoSourceRemoved;
             }
 
             var rtcIceServers = new List<RTCIceServer>();
@@ -141,13 +141,13 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void OnVideoSourceRemoved(CustomTrackHandle trackHandle)
+        private void OnCustomVideoSourceAdded((CustomTrackHandle handle, RenderTexture source, uint frameRate) obj)
+            => CreatePublisherCustomVideoTransceiver(obj.source, obj.frameRate);
+
+        private void OnCustomVideoSourceRemoved(CustomTrackHandle trackHandle)
         {
             // StreamTodo: handle removing video source
         }
-
-        private void OnVideoSourceAdded((CustomTrackHandle handle, RenderTexture source, uint frameRate) obj)
-            => CreatePublisherCustomVideoTransceiver(obj.source, obj.frameRate);
 
         public void RestartIce() => _peerConnection.RestartIce();
 
@@ -215,8 +215,8 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
-            _mediaInputProvider.VideoSourceAdded -= OnVideoSourceAdded;
-            _mediaInputProvider.VideoSourceRemoved -= OnVideoSourceRemoved;
+            _mediaInputProvider.CustomVideoSourceAdded -= OnCustomVideoSourceAdded;
+            _mediaInputProvider.CustomVideoSourceRemoved -= OnCustomVideoSourceRemoved;
 
             _peerConnection.OnIceCandidate -= OnIceCandidate;
             _peerConnection.OnIceConnectionChange -= OnIceConnectionChange;
@@ -445,6 +445,10 @@ namespace StreamVideo.Core.LowLevelClient
             videoTransceiverInit.streams = new[] { mediaStream };
 
             var transceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
+            
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"Added custom video transceiver. Media stream ID: {mediaStream.Id}, track ID: {videoTrack.Id}");
+#endif
 
             ForceCodec(transceiver, VideoCodecKeyH264, TrackKind.Video);
         }

@@ -80,9 +80,9 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action<AudioSource> AudioInputChanged;
         public event Action<WebCamTexture> VideoInputChanged;
         public event Action<Camera> VideoSceneInputChanged;
-        
-        public event Action<(CustomTrackHandle handle, RenderTexture source, uint frameRate)> VideoSourceAdded;
-        public event Action<CustomTrackHandle> VideoSourceRemoved;
+
+        public event Action<(CustomTrackHandle handle, RenderTexture source, uint frameRate)> CustomVideoSourceAdded;
+        public event Action<CustomTrackHandle> CustomVideoSourceRemoved;
 
         //StreamTodo: move IInputProvider elsewhere. it's for easy testing only
         public AudioSource AudioInput
@@ -210,12 +210,13 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (texture.format != format)
             {
-                throw new ArgumentException($"Unsupported RenderTexture format. Please create texture with {nameof(StreamVideoClient.CreateRenderTextureForVideo)} to obtain a valid format for video streaming");
+                throw new ArgumentException(
+                    $"Unsupported RenderTexture format. Please create texture with {nameof(StreamVideoClient.CreateRenderTextureForVideo)} to obtain a valid format for video streaming");
             }
-            
+
             var handle = new CustomTrackHandle(Guid.NewGuid().ToString());
             _customVideoSources.Add(handle, texture);
-            VideoSourceAdded?.Invoke((handle, texture, frameRate));
+            CustomVideoSourceAdded?.Invoke((handle, texture, frameRate));
             return handle;
         }
 
@@ -224,7 +225,7 @@ namespace StreamVideo.Core.LowLevelClient
             var success = _customVideoSources.Remove(handle);
             if (success)
             {
-                VideoSourceRemoved?.Invoke(handle);
+                CustomVideoSourceRemoved?.Invoke(handle);
             }
 
             return success;
@@ -363,7 +364,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly Dictionary<string, VideoResolution> _videoResolutionByParticipantSessionId
             = new Dictionary<string, VideoResolution>();
-        
+
         private readonly Dictionary<CustomTrackHandle, RenderTexture> _customVideoSources
             = new Dictionary<CustomTrackHandle, RenderTexture>();
 
@@ -917,39 +918,48 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private string ExtractVideoTrackId(string sdp)
+        private bool TryExtractVideoTrackId(string sdp, string mediaStreamId, out string trackId)
         {
             var lines = sdp.Split("\n");
             var mediaStreamRecord
-                = lines.Single(l => l.StartsWith($"a=msid:{Publisher.PublisherVideoMediaStream.Id}"));
+                = lines.FirstOrDefault(l => l.StartsWith($"a=msid:{mediaStreamId}"));
+
+            if (mediaStreamRecord == null)
+            {
+                trackId = null;
+                return false;
+            }
+
             var parts = mediaStreamRecord.Split(" ");
             var result = parts[1];
 
-            // StreamTodo: verify if this is needed
-            result = result.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
-
-            return result;
+            trackId = result.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
+            return true;
         }
 
         private IEnumerable<TrackInfo> GetPublisherTracks(string sdp)
         {
-            var transceivers = Publisher.GetTransceivers().ToArray();
+            var transceivers = Publisher.GetTransceivers();
 
             //StreamTodo: investigate why this return no results
             // var senderTracks = _publisher.GetTransceivers().Where(t
             //     => t.Direction == RTCRtpTransceiverDirection.SendOnly && t.Sender?.Track != null).ToArray();
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Warning($"GetPublisherTracks - transceivers: {transceivers?.Count()} ");
+            _logs.Warning($"GetPublisherTracks - transceivers: {transceivers?.Count()}.\n SDP:\n {sdp}");
 #endif
 
             //StreamTodo: figure out TrackType, because we rely on transceiver track type mapping we don't support atm screen video/audio share tracks
             //This implementation is based on the Android SDK, perhaps we shouldn't rely on GetTransceivers() but maintain our own TrackType => Transceiver mapping
 
-
             foreach (var t in transceivers)
             {
-                var trackId = t.Sender.Track.Kind == TrackKind.Video ? ExtractVideoTrackId(sdp) : t.Sender.Track.Id;
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning(
+                    $"GetPublisherTracks - transceiver: {t.Sender.Track.Kind}, mid: {t.Mid}, sender track Id: {t.Sender.Track.Id}");
+#endif
+
+                var trackId = GetTrackId(sdp, t);
 
                 var trackInfo = new TrackInfo
                 {
@@ -972,6 +982,26 @@ namespace StreamVideo.Core.LowLevelClient
 
                 yield return trackInfo;
             }
+        }
+
+        private string GetTrackId(string sdp, RTCRtpTransceiver transceiver)
+        {
+            if (transceiver.Sender.Track.Kind == TrackKind.Audio)
+            {
+                return transceiver.Sender.Track.Id;
+            }
+
+            // StreamTodo: figure out why we extract track ID by media Stream ID instead of using the transceiver.Sender.Track.Id
+            // Perhaps it was possible that the SFU could override the track ID
+            if (TryExtractVideoTrackId(sdp, Publisher.PublisherVideoMediaStream.Id, out var mainVideoTrackId))
+            {
+                return mainVideoTrackId;
+            }
+            
+            // StreamTodo: extract track ID by other media streams we have? Apart from the primary video track we can have arbitrary video tracks defined.
+            // So if the SFU can indeed overwrite we should extract the track ID by the media stream ID
+
+            return transceiver.Sender.Track.Id;
         }
 
         private string ReplaceVp8PayloadType(string sdpOffer)

@@ -594,11 +594,8 @@ namespace StreamVideo.Core.LowLevelClient
                 => c.mimeType.IndexOf(codecKey, StringComparison.OrdinalIgnoreCase) != -1);
 
 #if STREAM_DEBUG_ENABLED
-            foreach (var codec in capabilities.codecs)
-            {
-                _logs.Info($"Available codec of kind `{kind}`: {codec.mimeType}");
-            }
-
+            var availableCodecsLog = capabilities.codecs.Select(c => $"`{kind}`: {c.mimeType}");
+            _logs.Info($"Available Codecs:\n " + string.Join("\n", availableCodecsLog));
 #endif
 
             if (!forcedCodecs.Any())
@@ -610,10 +607,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
 #if STREAM_DEBUG_ENABLED
-            foreach (var c in forcedCodecs)
-            {
-                _logs.Info($"Forced Codec of kind `{kind}`: {c.mimeType}, ");
-            }
+            var forcedCodecsLog = forcedCodecs.Select(c => $"`{kind}`: {c.mimeType}");
+            _logs.Info($"Forced Codecs:\n " + string.Join("\n", forcedCodecsLog));
 #endif
 
             var error = transceiver.SetCodecPreferences(forcedCodecs.ToArray());

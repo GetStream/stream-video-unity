@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using StreamVideo.v1.Sfu.Events;
@@ -79,8 +80,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action<AudioSource> AudioInputChanged;
         public event Action<WebCamTexture> VideoInputChanged;
+        
+        // StreamTodo: remove, this will become obsolete once we can send custom video tracks
         public event Action<Camera> VideoSceneInputChanged;
 
+        // StreamTodo: replace with custom struct
         public event Action<(CustomTrackHandle handle, RenderTexture source, uint frameRate)> CustomVideoSourceAdded;
         public event Action<CustomTrackHandle> CustomVideoSourceRemoved;
 
@@ -348,6 +352,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             Publisher.PublisherVideoTrack.Enabled = isEnabled;
         }
+        
+        //StreamTodo: add option to enable/disable custom video tracks
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
 
@@ -838,10 +844,6 @@ namespace StreamVideo.Core.LowLevelClient
      */
         private async void OnPublisherNegotiationNeeded()
         {
-#if STREAM_DEBUG_ENABLED
-            Debug.LogWarning("OnPublisherNegotiationNeeded");
-#endif
-
             try
             {
                 if (Publisher.SignalingState != RTCSignalingState.Stable)
@@ -970,14 +972,8 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (t.Sender.Track.Kind == TrackKind.Video)
                 {
-                    var videoLayers = GetPublisherVideoLayers(Publisher.VideoSender.GetParameters().encodings,
-                        _publisherVideoSettings);
+                    var videoLayers = GetPublisherVideoLayers(t, _publisherVideoSettings);
                     trackInfo.Layers.AddRange(videoLayers);
-
-#if STREAM_DEBUG_ENABLED
-                    _logs.Warning(
-                        $"Video layers: {videoLayers.Count()} for transceiver: {t.Sender.Track.Kind}, Sender Track ID: {t.Sender.Track.Id}");
-#endif
                 }
 
                 yield return trackInfo;
@@ -1027,9 +1023,17 @@ namespace StreamVideo.Core.LowLevelClient
             return sdpOffer;
         }
 
-        private IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
+        private IEnumerable<VideoLayer> GetPublisherVideoLayers(RTCRtpTransceiver transceiver,
             PublisherVideoSettings videoSettings)
         {
+            var encodings = transceiver.Sender.GetParameters().encodings;
+            
+#if STREAM_DEBUG_ENABLED
+            // StreamTodo: create debug string builder pool
+            var sb = new StringBuilder();
+            sb.AppendLine($"Video layers for transceiver - Mid:{transceiver.Mid}, kind: {transceiver.Sender.Track.Kind}, Sender Track ID: {transceiver.Sender.Track.Id}");
+            
+#endif
             foreach (var encoding in encodings)
             {
                 var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
@@ -1040,10 +1044,10 @@ namespace StreamVideo.Core.LowLevelClient
                 var quality = EncodingsToVideoQuality(encoding);
 
 #if STREAM_DEBUG_ENABLED
-                _logs.Warning(
-                    $"Video layer - rid: {encoding.rid} quality: {quality}, scaleBy: {scaleBy}, width: {width}, height: {height}, bitrate: {encoding.maxBitrate}");
-#endif
+                sb.AppendLine(
+                    $"- Video layer - rid: {encoding.rid} quality: {quality}, scaleBy: {scaleBy}, width: {width}, height: {height}, bitrate: {encoding.maxBitrate}");
 
+#endif
                 yield return new VideoLayer
                 {
                     Rid = string.IsNullOrEmpty(encoding.rid) ? "f" : encoding.rid,
@@ -1057,6 +1061,9 @@ namespace StreamVideo.Core.LowLevelClient
                     Quality = quality,
                 };
             }
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning(sb.ToString());
+#endif
         }
 
         private static VideoQuality EncodingsToVideoQuality(RTCRtpEncodingParameters encodings)

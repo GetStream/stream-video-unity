@@ -209,6 +209,9 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public Task<RTCStatsReport> GetStatsReportAsync() => _peerConnection.GetStatsAsync();
+        
+        public bool TryGetMediaStreamFor(RTCRtpTransceiver transceiver, out MediaStream mediaStream)
+            => _transceiverToMediaStream.TryGetValue(transceiver, out mediaStream);
 
         public void Dispose()
         {
@@ -227,6 +230,16 @@ namespace StreamVideo.Core.LowLevelClient
 
             PublisherAudioTrack?.Stop();
             PublisherVideoTrack?.Stop();
+            
+            foreach (var mediaStream in _transceiverToMediaStream.Values)
+            {
+                foreach(var track in mediaStream.GetTracks())
+                {
+                    track.Stop();
+                }
+            }
+            
+            _transceiverToMediaStream.Clear();
 
             _peerConnection.Close();
         }
@@ -244,6 +257,9 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly PublisherVideoSettings _publisherVideoSettings;
 
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
+        
+        private readonly Dictionary<RTCRtpTransceiver, MediaStream> _transceiverToMediaStream
+            = new Dictionary<RTCRtpTransceiver, MediaStream>();
 
         private RTCRtpTransceiver _videoTransceiver;
         private RTCRtpTransceiver _audioTransceiver;
@@ -445,6 +461,7 @@ namespace StreamVideo.Core.LowLevelClient
             videoTransceiverInit.streams = new[] { mediaStream };
 
             var transceiver = _peerConnection.AddTransceiver(videoTrack, videoTransceiverInit);
+            _transceiverToMediaStream.Add(transceiver, mediaStream);
             
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"Added custom video transceiver. Media stream ID: {mediaStream.Id}, track ID: {videoTrack.Id}");
@@ -574,19 +591,6 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             return new VideoStreamTrack(_publisherVideoTrackTexture);
-        }
-
-        //StreamTodo: CreatePublisherVideoTrackFromSceneCamera() is not used in any path
-        private VideoStreamTrack CreateCustomPublisherVideoTrack(RenderTexture source)
-        {
-            var gfxType = SystemInfo.graphicsDeviceType;
-            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
-
-            //StreamTodo: hardcoded resolution
-            _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
-
-            var track = _mediaInputProvider.VideoSceneInput.CaptureStreamTrack(1920, 1080);
-            return new VideoStreamTrack(source);
         }
 
         private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack(_mediaInputProvider.AudioInput);

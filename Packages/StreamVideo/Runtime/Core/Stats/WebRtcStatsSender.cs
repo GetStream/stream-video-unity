@@ -75,10 +75,14 @@ namespace StreamVideo.Core.Stats
             };
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Info("-----------WebRTC STATS DUMP -> 1. publisher, 2. subscriber------");
-            _logs.Info(publisherStatsJson);
-            _logs.Info(subscriberStatsJson);
-            _logs.Info("-----------END WebRTC STATS DUMP END------");
+            // StreamTodo: Add flags to control what debug logs are enabled.
+            // Perhaps extensions like logs.DebugInfo, logs.DebugWarning that will have the flag check internally
+            // Also maybe a package with editor window to enable/disable debug logs
+            
+            // _logs.Info("-----------WebRTC STATS DUMP -> 1. publisher, 2. subscriber------");
+            // _logs.Info(publisherStatsJson);
+            // _logs.Info(subscriberStatsJson);
+            // _logs.Info("-----------END WebRTC STATS DUMP END------");
 #endif
 
             await _rtcSession.SendWebRtcStats(request);

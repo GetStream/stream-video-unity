@@ -993,11 +993,12 @@ namespace StreamVideo.Core.LowLevelClient
 
             // StreamTodo: figure out why we extract track ID by media Stream ID instead of using the transceiver.Sender.Track.Id
             // Perhaps it was possible that the SFU could override the track ID
-            if (TryExtractVideoTrackId(sdp, Publisher.PublisherVideoMediaStream.Id, out var mainVideoTrackId))
+            if (Publisher.PublisherVideoMediaStream != null && TryExtractVideoTrackId(sdp,
+                    Publisher.PublisherVideoMediaStream.Id, out var mainVideoTrackId))
             {
                 return mainVideoTrackId;
             }
-            
+
             // StreamTodo: extract track ID by other media streams we have? Apart from the primary video track we can have arbitrary video tracks defined.
             // So if the SFU can indeed overwrite we should extract the track ID by the media stream ID
 

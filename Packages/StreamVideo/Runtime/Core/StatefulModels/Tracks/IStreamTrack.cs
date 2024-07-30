@@ -11,5 +11,7 @@
         /// Is this track active.
         /// </summary>
         bool IsEnabled { get; }
+
+        string Id { get; }
     }
 }

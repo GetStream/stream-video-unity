@@ -593,7 +593,7 @@ namespace StreamVideo.Core.LowLevelClient
         private async void OnSfuSubscriberOffer(SubscriberOffer subscriberOffer)
         {
 #if STREAM_DEBUG_ENABLED
-            _logs.Warning("OnSfuSubscriberOffer");
+            _logs.Warning($"OnSfuSubscriberOffer\nSDP:\n{subscriberOffer.Sdp}");
 #endif
             //StreamTodo: check RtcSession.kt handleSubscriberOffer for the retry logic
 

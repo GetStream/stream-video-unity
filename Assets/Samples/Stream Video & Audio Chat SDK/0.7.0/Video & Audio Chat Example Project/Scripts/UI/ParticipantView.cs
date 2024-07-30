@@ -105,7 +105,7 @@ namespace StreamVideo.ExampleProject.UI
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {
-            Debug.Log($"Track received from `{participant.UserId}`, type: {track.GetType()}");
+            Debug.Log($"Track received from `{participant.UserId}`, type: {track.GetType()}, id: {track.Id}");
             switch (track)
             {
                 case StreamAudioTrack streamAudioTrack:

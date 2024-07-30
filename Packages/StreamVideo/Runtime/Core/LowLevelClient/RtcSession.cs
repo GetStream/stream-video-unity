@@ -132,9 +132,6 @@ namespace StreamVideo.Core.LowLevelClient
                 var prev = _videoInput;
                 _videoInput = value;
 
-                _publisherVideoSettings.MaxResolution = new VideoResolution((uint)value.width, (uint)value.height);
-                _publisherVideoSettings.FrameRate = (uint)value.requestedFPS;
-
                 if (prev != _videoInput)
                 {
                     VideoInputChanged?.Invoke(value);

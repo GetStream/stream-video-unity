@@ -225,11 +225,60 @@ namespace StreamVideo.ExampleProject
                 return;
             }
 
-            var renderTexture = StreamVideoClient.CreateRenderTextureForVideo(1920, 1080);
-            cam.targetTexture = renderTexture;
+            _renderTexture = StreamVideoClient.CreateRenderTextureForVideo(1920, 1080);
+            _bufferTexture = new Texture2D(1920, 1080, TextureFormat.RGBA32, false);
+            //cam.targetTexture = _renderTexture;
 
-            _activeCall.AddCustomVideoTrack(renderTexture, 24);
+            _activeCall.AddCustomVideoTrack(_renderTexture, 24);
         }
+
+        private float offset = 0.0f;
+
+        public void Update()
+        {
+            if (_renderTexture == null)
+            {
+                return;
+            }
+            FillTextureWithSinusoid();
+            RenderTexture.active = _renderTexture;
+            Graphics.Blit(_bufferTexture, _renderTexture);
+            RenderTexture.active = null;
+
+            offset += Time.deltaTime * 8;  // Increment the offset over time to animate the wave
+        }
+
+        void FillTextureWithSinusoid()
+        {
+            int width = 1920;
+            int height = 1080;
+            float frequency = 2.0f;  // Adjust the frequency as needed
+            float amplitude = height / 4.0f;  // Adjust the amplitude as needed
+
+            Color32[] pixels = new Color32[width * height];
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    pixels[y * width + x] = Color.black;
+                }
+            }
+
+            for (int x = 0; x < width; x++)
+            {
+                float yValue = Mathf.Sin((x + offset * 100) * frequency * Mathf.PI * 2 / width) * amplitude + height / 2;
+                int y = Mathf.Clamp(Mathf.RoundToInt(yValue), 0, height - 1);
+                pixels[y * width + x] = Color.white;
+            }
+
+            _bufferTexture.SetPixels32(pixels);
+            _bufferTexture.Apply();
+        }
+
+
+        
+        private Texture2D _bufferTexture;
+        private RenderTexture _renderTexture;
 
         private void OnCallEnded(IStreamCall call)
         {

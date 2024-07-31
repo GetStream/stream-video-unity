@@ -206,6 +206,11 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
             }
+            
+            foreach(var (source, target) in _sourceToTargetMapping)
+            {
+                Graphics.Blit(source, target);
+            }
         }
 
         public Task<RTCStatsReport> GetStatsReportAsync() => _peerConnection.GetStatsAsync();
@@ -453,9 +458,14 @@ namespace StreamVideo.Core.LowLevelClient
                 MaxResolution = new VideoResolution(source.width, source.height),
                 FrameRate = frameRate
             });
+            
+            var gfxType = SystemInfo.graphicsDeviceType;
+            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+            var targetRenderTexture = new RenderTexture(source.width, source.height, source.depth, format);
+            _sourceToTargetMapping.Add(source, targetRenderTexture);
 
             var mediaStream = new MediaStream();
-            var videoTrack = new VideoStreamTrack(source);
+            var videoTrack = new VideoStreamTrack(targetRenderTexture);
             mediaStream.AddTrack(videoTrack);
 
             videoTransceiverInit.streams = new[] { mediaStream };
@@ -469,6 +479,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             ForceCodec(transceiver, VideoCodecKeyH264, TrackKind.Video);
         }
+
+        private Dictionary<RenderTexture, RenderTexture> _sourceToTargetMapping
+            = new Dictionary<RenderTexture, RenderTexture>();
 
         private void ReplaceActiveVideoTrack(VideoStreamTrack videoTrack)
         {

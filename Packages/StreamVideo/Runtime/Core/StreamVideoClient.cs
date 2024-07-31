@@ -207,18 +207,13 @@ namespace StreamVideo.Core
             InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;
         }
         
-        public static RenderTexture CreateRenderTextureForVideo(int width, int height)
+        public static RenderTexture CreateRenderTextureForVideo(int width, int height, int depth = 32)
         {
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
 
-            return new RenderTexture(width, height, 0, format);
+            return new RenderTexture(width, height, depth, format);
         }
-
-        // public void SetCameraInputSource(Camera sceneCamera)
-        // {
-        //     InternalLowLevelClient.RtcSession.VideoSceneInput = sceneCamera;
-        // }
 
         public async Task<QueryCallsResult> QueryCallsAsync(IEnumerable<IFieldFilterRule> filters = null,
             CallSort sort = null, int limit = 25, string prev = null, string next = null, bool watch = false)

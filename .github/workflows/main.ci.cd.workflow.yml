@@ -6,6 +6,8 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  schedule:
+    - cron: "0 5 * * *"  # run daily at 5 AM (UTC)
 
 jobs:
   build:
@@ -230,3 +232,13 @@ jobs:
         with:
           name: Build_${{ env.BUILD_NAME }}
           path: $(pwd)/SampleAppBuild/${{ env.BUILD_NAME }}
+          
+      - name: Notify Slack if failed
+        uses: voxmedia/github-action-slack-notify-build@v1
+        if: always() && failure()
+        with:
+          channel_id: C02RPDF7T63
+          color: danger
+          status: FAILED
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_NOTIFICATIONS_BOT_TOKEN }}

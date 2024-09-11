@@ -85,8 +85,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 {
                     Sdk = new Sdk
                     {
-                        //StreamTodo: change to Unity once this is merged https://github.com/GetStream/protocol/pull/171
-                        Type = SdkType.Angular,
+                        Type = SdkType.Unity,
                         Major = _sdkVersion.Major.ToString(),
                         Minor = _sdkVersion.Minor.ToString(),
                         Patch = _sdkVersion.Revision.ToString()

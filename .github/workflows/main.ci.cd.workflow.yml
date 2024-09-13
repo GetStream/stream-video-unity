@@ -237,7 +237,7 @@ jobs:
         uses: voxmedia/github-action-slack-notify-build@v1
         if: always() && failure()
         with:
-          channel_id: C02RPDF7T63
+          channel_id: C07KW7ZCJ6T
           color: danger
           status: FAILED
         env:

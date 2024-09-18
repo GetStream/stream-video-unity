@@ -19,6 +19,7 @@ namespace StreamVideo.Core.DeviceManagers
             }
         }
 
+        //StreamTodo: ordering 
         protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msTimeout)
         {
             const int sampleRate = 44100;
@@ -84,7 +85,22 @@ namespace StreamVideo.Core.DeviceManagers
 
             SetEnabled(enable);
         }
-        
+
+        protected override void OnFrameUpdate()
+        {
+            base.OnFrameUpdate();
+
+            if (IsEnabled && SelectedDevice.IsValid && _targetAudioSource != null && RtcSession.Publisher.PublisherAudioTrack != null)
+            {
+                _targetAudioSource.GetOutputData(_sampleBuffer, 0);
+                RtcSession.Publisher.PublisherAudioTrack.SetData(_sampleBuffer, _targetAudioSource.clip.channels, AudioSettings.outputSampleRate);
+                    
+                Logs.Info("Audio data sent to the publisher");
+            }
+        }
+
+        private float[] _sampleBuffer;
+
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio
         
         internal StreamAudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
@@ -96,6 +112,12 @@ namespace StreamVideo.Core.DeviceManagers
         {
             if (isEnabled && SelectedDevice.IsValid && !GetOrCreateTargetAudioSource().isPlaying)
             {
+                var bufferChunkSize = AudioSettings.outputSampleRate / 100;
+                if (_sampleBuffer == null || _sampleBuffer.Length != bufferChunkSize)
+                {
+                    _sampleBuffer = new float[bufferChunkSize];
+                }
+                
                 GetOrCreateTargetAudioSource().Play();
             }
 

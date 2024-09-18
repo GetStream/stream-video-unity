@@ -62,5 +62,7 @@ namespace StreamVideo.Core.DeviceManagers
         /// <param name="testTimeoutPerDevice"></param>
         /// <returns>First found working device of NULL if none of the devices worked</returns>
         Task<TDeviceInfo?> TryFindFirstWorkingDeviceAsync(float testTimeoutPerDevice = 1f);
+
+        void FrameUpdate();
     }
 }

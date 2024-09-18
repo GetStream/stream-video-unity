@@ -177,7 +177,12 @@ namespace StreamVideo.Core
         }
 
         //StreamTodo: change public to explicit interface
-        public void Update() => InternalLowLevelClient.Update();
+        public void Update()
+        {
+            InternalLowLevelClient.Update();
+            AudioDeviceManager?.FrameUpdate();
+            VideoDeviceManager?.FrameUpdate();
+        }
 
         //StreamTodo: change public to explicit interface
         public IEnumerator WebRTCUpdateCoroutine() => WebRTC.Update();

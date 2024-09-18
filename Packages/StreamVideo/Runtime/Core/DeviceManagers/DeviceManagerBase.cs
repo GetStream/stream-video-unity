@@ -48,6 +48,12 @@ namespace StreamVideo.Core.DeviceManagers
             }
         }
 
+        public void FrameUpdate() => OnFrameUpdate();
+
+        protected virtual void OnFrameUpdate()
+        {
+        }
+
         public void Enable() => SetEnabled(true);
 
         public void Disable() => SetEnabled(false);

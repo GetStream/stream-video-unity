@@ -90,7 +90,7 @@ namespace StreamVideo.Core.DeviceManagers
         {
             base.OnFrameUpdate();
 
-            if (IsEnabled && SelectedDevice.IsValid && _targetAudioSource != null && RtcSession.Publisher.PublisherAudioTrack != null)
+            if (IsEnabled && SelectedDevice.IsValid && _targetAudioSource != null && RtcSession?.Publisher?.PublisherAudioTrack != null)
             {
                 _targetAudioSource.GetOutputData(_sampleBuffer, 0);
                 RtcSession.Publisher.PublisherAudioTrack.SetData(_sampleBuffer, _targetAudioSource.clip.channels, AudioSettings.outputSampleRate);

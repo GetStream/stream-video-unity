@@ -71,7 +71,7 @@ namespace StreamVideo.Core.DeviceManagers
             var targetAudioSource = GetOrCreateTargetAudioSource();
             
             targetAudioSource.clip
-                = Microphone.Start(SelectedDevice.Name, true, 3, AudioSettings.outputSampleRate);
+                = Microphone.Start(SelectedDevice.Name, true, 1, AudioSettings.outputSampleRate);
             targetAudioSource.loop = true;
             
 #if STREAM_DEBUG_ENABLED

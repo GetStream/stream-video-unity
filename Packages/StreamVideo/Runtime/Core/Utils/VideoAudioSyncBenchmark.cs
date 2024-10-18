@@ -107,6 +107,9 @@ namespace StreamVideo.Core.Utils
             }
         }
 
+        // Determined via testing
+        private const float BeepAudioVolumeThreshold = 0.001f;
+        
         private const string LogsPrefix = "[VideoAudioSyncBenchmark] ";
 
         private readonly ITimeService _timeService;
@@ -114,13 +117,14 @@ namespace StreamVideo.Core.Utils
 
         private readonly List<float> _brightFramesReceivedAt = new List<float>();
         private readonly List<float> _beepSoundReceivedAt = new List<float>();
-        private readonly float[] _audioBuffer = new float[2048];
+        private readonly float[] _audioBuffer = new float[2048 * 2 * 2];
 
         private StreamVideoTrack _videoTrack;
         private StreamAudioTrack _audioTrack;
 
         private Texture2D _textureBuffer;
-        private bool _wasPreviousFrameBright;
+        private bool _prevIsBrightFrame;
+        private bool _prevIsBeepSound;
 
         private void GetVideoAndAudioTracks(IStreamVideoCallParticipant participant)
         {
@@ -162,14 +166,14 @@ namespace StreamVideo.Core.Utils
 
             var isBrightFrame = IsBrightFrame(buffer);
 
-            if (!_wasPreviousFrameBright && isBrightFrame)
+            if (!_prevIsBrightFrame && isBrightFrame)
             {
                 Log("Bright frame detected at: " +
                     _timeService.Time); //StreamTodo: count how many bright frames received in sequence
                 _brightFramesReceivedAt.Add(_timeService.Time);
             }
 
-            _wasPreviousFrameBright = isBrightFrame;
+            _prevIsBrightFrame = isBrightFrame;
         }
 
         private void EvaluateAudioFrame(AudioSource audioSource)
@@ -178,23 +182,27 @@ namespace StreamVideo.Core.Utils
 
             const float sampleRate = 44100;
             var samplesPerFrame = sampleRate * _timeService.DeltaTime;
+            var maxFrames = Math.Min(samplesPerFrame, _audioBuffer.Length);
 
             float maxVolume = 0;
-            for (var i = 0; i < samplesPerFrame; i++)
+            for (var i = 0; i < maxFrames; i++)
             {
                 var volume = Mathf.Abs(_audioBuffer[i]);
                 if (volume > maxVolume)
                 {
-                    maxVolume = volume;
+                    maxVolume = Mathf.Abs(volume);
                 }
             }
 
-            const float beepThreshold = 0.3f;
-            if (maxVolume > beepThreshold)
+            var isBeep = maxVolume > BeepAudioVolumeThreshold;
+
+            if (isBeep && !_prevIsBeepSound)
             {
-                Log("Beep sound detected at: " + _timeService.Time);
+                Log($"Beep sound detected at: {_timeService.Time} and max volume: {maxVolume}");
                 _beepSoundReceivedAt.Add(_timeService.Time);
             }
+
+            _prevIsBeepSound = isBeep;
         }
 
         private Texture2D GetTextureBuffer(RenderTexture texture)

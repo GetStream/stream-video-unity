@@ -166,6 +166,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             var statsCollector = new UnityWebRtcStatsCollector(this, _serializer);
             _statsSender = new WebRtcStatsSender(this, statsCollector, _timeService, _logs);
+
+            //StreamTodo: enable this only if a special mode e.g. compiler flag STREAM_AUDIO_BENCHMARK_ENABLED
+            _videoAudioSyncBenchmark = new VideoAudioSyncBenchmark(_timeService, _logs);
         }
 
         public void Dispose()
@@ -184,6 +187,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.Update();
             Publisher?.Update();
             _statsSender.Update();
+            _videoAudioSyncBenchmark?.Update();
 
             //StreamTodo: we could remove this if we'd maintain a collection of tracks and update them directly
             if (ActiveCall != null)
@@ -270,6 +274,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             //StreamTodo: validate when this state should set
             CallState = CallingState.Joined;
+            _videoAudioSyncBenchmark.Init(call);
         }
 
         public async Task StopAsync()
@@ -278,6 +283,7 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: check with js definition of "offline" 
             CallState = CallingState.Offline;
             await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Video session stopped");
+            _videoAudioSyncBenchmark?.Finish();
         }
 
         //StreamTodo: call by call.reconnectOrSwitchSfu()
@@ -324,6 +330,8 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IStreamClientConfig _config;
         private readonly Func<IStreamCall, HttpClient> _httpClientFactory;
         private readonly WebRtcStatsSender _statsSender;
+        private readonly VideoAudioSyncBenchmark _videoAudioSyncBenchmark;
+        private readonly SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
 
         private readonly List<SfuICETrickle> _pendingIceTrickleRequests = new List<SfuICETrickle>();
         private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
@@ -340,7 +348,6 @@ namespace StreamVideo.Core.LowLevelClient
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
 
-        private SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
         private Camera _videoSceneInput;

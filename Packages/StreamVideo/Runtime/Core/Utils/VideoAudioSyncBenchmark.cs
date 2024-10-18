@@ -64,6 +64,11 @@ namespace StreamVideo.Core.Utils
 
         public void Update()
         {
+            if(_videoTrack == null || _videoTrack.TargetTexture == null || _audioTrack == null || _audioTrack.TargetAudioSource == null)
+            {
+                return;
+            }
+            
             EvaluateVideoFrame(_videoTrack.TargetTexture);
             EvaluateAudioFrame(_audioTrack.TargetAudioSource);
         }

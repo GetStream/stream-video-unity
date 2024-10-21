@@ -167,8 +167,11 @@ namespace StreamVideo.Core.LowLevelClient
             var statsCollector = new UnityWebRtcStatsCollector(this, _serializer);
             _statsSender = new WebRtcStatsSender(this, statsCollector, _timeService, _logs);
 
-            //StreamTodo: enable this only if a special mode e.g. compiler flag STREAM_AUDIO_BENCHMARK_ENABLED
+            //StreamTodo: enable this only if a special mode e.g. compiler flag 
+#if !STREAM_AUDIO_BENCHMARK_ENABLED
+            _logs.Warning($"Audio benchmark enabled. Waiting for a special video stream to measure audio-video sync. Check {nameof(VideoAudioSyncBenchmark)} summary for more details.");
             _videoAudioSyncBenchmark = new VideoAudioSyncBenchmark(_timeService, _logs);
+#endif
         }
 
         public void Dispose()
@@ -274,7 +277,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             //StreamTodo: validate when this state should set
             CallState = CallingState.Joined;
-            _videoAudioSyncBenchmark.Init(call);
+            _videoAudioSyncBenchmark?.Init(call);
         }
 
         public async Task StopAsync()

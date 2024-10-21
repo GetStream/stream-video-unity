@@ -46,8 +46,7 @@ namespace StreamVideo.ExampleProject.UI
         {
 #if UNITY_STANDALONE
             return true; //StreamTodo: check if this is true for all platforms    
-#endif
-#if UNITY_ANDROID
+#elif UNITY_ANDROID
             return Permission.HasUserAuthorizedPermission(Permission.Camera);
 #else
             Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
@@ -81,8 +80,7 @@ namespace StreamVideo.ExampleProject.UI
         {
 #if UNITY_STANDALONE
             return true; //StreamTodo: check if this is true for all platforms    
-#endif
-#if UNITY_ANDROID
+#elif UNITY_ANDROID
             return Permission.HasUserAuthorizedPermission(Permission.Microphone);
 #else
             Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);

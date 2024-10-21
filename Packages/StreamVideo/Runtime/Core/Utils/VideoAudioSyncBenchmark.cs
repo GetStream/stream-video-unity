@@ -14,7 +14,7 @@ namespace StreamVideo.Core.Utils
     ///
     /// How it works:
     /// A stream of video with a sequence of black frames with short sequences of white frames is expected. The white frames should be accompanied by a sound beep.
-    /// The tool will detect when black frames switched to white frames and will wait for the sound beep.
+    /// The tool will detect a switch to bright frames and expects to receive a beep sound at the same time.
     /// The time between the frame switch and the sound beep is the audio and video sync delay.
     /// </summary>
     internal class VideoAudioSyncBenchmark
@@ -151,6 +151,7 @@ namespace StreamVideo.Core.Utils
             }
         }
 
+        // StreamTodo: we could start after receiving specific sequence of frames like r -> g > r > b -> start
         private void Start(StreamVideoTrack videoTrack, StreamAudioTrack audioTrack)
         {
             _videoTrack = videoTrack ?? throw new ArgumentNullException(nameof(videoTrack));
@@ -238,6 +239,9 @@ namespace StreamVideo.Core.Utils
         {
             _brightFramesReceivedAt.Clear();
             _beepSoundReceivedAt.Clear();
+            
+            _videoTrack = null;
+            _audioTrack = null;
         }
     }
 }

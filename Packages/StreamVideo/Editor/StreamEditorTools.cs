@@ -25,6 +25,10 @@ namespace StreamVideo.EditorTools
         [MenuItem(MenuPrefix + "Toggle " + StreamLocalSfuModeEnabledCompilerFlag + " compiler flag")]
         public static void ToggleStreamLocalSfuCompilerFlag()
             => ToggleCompilerFlag(StreamLocalSfuModeEnabledCompilerFlag);
+        
+        [MenuItem(MenuPrefix + "Toggle " + StreamAudioBenchmarkEnabledCompilerFlag + " compiler flag")]
+        public static void ToggleStreamAudioBenchmarkCompilerFlag()
+            => ToggleCompilerFlag(StreamAudioBenchmarkEnabledCompilerFlag);
 
         public static void BuildSampleApp()
         {
@@ -160,5 +164,6 @@ namespace StreamVideo.EditorTools
         private const string StreamTestsEnabledCompilerFlag = "STREAM_TESTS_ENABLED";
         private const string StreamDebugModeEnabledCompilerFlag = "STREAM_DEBUG_ENABLED";
         private const string StreamLocalSfuModeEnabledCompilerFlag = "STREAM_LOCAL_SFU";
+        private const string StreamAudioBenchmarkEnabledCompilerFlag = "STREAM_AUDIO_BENCHMARK_ENABLED";
     }
 }

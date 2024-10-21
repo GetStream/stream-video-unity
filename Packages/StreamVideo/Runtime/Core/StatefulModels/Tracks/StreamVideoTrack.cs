@@ -7,11 +7,13 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 {
     public class StreamVideoTrack : BaseStreamTrack<VideoStreamTrack>
     {
-        public StreamVideoTrack(MediaStreamTrack track) 
+        internal RenderTexture TargetTexture => _targetTexture;
+        
+        public StreamVideoTrack(MediaStreamTrack track)
             : base(track)
         {
         }
-        
+
         //StreamTodo: can we remove Unity dependency? 
         public void SetRenderTarget(RawImage targetImage)
         {
@@ -39,7 +41,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
                 _targetTexture = new RenderTexture(source.width, source.height, 0, RenderTextureFormat.Default);
                 _targetImage.texture = _targetTexture;
             }
-            
+
             var sizeRatio = (float)source.width / source.height;
 
             var sizeChanged = source.width != _targetTexture.width || source.height != _targetTexture.height;
@@ -55,13 +57,13 @@ namespace StreamVideo.Core.StatefulModels.Tracks
                 _targetTexture.height = source.height;
                 _targetTexture.Create();
             }
-            
+
             //StreamTodo: debug this size, it can get to negative values
             var rect = _targetImage.GetComponent<RectTransform>();
             var current = rect.sizeDelta;
-            rect.sizeDelta = new Vector2(current.x, current.x * (1/sizeRatio));
-            
-            //StreamTodo: investigate if copying texture is really necessary. Perhaps we can just use the texture from the VideoStreamTrack
+            rect.sizeDelta = new Vector2(current.x, current.x * (1 / sizeRatio));
+
+            //StreamTodo: PERFORMANCE investigate if copying texture is really necessary. Perhaps we can just use the texture from the VideoStreamTrack. Test cross-platform
 
             //StreamTodo: use CopyTexture if available on this GPU
             Graphics.Blit(source, _targetTexture);

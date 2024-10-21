@@ -64,17 +64,22 @@ namespace StreamVideo.Core.Utils
 
         public void Update()
         {
-            if(_videoTrack == null || _videoTrack.TargetTexture == null || _audioTrack == null || _audioTrack.TargetAudioSource == null)
+            if (!IsEnabled())
             {
                 return;
             }
-            
+
             EvaluateVideoFrame(_videoTrack.TargetTexture);
             EvaluateAudioFrame(_audioTrack.TargetAudioSource);
         }
 
         public Results Finish()
         {
+            if (!IsEnabled())
+            {
+                return default;
+            }
+
             Log("Benchmark finished. Generating results.");
             var results = Results.GenerateResults(EnumerateResults());
             Clear();
@@ -109,7 +114,7 @@ namespace StreamVideo.Core.Utils
 
         // Determined via testing
         private const float BeepAudioVolumeThreshold = 0.001f;
-        
+
         private const string LogsPrefix = "[VideoAudioSyncBenchmark] ";
 
         private readonly ITimeService _timeService;
@@ -125,6 +130,10 @@ namespace StreamVideo.Core.Utils
         private Texture2D _textureBuffer;
         private bool _prevIsBrightFrame;
         private bool _prevIsBeepSound;
+
+        private bool IsEnabled()
+            => _videoTrack != null && _videoTrack.TargetTexture != null && _audioTrack != null &&
+               _audioTrack.TargetAudioSource != null;
 
         private void GetVideoAndAudioTracks(IStreamVideoCallParticipant participant)
         {
@@ -239,7 +248,7 @@ namespace StreamVideo.Core.Utils
         {
             _brightFramesReceivedAt.Clear();
             _beepSoundReceivedAt.Clear();
-            
+
             _videoTrack = null;
             _audioTrack = null;
         }

@@ -7,14 +7,14 @@ using StreamVideo.Libs.Logs;
 namespace StreamVideo.Core.DeviceManagers
 {
     public delegate void DeviceEnabledChangeHandler(bool isEnabled);
-    
+
     public delegate void
         SelectedDeviceChangeHandler<in TDeviceInfo>(TDeviceInfo previousDevice, TDeviceInfo currentDevice);
 
     internal abstract class DeviceManagerBase<TDeviceInfo> : IDeviceManager<TDeviceInfo> where TDeviceInfo : struct
     {
         public event DeviceEnabledChangeHandler IsEnabledChanged;
-        
+
         public event SelectedDeviceChangeHandler<TDeviceInfo> SelectedDeviceChanged;
 
         public bool IsEnabled
@@ -26,7 +26,7 @@ namespace StreamVideo.Core.DeviceManagers
                 {
                     return;
                 }
-                
+
                 _isEnabled = value;
                 IsEnabledChanged?.Invoke(IsEnabled);
             }
@@ -69,7 +69,7 @@ namespace StreamVideo.Core.DeviceManagers
         {
             const float MinTimeout = 0f;
             const float MaxTimeout = 20f;
-            
+
             if (timeout <= MinTimeout || timeout > MaxTimeout)
             {
                 throw new ArgumentOutOfRangeException(
@@ -104,14 +104,19 @@ namespace StreamVideo.Core.DeviceManagers
             //StreamTodo: react to when video & audio streams become available and disable them if IsEnabled was set to false before the call
         }
 
+        internal void Update() => OnUpdate();
+
         protected RtcSession RtcSession { get; }
         protected IInternalStreamVideoClient Client { get; }
         protected ILogs Logs { get; }
 
-
         protected abstract void OnSetEnabled(bool isEnabled);
 
         protected abstract Task<bool> OnTestDeviceAsync(TDeviceInfo device, int msTimeout);
+
+        protected virtual void OnUpdate()
+        {
+        }
 
         protected virtual void OnDisposing()
         {

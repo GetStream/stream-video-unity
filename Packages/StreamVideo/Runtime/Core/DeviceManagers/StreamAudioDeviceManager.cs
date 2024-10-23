@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -23,7 +24,7 @@ namespace StreamVideo.Core.DeviceManagers
         {
             const int sampleRate = 44100;
             var maxRecordingTime = (int)Math.Ceiling(msTimeout / 1000f);
-            
+
             var clip = Microphone.Start(device.Name, true, maxRecordingTime, sampleRate);
             if (clip == null)
             {
@@ -64,29 +65,23 @@ namespace StreamVideo.Core.DeviceManagers
                 throw new ArgumentException($"{nameof(device)} argument is not valid. The device name is empty.");
             }
 
-            TryStopRecording();
+            TryStopRecording(device);
 
             SelectedDevice = device;
-            
-            var targetAudioSource = GetOrCreateTargetAudioSource();
-            
-            targetAudioSource.clip
-                = Microphone.Start(SelectedDevice.Name, true, 1, AudioSettings.outputSampleRate);
-            targetAudioSource.loop = true;
-            
+
 #if STREAM_DEBUG_ENABLED
             Logs.Info($"Changed microphone device to: {SelectedDevice}");
 #endif
-            
+
             //StreamTodo: in some cases starting the mic recording before the call was causing the recorded audio being played in speakers
             //I think the reason was that AudioSource was being captured by an AudioListener but once I've joined the call, this disappeared
             //Check if we can have this AudioSource to be ignored by AudioListener's or otherwise mute it when there is not active call session
 
             SetEnabled(enable);
         }
-        
+
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio
-        
+
         internal StreamAudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
             : base(rtcSession, client, logs)
         {
@@ -96,26 +91,51 @@ namespace StreamVideo.Core.DeviceManagers
         {
             if (isEnabled && SelectedDevice.IsValid && !GetOrCreateTargetAudioSource().isPlaying)
             {
-                GetOrCreateTargetAudioSource().Play();
+                TryStopRecording(SelectedDevice);
+                
+                var targetAudioSource = GetOrCreateTargetAudioSource();
+
+                // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
+
+                targetAudioSource.clip
+                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 10, AudioSettings.outputSampleRate);
+                targetAudioSource.loop = true;
+
+                using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
+                {
+                    while (!(Microphone.GetPosition(SelectedDevice.Name) > 0))
+                    {
+                        // StreamTodo: add timeout. Otherwise might hang application
+                    }
+                }
+
+                targetAudioSource.Play();
             }
 
             if (!isEnabled)
             {
-                TryStopRecording();
+                TryStopRecording(SelectedDevice);
             }
-            
+
             RtcSession.TrySetAudioTrackEnabled(isEnabled);
+        }
+
+        protected override void OnUpdate()
+        {
+            base.OnUpdate();
+
+            TrySyncMicrophoneAudioSourceReadPosWithMicrophoneWritePos();
         }
 
         protected override void OnDisposing()
         {
-            TryStopRecording();
-            
+            TryStopRecording(SelectedDevice);
+
             if (_targetAudioSourceContainer != null)
             {
                 Object.Destroy(_targetAudioSourceContainer);
             }
-            
+
             base.OnDisposing();
         }
 
@@ -141,22 +161,37 @@ namespace StreamVideo.Core.DeviceManagers
                 hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave
 #endif
             };
-            
+
             _targetAudioSource = _targetAudioSourceContainer.AddComponent<AudioSource>();
             Client.SetAudioInputSource(_targetAudioSource);
             return _targetAudioSource;
         }
-        
-        private void TryStopRecording()
+
+        private static void TryStopRecording(MicrophoneDeviceInfo device)
         {
-            if (!SelectedDevice.IsValid)
+            if (!device.IsValid)
+            {
+                return;
+            }
+
+            if (Microphone.IsRecording(device.Name))
+            {
+                Microphone.End(device.Name);
+            }
+        }
+        
+        private void TrySyncMicrophoneAudioSourceReadPosWithMicrophoneWritePos()
+        {
+            var isRecording = IsEnabled && SelectedDevice.IsValid && Microphone.IsRecording(SelectedDevice.Name) && _targetAudioSource != null;
+            if (!isRecording)
             {
                 return;
             }
             
-            if (Microphone.IsRecording(SelectedDevice.Name))
+            var microphonePosition = Microphone.GetPosition(SelectedDevice.Name);
+            if (microphonePosition >= 0 && _targetAudioSource.timeSamples > microphonePosition)
             {
-                Microphone.End(SelectedDevice.Name);
+                _targetAudioSource.timeSamples = microphonePosition;
             }
         }
     }

@@ -101,7 +101,6 @@ namespace Tests.Editor
             var internalDtosDirectory = Path.Combine(packageSourcePath, "Runtime", "Core", "InternalDTO");
 
             const string internalDtoNamespace = "namespace StreamVideo.Core.InternalDTO";
-            const string sfuNamespace = "namespace StreamVideo.v1.Sfu";
             var sfuNamespaces = new string[] { "namespace StreamVideo.v1.Sfu", "StreamVideo.Core.Sfu" };
             const string jsonAlwaysRequiredFlag = "Newtonsoft.Json.Required.Always";
 

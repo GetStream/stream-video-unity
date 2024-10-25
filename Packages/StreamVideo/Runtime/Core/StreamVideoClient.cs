@@ -46,9 +46,12 @@ namespace StreamVideo.Core
         public IStreamCall ActiveCall => InternalLowLevelClient.RtcSession.ActiveCall;
 
         public bool IsConnected => InternalLowLevelClient.ConnectionState == ConnectionState.Connected;
+
+        public IStreamVideoDeviceManager VideoDeviceManager => _videoDeviceManager;
+        public IStreamAudioDeviceManager AudioDeviceManager => _audioDeviceManager;
         
-        public IStreamVideoDeviceManager VideoDeviceManager { get; }
-        public IStreamAudioDeviceManager AudioDeviceManager { get; }
+        private StreamVideoDeviceManager _videoDeviceManager;
+        private StreamAudioDeviceManager _audioDeviceManager;
 
         /// <summary>
         /// Use this method to create the Video Client. You should have only one instance of this class
@@ -177,7 +180,12 @@ namespace StreamVideo.Core
         }
 
         //StreamTodo: change public to explicit interface
-        public void Update() => InternalLowLevelClient.Update();
+        public void Update()
+        {
+            InternalLowLevelClient.Update();
+            _videoDeviceManager?.Update();
+            _audioDeviceManager?.Update();
+        }
 
         //StreamTodo: change public to explicit interface
         public IEnumerator WebRTCUpdateCoroutine() => WebRTC.Update();
@@ -386,8 +394,8 @@ namespace StreamVideo.Core
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);
             
-            VideoDeviceManager = new StreamVideoDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
-            AudioDeviceManager = new StreamAudioDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
+            _videoDeviceManager = new StreamVideoDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
+            _audioDeviceManager = new StreamAudioDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
 
             SubscribeTo(InternalLowLevelClient);
         }

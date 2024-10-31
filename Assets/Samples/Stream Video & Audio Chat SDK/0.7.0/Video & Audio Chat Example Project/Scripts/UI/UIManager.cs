@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.StatefulModels;
-using StreamVideo.ExampleProject.UI.Screens;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
 #if UNITY_ANDROID
@@ -97,8 +96,8 @@ namespace StreamVideo.ExampleProject.UI
             _videoManager.Client.VideoDeviceManager.SelectedDeviceChanged += OnCameraDeviceChanged;
             _videoManager.Client.AudioDeviceManager.SelectedDeviceChanged += OnMicrophoneDeviceChanged;
 
-            _mainScreen.Init(_videoManager, uiManager: this);
-            _callScreen.Init(_videoManager, uiManager: this);
+            _portraitModeUIScreensSet.Init(_videoManager, uiManager: this);
+            _landscapeModeUIScreensSet.Init(_videoManager, uiManager: this);
 
             if (!HasUserAuthorizedCameraPermission())
             {
@@ -141,35 +140,30 @@ namespace StreamVideo.ExampleProject.UI
         private StreamVideoManager _videoManager;
 
         [SerializeField]
-        private int _senderVideoWidth = 1280;
+        private int _senderVideoWidth = 1920;
 
         [SerializeField]
-        private int _senderVideoHeight = 720;
+        private int _senderVideoHeight = 1080;
 
         [SerializeField]
         private int _senderVideoFps = 30;
 
         [SerializeField]
-        private CallScreenView _callScreen;
-
+        private UIScreensSet _landscapeModeUIScreensSet;
+        
         [SerializeField]
-        private MainScreenView _mainScreen;
+        private UIScreensSet _portraitModeUIScreensSet;
+        
+        [SerializeField]
+        private bool _forceTestPortraitMode;
 
         private void OnCallStarted(IStreamCall call) => ShowCallScreen(call);
 
         private void OnCallEnded() => ShowMainScreen();
 
-        private void ShowMainScreen()
-        {
-            _callScreen.Hide();
-            _mainScreen.Show();
-        }
+        private void ShowMainScreen() => GetCurrentScreenSet().ShowMainScreen();
 
-        private void ShowCallScreen(IStreamCall call)
-        {
-            _mainScreen.Hide();
-            _callScreen.Show(new CallScreenView.ShowArgs(call));
-        }
+        private void ShowCallScreen(IStreamCall call) => GetCurrentScreenSet().ShowCallScreen(call);
 
         private void OnMicrophoneDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice)
         {
@@ -242,6 +236,29 @@ namespace StreamVideo.ExampleProject.UI
             }
 
             _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice, enable: false);
+        }
+
+        private UIScreensSet GetCurrentScreenSet()
+        {
+            var isPortraitMode = IsPotraitMode();
+            
+            _portraitModeUIScreensSet.gameObject.SetActive(isPortraitMode);
+            _landscapeModeUIScreensSet.gameObject.SetActive(!isPortraitMode);
+            
+            return isPortraitMode ? _portraitModeUIScreensSet : _landscapeModeUIScreensSet;
+        }
+
+        private bool IsPotraitMode()
+        {
+#if UNITY_EDITOR
+            if (_forceTestPortraitMode)
+            {
+                return true;
+            }
+#elif (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+            return true;
+#endif
+            return false;
         }
     }
 }

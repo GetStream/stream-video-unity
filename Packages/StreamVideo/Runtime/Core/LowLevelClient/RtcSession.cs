@@ -483,6 +483,13 @@ namespace StreamVideo.Core.LowLevelClient
 
         private VideoResolution GetRequestedVideoResolution(IStreamVideoCallParticipant participant)
         {
+            if (participant == null || participant.SessionId == null)
+            {
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning($"Participant or SessionId was null: {participant}, SeessionId: {participant?.SessionId}");
+#endif
+                return _config.Video.DefaultParticipantVideoResolution;
+            }
             if (_videoResolutionByParticipantSessionId.TryGetValue(participant.SessionId, out var resolution))
             {
                 return resolution;

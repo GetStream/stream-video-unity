@@ -65,9 +65,21 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 //OnSetEnabled will not trigger because IsEnabled value didn't change
                 _activeCamera.Play();
-                Client.SetCameraInputSource(_activeCamera);
+                Client.SetVideoInputSource(_activeCamera);
             }
 
+            SetEnabled(enable);
+        }
+
+        public void SelectSource(RenderTexture renderTexture, bool enable)
+        {
+            Client.SetVideoInputSource(renderTexture);
+            SetEnabled(enable);
+        }
+        
+        public void SelectSource(Texture2D texture2D, bool enable)
+        {
+            Client.SetVideoInputSource(texture2D);
             SetEnabled(enable);
         }
 
@@ -89,7 +101,7 @@ namespace StreamVideo.Core.DeviceManagers
             if (isEnabled && _activeCamera != null && !_activeCamera.isPlaying)
             {
                 _activeCamera.Play();
-                Client.SetCameraInputSource(_activeCamera);
+                Client.SetVideoInputSource(_activeCamera);
             }
 
             if (!isEnabled && _activeCamera != null)

@@ -78,10 +78,12 @@ namespace StreamVideo.Core.LowLevelClient
         #region IInputProvider
 
         public event Action<AudioSource> AudioInputChanged;
-        public event Action<WebCamTexture> VideoInputChanged;
+        public event Action<WebCamTexture> VideoInputWebCamTextureChanged;
+        public event Action<RenderTexture> VideoInputRenderTextureChanged;
+        public event Action<Texture2D> VideoInputTexture2DChanged;
         public event Action<Camera> VideoSceneInputChanged;
 
-        //StreamTodo: move IInputProvider elsewhere. it's for easy testing only
+        //StreamTodo: move IMediaInputProvider elsewhere. it's for easy testing only
         public AudioSource AudioInput
         {
             get => _audioInput;
@@ -107,7 +109,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public WebCamTexture VideoInput
+        public WebCamTexture VideoWebCamTextureInput
         {
             get => _videoInput;
             set
@@ -127,7 +129,57 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (prev != _videoInput)
                 {
-                    VideoInputChanged?.Invoke(value);
+                    VideoInputWebCamTextureChanged?.Invoke(value);
+                }
+            }
+        }
+        
+        public RenderTexture VideoRenderTextureInput
+        {
+            get => _videoRenderTextureInput;
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException();
+                }
+
+                if (value == _videoRenderTextureInput)
+                {
+                    return;
+                }
+                
+                var prev = _videoRenderTextureInput;
+                _videoRenderTextureInput = value;
+
+                if (prev != _videoRenderTextureInput)
+                {
+                    VideoInputRenderTextureChanged?.Invoke(value);
+                }
+            }
+        }
+        
+        public Texture2D VideoTexture2DInput
+        {
+            get => _videoTexture2DInput;
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException();
+                }
+
+                if (value == _videoTexture2DInput)
+                {
+                    return;
+                }
+                
+                var prev = _videoTexture2DInput;
+                _videoTexture2DInput = value;
+
+                if (prev != _videoTexture2DInput)
+                {
+                    VideoInputTexture2DChanged?.Invoke(value);
                 }
             }
         }
@@ -353,6 +405,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
+        private RenderTexture _videoRenderTextureInput;
+        private Texture2D _videoTexture2DInput;
         private Camera _videoSceneInput;
 
         private void ClearSession()

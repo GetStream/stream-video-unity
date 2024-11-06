@@ -1,7 +1,11 @@
 ﻿namespace StreamVideo.Core
 {
-    //StreamTodo: consider making this public and allowing developers to change the resolution explicitly. Right now it's copied from the passed WebCamTexture
-    //But this won't cover cases like screenshare or streaming scene camera
+    // StreamTodo: Figure out if we should make this public so that developers can control the resolution and FPS. This is troublesome because there needs to be a match between source texture and the video stream
+    // So we either take the resolution from the source texture and allow developers to implicitly control this (this could be unintuitive) or we expose this and developers need to ensure that the source texture resolution matches the stream resolution.
+    // The second option might be more clear because they'd receive clear errors if there's a video resolution mismatch.
+    // Also take into account that we might stream multiple tracks (webcam + screenshare) and we also can have multiple sources (texture, renderTexture, webCamTexture, SceneCamera)
+    // Also, perhaps we should allow to publish unlimited number of video tracks and not just webcam + screenshare but any arbitrary combination of video sources.
+    
     /// <summary>
     /// Settings related to video stream that's sent to other participants.
     /// </summary>

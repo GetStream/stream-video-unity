@@ -44,6 +44,8 @@ namespace StreamVideo.Core
 
         void SetAudioInputSource(AudioSource audioSource);
 
-        void SetCameraInputSource(WebCamTexture webCamTexture);
+        void SetVideoInputSource(WebCamTexture webCamTexture);
+        void SetVideoInputSource(RenderTexture renderTexture);
+        void SetVideoInputSource(Texture2D texture2D);
     }
 }

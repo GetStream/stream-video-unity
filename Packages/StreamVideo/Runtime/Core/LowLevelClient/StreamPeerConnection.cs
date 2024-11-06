@@ -20,7 +20,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
-        
+
         public event Action<VideoStreamTrack> PublisherVideoTrackChanged;
         public event Action<AudioStreamTrack> PublisherAudioTrackChanged;
 
@@ -91,7 +91,9 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
                 _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
-                _mediaInputProvider.VideoInputChanged += OnVideoInputChanged;
+                _mediaInputProvider.VideoInputWebCamTextureChanged += OnVideoInputWebCamTextureChanged;
+                _mediaInputProvider.VideoInputRenderTextureChanged += OnVideoInputRenderTextureChanged;
+                _mediaInputProvider.VideoInputTexture2DChanged += OnVideoInputTexture2DChanged;
             }
 
             var rtcIceServers = new List<RTCIceServer>();
@@ -131,12 +133,14 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 // StreamTodo: VideoSceneInput is not handled
-                if (mediaInputProvider.VideoInput != null)
+                if (mediaInputProvider.VideoWebCamTextureInput != null)
                 {
                     CreatePublisherVideoTransceiver();
                 }
             }
         }
+
+
 
         public void RestartIce() => _peerConnection.RestartIce();
 
@@ -190,10 +194,23 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void Update()
         {
-            //StreamTodo: investigate if this Blit is necessary
-            if (_publisherVideoTrackTexture != null && _mediaInputProvider.VideoInput != null)
+            if (_publisherVideoTrackTexture == null)
             {
-                Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
+                return;
+            }
+            
+            //StreamTodo: investigate if this Blit is necessary
+            if (_mediaInputProvider.VideoWebCamTextureInput != null)
+            {
+                Graphics.Blit(_mediaInputProvider.VideoWebCamTextureInput, _publisherVideoTrackTexture);
+            }
+            else if (_mediaInputProvider.VideoRenderTextureInput != null)
+            {
+                Graphics.Blit(_mediaInputProvider.VideoRenderTextureInput, _publisherVideoTrackTexture);
+            }
+            else if (_mediaInputProvider.VideoTexture2DInput != null)
+            {
+                Graphics.Blit(_mediaInputProvider.VideoRenderTextureInput, _publisherVideoTrackTexture);
             }
         }
 
@@ -203,7 +220,9 @@ namespace StreamVideo.Core.LowLevelClient
         {
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
-            _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
+            _mediaInputProvider.VideoInputWebCamTextureChanged -= OnVideoInputWebCamTextureChanged;
+            _mediaInputProvider.VideoInputRenderTextureChanged -= OnVideoInputRenderTextureChanged;
+            _mediaInputProvider.VideoInputTexture2DChanged -= OnVideoInputTexture2DChanged;
 
             _peerConnection.OnIceCandidate -= OnIceCandidate;
             _peerConnection.OnIceConnectionChange -= OnIceConnectionChange;
@@ -312,9 +331,15 @@ namespace StreamVideo.Core.LowLevelClient
             SetPublisherActiveAudioTrack(newAudioTrack);
         }
 
-        private void OnVideoInputChanged(WebCamTexture webCamTexture)
+        private void OnVideoInputTexture2DChanged(Texture2D _) => OnAnyVideoInputChanged();
+
+        private void OnVideoInputRenderTextureChanged(RenderTexture _) => OnAnyVideoInputChanged();
+
+        private void OnVideoInputWebCamTextureChanged(WebCamTexture _) => OnAnyVideoInputChanged();
+
+        private void OnAnyVideoInputChanged()
         {
-            if (_mediaInputProvider.VideoInput == null)
+            if (!IsAnyVideoSourceAvailable())
             {
                 TryClearVideoTrack();
                 return;
@@ -505,21 +530,38 @@ namespace StreamVideo.Core.LowLevelClient
 
         private VideoResolution GetPublisherResolution()
         {
-            if (_mediaInputProvider.VideoInput != null)
-            {
-                var maxResolution = _publisherVideoSettings.MaxResolution;
-                return new VideoResolution(maxResolution.Width, maxResolution.Height);
-            }
+            // StreamTodo: figure out if we should take into account resolution of the source texture
+            // mismatch in source texture resolution vs how video layers are constructed can lead to video quality issues
+            
+            // if (_mediaInputProvider.VideoWebCamTextureInput != null)
+            // {
+            //     var source = _mediaInputProvider.VideoWebCamTextureInput;
+            //     return new VideoResolution(source.width, source.height);
+            // }
+            // else if (_mediaInputProvider.VideoRenderTextureInput != null)
+            // {
+            //     var source = _mediaInputProvider.VideoRenderTextureInput;
+            //     return new VideoResolution(source.width, source.height);
+            // }
+            // else if (_mediaInputProvider.VideoTexture2DInput != null)
+            // {
+            //     var source = _mediaInputProvider.VideoTexture2DInput;
+            //     return new VideoResolution(source.width, source.height);
+            // }
 
-            return VideoResolution.Res_1080p;
+            return _publisherVideoSettings.MaxResolution;
         }
+
+        private bool IsAnyVideoSourceAvailable()
+            => _mediaInputProvider.VideoWebCamTextureInput != null || _mediaInputProvider.VideoTexture2DInput != null ||
+               _mediaInputProvider.VideoRenderTextureInput != null;
 
         private VideoStreamTrack CreatePublisherVideoTrack()
         {
-            if (_mediaInputProvider.VideoInput == null)
+            if (!IsAnyVideoSourceAvailable())
             {
                 throw new ArgumentException(
-                    $"Can't create publisher video track because `{nameof(_mediaInputProvider.VideoInput)}` is not null");
+                    $"Can't create publisher video track because there is no video source available.");
             }
 
             var gfxType = SystemInfo.graphicsDeviceType;

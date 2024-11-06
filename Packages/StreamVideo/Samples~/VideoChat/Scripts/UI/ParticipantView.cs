@@ -110,6 +110,8 @@ namespace StreamVideo.ExampleProject.UI
                 case StreamAudioTrack streamAudioTrack:
                     if (_audioSource != null)
                     {
+                        //StreamTodo: debug why we're sometimes getting multiple audio tracks despite publishing a single audio track
+                        //StreamTodo: handle multiple audio tracks. This is a valid use case
                         Debug.LogError("Multiple audio track!");
                         return;
                     }

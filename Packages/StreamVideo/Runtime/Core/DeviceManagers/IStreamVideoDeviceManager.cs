@@ -33,5 +33,9 @@ namespace StreamVideo.Core.DeviceManagers
         /// This can change whenever a selected device is changed. Subscribe to <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDeviceChanged"/> to get notified when the selected device changes.
         /// </summary>
         WebCamTexture GetSelectedDeviceWebCamTexture();
+
+        void SelectSource(RenderTexture renderTexture, bool enable);
+
+        void SelectSource(Texture2D texture2D, bool enable);
     }
 }

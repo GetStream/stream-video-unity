@@ -204,15 +204,35 @@ namespace StreamVideo.Core
         
         //StreamTodo: add IsActive flag to SetCameraInputSource  SetAudioInputSource SetCameraInputSource
 
-        //StreamTodo: later we should accept just Texture or RenderTexture or TextureProvider
-        void IInternalStreamVideoClient.SetCameraInputSource(WebCamTexture webCamTexture)
+        //StreamTodo: should we also add TextureProvider? E.g. publisher is generating texture and we want to read it per frame without having to call SetVideoInputSource each frame
+        void IInternalStreamVideoClient.SetVideoInputSource(WebCamTexture webCamTexture)
         {
             if (webCamTexture == null)
             {
                 throw new ArgumentNullException(nameof(webCamTexture));
             }
 
-            InternalLowLevelClient.RtcSession.VideoInput = webCamTexture;
+            InternalLowLevelClient.RtcSession.VideoWebCamTextureInput = webCamTexture;
+        }
+        
+        void IInternalStreamVideoClient.SetVideoInputSource(RenderTexture renderTexture)
+        {
+            if (renderTexture == null)
+            {
+                throw new ArgumentNullException(nameof(renderTexture));
+            }
+
+            InternalLowLevelClient.RtcSession.VideoRenderTextureInput = renderTexture;
+        }
+        
+        void IInternalStreamVideoClient.SetVideoInputSource(Texture2D texture2D)
+        {
+            if (texture2D == null)
+            {
+                throw new ArgumentNullException(nameof(texture2D));
+            }
+
+            InternalLowLevelClient.RtcSession.VideoTexture2DInput = texture2D;
         }
 
         // public void SetCameraInputSource(Camera sceneCamera)

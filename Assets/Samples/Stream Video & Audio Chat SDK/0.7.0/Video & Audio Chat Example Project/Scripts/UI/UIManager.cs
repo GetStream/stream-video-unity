@@ -36,7 +36,7 @@ namespace StreamVideo.ExampleProject.UI
                 onDenied?.Invoke();
                 Debug.LogError($"{permissionName} permission was not granted. Video capturing will not work.");
             };
-#else
+#elif UNITY_IOS
             Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
 #endif
         }
@@ -57,8 +57,6 @@ namespace StreamVideo.ExampleProject.UI
 #if UNITY_ANDROID
             var callbacks = new PermissionCallbacks();
 
-            Permission.RequestUserPermission(Permission.Microphone, callbacks);
-
             callbacks.PermissionGranted += _ => { onGranted?.Invoke(); };
             callbacks.PermissionDenied += permissionName =>
             {
@@ -70,6 +68,9 @@ namespace StreamVideo.ExampleProject.UI
                 onDenied?.Invoke();
                 Debug.LogError($"{permissionName} permission was not granted. Video capturing will not work.");
             };
+            
+            Permission.RequestUserPermission(Permission.Microphone, callbacks);
+
 #else
             Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
 #endif

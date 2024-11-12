@@ -99,6 +99,12 @@ namespace StreamVideo.Core.InternalDTO.Models
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call-settings")]
         UpdateCallSettings = 25,
+        
+        [System.Runtime.Serialization.EnumMember(Value = @"start-closed-captions-call")]
+        StartClosedCaptionsCall = 26,
+        
+        [System.Runtime.Serialization.EnumMember(Value = @"stop-closed-captions-call")]
+        StopClosedCaptionsCall = 27,
 
     }
 

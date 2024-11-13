@@ -31,6 +31,8 @@ namespace StreamVideo.Core.Models
         UpdateCallSettings = 23,
         EnableNoiseCancellation = 24,
         ChangeMaxDuration = 25,
+        StartClosedCaptionsCall = 26,
+        StopClosedCaptionsCall = 27,
     }
 
     internal static class OwnCapabilityExt
@@ -65,6 +67,8 @@ namespace StreamVideo.Core.Models
                 case OwnCapability.UpdateCallSettings: return OwnCapabilityInternalEnum.UpdateCallSettings;
                 case OwnCapability.EnableNoiseCancellation: return OwnCapabilityInternalEnum.EnableNoiseCancellation;
                 case OwnCapability.ChangeMaxDuration: return OwnCapabilityInternalEnum.ChangeMaxDuration;
+                case OwnCapability.StartClosedCaptionsCall: return OwnCapabilityInternalEnum.StartClosedCaptionsCall;
+                case OwnCapability.StopClosedCaptionsCall: return OwnCapabilityInternalEnum.StopClosedCaptionsCall;
                 default: throw new ArgumentOutOfRangeException(nameof(ownCapability), ownCapability, null);
             }
         }
@@ -99,6 +103,8 @@ namespace StreamVideo.Core.Models
                 case OwnCapabilityInternalEnum.UpdateCallSettings: return OwnCapability.UpdateCallSettings;
                 case OwnCapabilityInternalEnum.EnableNoiseCancellation: return OwnCapability.EnableNoiseCancellation;
                 case OwnCapabilityInternalEnum.ChangeMaxDuration: return OwnCapability.ChangeMaxDuration;
+                case OwnCapabilityInternalEnum.StartClosedCaptionsCall: return OwnCapability.StartClosedCaptionsCall;
+                case OwnCapabilityInternalEnum.StopClosedCaptionsCall: return OwnCapability.StopClosedCaptionsCall;
                 default: throw new ArgumentOutOfRangeException(nameof(ownCapability), ownCapability, null);
             }
         }

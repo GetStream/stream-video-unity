@@ -203,12 +203,16 @@ namespace StreamVideo.ExampleProject
         private void OnCallStarted(IStreamCall call)
         {
             _activeCall = call;
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            
             CallStarted?.Invoke(call);
         }
 
         private void OnCallEnded(IStreamCall call)
         {
             _activeCall = null;
+            Screen.sleepTimeout = SleepTimeout.SystemSetting;
+            
             CallEnded?.Invoke();
         }
     }

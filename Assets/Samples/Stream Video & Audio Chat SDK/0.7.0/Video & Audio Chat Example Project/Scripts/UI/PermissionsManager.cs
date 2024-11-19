@@ -3,6 +3,9 @@ using UnityEngine;
 #if UNITY_ANDROID
 using UnityEngine.Android;
 #endif
+#if UNITY_IOS
+using System.Collections;
+#endif
 
 namespace StreamVideo.ExampleProject.UI
 {

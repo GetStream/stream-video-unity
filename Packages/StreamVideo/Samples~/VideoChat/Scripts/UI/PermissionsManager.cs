@@ -24,14 +24,17 @@ namespace StreamVideo.ExampleProject.UI
 
         public bool HasPermission(PermissionType permissionType)
         {
-#if UNITY_ANDROID
+#if UNITY_STANDALONE
+            return true;
+#elif UNITY_ANDROID
             var androidPermission = PermissionTypeToAndroidPermission(permissionType);
             return Permission.HasUserAuthorizedPermission(androidPermission);
 #elif UNITY_IOS
             var iosPermission = PermissionTypeToIOSPermission(permissionType);
             return Application.HasUserAuthorization(iosPermission);
 #else
-            Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
+            Debug.LogWarning($"Handling permissions not implemented for platform: {Application.platform}. Requested {permissionType}. Assuming permission is granted.");
+            return true;
 #endif
         }
 

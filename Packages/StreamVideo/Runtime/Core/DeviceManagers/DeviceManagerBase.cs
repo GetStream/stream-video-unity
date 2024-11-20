@@ -79,6 +79,7 @@ namespace StreamVideo.Core.DeviceManagers
             return OnTestDeviceAsync(device, (int)(timeout * 1000));
         }
 
+        // StreamTODO: add filter option. E.g. so we can easily consider only front cameras on ios/android
         public async Task<TDeviceInfo?> TryFindFirstWorkingDeviceAsync(float testTimeoutPerDevice = 1f)
         {
             foreach (var device in EnumerateDevices())

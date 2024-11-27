@@ -114,6 +114,7 @@ public class AudioSessionMonitor : MonoBehaviour
                 case "interruption":
                     var interruptEvent = new AudioInterruptionEventData
                     {
+                        Reason = eventData["reason"].ToString(),
                         InterruptionType = Convert.ToInt32(eventData["interruptionType"]),
                         Settings = ParseAudioSettings(eventData["settings"])
                     };
@@ -280,6 +281,7 @@ public class AudioRouteChangeEventData
 
 public class AudioInterruptionEventData
 {
+    public string Reason { get; set; }
     public int InterruptionType { get; set; }
     public AudioSettings Settings { get; set; }
 }

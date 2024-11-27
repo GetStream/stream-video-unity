@@ -45,7 +45,7 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
         NSLog(@"[Stream] Add option AVAudioSessionCategoryOptionAllowBluetoothA2DP");
     }
     
-    BOOL success = [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:options error:&error];
+    BOOL success = [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord mode:AVAudioSessionModeVideoChat options:options error:&error];
     
     if(!success){
         NSLog(@"[Stream] Error setting audio session category: %@", error.localizedDescription);
@@ -54,7 +54,7 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
     }
     
     // Set audio session mode
-    if(@available(iOS 5.0, *)){
+    if(@available(iOS 5.0, *) && false){ // TEMP DISABLE for testing. perhaps not needed at all, the setCategory has mode
         success = [audioSession setMode:AVAudioSessionModeVideoChat error:&error];
         
         if(!success){
@@ -184,9 +184,16 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
         NSDictionary *settings = [self getCurrentAudioSettings];
         NSLog(@"[Stream] Audio Route Changed: %@", settings);
         
+        NSNumber *reasonValue = notification.userInfo[AVAudioSessionRouteChangeReasonKey];
+        AVAudioSessionRouteChangeReason reason = (AVAudioSessionRouteChangeReason)[reasonValue unsignedIntegerValue];
+        
+        // Map reason to a string
+        NSString *reasonLabel = [self getLabelForRouteChangeReason:reason];
+        
         NSDictionary *eventInfo = @{
           @"type": @"routeChange",
-          @"settings": settings
+          @"settings": settings,
+          @"reason": reasonLabel
         };
         
         // To JSON and send to Unity
@@ -200,10 +207,17 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
     
     [center addObserverForName:AVAudioSessionInterruptionNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
         NSInteger type = [notification.userInfo[AVAudioSessionInterruptionTypeKey] integerValue];
-        NSLog(@"[Stream] Audio Session Interrupted: %ld", (long)type);
+        NSString *label = [self labelForInterruptionType:(AVAudioSessionInterruptionType)type];
+        
+        NSNumber *reasonValue = notification.userInfo[AVAudioSessionInterruptionReasonKey];
+        NSString *reasonLabel = reasonValue ? [self labelForInterruptionReason:(AVAudioSessionInterruptionReason)[reasonValue integerValue]] : @"Unknown";
+        
+        NSLog(@"[Stream] Audio Session Interrupted: %@, Reason: %@", label, reasonLabel);
         
         NSDictionary *eventInfo = @{
           @"type": @"interruption",
+          @"interruptionType": label,
+          @"reason": reasonLabel
         };
         
         // To JSON and send to Unity
@@ -235,6 +249,52 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
 - (void)unregisterNotifications {
     [self.notificationCenter removeObserver:self];
 }
+
+- (NSString *)getLabelForRouteChangeReason:(AVAudioSessionRouteChangeReason)reason {
+    switch (reason) {
+        case AVAudioSessionRouteChangeReasonUnknown:
+            return @"Unknown";
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+            return @"NewDeviceAvailable";
+        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
+            return @"OldDeviceUnavailable";
+        case AVAudioSessionRouteChangeReasonCategoryChange:
+            return @"CategoryChange";
+        case AVAudioSessionRouteChangeReasonOverride:
+            return @"Override";
+        case AVAudioSessionRouteChangeReasonWakeFromSleep:
+            return @"WakeFromSleep";
+        case AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory:
+            return @"NoSuitableRouteForCategory";
+        case AVAudioSessionRouteChangeReasonRouteConfigurationChange:
+            return @"RouteConfigurationChange";
+        default:
+            return @"Unknown";
+    }
+}
+
+- (NSString *)labelForInterruptionType:(AVAudioSessionInterruptionType)type {
+    switch (type) {
+        case AVAudioSessionInterruptionTypeBegan:
+            return @"Began";
+        case AVAudioSessionInterruptionTypeEnded:
+            return @"Ended";
+        default:
+            return @"Unknown";
+    }
+}
+
+- (NSString *)labelForInterruptionReason:(AVAudioSessionInterruptionReason)reason {
+    switch (reason) {
+        case AVAudioSessionInterruptionReasonAppWasSuspended:
+            return @"AppWasSuspended";
+        case AVAudioSessionInterruptionReasonBuiltInMicMuted:
+            return @"BuiltInMicMuted";
+        default:
+            return @"Unknown";
+    }
+}
+
 
 @end
 

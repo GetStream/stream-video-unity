@@ -1,5 +1,6 @@
 ﻿namespace StreamVideo.Core.IssueReporters
 {
+#if STREAM_DEBUG_ENABLED
     /// <summary>
     /// Gets logs from the current device.
     /// </summary>
@@ -7,4 +8,5 @@
     {
         string GetLogs();
     }
+#endif
 }

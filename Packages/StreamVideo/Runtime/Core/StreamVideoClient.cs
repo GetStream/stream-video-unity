@@ -39,7 +39,7 @@ namespace StreamVideo.Core
         public event ConnectHandler Connected;
 
         public event CallHandler CallStarted;
-        
+
         //StreamTodo: not sure if this should pass instance because we want to destroy call instance when the call is over??
         public event CallHandler CallEnded;
 
@@ -50,7 +50,7 @@ namespace StreamVideo.Core
 
         public IStreamVideoDeviceManager VideoDeviceManager => _videoDeviceManager;
         public IStreamAudioDeviceManager AudioDeviceManager => _audioDeviceManager;
-        
+
         private StreamVideoDeviceManager _videoDeviceManager;
         private StreamAudioDeviceManager _audioDeviceManager;
 
@@ -165,7 +165,9 @@ namespace StreamVideo.Core
 
         public void Dispose()
         {
+#if STREAM_DEBUG_ENABLED
             _logsCollector?.Dispose();
+#endif
             UnsubscribeFrom(InternalLowLevelClient);
             InternalLowLevelClient?.Dispose();
             Destroyed?.Invoke();
@@ -173,7 +175,7 @@ namespace StreamVideo.Core
 
         //StreamTodo: Consider removing this overload and exposing ConnectAsync() DisconnectAsync() only. The config would contain credentials (token or token provider), etc.
         //Similar to Android SDK: https://getstream.io/video/docs/android/guides/client-auth/
-        
+
         public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials)
         {
             await InternalLowLevelClient.ConnectUserAsync(credentials);
@@ -200,10 +202,10 @@ namespace StreamVideo.Core
             {
                 throw new ArgumentNullException(nameof(audioSource));
             }
-            
+
             InternalLowLevelClient.RtcSession.AudioInput = audioSource;
         }
-        
+
         //StreamTodo: add IsActive flag to SetCameraInputSource  SetAudioInputSource SetCameraInputSource
 
         //StreamTodo: later we should accept just Texture or RenderTexture or TextureProvider
@@ -368,9 +370,10 @@ namespace StreamVideo.Core
 
             return activeCall.SyncParticipantCustomDataAsync(participant, internalCustomData);
         }
-        
+
 #if STREAM_DEBUG_ENABLED
-        public Task SendDebugLogs(string callId, string participantId) => _feedbackReporter?.SendCallReport(callId, participantId) ?? Task.CompletedTask;
+        public Task SendDebugLogs(string callId, string participantId)
+            => _feedbackReporter?.SendCallReport(callId, participantId) ?? Task.CompletedTask;
 #endif
 
         private StreamVideoLowLevelClient InternalLowLevelClient { get; }
@@ -379,9 +382,11 @@ namespace StreamVideo.Core
 
         private readonly ILogs _logs;
         private readonly ICache _cache;
-        
+
+#if STREAM_DEBUG_ENABLED
         private readonly ILogsCollector _logsCollector;
         private readonly IFeedbackReporter _feedbackReporter;
+#endif
 
         private async Task LeaveCallAsync(IStreamCall call)
         {
@@ -401,16 +406,16 @@ namespace StreamVideo.Core
 
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);
-            
+
             _videoDeviceManager = new StreamVideoDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
             _audioDeviceManager = new StreamAudioDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
 
             SubscribeTo(InternalLowLevelClient);
-     
+
             // StreamTODO: Change condition
 #if STREAM_DEBUG_ENABLED
             _logsCollector = new LogsCollector();
-            
+
 #if UNITY_IOS || UNITY_ANDROID
             _logsCollector.Enable();
 #endif

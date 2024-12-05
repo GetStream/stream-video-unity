@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace StreamVideo.Core.IssueReporters
 {
+#if STREAM_DEBUG_ENABLED
     internal class StandaloneLogsProvider : ILogsProvider
     {
         public string GetLogs()
@@ -75,4 +76,5 @@ namespace StreamVideo.Core.IssueReporters
             }
         }
     }
+#endif
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace StreamVideo.Core.IssueReporters
 {
+#if STREAM_DEBUG_ENABLED
     /// <summary>
     /// Collects logs when enabled and stores them in a file.
     /// </summary>
@@ -57,4 +58,5 @@ namespace StreamVideo.Core.IssueReporters
 
         private bool _enabled;
     }
+#endif
 }

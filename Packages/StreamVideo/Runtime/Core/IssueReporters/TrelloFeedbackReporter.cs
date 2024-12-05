@@ -7,6 +7,7 @@ using UnityEngine.Device;
 
 namespace StreamVideo.Core.IssueReporters
 {
+#if STREAM_DEBUG_ENABLED
     internal class TrelloFeedbackReporter : IFeedbackReporter
     {
         // StreamTODO: Move to local config
@@ -40,7 +41,7 @@ namespace StreamVideo.Core.IssueReporters
             var version = Application.version;
             var model = SystemInfo.deviceModel != SystemInfo.unsupportedIdentifier ? SystemInfo.deviceModel : "unknown";
             var name = SystemInfo.deviceName;
-            
+
             return $"logs_{participantId}_{platform}_{version}_{model}_{name}_.zip";
         }
 
@@ -72,4 +73,5 @@ namespace StreamVideo.Core.IssueReporters
             }
         }
     }
+#endif
 }

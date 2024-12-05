@@ -2,6 +2,7 @@
 
 namespace StreamVideo.Core.IssueReporters
 {
+#if STREAM_DEBUG_ENABLED
     /// <summary>
     /// Collects logs when enabled
     /// </summary>
@@ -13,4 +14,5 @@ namespace StreamVideo.Core.IssueReporters
 
         void Disable();
     }
+#endif
 }

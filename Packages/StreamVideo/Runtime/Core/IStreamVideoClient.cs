@@ -93,5 +93,9 @@ namespace StreamVideo.Core
         /// <param name="next"></param>
         /// <param name="watch">Start receiving updates. If false, the returned <see cref="IStreamCall"/> objects will not be updated</param>
         Task<QueryCallsResult> QueryCallsAsync(IEnumerable<IFieldFilterRule> filters = null, CallSort sort = null, int limit = 25, string prev = null, string next = null, bool watch = false);
+
+#if STREAM_DEBUG_ENABLED
+        Task SendDebugLogs(string callId, string participantId);
+#endif
     }
 }

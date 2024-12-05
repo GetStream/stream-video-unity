@@ -8,6 +8,7 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
+using StreamVideo.Core.IssueReporters;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.State.Caches;
@@ -164,6 +165,7 @@ namespace StreamVideo.Core
 
         public void Dispose()
         {
+            _logsCollector?.Dispose();
             UnsubscribeFrom(InternalLowLevelClient);
             InternalLowLevelClient?.Dispose();
             Destroyed?.Invoke();
@@ -273,7 +275,6 @@ namespace StreamVideo.Core
 
         #endregion
 
-
         StreamVideoLowLevelClient IInternalStreamVideoClient.InternalLowLevelClient => InternalLowLevelClient;
 
         Task IInternalStreamVideoClient.LeaveCallAsync(IStreamCall call) => LeaveCallAsync(call);
@@ -367,6 +368,10 @@ namespace StreamVideo.Core
 
             return activeCall.SyncParticipantCustomDataAsync(participant, internalCustomData);
         }
+        
+#if STREAM_DEBUG_ENABLED
+        public Task SendDebugLogs(string callId, string participantId) => _feedbackReporter?.SendCallReport(callId, participantId) ?? Task.CompletedTask;
+#endif
 
         private StreamVideoLowLevelClient InternalLowLevelClient { get; }
 
@@ -374,6 +379,9 @@ namespace StreamVideo.Core
 
         private readonly ILogs _logs;
         private readonly ICache _cache;
+        
+        private readonly ILogsCollector _logsCollector;
+        private readonly IFeedbackReporter _feedbackReporter;
 
         private async Task LeaveCallAsync(IStreamCall call)
         {
@@ -398,6 +406,16 @@ namespace StreamVideo.Core
             _audioDeviceManager = new StreamAudioDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
 
             SubscribeTo(InternalLowLevelClient);
+     
+            // StreamTODO: Change condition
+#if STREAM_DEBUG_ENABLED
+            _logsCollector = new LogsCollector();
+            
+#if UNITY_IOS || UNITY_ANDROID
+            _logsCollector.Enable();
+#endif
+            _feedbackReporter = new FeedbackReporterFactory(_logsCollector, serializer).CreateTrelloReporter();
+#endif
         }
 
         private void SubscribeTo(StreamVideoLowLevelClient lowLevelClient)

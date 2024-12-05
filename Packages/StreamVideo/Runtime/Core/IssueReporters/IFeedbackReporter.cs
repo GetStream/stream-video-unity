@@ -7,6 +7,6 @@ namespace StreamVideo.Core.IssueReporters
     /// </summary>
     internal interface IFeedbackReporter
     {
-        public Task SendCallReport(string callId);
+        public Task SendCallReport(string callId, string participantId);
     }
 }

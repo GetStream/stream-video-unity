@@ -1,82 +1,73 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using StreamVideo.Libs.Serialization;
+using UnityEngine.Device;
 
 namespace StreamVideo.Core.IssueReporters
 {
     internal class TrelloFeedbackReporter : IFeedbackReporter
     {
-        // StreamTODO: Remove
-        public const string ApiKey = "";
-        public const string Token = "";
-        public const string ListId = "";
+        // StreamTODO: Move to local config
+        public const string SendReportEndpoint = "http://194.59.158.13:3000/send-logs";
 
-        public TrelloFeedbackReporter(ILogsProvider logsProvider, ISerializer serializer)
+        public TrelloFeedbackReporter(ILogsProvider logsProvider)
         {
-            _serializer = serializer;
             _logsProvider = logsProvider;
         }
 
-        public async Task SendCallReport(string callId)
+        public async Task SendCallReport(string callId, string participantId)
         {
-            var logs = _logsProvider.GetLogs();
-            var zippedLogs = Zip(logs);
-
             using var client = new HttpClient();
 
-            var createCardUrl = GetApiQuery("cards", $"&idList={ListId}&name={callId}");
-            var createCardResponse = await client.PostAsync(createCardUrl, content: null);
-            var cardResponseJson = await createCardResponse.Content.ReadAsStringAsync();
-            
-            var cardJObject = (JObject)_serializer.DeserializeObject(cardResponseJson);
-            var id = cardJObject["id"];
+            var deviceLogs = _logsProvider.GetLogs();
+            var zippedLogs = Zip(deviceLogs);
+            var logsFileName = GetLogsFileName(participantId);
 
             var content = new MultipartFormDataContent();
-            content.Add(new ByteArrayContent(zippedLogs), "file", "logs.zip");
+            content.Add(new ByteArrayContent(zippedLogs), "file", $"{logsFileName}.zip");
+            content.Add(new StringContent(callId), "callId");
 
-            var addCardAttachmentUrl = GetApiQuery($"cards/{id}/attachments");
-            var attachmentResponse = await client.PostAsync(addCardAttachmentUrl, content);
+            var response = await client.PostAsync(SendReportEndpoint, content);
         }
 
         private readonly ILogsProvider _logsProvider;
-        private readonly ISerializer _serializer;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="subUrl">SubURL without / prefix. E.g. "cards", $"boards/{id}"</param>
-        /// <param name="paramChain">Additional URL params. E.g. $"&idList={BoardId}&name={callId}"</param>
-        /// <returns>Full API Request URL with Trello domain, API Key & Token</returns>
-        private static string GetApiQuery(string subUrl, string paramChain = "")
+        private string GetLogsFileName(string participantId)
         {
-            return $"https://api.trello.com/1/{subUrl}?key={ApiKey}&token={Token}{paramChain}";
+            var platform = Application.platform;
+            var version = Application.version;
+            var model = SystemInfo.deviceModel != SystemInfo.unsupportedIdentifier ? SystemInfo.deviceModel : "unknown";
+            var name = SystemInfo.deviceName;
+            
+            return $"logs_{participantId}_{platform}_{version}_{model}_{name}_.zip";
         }
-        
-        private static byte[] Zip(string str) {
+
+        private static byte[] Zip(string str)
+        {
             var bytes = Encoding.UTF8.GetBytes(str);
 
             using (var msi = new MemoryStream(bytes))
-            using (var mso = new MemoryStream()) {
-                using (var gs = new GZipStream(mso, CompressionMode.Compress)) {
-                    //msi.CopyTo(gs);
+            using (var mso = new MemoryStream())
+            {
+                using (var gs = new GZipStream(mso, CompressionMode.Compress))
+                {
                     CopyTo(msi, gs);
                 }
 
                 return mso.ToArray();
             }
         }
-        
-        private static void CopyTo(Stream src, Stream dest) {
+
+        private static void CopyTo(Stream src, Stream dest)
+        {
             var bytes = new byte[4096];
 
             int cnt;
 
-            while ((cnt = src.Read(bytes, 0, bytes.Length)) != 0) {
+            while ((cnt = src.Read(bytes, 0, bytes.Length)) != 0)
+            {
                 dest.Write(bytes, 0, cnt);
             }
         }

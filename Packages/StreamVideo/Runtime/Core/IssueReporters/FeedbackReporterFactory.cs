@@ -14,7 +14,7 @@ namespace StreamVideo.Core.IssueReporters
         public IFeedbackReporter CreateTrelloReporter()
         {
             var logsProvider = CreateLogsProvider();
-            return new TrelloFeedbackReporter(logsProvider, _serializer);
+            return new TrelloFeedbackReporter(logsProvider);
         }
 
         private readonly ILogsCollector _logsCollector;

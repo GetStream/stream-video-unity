@@ -10,15 +10,27 @@ namespace StreamVideo.ExampleProject.UI.Devices
         protected override bool IsDeviceEnabled
         {
             get => Client.AudioDeviceManager.IsEnabled;
-            set => Client.AudioDeviceManager.SetEnabled(value);
+            set
+            {
+                Client.AudioDeviceManager.SetEnabled(value);
+                
+                // Force set IOS audio settings StreamTODO: remove this 
+                AudioSessionMonitor.Instance.Prepare();
+            }
         }
 
         protected override IEnumerable<MicrophoneDeviceInfo> GetDevices() => Client.AudioDeviceManager.EnumerateDevices();
 
         protected override string GetDeviceName(MicrophoneDeviceInfo device) => device.Name;
         
-        protected override void ChangeDevice(MicrophoneDeviceInfo device) => Client.AudioDeviceManager.SelectDevice(device, IsDeviceEnabled);
-        
+        protected override void ChangeDevice(MicrophoneDeviceInfo device)
+        {
+            Client.AudioDeviceManager.SelectDevice(device, IsDeviceEnabled);
+            
+            // Force set IOS audio settings StreamTODO: remove this 
+            AudioSessionMonitor.Instance.Prepare();
+        }
+
         protected override void OnInit()
         {
             base.OnInit();

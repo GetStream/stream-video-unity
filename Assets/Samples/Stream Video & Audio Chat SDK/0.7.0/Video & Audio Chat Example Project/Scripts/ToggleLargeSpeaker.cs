@@ -4,19 +4,18 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PrintAudioSettings : MonoBehaviour
+public class ToggleLargeSpeaker : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("Print audio settings SUBSCRIBE To BUTTON CLICK");
         GetComponent<Button>().onClick.AddListener(OnButtonClick);
     }
-
+    
     private void OnButtonClick()
     {
-        Debug.Log("Log audio settings clicked");
-        AudioSessionMonitor.Instance.GetCurrentSettings();
+        Debug.Log("Toggle large speaker clicked");
+        AudioSessionMonitor.Instance.ToggleLargeSpeaker();
     }
 
     // Update is called once per frame

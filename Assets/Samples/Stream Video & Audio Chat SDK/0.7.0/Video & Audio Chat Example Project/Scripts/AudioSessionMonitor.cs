@@ -90,6 +90,9 @@ public class AudioSessionMonitor : MonoBehaviour
     
     [DllImport("__Internal")]
     private static extern void AudioMonitor_PrepareAudioSessionForRecording();
+    
+    [DllImport("__Internal")]
+    private static extern void AudioMonitor_ToggleLargeSpeaker(int enabled);
 
     // Called by native code through UnitySendMessage
     private void OnAudioSessionEvent(string jsonData)
@@ -128,6 +131,19 @@ public class AudioSessionMonitor : MonoBehaviour
         }
     }
 
+    public void Prepare()
+    {
+        AudioMonitor_PrepareAudioSessionForRecording();
+    }
+
+    public void ToggleLargeSpeaker()
+    {
+        _lastLargeSpeakerState = !_lastLargeSpeakerState;
+        AudioMonitor_ToggleLargeSpeaker(_lastLargeSpeakerState ? 1 : 0);
+    }
+
+    private bool _lastLargeSpeakerState;
+    
     public AudioSettings GetCurrentSettings()
     {
         _receivedEvents.Enqueue("------------ GetCurrentSettings");

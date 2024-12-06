@@ -89,7 +89,7 @@ namespace StreamVideo.Core.DeviceManagers
 
         protected override void OnSetEnabled(bool isEnabled)
         {
-            if (isEnabled && SelectedDevice.IsValid && !GetOrCreateTargetAudioSource().isPlaying)
+            if (isEnabled && SelectedDevice.IsValid)
             {
                 TryStopRecording(SelectedDevice);
                 

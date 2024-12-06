@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using StreamVideo.Core;
@@ -210,6 +211,19 @@ namespace StreamVideo.ExampleProject
 
         private void OnCallEnded(IStreamCall call)
         {
+#if STREAM_DEBUG_ENABLED
+            try
+            {
+                var callId = _activeCall.Id;
+                var localParticipant = _activeCall.Participants.First(p => p.IsLocalParticipant);
+                Client.SendDebugLogs(call.Id, localParticipant.SessionId);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+#endif
+            
             _activeCall = null;
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
             

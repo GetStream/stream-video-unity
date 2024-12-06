@@ -64,15 +64,20 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
         }
     }
     
+    // TODO: sample rate should be injected from Unity and perhaps taken from AudioSettings.outputSampleRate
+    
     // Set preferred sample rate and buffer duration
     if(@available(iOS 6.0, *)) {
-        success = [audioSession setPreferredSampleRate:16000 error:&error];
+        success = [audioSession setPreferredSampleRate:48000 error:&error];
         
         if(!success){
             NSLog(@"[Stream] Error setting audio session category: %@", error.localizedDescription);
         }
         
-        success = [audioSession setPreferredIOBufferDuration:0.01 error:&error];
+        // 0 means let system decide.
+        // I previously tried 0.01 but this sometimes led to buffer related error and app breaking:
+        // "1024 frames, 2 bytes/frame, expected 2048-byte buffer; ioData.mBuffers[0].mDataByteSize=1024; kAudio_ParamError"
+        success = [audioSession setPreferredIOBufferDuration:0 error:&error];
         
         if(!success){
             NSLog(@"[Stream] Error setting audio session category: %@", error.localizedDescription);
@@ -87,6 +92,25 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
         NSLog(@"[Stream] Audio Session prepared sucessfully for recording with low latency.");
     }
     
+}
+
+- (void)toggleAudioOutputToSpeaker:(BOOL)useSpeaker {
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    NSError *error = nil;
+
+    if (useSpeaker) {
+        // Route audio to the large speaker
+        [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
+    } else {
+        // Route audio to the earpiece
+        [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&error];
+    }
+
+    if (error) {
+        NSLog(@"Error toggling audio output: %@", error.localizedDescription);
+    } else {
+        NSLog(@"Audio output toggled to %@", useSpeaker ? @"large speaker" : @"earpiece");
+    }
 }
 
 
@@ -326,3 +350,6 @@ void AudioMonitor_PrepareAudioSessionForRecording(){
     [[AudioSessionMonitor sharedInstance] prepareAudioSessionForRecording];
 }
 
+void AudioMonitor_ToggleLargeSpeaker(int enabled){
+    [[AudioSessionMonitor sharedInstance] toggleAudioOutputToSpeaker:enabled != 0];
+}

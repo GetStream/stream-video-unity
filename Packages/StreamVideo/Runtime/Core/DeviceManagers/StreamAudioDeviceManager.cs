@@ -97,8 +97,16 @@ namespace StreamVideo.Core.DeviceManagers
 
                 // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
 
+                // StreamTodo: hardcoded sample rate. Move elsewhere
+                // + consider making this configurable. Maybe not int but few predefined values?
+                // Because we'll be setting IOS AudioSession via Objective-C script this needs to match exactly
+                // Also check if anywhere in the webRTC we're setting the streamed output sample rate.
+                // Sample rate mismatch would lead to re-sampling which could affect the quality
+                
+                // StreamTodo: lower the buffer size. Probably 1 second is enough
+                
                 targetAudioSource.clip
-                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 10, AudioSettings.outputSampleRate);
+                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 10, 48000);
                 targetAudioSource.loop = true;
 
                 using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
@@ -178,6 +186,9 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 Microphone.End(device.Name);
             }
+            
+            // StreamTodo: clear buffer clip? Re-enabling is broken and resends the last buffer
+            // Perhaps clearing won't be needed once audio track re-enabling is fixed
         }
         
         private void TrySyncMicrophoneAudioSourceReadPosWithMicrophoneWritePos()

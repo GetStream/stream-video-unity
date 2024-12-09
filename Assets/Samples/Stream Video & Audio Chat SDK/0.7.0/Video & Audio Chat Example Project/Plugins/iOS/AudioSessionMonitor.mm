@@ -97,15 +97,26 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
 - (void)toggleAudioOutputToSpeaker:(BOOL)useSpeaker {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
+    
+    AVAudioSessionRouteDescription *beforeRoute = audioSession.currentRoute;
+    
+    NSLog(@"before toggle - Outputs: %@", beforeRoute.outputs);
 
     if (useSpeaker) {
+        NSLog(@"-- Attempt to route through speaker");
         // Route audio to the large speaker
         [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
     } else {
+        NSLog(@"-- Attempt to route through earpiece");
         // Route audio to the earpiece
         [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&error];
     }
-
+    
+    AVAudioSessionRouteDescription *afterRoute = audioSession.currentRoute;
+    
+    NSLog(@"after toggle - Outputs: %@", afterRoute.outputs);
+    NSLog(@"Current category - %@, options: %lu", audioSession.category, (unsigned long)audioSession.categoryOptions);
+    
     if (error) {
         NSLog(@"Error toggling audio output: %@", error.localizedDescription);
     } else {

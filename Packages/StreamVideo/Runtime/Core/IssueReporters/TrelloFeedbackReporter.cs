@@ -23,8 +23,8 @@ namespace StreamVideo.Core.IssueReporters
             using var client = new HttpClient();
 
             var deviceLogs = _logsProvider.GetLogs();
-            var zippedLogs = Zip(deviceLogs);
             var logsFileName = GetLogsFileName(participantId);
+            var zippedLogs = CreateZipArchive(deviceLogs, logsFileName);
 
             var content = new MultipartFormDataContent();
             content.Add(new ByteArrayContent(zippedLogs), "file", $"{logsFileName}.zip");
@@ -42,35 +42,21 @@ namespace StreamVideo.Core.IssueReporters
             var model = SystemInfo.deviceModel != SystemInfo.unsupportedIdentifier ? SystemInfo.deviceModel : "unknown";
             var name = SystemInfo.deviceName;
 
-            return $"logs_{participantId}_{platform}_{version}_{model}_{name}_.zip";
+            return $"logs_{participantId}_{platform}_{version}_{model}_{name}";
         }
 
-        private static byte[] Zip(string str)
+        private static byte[] CreateZipArchive(string deviceLogs, string logsFileName)
         {
-            var bytes = Encoding.UTF8.GetBytes(str);
-
-            using (var msi = new MemoryStream(bytes))
-            using (var mso = new MemoryStream())
+            using var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
             {
-                using (var gs = new GZipStream(mso, CompressionMode.Compress))
-                {
-                    CopyTo(msi, gs);
-                }
-
-                return mso.ToArray();
+                var entry = archive.CreateEntry(logsFileName + ".txt", CompressionLevel.Optimal);
+                using var entryStream = entry.Open();
+                using var writer = new StreamWriter(entryStream);
+                writer.Write(deviceLogs);
             }
-        }
 
-        private static void CopyTo(Stream src, Stream dest)
-        {
-            var bytes = new byte[4096];
-
-            int cnt;
-
-            while ((cnt = src.Read(bytes, 0, bytes.Length)) != 0)
-            {
-                dest.Write(bytes, 0, cnt);
-            }
+            return memoryStream.ToArray();
         }
     }
 #endif

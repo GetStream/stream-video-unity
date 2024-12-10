@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using UnityEngine;
 
 namespace StreamVideo.Core.IssueReporters
@@ -13,6 +14,8 @@ namespace StreamVideo.Core.IssueReporters
         public LogsCollector()
         {
             _logFilePath = Path.Combine(Application.persistentDataPath, LogsFilePath);
+
+            ClearLogFile();
         }
 
         public void Enable()
@@ -23,18 +26,33 @@ namespace StreamVideo.Core.IssueReporters
             }
 
             Application.logMessageReceived += HandleLog;
+            _enabled = true;
         }
 
         public void Disable() => Application.logMessageReceived -= HandleLog;
 
         public string GetLogs()
         {
-            if (!File.Exists(LogsFilePath))
+            if (!File.Exists(_logFilePath))
             {
                 return string.Empty;
             }
 
-            return File.ReadAllText(_logFilePath);
+            try
+            {
+                using (var fileStream = File.Open(_logFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    using (var streamReader = new StreamReader(fileStream))
+                    {
+                        return streamReader.ReadToEnd();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return string.Empty;
+            }
         }
 
         public void Dispose()
@@ -49,7 +67,13 @@ namespace StreamVideo.Core.IssueReporters
         {
             var formattedLog = $"[{DateTime.Now}] [{type}] {logString}\n{stackTrace}";
 
-            File.AppendAllText(_logFilePath, formattedLog + "\n\n");
+            using (var fileStream = File.Open(_logFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            {
+                using (var writeStream = new StreamWriter(fileStream))
+                {
+                    writeStream.WriteLine(formattedLog + "\n");
+                }
+            }
         }
 
         private const string LogsFilePath = "unity_session_logs_43534.txt";
@@ -57,6 +81,18 @@ namespace StreamVideo.Core.IssueReporters
         private readonly string _logFilePath;
 
         private bool _enabled;
+
+        private void ClearLogFile()
+        {
+            if (!File.Exists(_logFilePath))
+            {
+                return;
+            }
+
+            using (File.Open(_logFilePath, FileMode.Truncate, FileAccess.Write, FileShare.ReadWrite))
+            {
+            }
+        }
     }
 #endif
 }

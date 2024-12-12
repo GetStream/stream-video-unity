@@ -29,6 +29,17 @@ namespace StreamVideo.EditorTools
         [MenuItem(MenuPrefix + "Toggle " + StreamAudioBenchmarkEnabledCompilerFlag + " compiler flag")]
         public static void ToggleStreamAudioBenchmarkCompilerFlag()
             => ToggleCompilerFlag(StreamAudioBenchmarkEnabledCompilerFlag);
+        
+        [MenuItem(MenuPrefix + "Print compiler flags")]
+        public static void PrintCompilerFlags()
+        {
+            var unityDefineSymbols = new UnityDefineSymbolsFactory().CreateDefault();
+
+            var activeBuildTarget = EditorUserBuildSettings.activeBuildTarget;
+
+            var symbols = unityDefineSymbols.GetScriptingDefineSymbols(activeBuildTarget).ToList();
+            Debug.Log("Current compiler flags: " + string.Join(", ", symbols));
+        }
 
         public static void BuildSampleApp()
         {

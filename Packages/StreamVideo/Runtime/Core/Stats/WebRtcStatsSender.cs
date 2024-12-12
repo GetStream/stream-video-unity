@@ -75,10 +75,10 @@ namespace StreamVideo.Core.Stats
             };
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Info("-----------WebRTC STATS DUMP -> 1. publisher, 2. subscriber------");
-            _logs.Info(publisherStatsJson);
-            _logs.Info(subscriberStatsJson);
-            _logs.Info("-----------END WebRTC STATS DUMP END------");
+            // _logs.Info("-----------WebRTC STATS DUMP -> 1. publisher, 2. subscriber------");
+            // _logs.Info(publisherStatsJson);
+            // _logs.Info(subscriberStatsJson);
+            // _logs.Info("-----------END WebRTC STATS DUMP END------");
 #endif
 
             await _rtcSession.SendWebRtcStats(request);

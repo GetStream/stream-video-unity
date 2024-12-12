@@ -207,7 +207,7 @@ namespace StreamVideo.Core.LowLevelClient
         public async Task SendWebRtcStats(SendStatsRequest request)
         {
             var response = await RpcCallAsync(request, GeneratedAPI.SendStats,
-                nameof(GeneratedAPI.SendStats));
+                nameof(GeneratedAPI.SendStats), postLog: false);
 
             if (ActiveCall == null)
             {
@@ -755,7 +755,7 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: implement retry strategy like in Android SDK
         //If possible, take into account if we the update is still valid e.g. 
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
-            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
+            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false, bool postLog = true)
         {
             //StreamTodo: use rpcCallAsync.GetMethodInfo().Name; instead debugRequestName
 
@@ -770,22 +770,25 @@ namespace StreamVideo.Core.LowLevelClient
             var response = await rpcCallAsync(_httpClient, request);
 
 #if STREAM_DEBUG_ENABLED
-            var serializedResponse = _serializer.Serialize(response);
+            if (postLog)
+            {
+                var serializedResponse = _serializer.Serialize(response);
 
-            //StreamTodo: move to debug helper class
-            var sb = new System.Text.StringBuilder();
+                //StreamTodo: move to debug helper class
+                var sb = new System.Text.StringBuilder();
 
-            var errorProperty = typeof(TResponse).GetProperty("Error");
-            var error = (StreamVideo.v1.Sfu.Models.Error)errorProperty.GetValue(response);
-            var errorLog = error != null ? $"<color=red>{error.Message}</color>" : "";
-            var errorStatus = error != null ? "<color=red>FAILED</color>" : "<color=green>SUCCESS</color>";
-            sb.AppendLine($"[RPC Request] {errorStatus} {debugRequestName} | {errorLog}");
-            sb.AppendLine(serializedRequest);
-            sb.AppendLine();
-            sb.AppendLine("Response:");
-            sb.AppendLine(serializedResponse);
+                var errorProperty = typeof(TResponse).GetProperty("Error");
+                var error = (StreamVideo.v1.Sfu.Models.Error)errorProperty.GetValue(response);
+                var errorLog = error != null ? $"<color=red>{error.Message}</color>" : "";
+                var errorStatus = error != null ? "<color=red>FAILED</color>" : "<color=green>SUCCESS</color>";
+                sb.AppendLine($"[RPC Request] {errorStatus} {debugRequestName} | {errorLog}");
+                sb.AppendLine(serializedRequest);
+                sb.AppendLine();
+                sb.AppendLine("Response:");
+                sb.AppendLine(serializedResponse);
 
-            _logs.Warning(sb.ToString());
+                _logs.Warning(sb.ToString());              
+            }
 #endif
 
             return response;

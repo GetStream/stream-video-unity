@@ -15,7 +15,7 @@ public class SetAudioSettings : MonoBehaviour
     private void OnButtonClick()
     {
         Debug.Log("Prepare audio settings clicked");
-        AudioSessionMonitor.Instance.Prepare();
+        AudioSessionMonitor.Instance.ConfigureAudioForRecording();
     }
 
     // Update is called once per frame

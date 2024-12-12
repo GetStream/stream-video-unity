@@ -9,6 +9,8 @@ using Newtonsoft.Json;
 
 public class AudioSessionMonitor : MonoBehaviour
 {
+    public const int SampleRate = 48000; //StreamTodo: set the same for Unity microphone and check if anywhere else is needed
+    
     public event Action<AudioRouteChangeEventData> OnAudioRouteChanged;
     public event Action<AudioInterruptionEventData> OnAudioInterruption;
     
@@ -38,7 +40,7 @@ public class AudioSessionMonitor : MonoBehaviour
 
     public void PrepareForRecording()
     {
-        AudioMonitor_PrepareAudioSessionForRecording();
+        AudioMonitor_PrepareAudioSessionForRecording(largeSpeakerOn: 1, SampleRate);
     }
     
     protected void Awake()
@@ -89,7 +91,7 @@ public class AudioSessionMonitor : MonoBehaviour
     private static extern void AudioMonitor_StopMonitoring();
     
     [DllImport("__Internal")]
-    private static extern void AudioMonitor_PrepareAudioSessionForRecording();
+    private static extern void AudioMonitor_PrepareAudioSessionForRecording(int largeSpeakerOn, int sampleRate);
     
     [DllImport("__Internal")]
     private static extern void AudioMonitor_ToggleLargeSpeaker(int enabled);
@@ -131,18 +133,18 @@ public class AudioSessionMonitor : MonoBehaviour
         }
     }
 
-    public void Prepare()
+    public void ConfigureAudioForRecording()
     {
-        AudioMonitor_PrepareAudioSessionForRecording();
+        AudioMonitor_PrepareAudioSessionForRecording(_lastLargeSpeakerState ? 1 : 0, SampleRate);
     }
 
     public void ToggleLargeSpeaker()
     {
         _lastLargeSpeakerState = !_lastLargeSpeakerState;
-        AudioMonitor_ToggleLargeSpeaker(_lastLargeSpeakerState ? 1 : 0);
+        ConfigureAudioForRecording();
     }
 
-    private bool _lastLargeSpeakerState;
+    private bool _lastLargeSpeakerState = true;
     
     public AudioSettings GetCurrentSettings()
     {

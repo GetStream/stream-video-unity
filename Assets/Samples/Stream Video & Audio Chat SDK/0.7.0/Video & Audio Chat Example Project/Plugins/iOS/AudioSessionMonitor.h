@@ -16,7 +16,7 @@ extern "C" {
     void AudioMonitor_StartMonitoring();
     void AudioMonitor_StopMonitoring();
     void AudioMonitor_StopMonitoring();
-    void AudioMonitor_PrepareAudioSessionForRecording();
+    void AudioMonitor_PrepareAudioSessionForRecording(int useLargeSpeaker, int sampleRate);
     void AudioMonitor_ToggleLargeSpeaker(int enabled);
     
 //#ifdev __cplusplus

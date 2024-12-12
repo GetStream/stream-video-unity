@@ -32,20 +32,27 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
     return self;
 }
 
-- (void)prepareAudioSessionForRecording {
+- (void)prepareAudioSessionForRecording:(BOOL)useLargeSpeaker withSampleRate: (int)sampleRate {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
     
-    // Set category
-    AVAudioSessionCategoryOptions options = AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetooth;
+    AVAudioSessionMode mode = nil;
     
-    if(@available(iOS 10.0, *)){
-        options |= AVAudioSessionCategoryOptionAllowBluetoothA2DP;
+    // Set category
+    AVAudioSessionCategoryOptions options = AVAudioSessionCategoryOptionAllowBluetooth
+    | AVAudioSessionCategoryOptionAllowBluetoothA2DP
+    | AVAudioSessionCategoryOptionAllowAirPlay
+    | AVAudioSessionCategoryOptionMixWithOthers;
+    
+    if (useLargeSpeaker){
+        mode = AVAudioSessionModeVideoChat;
+        options |= AVAudioSessionCategoryOptionDefaultToSpeaker;
     } else {
-        NSLog(@"[Stream] Add option AVAudioSessionCategoryOptionAllowBluetoothA2DP");
+        mode = AVAudioSessionModeVoiceChat;
     }
     
-    BOOL success = [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord mode:AVAudioSessionModeVideoChat options:options error:&error];
+    
+    BOOL success = [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord mode:mode options:options error:&error];
     
     if(!success){
         NSLog(@"[Stream] Error setting audio session category: %@", error.localizedDescription);
@@ -53,25 +60,12 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
         NSLog(@"[Stream] Success in setCategory");
     }
     
-    // Set audio session mode
-    if(@available(iOS 5.0, *) && false){ // TEMP DISABLE for testing. perhaps not needed at all, the setCategory has mode
-        success = [audioSession setMode:AVAudioSessionModeVideoChat error:&error];
-        
-        if(!success){
-            NSLog(@"[Stream] Error setting audio session category: %@", error.localizedDescription);
-        } else {
-            NSLog(@"[Stream] Success in setMod:AVAudioSessionModeVideoChate");
-        }
-    }
-    
-    // TODO: sample rate should be injected from Unity and perhaps taken from AudioSettings.outputSampleRate
-    
     // Set preferred sample rate and buffer duration
     if(@available(iOS 6.0, *)) {
-        success = [audioSession setPreferredSampleRate:48000 error:&error];
+        success = [audioSession setPreferredSampleRate:sampleRate error:&error];
         
         if(!success){
-            NSLog(@"[Stream] Error setting audio session category: %@", error.localizedDescription);
+            NSLog(@"[Stream] Error setting sample rate: %@", error.localizedDescription);
         }
         
         // 0 means let system decide.
@@ -80,7 +74,7 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
         success = [audioSession setPreferredIOBufferDuration:0 error:&error];
         
         if(!success){
-            NSLog(@"[Stream] Error setting audio session category: %@", error.localizedDescription);
+            NSLog(@"[Stream] Error setting setPreferredIOBufferDuration: %@", error.localizedDescription);
         }
     }
     
@@ -91,7 +85,21 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
     } else {
         NSLog(@"[Stream] Audio Session prepared sucessfully for recording with low latency.");
     }
+
+
     
+    [[AudioSessionMonitor sharedInstance] logAudioRoute];
+}
+
+- (void)logAudioRoute {
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    AVAudioSessionRouteDescription *route = audioSession.currentRoute;
+
+    NSLog(@"Audio Route Inputs: %@", route.inputs);
+    NSLog(@"Audio Route Outputs: %@", route.outputs);
+    NSLog(@"Audio Category: %@", audioSession.category);
+    NSLog(@"Audio Mode: %@", audioSession.mode);
+    NSLog(@"Audio Category Options: %lu", (unsigned long)audioSession.categoryOptions);
 }
 
 - (void)toggleAudioOutputToSpeaker:(BOOL)useSpeaker {
@@ -122,6 +130,9 @@ void UnitySendMessage(const char* gameObjectName, const char* methodName, const 
     } else {
         NSLog(@"Audio output toggled to %@", useSpeaker ? @"large speaker" : @"earpiece");
     }
+    
+    NSLog(@"Audio Session Active: %d", audioSession);
+
 }
 
 
@@ -357,8 +368,8 @@ void AudioMonitor_StopMonitoring(){
     [[AudioSessionMonitor sharedInstance] stopMonitoring];
 }
 
-void AudioMonitor_PrepareAudioSessionForRecording(){
-    [[AudioSessionMonitor sharedInstance] prepareAudioSessionForRecording];
+void AudioMonitor_PrepareAudioSessionForRecording(int useLargeSpeaker, int sampleRate){
+    [[AudioSessionMonitor sharedInstance] prepareAudioSessionForRecording:useLargeSpeaker != 0 withSampleRate: sampleRate];
 }
 
 void AudioMonitor_ToggleLargeSpeaker(int enabled){

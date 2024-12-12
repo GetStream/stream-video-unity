@@ -15,7 +15,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
                 Client.AudioDeviceManager.SetEnabled(value);
                 
                 // Force set IOS audio settings StreamTODO: remove this 
-                AudioSessionMonitor.Instance.Prepare();
+                AudioSessionMonitor.Instance.ConfigureAudioForRecording();
             }
         }
 
@@ -28,7 +28,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
             Client.AudioDeviceManager.SelectDevice(device, IsDeviceEnabled);
             
             // Force set IOS audio settings StreamTODO: remove this 
-            AudioSessionMonitor.Instance.Prepare();
+            AudioSessionMonitor.Instance.ConfigureAudioForRecording();
         }
 
         protected override void OnInit()

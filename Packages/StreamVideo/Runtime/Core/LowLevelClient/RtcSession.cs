@@ -53,6 +53,9 @@ namespace StreamVideo.Core.LowLevelClient
         public const ulong FullPublishVideoBitrate = 1_200_000;
         public const ulong HalfPublishVideoBitrate = MaxPublishVideoBitrate / 2;
         public const ulong QuarterPublishVideoBitrate = MaxPublishVideoBitrate / 4;
+        
+        // StreamTodo: control this via compiler flag
+        public const bool LogWebRTCStats = false;
 
         public CallingState CallState
         {
@@ -96,7 +99,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
                 var prev = _audioInput;
                 _audioInput = value;
 
@@ -121,7 +124,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
                 var prev = _videoInput;
                 _videoInput = value;
 
@@ -207,7 +210,7 @@ namespace StreamVideo.Core.LowLevelClient
         public async Task SendWebRtcStats(SendStatsRequest request)
         {
             var response = await RpcCallAsync(request, GeneratedAPI.SendStats,
-                nameof(GeneratedAPI.SendStats), postLog: false);
+                nameof(GeneratedAPI.SendStats), postLog: LogWebRTCStats);
 
             if (ActiveCall == null)
             {
@@ -382,7 +385,7 @@ namespace StreamVideo.Core.LowLevelClient
          * - we retry when:
          * -- error isn't permanent, SFU didn't change, the mute/publish state didn't change
          * -- we cap at 30 retries to prevent endless loops
-        */
+         */
         private void QueueTracksSubscriptionRequest()
         {
             if (_trackSubscriptionRequested)
@@ -486,10 +489,12 @@ namespace StreamVideo.Core.LowLevelClient
             if (participant == null || participant.SessionId == null)
             {
 #if STREAM_DEBUG_ENABLED
-                _logs.Warning($"Participant or SessionId was null: {participant}, SeessionId: {participant?.SessionId}");
+                _logs.Warning(
+                    $"Participant or SessionId was null: {participant}, SeessionId: {participant?.SessionId}");
 #endif
                 return _config.Video.DefaultParticipantVideoResolution;
             }
+
             if (_videoResolutionByParticipantSessionId.TryGetValue(participant.SessionId, out var resolution))
             {
                 return resolution;
@@ -787,7 +792,7 @@ namespace StreamVideo.Core.LowLevelClient
                 sb.AppendLine("Response:");
                 sb.AppendLine(serializedResponse);
 
-                _logs.Warning(sb.ToString());              
+                _logs.Warning(sb.ToString());
             }
 #endif
 

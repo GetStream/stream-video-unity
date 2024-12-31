@@ -53,6 +53,9 @@ namespace StreamVideo.Core.LowLevelClient
         public const ulong FullPublishVideoBitrate = 1_200_000;
         public const ulong HalfPublishVideoBitrate = MaxPublishVideoBitrate / 2;
         public const ulong QuarterPublishVideoBitrate = MaxPublishVideoBitrate / 4;
+        
+        // StreamTodo: control this via compiler flag
+        public const bool LogWebRTCStats = false;
 
         public CallingState CallState
         {
@@ -96,7 +99,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
                 var prev = _audioInput;
                 _audioInput = value;
 
@@ -121,7 +124,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
                 var prev = _videoInput;
                 _videoInput = value;
 
@@ -207,7 +210,7 @@ namespace StreamVideo.Core.LowLevelClient
         public async Task SendWebRtcStats(SendStatsRequest request)
         {
             var response = await RpcCallAsync(request, GeneratedAPI.SendStats,
-                nameof(GeneratedAPI.SendStats));
+                nameof(GeneratedAPI.SendStats), postLog: LogWebRTCStats);
 
             if (ActiveCall == null)
             {
@@ -382,7 +385,7 @@ namespace StreamVideo.Core.LowLevelClient
          * - we retry when:
          * -- error isn't permanent, SFU didn't change, the mute/publish state didn't change
          * -- we cap at 30 retries to prevent endless loops
-        */
+         */
         private void QueueTracksSubscriptionRequest()
         {
             if (_trackSubscriptionRequested)
@@ -486,10 +489,12 @@ namespace StreamVideo.Core.LowLevelClient
             if (participant == null || participant.SessionId == null)
             {
 #if STREAM_DEBUG_ENABLED
-                _logs.Warning($"Participant or SessionId was null: {participant}, SeessionId: {participant?.SessionId}");
+                _logs.Warning(
+                    $"Participant or SessionId was null: {participant}, SeessionId: {participant?.SessionId}");
 #endif
                 return _config.Video.DefaultParticipantVideoResolution;
             }
+
             if (_videoResolutionByParticipantSessionId.TryGetValue(participant.SessionId, out var resolution))
             {
                 return resolution;
@@ -755,7 +760,7 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: implement retry strategy like in Android SDK
         //If possible, take into account if we the update is still valid e.g. 
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
-            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false)
+            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false, bool postLog = true)
         {
             //StreamTodo: use rpcCallAsync.GetMethodInfo().Name; instead debugRequestName
 
@@ -770,22 +775,25 @@ namespace StreamVideo.Core.LowLevelClient
             var response = await rpcCallAsync(_httpClient, request);
 
 #if STREAM_DEBUG_ENABLED
-            var serializedResponse = _serializer.Serialize(response);
+            if (postLog)
+            {
+                var serializedResponse = _serializer.Serialize(response);
 
-            //StreamTodo: move to debug helper class
-            var sb = new System.Text.StringBuilder();
+                //StreamTodo: move to debug helper class
+                var sb = new System.Text.StringBuilder();
 
-            var errorProperty = typeof(TResponse).GetProperty("Error");
-            var error = (StreamVideo.v1.Sfu.Models.Error)errorProperty.GetValue(response);
-            var errorLog = error != null ? $"<color=red>{error.Message}</color>" : "";
-            var errorStatus = error != null ? "<color=red>FAILED</color>" : "<color=green>SUCCESS</color>";
-            sb.AppendLine($"[RPC Request] {errorStatus} {debugRequestName} | {errorLog}");
-            sb.AppendLine(serializedRequest);
-            sb.AppendLine();
-            sb.AppendLine("Response:");
-            sb.AppendLine(serializedResponse);
+                var errorProperty = typeof(TResponse).GetProperty("Error");
+                var error = (StreamVideo.v1.Sfu.Models.Error)errorProperty.GetValue(response);
+                var errorLog = error != null ? $"<color=red>{error.Message}</color>" : "";
+                var errorStatus = error != null ? "<color=red>FAILED</color>" : "<color=green>SUCCESS</color>";
+                sb.AppendLine($"[RPC Request] {errorStatus} {debugRequestName} | {errorLog}");
+                sb.AppendLine(serializedRequest);
+                sb.AppendLine();
+                sb.AppendLine("Response:");
+                sb.AppendLine(serializedResponse);
 
-            _logs.Warning(sb.ToString());
+                _logs.Warning(sb.ToString());
+            }
 #endif
 
             return response;
@@ -831,6 +839,8 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var offer = await Publisher.CreateOfferAsync();
                 Publisher.ThrowDisposedDuringOperationIfNull();
+
+                //StreamTOodo: check if SDP is null or empty (this would throw an exception during setting)
 
                 //StreamTodo: ignored the _config.Audio.EnableRed because with current webRTC version this modification causes a crash
                 //We're also forcing the red codec in the StreamPeerConnection but atm this results in "InvalidModification"
@@ -926,16 +936,34 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: figure out TrackType, because we rely on transceiver track type mapping we don't support atm screen video/audio share tracks
             //This implementation is based on the Android SDK, perhaps we shouldn't rely on GetTransceivers() but maintain our own TrackType => Transceiver mapping
 
-
             foreach (var t in transceivers)
             {
                 var trackId = t.Sender.Track.Kind == TrackKind.Video ? ExtractVideoTrackId(sdp) : t.Sender.Track.Id;
+
+                if (t.Mid == null)
+                {
+                    // StreamTodo: figure out why this is happening and if there should be any re-try logic. This is part of the SDP negotiation
+                    // Perhaps we need to recreate transceiver. 
+                    // This is happening only sometimes 
+#if STREAM_DEBUG_ENABLED
+                    var sb = new System.Text.StringBuilder();
+                    sb.AppendLine("Error: Track MID was NULL. Transceiver dump:");
+                    sb.AppendLine(DebugObjectPrinter.PrintObject(t));
+                    sb.AppendLine("SDP:");
+                    sb.AppendLine(sdp);
+                    _logs.Error(sb.ToString());
+#endif
+
+                    t.Stop();
+
+                    continue;
+                }
 
                 var trackInfo = new TrackInfo
                 {
                     TrackId = trackId,
                     TrackType = t.Sender.Track.Kind.ToInternalEnum(),
-                    Mid = t.Mid
+                    Mid = t.Mid // Will throw if NULL due to protbuf precondition 
                 };
 
                 if (t.Sender.Track.Kind == TrackKind.Video)
@@ -979,6 +1007,10 @@ namespace StreamVideo.Core.LowLevelClient
         private IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
             PublisherVideoSettings videoSettings)
         {
+#if STREAM_DEBUG_ENABLED
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("GetPublisherVideoLayers:");
+#endif
             foreach (var encoding in encodings)
             {
                 var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
@@ -989,8 +1021,8 @@ namespace StreamVideo.Core.LowLevelClient
                 var quality = EncodingsToVideoQuality(encoding);
 
 #if STREAM_DEBUG_ENABLED
-                _logs.Warning(
-                    $"Video layer - rid: {encoding.rid} quality: {quality}, scaleBy: {scaleBy}, width: {width}, height: {height}, bitrate: {encoding.maxBitrate}");
+                sb.AppendLine(
+                    $"- rid: {encoding.rid} quality: {quality}, scaleBy: {scaleBy}, width: {width}, height: {height}, bitrate: {encoding.maxBitrate}");
 #endif
 
                 yield return new VideoLayer
@@ -1006,6 +1038,10 @@ namespace StreamVideo.Core.LowLevelClient
                     Quality = quality,
                 };
             }
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning(sb.ToString());
+#endif
         }
 
         private static VideoQuality EncodingsToVideoQuality(RTCRtpEncodingParameters encodings)

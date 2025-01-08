@@ -3,6 +3,48 @@ using UnityEngine;
 
 namespace StreamVideo.Core.LowLevelClient
 {
+    internal class AudioNoiseSuppressor
+    {
+        public AudioNoiseSuppressor(int movingAverageWindow = 3)
+        {
+            _previousSamples = new float[movingAverageWindow];
+        }
+        
+        public float[] ProcessAudio(float[] data)
+        {
+            for (var i = 0; i < data.Length; i++)
+            {
+                // First apply noise gate
+                var sample = Mathf.Abs(data[i]) < NoiseGateThreshold ? 0f : data[i];
+            
+                // Then apply moving average
+                // Shift previous samples
+                for (var j = _previousSamples.Length - 1; j > 0; j--)
+                {
+                    _previousSamples[j] = _previousSamples[j-1];
+                }
+                _previousSamples[0] = sample;
+            
+                // Calculate average
+                float sum = 0;
+                for (var j = 0; j < _previousSamples.Length; j++)
+                {
+                    sum += _previousSamples[j];
+                }
+            
+                data[i] = sum / _previousSamples.Length;
+            }
+        
+            return data;
+        }
+        
+        private const float NoiseGateThreshold = 0.00002f;
+
+        // Adjust this for more/less smoothing
+        private const int MovingAverageWindow = 3;
+        
+        private readonly float[] _previousSamples;
+    }
     /// <summary>
     /// This component takes audio chunks from an <see cref="AudioSource"/> and transfers them to an <see cref="AudioStreamTrack"/>.
     /// It also applies AGC (Automatic Gain Control) to the audio in order to make the audio output louder.
@@ -22,6 +64,8 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _debugPrinter.OnAudioFilterReadStart(volumeGain);
 #endif
+            
+            data = _audioNoiseSuppressor.ProcessAudio(data);
 
             for (var i = 0; i < data.Length; i++)
             {
@@ -33,7 +77,10 @@ namespace StreamVideo.Core.LowLevelClient
                 data[i] = Mathf.Clamp(newValue, -1f, 1f);
             }
 
-            _audioStreamTrack.SetData(data, channels, _sampleRate);
+            if (_audioStreamTrack != null)
+            {
+                _audioStreamTrack.SetData(data, channels, _sampleRate);
+            }
 
             // This removes echo from the audio. Echo is related to how much gain we apply. Without any gain there is no echo.
             for (var i = 0; i < data.Length; i++)
@@ -44,14 +91,13 @@ namespace StreamVideo.Core.LowLevelClient
             _debugPrinter.OnAudioFilterReadEnd(data, channels);
 #endif
         }
+        
+        private readonly MumbleStyleAGC _agc = new MumbleStyleAGC();
+        private readonly AudioNoiseSuppressor _audioNoiseSuppressor = new AudioNoiseSuppressor();
+        private readonly DebugPrinter _debugPrinter = new DebugPrinter();
 
         private AudioStreamTrack _audioStreamTrack;
-        private AudioSource _audioSource;
         private int _sampleRate;
-
-
-        private readonly MumbleStyleAGC _agc = new MumbleStyleAGC();
-        private readonly DebugPrinter _debugPrinter = new DebugPrinter();
 
         private class DebugPrinter
         {
@@ -139,7 +185,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         void Awake()
         {
-            _audioSource = GetComponent<AudioSource>();
             _sampleRate = AudioSettings.outputSampleRate;
         }
 #if STREAM_DEBUG_ENABLED

@@ -5,7 +5,7 @@ namespace StreamVideo.Core.LowLevelClient
     /// <summary>
     /// Automatic Gain Control (AGC) algorithm inspired by Mumble.
     /// </summary>
-    internal class MumbleStyleAGC
+    internal class MumbleStyleAutomaticGainControl
     {
         public float CalculateDesiredVolumeGain(float[] data)
         {
@@ -35,14 +35,14 @@ namespace StreamVideo.Core.LowLevelClient
             return _currentGain;
         }
 
-        private const float TargetPeak = 0.3f;
+        private const float TargetPeak = 0.15f;
         private const float GainIncreaseRate = 0.1f;
         private const float GainDecayRate = 0.12f;
         private const float PeakDecayRate = 0.999f;
-        private const float MaxGain = 25.0f;
+        private const float MaxGain = 4.0f;
         private const float MinGain = 1f;
 
-        private float _currentGain = 5.0f;
+        private float _currentGain = 3.0f;
         private float _maxPeak;
     }
 }

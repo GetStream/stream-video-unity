@@ -38,10 +38,10 @@ namespace StreamVideo.Core.LowLevelClient
             return data;
         }
         
-        private const float NoiseGateThreshold = 0.00002f;
+        private const float NoiseGateThreshold = 0.00008f;
 
         // Adjust this for more/less smoothing
-        private const int MovingAverageWindow = 3;
+        private const int MovingAverageWindow = 10;
         
         private readonly float[] _previousSamples;
     }
@@ -60,7 +60,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            var volumeGain = _agc.CalculateDesiredVolumeGain(data);
+            var volumeGain = _automaticGainControl.CalculateDesiredVolumeGain(data);
 #if STREAM_DEBUG_ENABLED
             _debugPrinter.OnAudioFilterReadStart(volumeGain);
 #endif
@@ -92,7 +92,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
         }
         
-        private readonly MumbleStyleAGC _agc = new MumbleStyleAGC();
+        private readonly MumbleStyleAutomaticGainControl _automaticGainControl = new MumbleStyleAutomaticGainControl();
         private readonly AudioNoiseSuppressor _audioNoiseSuppressor = new AudioNoiseSuppressor();
         private readonly DebugPrinter _debugPrinter = new DebugPrinter();
 

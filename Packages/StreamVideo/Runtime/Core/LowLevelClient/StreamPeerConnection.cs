@@ -20,7 +20,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
-        
+
         public event Action<VideoStreamTrack> PublisherVideoTrackChanged;
         public event Action<AudioStreamTrack> PublisherAudioTrackChanged;
 
@@ -549,7 +549,25 @@ namespace StreamVideo.Core.LowLevelClient
             return track;
         }
 
-        private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack(_mediaInputProvider.AudioInput);
+        private AudioStreamTrack CreatePublisherAudioTrack()
+        {
+            if (_mediaInputProvider.AudioInput == null)
+            {
+                throw new ArgumentNullException($"{nameof(_mediaInputProvider.AudioInput)} is null");
+            }
+
+            var audioPostprocessor
+                = _mediaInputProvider.AudioInput.gameObject.GetComponent<StreamAudioTrackProcessor>();
+            if (audioPostprocessor == null)
+            {
+                throw new ArgumentException(
+                    $"{nameof(_mediaInputProvider.AudioInput)} is expected to have the {nameof(StreamAudioTrackProcessor)} component");
+            }
+
+            var audioStreamTrack = new AudioStreamTrack();
+            audioPostprocessor.SetTarget(audioStreamTrack);
+            return audioStreamTrack;
+        }
 
         private void ForceCodec(RTCRtpTransceiver transceiver, string codecKey, TrackKind kind)
         {
@@ -558,7 +576,8 @@ namespace StreamVideo.Core.LowLevelClient
                 => c.mimeType.IndexOf(codecKey, StringComparison.OrdinalIgnoreCase) != -1);
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Info($"Available codec of kind `{kind}`: " + string.Join(", ", capabilities.codecs.Select(c => c.mimeType)));
+            _logs.Info($"Available codec of kind `{kind}`: " +
+                       string.Join(", ", capabilities.codecs.Select(c => c.mimeType)));
 #endif
 
             if (!forcedCodecs.Any())

@@ -11,6 +11,12 @@ namespace StreamVideo.Core.DeviceManagers
 {
     internal class StreamAudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IStreamAudioDeviceManager
     {
+        // StreamTodo: figure out if we should rely on AudioSettings.outputSampleRate or we should store our own value.
+        // If we rely on AudioSettings.outputSampleRate, we should update it on AudioSettings.OnAudioConfigurationChanged
+        // Perhaps we should also verify if the value is valid (e.g. 44100, 48000, etc.)
+        // It also needs to match with Microphone.GetDeviceCaps(device).minFreq and maxFreq
+        public static int RecordingSampleRate = AudioSettings.outputSampleRate;
+        
         //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
         {
@@ -22,7 +28,7 @@ namespace StreamVideo.Core.DeviceManagers
 
         protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msTimeout)
         {
-            const int sampleRate = 44100;
+            int sampleRate = RecordingSampleRate;
             var maxRecordingTime = (int)Math.Ceiling(msTimeout / 1000f);
 
             var clip = Microphone.Start(device.Name, true, maxRecordingTime, sampleRate);
@@ -98,8 +104,9 @@ namespace StreamVideo.Core.DeviceManagers
                 // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
 
                 targetAudioSource.clip
-                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 10, AudioSettings.outputSampleRate);
+                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 1, RecordingSampleRate);
                 targetAudioSource.loop = true;
+                targetAudioSource.volume = 1f;
 
                 using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
                 {
@@ -119,7 +126,7 @@ namespace StreamVideo.Core.DeviceManagers
 
             RtcSession.TrySetAudioTrackEnabled(isEnabled);
         }
-
+        
         protected override void OnUpdate()
         {
             base.OnUpdate();
@@ -163,6 +170,7 @@ namespace StreamVideo.Core.DeviceManagers
             };
 
             _targetAudioSource = _targetAudioSourceContainer.AddComponent<AudioSource>();
+            _targetAudioSourceContainer.AddComponent<StreamAudioTrackProcessor>();
             Client.SetAudioInputSource(_targetAudioSource);
             return _targetAudioSource;
         }

@@ -24,7 +24,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
 
         [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Default)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public TranscriptionSettingsResponseLanguageInternalEnum Language { get; set; } = default!;
+        public TranscriptionSettingsResponseLanguageInternalEnum? Language { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

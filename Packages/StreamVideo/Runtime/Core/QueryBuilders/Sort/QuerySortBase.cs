@@ -11,7 +11,7 @@ namespace StreamVideo.Core.QueryBuilders.Sort
     public abstract class QuerySortBase<TSortType, TFieldType> where TSortType : QuerySortBase<TSortType, TFieldType>
     {
         /// <summary>
-        /// Order by field in an ascending order
+        /// Order by field in ascending order
         /// </summary>
         /// <param name="fieldName"></param>
         /// <returns></returns>
@@ -32,18 +32,18 @@ namespace StreamVideo.Core.QueryBuilders.Sort
             return Instance;
         }
 
-        internal List<SortParamInternalDTO> ToSortParamRequestList()
+        internal List<SortParamRequestInternalDTO> ToSortParamRequestList()
         {
             if (_order.Count == 0)
             {
                 return null;
             }
 
-            var sortParams = new List<SortParamInternalDTO>();
+            var sortParams = new List<SortParamRequestInternalDTO>();
 
             foreach (var entry in _order)
             {
-                sortParams.Add(new SortParamInternalDTO
+                sortParams.Add(new SortParamRequestInternalDTO
                 {
                     Direction = entry.Direction,
                     Field = ToUnderlyingFieldName(entry.Field),

@@ -15,19 +15,34 @@ namespace StreamVideo.Core.InternalDTO.Requests
 {
     using System = global::System;
 
+    /// <summary>
+    /// Create device request
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CreateDeviceRequestInternalDTO
     {
+        /// <summary>
+        /// Device ID
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Default)]
         public string Id { get; set; } = default!;
 
+        /// <summary>
+        /// Push provider
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("push_provider", Required = Newtonsoft.Json.Required.Default)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public CreateDeviceRequestPushProviderInternalEnum PushProvider { get; set; } = default!;
 
+        /// <summary>
+        /// Push provider name
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("push_provider_name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string PushProviderName { get; set; } = default!;
 
+        /// <summary>
+        /// When true the token is for Apple VoIP push notifications
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("voip_token", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool VoipToken { get; set; } = default!;
 

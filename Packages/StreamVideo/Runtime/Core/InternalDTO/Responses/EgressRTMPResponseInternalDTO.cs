@@ -21,11 +21,14 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
         public string Name { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("stream_key", Required = Newtonsoft.Json.Required.Default)]
+        [Newtonsoft.Json.JsonProperty("started_at", Required = Newtonsoft.Json.Required.Default)]
+        public System.DateTimeOffset StartedAt { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("stream_key", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string StreamKey { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("url", Required = Newtonsoft.Json.Required.Default)]
-        public string Url { get; set; } = default!;
+        [Newtonsoft.Json.JsonProperty("stream_url", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string StreamUrl { get; set; } = default!;
 
     }
 

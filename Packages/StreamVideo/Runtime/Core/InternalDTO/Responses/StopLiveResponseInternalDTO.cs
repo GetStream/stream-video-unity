@@ -18,12 +18,12 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class StopLiveResponseInternalDTO
     {
+        /// <summary>
+        /// The call that was stopped
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("call", Required = Newtonsoft.Json.Required.Default)]
         public CallResponseInternalDTO Call { get; set; } = new CallResponseInternalDTO();
 
-        /// <summary>
-        /// Duration of the request in milliseconds
-        /// </summary>
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 

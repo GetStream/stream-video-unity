@@ -21,6 +21,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 
+        /// <summary>
+        /// List of transcriptions for the call
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("transcriptions", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<CallTranscriptionInternalDTO> Transcriptions { get; set; } = new System.Collections.Generic.List<CallTranscriptionInternalDTO>();
 

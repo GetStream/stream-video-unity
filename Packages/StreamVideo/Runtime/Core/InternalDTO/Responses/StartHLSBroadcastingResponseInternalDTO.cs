@@ -15,15 +15,18 @@ namespace StreamVideo.Core.InternalDTO.Responses
 {
     using System = global::System;
 
+    /// <summary>
+    /// StartHLSBroadcastingResponse is the payload for starting an HLS broadcasting.
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class StartHLSBroadcastingResponseInternalDTO
     {
-        /// <summary>
-        /// Duration of the request in milliseconds
-        /// </summary>
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 
+        /// <summary>
+        /// the URL of the HLS playlist
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("playlist_url", Required = Newtonsoft.Json.Required.Default)]
         public string PlaylistUrl { get; set; } = default!;
 

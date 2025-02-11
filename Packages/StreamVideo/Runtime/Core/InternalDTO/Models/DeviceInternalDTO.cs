@@ -36,15 +36,27 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("disabled_reason", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string DisabledReason { get; set; } = default!;
 
+        /// <summary>
+        /// Device ID
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Default)]
         public string Id { get; set; } = default!;
 
+        /// <summary>
+        /// Push provider
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("push_provider", Required = Newtonsoft.Json.Required.Default)]
         public string PushProvider { get; set; } = default!;
 
+        /// <summary>
+        /// Push provider name
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("push_provider_name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string PushProviderName { get; set; } = default!;
 
+        /// <summary>
+        /// User ID
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("user_id", Required = Newtonsoft.Json.Required.Default)]
         public string UserId { get; set; } = default!;
 

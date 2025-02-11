@@ -18,15 +18,9 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class LabelThresholdsInternalDTO
     {
-        /// <summary>
-        /// Threshold for automatic message block
-        /// </summary>
         [Newtonsoft.Json.JsonProperty("block", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public float Block { get; set; } = default!;
 
-        /// <summary>
-        /// Threshold for automatic message flag
-        /// </summary>
         [Newtonsoft.Json.JsonProperty("flag", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public float Flag { get; set; } = default!;
 

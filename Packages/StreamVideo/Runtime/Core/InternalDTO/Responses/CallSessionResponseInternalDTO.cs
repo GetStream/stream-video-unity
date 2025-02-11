@@ -21,6 +21,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("accepted_by", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.Dictionary<string, System.DateTimeOffset> AcceptedBy { get; set; } = new System.Collections.Generic.Dictionary<string, System.DateTimeOffset>();
 
+        [Newtonsoft.Json.JsonProperty("anonymous_participant_count", Required = Newtonsoft.Json.Required.Default)]
+        public int AnonymousParticipantCount { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("ended_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset EndedAt { get; set; } = default!;
 

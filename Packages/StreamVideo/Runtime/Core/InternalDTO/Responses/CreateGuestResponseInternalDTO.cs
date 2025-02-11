@@ -30,6 +30,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 
+        /// <summary>
+        /// User object which server acts upon
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Default)]
         public UserResponseInternalDTO User { get; set; } = new UserResponseInternalDTO();
 

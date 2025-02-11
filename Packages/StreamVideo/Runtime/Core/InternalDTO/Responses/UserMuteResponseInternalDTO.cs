@@ -25,13 +25,13 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public System.DateTimeOffset Expires { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("target", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public UserObjectInternalDTO Target { get; set; } = default!;
+        public UserResponseInternalDTO Target { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("updated_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset UpdatedAt { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public UserObjectInternalDTO User { get; set; } = default!;
+        public UserResponseInternalDTO User { get; set; } = default!;
 
     }
 

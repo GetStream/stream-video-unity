@@ -69,6 +69,12 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
         public string Name { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("partition_size", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int PartitionSize { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("partition_ttl", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int PartitionTtl { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("polls", Required = Newtonsoft.Json.Required.Default)]
         public bool Polls { get; set; } = default!;
 

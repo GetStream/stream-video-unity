@@ -19,7 +19,7 @@ namespace StreamVideo.Core.InternalDTO.Models
     internal partial class VideoQualityInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("resolution", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public VideoResolutionInternalDTO Resolution { get; set; } = default!;
+        public VideoDimensionInternalDTO Resolution { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("usage_type", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string UsageType { get; set; } = default!;

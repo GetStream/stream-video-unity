@@ -36,6 +36,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("first_stats_time", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset FirstStatsTime { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("min_user_rating", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int MinUserRating { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("quality_score", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int QualityScore { get; set; } = default!;
 

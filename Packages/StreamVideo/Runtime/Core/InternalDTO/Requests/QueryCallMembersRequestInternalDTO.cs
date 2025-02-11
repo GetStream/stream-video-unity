@@ -34,7 +34,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         public string Prev { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("sort", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.List<SortParamInternalDTO?> Sort { get; set; } = default!;
+        public System.Collections.Generic.List<SortParamRequestInternalDTO?> Sort { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Default)]
         public string Type { get; set; } = default!;

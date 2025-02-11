@@ -28,6 +28,12 @@ namespace StreamVideo.Core.InternalDTO.Events
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
         /// <summary>
+        /// The duration participant was in the session in seconds
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("duration_seconds", Required = Newtonsoft.Json.Required.Default)]
+        public int DurationSeconds { get; set; } = default!;
+
+        /// <summary>
         /// The participant that left the session
         /// </summary>
         [Newtonsoft.Json.JsonProperty("participant", Required = Newtonsoft.Json.Required.Default)]

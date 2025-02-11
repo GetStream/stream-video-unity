@@ -60,6 +60,12 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("more_info", Required = Newtonsoft.Json.Required.Default)]
         public string MoreInfo { get; set; } = default!;
 
+        /// <summary>
+        /// Flag that indicates if the error is unrecoverable, requests that return unrecoverable errors should not be retried, this error only applies to the request that caused it
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("unrecoverable", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool Unrecoverable { get; set; } = default!;
+
     }
 
 }

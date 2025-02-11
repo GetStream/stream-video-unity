@@ -18,6 +18,20 @@ namespace StreamVideo.Core.InternalDTO.Requests
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class StopLiveRequestInternalDTO
     {
+        [Newtonsoft.Json.JsonProperty("continue_closed_caption", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool ContinueClosedCaption { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("continue_hls", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool ContinueHls { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("continue_recording", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool ContinueRecording { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("continue_rtmp_broadcasts", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool ContinueRtmpBroadcasts { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("continue_transcription", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool ContinueTranscription { get; set; } = default!;
 
     }
 

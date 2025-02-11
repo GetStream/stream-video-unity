@@ -21,6 +21,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("playlist_url", Required = Newtonsoft.Json.Required.Default)]
         public string PlaylistUrl { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.Default)]
+        public string Status { get; set; } = default!;
+
     }
 
 }

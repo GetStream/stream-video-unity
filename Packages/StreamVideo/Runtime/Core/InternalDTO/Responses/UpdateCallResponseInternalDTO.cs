@@ -16,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     /// <summary>
-    /// Represents a call
+    /// Response for updating a call
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class UpdateCallResponseInternalDTO

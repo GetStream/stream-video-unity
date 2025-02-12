@@ -18,6 +18,21 @@ namespace StreamVideo.Core.InternalDTO.Requests
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class StartTranscriptionRequestInternalDTO
     {
+        /// <summary>
+        /// Enable closed captions along with transcriptions
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("enable_closed_captions", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool EnableClosedCaptions { get; set; } = default!;
+
+        /// <summary>
+        /// The spoken language in the call, if not provided the language defined in the transcription settings will be used
+        /// </summary>
+        [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Language { get; set; } = default!;
+
+        /// <summary>
+        /// Store transcriptions in this external storage
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("transcription_external_storage", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string TranscriptionExternalStorage { get; set; } = default!;
 

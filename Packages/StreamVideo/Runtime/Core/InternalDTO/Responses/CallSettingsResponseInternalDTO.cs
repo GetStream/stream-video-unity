@@ -27,6 +27,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Default)]
         public BroadcastSettingsResponseInternalDTO Broadcasting { get; set; } = new BroadcastSettingsResponseInternalDTO();
 
+        [Newtonsoft.Json.JsonProperty("frame_recording", Required = Newtonsoft.Json.Required.Default)]
+        public FrameRecordingSettingsResponseInternalDTO FrameRecording { get; set; } = new FrameRecordingSettingsResponseInternalDTO();
+
         [Newtonsoft.Json.JsonProperty("geofencing", Required = Newtonsoft.Json.Required.Default)]
         public GeofenceSettingsResponseInternalDTO Geofencing { get; set; } = new GeofenceSettingsResponseInternalDTO();
 
@@ -41,6 +44,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
 
         [Newtonsoft.Json.JsonProperty("screensharing", Required = Newtonsoft.Json.Required.Default)]
         public ScreensharingSettingsResponseInternalDTO Screensharing { get; set; } = new ScreensharingSettingsResponseInternalDTO();
+
+        [Newtonsoft.Json.JsonProperty("session", Required = Newtonsoft.Json.Required.Default)]
+        public SessionSettingsResponseInternalDTO Session { get; set; } = new SessionSettingsResponseInternalDTO();
 
         [Newtonsoft.Json.JsonProperty("thumbnails", Required = Newtonsoft.Json.Required.Default)]
         public ThumbnailsSettingsResponseInternalDTO Thumbnails { get; set; } = new ThumbnailsSettingsResponseInternalDTO();

@@ -19,10 +19,12 @@ namespace StreamVideo.Core.InternalDTO.Requests
     internal partial class TranscriptionSettingsRequestInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("closed_caption_mode", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string ClosedCaptionMode { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        public TranscriptionSettingsRequestClosedCaptionModeInternalEnum ClosedCaptionMode { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("languages", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.List<string> Languages { get; set; } = default!;
+        [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        public TranscriptionSettingsRequestLanguageInternalEnum Language { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default)]
         [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]

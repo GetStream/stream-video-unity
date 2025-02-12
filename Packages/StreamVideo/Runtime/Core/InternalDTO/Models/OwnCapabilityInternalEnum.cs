@@ -73,38 +73,44 @@ namespace StreamVideo.Core.InternalDTO.Models
         [System.Runtime.Serialization.EnumMember(Value = @"start-broadcast-call")]
         StartBroadcastCall = 16,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"start-closed-captions-call")]
+        StartClosedCaptionsCall = 17,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"start-frame-record-call")]
+        StartFrameRecordCall = 18,
+
         [System.Runtime.Serialization.EnumMember(Value = @"start-record-call")]
-        StartRecordCall = 17,
+        StartRecordCall = 19,
 
         [System.Runtime.Serialization.EnumMember(Value = @"start-transcription-call")]
-        StartTranscriptionCall = 18,
+        StartTranscriptionCall = 20,
 
         [System.Runtime.Serialization.EnumMember(Value = @"stop-broadcast-call")]
-        StopBroadcastCall = 19,
+        StopBroadcastCall = 21,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"stop-closed-captions-call")]
+        StopClosedCaptionsCall = 22,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"stop-frame-record-call")]
+        StopFrameRecordCall = 23,
 
         [System.Runtime.Serialization.EnumMember(Value = @"stop-record-call")]
-        StopRecordCall = 20,
+        StopRecordCall = 24,
 
         [System.Runtime.Serialization.EnumMember(Value = @"stop-transcription-call")]
-        StopTranscriptionCall = 21,
+        StopTranscriptionCall = 25,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call")]
-        UpdateCall = 22,
+        UpdateCall = 26,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call-member")]
-        UpdateCallMember = 23,
+        UpdateCallMember = 27,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call-permissions")]
-        UpdateCallPermissions = 24,
+        UpdateCallPermissions = 28,
 
         [System.Runtime.Serialization.EnumMember(Value = @"update-call-settings")]
-        UpdateCallSettings = 25,
-        
-        [System.Runtime.Serialization.EnumMember(Value = @"start-closed-captions-call")]
-        StartClosedCaptionsCall = 26,
-        
-        [System.Runtime.Serialization.EnumMember(Value = @"stop-closed-captions-call")]
-        StopClosedCaptionsCall = 27,
+        UpdateCallSettings = 29,
 
     }
 

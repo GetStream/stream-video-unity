@@ -30,8 +30,17 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("reason", Required = Newtonsoft.Json.Required.Default)]
         public string Reason { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("review_queue_item", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public ReviewQueueItemInternalDTO ReviewQueueItem { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("review_queue_item_id", Required = Newtonsoft.Json.Required.Default)]
         public string ReviewQueueItemId { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("target_user", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public UserObjectInternalDTO TargetUser { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("target_user_id", Required = Newtonsoft.Json.Required.Default)]
+        public string TargetUserId { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Default)]
         public string Type { get; set; } = default!;

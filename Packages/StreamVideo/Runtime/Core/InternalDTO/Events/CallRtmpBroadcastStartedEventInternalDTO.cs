@@ -21,12 +21,21 @@ namespace StreamVideo.Core.InternalDTO.Events
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class CallRtmpBroadcastStartedEventInternalDTO
     {
+        /// <summary>
+        /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("call_cid", Required = Newtonsoft.Json.Required.Default)]
         public string CallCid { get; set; } = default!;
 
+        /// <summary>
+        /// Date/time of creation
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
+        /// <summary>
+        /// Name of the given RTMP broadcast
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
         public string Name { get; set; } = default!;
 

@@ -33,7 +33,7 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("sdk_version", Required = Newtonsoft.Json.Required.Default)]
         public string SdkVersion { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("user_session_id", Required = Newtonsoft.Json.Required.Default)]
+        [Newtonsoft.Json.JsonProperty("user_session_id", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string UserSessionId { get; set; } = default!;
 
     }

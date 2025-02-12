@@ -10,13 +10,10 @@ namespace StreamVideo.Core.Models
 
         public string StreamKey { get; private set; }
 
-        public string Url { get; private set; }
-
         void IStateLoadableFrom<EgressRTMPResponseInternalDTO, CallEgressRTMP>.LoadFromDto(EgressRTMPResponseInternalDTO dto, ICache cache)
         {
             Name = dto.Name;
             StreamKey = dto.StreamKey;
-            Url = dto.Url;
         }
     }
 }

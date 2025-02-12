@@ -27,6 +27,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("broadcasting", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public BroadcastSettingsRequestInternalDTO Broadcasting { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("frame_recording", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public FrameRecordingSettingsRequestInternalDTO FrameRecording { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("geofencing", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public GeofenceSettingsRequestInternalDTO Geofencing { get; set; } = default!;
 
@@ -41,6 +44,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
 
         [Newtonsoft.Json.JsonProperty("screensharing", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public ScreensharingSettingsRequestInternalDTO Screensharing { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("session", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public SessionSettingsRequestInternalDTO Session { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("thumbnails", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public ThumbnailsSettingsRequestInternalDTO Thumbnails { get; set; } = default!;

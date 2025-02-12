@@ -33,6 +33,9 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("text", Required = Newtonsoft.Json.Required.Default)]
         public string Text { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Default)]
+        public UserResponseInternalDTO User { get; set; } = new UserResponseInternalDTO();
+
     }
 
 }

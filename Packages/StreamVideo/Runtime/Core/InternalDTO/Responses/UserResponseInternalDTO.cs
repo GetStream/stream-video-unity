@@ -15,12 +15,12 @@ namespace StreamVideo.Core.InternalDTO.Responses
 {
     using System = global::System;
 
+    /// <summary>
+    /// User response object
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class UserResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("banned", Required = Newtonsoft.Json.Required.Default)]
-        public bool Banned { get; set; } = default!;
-
         [Newtonsoft.Json.JsonProperty("blocked_user_ids", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> BlockedUserIds { get; set; } = new System.Collections.Generic.List<string>();
 
@@ -30,9 +30,15 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
+        /// <summary>
+        /// Custom data for this object
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
 
+        /// <summary>
+        /// Date of deactivation
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("deactivated_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset DeactivatedAt { get; set; } = default!;
 
@@ -42,30 +48,48 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("deleted_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset DeletedAt { get; set; } = default!;
 
+        /// <summary>
+        /// Unique user identifier
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Default)]
         public string Id { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Image { get; set; } = default!;
 
+        /// <summary>
+        /// Preferred language of a user
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Default)]
         public string Language { get; set; } = default!;
 
+        /// <summary>
+        /// Date of last activity
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("last_active", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset LastActive { get; set; } = default!;
 
+        /// <summary>
+        /// Optional name of user
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Name { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("online", Required = Newtonsoft.Json.Required.Default)]
-        public bool Online { get; set; } = default!;
-
+        /// <summary>
+        /// Revocation date for tokens
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("revoke_tokens_issued_before", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.DateTimeOffset RevokeTokensIssuedBefore { get; set; } = default!;
 
+        /// <summary>
+        /// Determines the set of user permissions
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("role", Required = Newtonsoft.Json.Required.Default)]
         public string Role { get; set; } = default!;
 
+        /// <summary>
+        /// List of teams user is a part of
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("teams", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> Teams { get; set; } = new System.Collections.Generic.List<string>();
 

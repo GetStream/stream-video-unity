@@ -15,6 +15,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
 {
     using System = global::System;
 
+    /// <summary>
+    /// Update call members
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class UpdateCallMembersRequestInternalDTO
     {

@@ -1,5 +1,4 @@
 ﻿using StreamVideo.Core.InternalDTO.Responses;
-using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 
@@ -10,7 +9,7 @@ namespace StreamVideo.Core.Models
         public string EdgeName { get; private set; }
 
 #if STREAM_LOCAL_SFU
-        public string Url => StreamVideoLowLevelClient.LocalSfuWebSocketUri.ToString();
+        public string Url => StreamVideo.Core.LowLevelClient.StreamVideoLowLevelClient.LocalSfuWebSocketUri.ToString();
 #else
         public string Url { get; private set; }
 #endif

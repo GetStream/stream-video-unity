@@ -1,5 +1,4 @@
-﻿using StreamVideo.Core.InternalDTO.Models;
-using StreamVideo.Core.InternalDTO.Requests;
+﻿using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;

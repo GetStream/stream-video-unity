@@ -35,6 +35,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action<GoAway> GoAway;
         public event Action<ICERestart> IceRestart;
         public event Action<PinsChanged> PinsUpdated;
+        public event Action CallEnded;
+        public event Action<ParticipantUpdated> ParticipantUpdated;
+        public event Action ParticipantMigrationComplete;
+        public event Action<ChangePublishOptions> ChangePublishOptions;
 
         public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,
@@ -199,7 +203,18 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                     case SfuEvent.EventPayloadOneofCase.PinsUpdated:
                         PinsUpdated?.Invoke(sfuEvent.PinsUpdated);
                         break;
-
+                    case SfuEvent.EventPayloadOneofCase.CallEnded:
+                        CallEnded?.Invoke();
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.ParticipantUpdated:
+                        ParticipantUpdated?.Invoke(sfuEvent.ParticipantUpdated);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.ParticipantMigrationComplete:
+                        ParticipantMigrationComplete?.Invoke();
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.ChangePublishOptions:
+                        ChangePublishOptions?.Invoke(sfuEvent.ChangePublishOptions);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(sfuEvent.EventPayloadCase),
                             sfuEvent.EventPayloadCase, null);

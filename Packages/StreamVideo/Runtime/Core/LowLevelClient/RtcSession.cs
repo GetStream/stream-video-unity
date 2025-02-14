@@ -220,7 +220,11 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (response.Error != null)
             {
-                _logs.Error(response.Error.Message);
+                // StreamTodo: perhaps failure on stats sending should be silent? This can return "call not found" if call ended before `call.ended` event was received
+                // Maybe we can wait 1-2s before displaying the error to cover this case
+                
+                _logs.Warning("Sending webRTC stats failed: " + response.Error.Message);
+                _logs.ErrorIfDebug("Sending webRTC stats failed: " + response.Error.Message);
             }
         }
 

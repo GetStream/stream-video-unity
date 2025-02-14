@@ -281,12 +281,9 @@ namespace StreamVideo.Core
 
         Task IInternalStreamVideoClient.LeaveCallAsync(IStreamCall call) => LeaveCallAsync(call);
 
-        async Task IInternalStreamVideoClient.EndCallAsync(IStreamCall call)
-        {
-            //StreamTodo: check if call is active
-            await InternalLowLevelClient.InternalVideoClientApi.EndCallAsync(call.Type, call.Id);
-            await LeaveCallAsync(call);
-        }
+        // Leaving the call will be triggered by the received `call.ended` event
+        Task IInternalStreamVideoClient.EndCallAsync(IStreamCall call)
+            => InternalLowLevelClient.InternalVideoClientApi.EndCallAsync(call.Type, call.Id);
 
         Task IInternalStreamVideoClient.StartHLSAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StartBroadcastingAsync(call.Type, call.Id);
@@ -390,8 +387,15 @@ namespace StreamVideo.Core
 
         private async Task LeaveCallAsync(IStreamCall call)
         {
-            //StreamTodo: check if call is active
-            await InternalLowLevelClient.RtcSession.StopAsync();
+            try
+            {
+                await InternalLowLevelClient.RtcSession.StopAsync();
+            }
+            catch (Exception e)
+            {
+                _logs.Exception(e);
+            }
+
             CallEnded?.Invoke(call);
         }
 
@@ -506,6 +510,11 @@ namespace StreamVideo.Core
         private void OnInternalCallEndedEvent(CallEndedEventInternalDTO eventData)
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
+            if (call == null)
+            {
+                _logs.Error($"Received call ended event for a call that doesn't exist. {nameof(eventData.Call.Cid)}:" + eventData?.Call?.Cid);
+                return;
+            }
             call.LeaveAsync().LogIfFailed();
         }
 

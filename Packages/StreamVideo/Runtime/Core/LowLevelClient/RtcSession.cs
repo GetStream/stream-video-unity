@@ -735,30 +735,57 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuIceRestart(ICERestart iceRestart)
         {
+            // StreamTODO: Implement OnSfuIceRestart
         }
 
         private void OnSfuGoAway(GoAway goAway)
         {
+            // StreamTODO: Implement OnSfuGoAway
         }
 
         private void OnSfuCallGrantsUpdated(CallGrantsUpdated callGrantsUpdated)
         {
+            // StreamTODO: Implement OnSfuCallGrantsUpdated
         }
 
         private void OnSfuChangePublishQuality(ChangePublishQuality changePublishQuality)
         {
+            // StreamTODO: Implement OnSfuChangePublishQuality
         }
 
         private void OnSfuConnectionQualityChanged(ConnectionQualityChanged connectionQualityChanged)
         {
+            // StreamTODO: Implement OnSfuConnectionQualityChanged
         }
 
         private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)
         {
+            // StreamTODO: Implement OnSfuAudioLevelChanged
         }
 
         private void OnSfuPublisherAnswer(PublisherAnswer publisherAnswer)
         {
+            // StreamTODO: Implement OnSfuPublisherAnswer
+        }
+        
+        private void OnSfuWebSocketOnChangePublishOptions(ChangePublishOptions obj)
+        {
+            // StreamTODO: Implement OnSfuWebSocketOnChangePublishOptions
+        }
+
+        private void OnSfuWebSocketOnParticipantMigrationComplete()
+        {
+            // StreamTODO: Implement OnSfuWebSocketOnParticipantMigrationComplete
+        }
+
+        private void OnSfuWebSocketOnParticipantUpdated(ParticipantUpdated obj)
+        {
+            // StreamTODO: Implement OnSfuWebSocketOnParticipantUpdated
+        }
+
+        private void OnSfuWebSocketOnCallEnded()
+        {
+            // StreamTODO: Implement OnSfuWebSocketOnCallEnded
         }
 
         //StreamTodo: implement retry strategy like in Android SDK
@@ -1201,9 +1228,12 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.CallGrantsUpdated += OnSfuCallGrantsUpdated;
             _sfuWebSocket.GoAway += OnSfuGoAway;
             _sfuWebSocket.IceRestart += OnSfuIceRestart;
-            _sfuWebSocket.PinsUpdated += OnSfuPinsUpdated;
+            _sfuWebSocket.CallEnded += OnSfuWebSocketOnCallEnded;
+            _sfuWebSocket.ParticipantUpdated += OnSfuWebSocketOnParticipantUpdated;
+            _sfuWebSocket.ParticipantMigrationComplete += OnSfuWebSocketOnParticipantMigrationComplete;
+            _sfuWebSocket.ChangePublishOptions += OnSfuWebSocketOnChangePublishOptions;
         }
-
+        
         private void UnsubscribeFromSfuEvents()
         {
             _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
@@ -1223,6 +1253,10 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.GoAway -= OnSfuGoAway;
             _sfuWebSocket.IceRestart -= OnSfuIceRestart;
             _sfuWebSocket.PinsUpdated -= OnSfuPinsUpdated;
+            _sfuWebSocket.CallEnded -= OnSfuWebSocketOnCallEnded;
+            _sfuWebSocket.ParticipantUpdated -= OnSfuWebSocketOnParticipantUpdated;
+            _sfuWebSocket.ParticipantMigrationComplete -= OnSfuWebSocketOnParticipantMigrationComplete;
+            _sfuWebSocket.ChangePublishOptions -= OnSfuWebSocketOnChangePublishOptions;
         }
     }
 }

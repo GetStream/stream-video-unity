@@ -26,7 +26,7 @@ namespace StreamVideo.v1.Sfu.Events {
           string.Concat(
             "Chx2aWRlby9zZnUvZXZlbnQvZXZlbnRzLnByb3RvEhZzdHJlYW0udmlkZW8u",
             "c2Z1LmV2ZW50Gh12aWRlby9zZnUvbW9kZWxzL21vZGVscy5wcm90bxohdmlk",
-            "ZW8vc2Z1L3NpZ25hbF9ycGMvc2lnbmFsLnByb3RvIvEJCghTZnVFdmVudBJD",
+            "ZW8vc2Z1L3NpZ25hbF9ycGMvc2lnbmFsLnByb3RvIqUMCghTZnVFdmVudBJD",
             "ChBzdWJzY3JpYmVyX29mZmVyGAEgASgLMicuc3RyZWFtLnZpZGVvLnNmdS5l",
             "dmVudC5TdWJzY3JpYmVyT2ZmZXJIABJDChBwdWJsaXNoZXJfYW5zd2VyGAIg",
             "ASgLMicuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5QdWJsaXNoZXJBbnN3ZXJI",
@@ -54,101 +54,135 @@ namespace StreamVideo.v1.Sfu.Events {
             "KAsyHi5zdHJlYW0udmlkZW8uc2Z1LmV2ZW50LkdvQXdheUgAEjkKC2ljZV9y",
             "ZXN0YXJ0GBUgASgLMiIuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5JQ0VSZXN0",
             "YXJ0SAASOwoMcGluc191cGRhdGVkGBYgASgLMiMuc3RyZWFtLnZpZGVvLnNm",
-            "dS5ldmVudC5QaW5zQ2hhbmdlZEgAQg8KDWV2ZW50X3BheWxvYWQiOQoLUGlu",
-            "c0NoYW5nZWQSKgoEcGlucxgBIAMoCzIcLnN0cmVhbS52aWRlby5zZnUubW9k",
-            "ZWxzLlBpbiI2CgVFcnJvchItCgVlcnJvchgEIAEoCzIeLnN0cmVhbS52aWRl",
-            "by5zZnUubW9kZWxzLkVycm9yIlkKCklDRVRyaWNrbGUSNAoJcGVlcl90eXBl",
-            "GAEgASgOMiEuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUGVlclR5cGUSFQoN",
-            "aWNlX2NhbmRpZGF0ZRgCIAEoCSJCCgpJQ0VSZXN0YXJ0EjQKCXBlZXJfdHlw",
-            "ZRgBIAEoDjIhLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlBlZXJUeXBlIqgB",
-            "CgpTZnVSZXF1ZXN0EjsKDGpvaW5fcmVxdWVzdBgBIAEoCzIjLnN0cmVhbS52",
-            "aWRlby5zZnUuZXZlbnQuSm9pblJlcXVlc3RIABJKChRoZWFsdGhfY2hlY2tf",
-            "cmVxdWVzdBgCIAEoCzIqLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuSGVhbHRo",
-            "Q2hlY2tSZXF1ZXN0SABCEQoPcmVxdWVzdF9wYXlsb2FkIhQKEkhlYWx0aENo",
-            "ZWNrUmVxdWVzdCJbChNIZWFsdGhDaGVja1Jlc3BvbnNlEkQKEXBhcnRpY2lw",
-            "YW50X2NvdW50GAEgASgLMikuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUGFy",
-            "dGljaXBhbnRDb3VudCKiAQoOVHJhY2tQdWJsaXNoZWQSDwoHdXNlcl9pZBgB",
-            "IAEoCRISCgpzZXNzaW9uX2lkGAIgASgJEjAKBHR5cGUYAyABKA4yIi5zdHJl",
-            "YW0udmlkZW8uc2Z1Lm1vZGVscy5UcmFja1R5cGUSOQoLcGFydGljaXBhbnQY",
-            "BCABKAsyJC5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5QYXJ0aWNpcGFudCLi",
-            "AQoQVHJhY2tVbnB1Ymxpc2hlZBIPCgd1c2VyX2lkGAEgASgJEhIKCnNlc3Np",
-            "b25faWQYAiABKAkSMAoEdHlwZRgDIAEoDjIiLnN0cmVhbS52aWRlby5zZnUu",
-            "bW9kZWxzLlRyYWNrVHlwZRI8CgVjYXVzZRgEIAEoDjItLnN0cmVhbS52aWRl",
-            "by5zZnUubW9kZWxzLlRyYWNrVW5wdWJsaXNoUmVhc29uEjkKC3BhcnRpY2lw",
-            "YW50GAUgASgLMiQuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUGFydGljaXBh",
-            "bnQi1gEKC0pvaW5SZXF1ZXN0Eg0KBXRva2VuGAEgASgJEhIKCnNlc3Npb25f",
-            "aWQYAiABKAkSFgoOc3Vic2NyaWJlcl9zZHAYAyABKAkSPgoOY2xpZW50X2Rl",
-            "dGFpbHMYBCABKAsyJi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5DbGllbnRE",
-            "ZXRhaWxzEjQKCW1pZ3JhdGlvbhgFIAEoCzIhLnN0cmVhbS52aWRlby5zZnUu",
-            "ZXZlbnQuTWlncmF0aW9uEhYKDmZhc3RfcmVjb25uZWN0GAYgASgIIqgBCglN",
-            "aWdyYXRpb24SEwoLZnJvbV9zZnVfaWQYASABKAkSPAoQYW5ub3VuY2VkX3Ry",
-            "YWNrcxgCIAMoCzIiLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlRyYWNrSW5m",
-            "bxJICg1zdWJzY3JpcHRpb25zGAMgAygLMjEuc3RyZWFtLnZpZGVvLnNmdS5z",
-            "aWduYWwuVHJhY2tTdWJzY3JpcHRpb25EZXRhaWxzIlsKDEpvaW5SZXNwb25z",
-            "ZRI2CgpjYWxsX3N0YXRlGAEgASgLMiIuc3RyZWFtLnZpZGVvLnNmdS5tb2Rl",
-            "bHMuQ2FsbFN0YXRlEhMKC3JlY29ubmVjdGVkGAIgASgIImAKEVBhcnRpY2lw",
-            "YW50Sm9pbmVkEhAKCGNhbGxfY2lkGAEgASgJEjkKC3BhcnRpY2lwYW50GAIg",
-            "ASgLMiQuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUGFydGljaXBhbnQiXgoP",
-            "UGFydGljaXBhbnRMZWZ0EhAKCGNhbGxfY2lkGAEgASgJEjkKC3BhcnRpY2lw",
-            "YW50GAIgASgLMiQuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUGFydGljaXBh",
-            "bnQiMwoPU3Vic2NyaWJlck9mZmVyEhMKC2ljZV9yZXN0YXJ0GAEgASgIEgsK",
-            "A3NkcBgCIAEoCSIeCg9QdWJsaXNoZXJBbnN3ZXISCwoDc2RwGAEgASgJIm0K",
-            "GENvbm5lY3Rpb25RdWFsaXR5Q2hhbmdlZBJRChpjb25uZWN0aW9uX3F1YWxp",
-            "dHlfdXBkYXRlcxgBIAMoCzItLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuQ29u",
-            "bmVjdGlvblF1YWxpdHlJbmZvIoQBChVDb25uZWN0aW9uUXVhbGl0eUluZm8S",
-            "DwoHdXNlcl9pZBgBIAEoCRISCgpzZXNzaW9uX2lkGAIgASgJEkYKEmNvbm5l",
-            "Y3Rpb25fcXVhbGl0eRgDIAEoDjIqLnN0cmVhbS52aWRlby5zZnUubW9kZWxz",
-            "LkNvbm5lY3Rpb25RdWFsaXR5Ij0KFkRvbWluYW50U3BlYWtlckNoYW5nZWQS",
-            "DwoHdXNlcl9pZBgBIAEoCRISCgpzZXNzaW9uX2lkGAIgASgJIlUKCkF1ZGlv",
-            "TGV2ZWwSDwoHdXNlcl9pZBgBIAEoCRISCgpzZXNzaW9uX2lkGAIgASgJEg0K",
-            "BWxldmVsGAMgASgCEhMKC2lzX3NwZWFraW5nGAQgASgIIk0KEUF1ZGlvTGV2",
-            "ZWxDaGFuZ2VkEjgKDGF1ZGlvX2xldmVscxgBIAMoCzIiLnN0cmVhbS52aWRl",
-            "by5zZnUuZXZlbnQuQXVkaW9MZXZlbCIqChFBdWRpb01lZGlhUmVxdWVzdBIV",
-            "Cg1jaGFubmVsX2NvdW50GAEgASgFIn4KC0F1ZGlvU2VuZGVyEkAKDW1lZGlh",
-            "X3JlcXVlc3QYASABKAsyKS5zdHJlYW0udmlkZW8uc2Z1LmV2ZW50LkF1ZGlv",
-            "TWVkaWFSZXF1ZXN0Ei0KBWNvZGVjGAIgASgLMh4uc3RyZWFtLnZpZGVvLnNm",
-            "dS5tb2RlbHMuQ29kZWMiWAoRVmlkZW9NZWRpYVJlcXVlc3QSFAoMaWRlYWxf",
-            "aGVpZ2h0GAEgASgFEhMKC2lkZWFsX3dpZHRoGAIgASgFEhgKEGlkZWFsX2Zy",
-            "YW1lX3JhdGUYAyABKAUi3QIKEVZpZGVvTGF5ZXJTZXR0aW5nEgwKBG5hbWUY",
-            "ASABKAkSDgoGYWN0aXZlGAIgASgIEhMKC21heF9iaXRyYXRlGAMgASgFEiAK",
-            "GHNjYWxlX3Jlc29sdXRpb25fZG93bl9ieRgEIAEoAhJECghwcmlvcml0eRgF",
-            "IAEoDjIyLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuVmlkZW9MYXllclNldHRp",
-            "bmcuUHJpb3JpdHkSLQoFY29kZWMYBiABKAsyHi5zdHJlYW0udmlkZW8uc2Z1",
-            "Lm1vZGVscy5Db2RlYxIVCg1tYXhfZnJhbWVyYXRlGAcgASgNImcKCFByaW9y",
-            "aXR5Eh0KGVBSSU9SSVRZX0hJR0hfVU5TUEVDSUZJRUQQABIQCgxQUklPUklU",
-            "WV9MT1cQARITCg9QUklPUklUWV9NRURJVU0QAhIVChFQUklPUklUWV9WRVJZ",
-            "X0xPVxADIrkBCgtWaWRlb1NlbmRlchJACg1tZWRpYV9yZXF1ZXN0GAEgASgL",
-            "Mikuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5WaWRlb01lZGlhUmVxdWVzdBIt",
-            "CgVjb2RlYxgCIAEoCzIeLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkNvZGVj",
-            "EjkKBmxheWVycxgDIAMoCzIpLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuVmlk",
-            "ZW9MYXllclNldHRpbmcijgEKFENoYW5nZVB1Ymxpc2hRdWFsaXR5EjoKDWF1",
-            "ZGlvX3NlbmRlcnMYASADKAsyIy5zdHJlYW0udmlkZW8uc2Z1LmV2ZW50LkF1",
-            "ZGlvU2VuZGVyEjoKDXZpZGVvX3NlbmRlcnMYAiADKAsyIy5zdHJlYW0udmlk",
-            "ZW8uc2Z1LmV2ZW50LlZpZGVvU2VuZGVyImEKEUNhbGxHcmFudHNVcGRhdGVk",
-            "EjsKDmN1cnJlbnRfZ3JhbnRzGAEgASgLMiMuc3RyZWFtLnZpZGVvLnNmdS5t",
-            "b2RlbHMuQ2FsbEdyYW50cxIPCgdtZXNzYWdlGAIgASgJIj8KBkdvQXdheRI1",
-            "CgZyZWFzb24YASABKA4yJS5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5Hb0F3",
-            "YXlSZWFzb25CY0ILU2Z1RXZlbnRzVjFQAVo2Z2l0aHViLmNvbS9HZXRTdHJl",
-            "YW0vcHJvdG9jb2wvcHJvdG9idWYvdmlkZW8vc2Z1L2V2ZW50qgIZU3RyZWFt",
-            "VmlkZW8udjEuU2Z1LkV2ZW50c2IGcHJvdG8z"));
+            "dS5ldmVudC5QaW5zQ2hhbmdlZEgAEjcKCmNhbGxfZW5kZWQYFyABKAsyIS5z",
+            "dHJlYW0udmlkZW8uc2Z1LmV2ZW50LkNhbGxFbmRlZEgAEkkKE3BhcnRpY2lw",
+            "YW50X3VwZGF0ZWQYGCABKAsyKi5zdHJlYW0udmlkZW8uc2Z1LmV2ZW50LlBh",
+            "cnRpY2lwYW50VXBkYXRlZEgAEl4KHnBhcnRpY2lwYW50X21pZ3JhdGlvbl9j",
+            "b21wbGV0ZRgZIAEoCzI0LnN0cmVhbS52aWRlby5zZnUuZXZlbnQuUGFydGlj",
+            "aXBhbnRNaWdyYXRpb25Db21wbGV0ZUgAEk4KFmNoYW5nZV9wdWJsaXNoX29w",
+            "dGlvbnMYGyABKAsyLC5zdHJlYW0udmlkZW8uc2Z1LmV2ZW50LkNoYW5nZVB1",
+            "Ymxpc2hPcHRpb25zSABCDwoNZXZlbnRfcGF5bG9hZCJnChRDaGFuZ2VQdWJs",
+            "aXNoT3B0aW9ucxI/Cg9wdWJsaXNoX29wdGlvbnMYASADKAsyJi5zdHJlYW0u",
+            "dmlkZW8uc2Z1Lm1vZGVscy5QdWJsaXNoT3B0aW9uEg4KBnJlYXNvbhgCIAEo",
+            "CSIeChxDaGFuZ2VQdWJsaXNoT3B0aW9uc0NvbXBsZXRlIh4KHFBhcnRpY2lw",
+            "YW50TWlncmF0aW9uQ29tcGxldGUiOQoLUGluc0NoYW5nZWQSKgoEcGlucxgB",
+            "IAMoCzIcLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlBpbiKHAQoFRXJyb3IS",
+            "LQoFZXJyb3IYBCABKAsyHi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5FcnJv",
+            "chJPChJyZWNvbm5lY3Rfc3RyYXRlZ3kYBSABKA4yMy5zdHJlYW0udmlkZW8u",
+            "c2Z1Lm1vZGVscy5XZWJzb2NrZXRSZWNvbm5lY3RTdHJhdGVneSJZCgpJQ0VU",
+            "cmlja2xlEjQKCXBlZXJfdHlwZRgBIAEoDjIhLnN0cmVhbS52aWRlby5zZnUu",
+            "bW9kZWxzLlBlZXJUeXBlEhUKDWljZV9jYW5kaWRhdGUYAiABKAkiQgoKSUNF",
+            "UmVzdGFydBI0CglwZWVyX3R5cGUYASABKA4yIS5zdHJlYW0udmlkZW8uc2Z1",
+            "Lm1vZGVscy5QZWVyVHlwZSLwAQoKU2Z1UmVxdWVzdBI7Cgxqb2luX3JlcXVl",
+            "c3QYASABKAsyIy5zdHJlYW0udmlkZW8uc2Z1LmV2ZW50LkpvaW5SZXF1ZXN0",
+            "SAASSgoUaGVhbHRoX2NoZWNrX3JlcXVlc3QYAiABKAsyKi5zdHJlYW0udmlk",
+            "ZW8uc2Z1LmV2ZW50LkhlYWx0aENoZWNrUmVxdWVzdEgAEkYKEmxlYXZlX2Nh",
+            "bGxfcmVxdWVzdBgDIAEoCzIoLnN0cmVhbS52aWRlby5zZnUuZXZlbnQuTGVh",
+            "dmVDYWxsUmVxdWVzdEgAQhEKD3JlcXVlc3RfcGF5bG9hZCI2ChBMZWF2ZUNh",
+            "bGxSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSDgoGcmVhc29uGAIgASgJ",
+            "IhQKEkhlYWx0aENoZWNrUmVxdWVzdCJbChNIZWFsdGhDaGVja1Jlc3BvbnNl",
+            "EkQKEXBhcnRpY2lwYW50X2NvdW50GAEgASgLMikuc3RyZWFtLnZpZGVvLnNm",
+            "dS5tb2RlbHMuUGFydGljaXBhbnRDb3VudCKiAQoOVHJhY2tQdWJsaXNoZWQS",
+            "DwoHdXNlcl9pZBgBIAEoCRISCgpzZXNzaW9uX2lkGAIgASgJEjAKBHR5cGUY",
+            "AyABKA4yIi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5UcmFja1R5cGUSOQoL",
+            "cGFydGljaXBhbnQYBCABKAsyJC5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5Q",
+            "YXJ0aWNpcGFudCLiAQoQVHJhY2tVbnB1Ymxpc2hlZBIPCgd1c2VyX2lkGAEg",
+            "ASgJEhIKCnNlc3Npb25faWQYAiABKAkSMAoEdHlwZRgDIAEoDjIiLnN0cmVh",
+            "bS52aWRlby5zZnUubW9kZWxzLlRyYWNrVHlwZRI8CgVjYXVzZRgEIAEoDjIt",
+            "LnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlRyYWNrVW5wdWJsaXNoUmVhc29u",
+            "EjkKC3BhcnRpY2lwYW50GAUgASgLMiQuc3RyZWFtLnZpZGVvLnNmdS5tb2Rl",
+            "bHMuUGFydGljaXBhbnQi1AMKC0pvaW5SZXF1ZXN0Eg0KBXRva2VuGAEgASgJ",
+            "EhIKCnNlc3Npb25faWQYAiABKAkSFgoOc3Vic2NyaWJlcl9zZHAYAyABKAkS",
+            "FQoNcHVibGlzaGVyX3NkcBgIIAEoCRI+Cg5jbGllbnRfZGV0YWlscxgEIAEo",
+            "CzImLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkNsaWVudERldGFpbHMSOAoJ",
+            "bWlncmF0aW9uGAUgASgLMiEuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5NaWdy",
+            "YXRpb25CAhgBEhoKDmZhc3RfcmVjb25uZWN0GAYgASgIQgIYARJDChFyZWNv",
+            "bm5lY3RfZGV0YWlscxgHIAEoCzIoLnN0cmVhbS52aWRlby5zZnUuZXZlbnQu",
+            "UmVjb25uZWN0RGV0YWlscxJJChlwcmVmZXJyZWRfcHVibGlzaF9vcHRpb25z",
+            "GAkgAygLMiYuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUHVibGlzaE9wdGlv",
+            "bhJNChtwcmVmZXJyZWRfc3Vic2NyaWJlX29wdGlvbnMYCiADKAsyKC5zdHJl",
+            "YW0udmlkZW8uc2Z1Lm1vZGVscy5TdWJzY3JpYmVPcHRpb24irgIKEFJlY29u",
+            "bmVjdERldGFpbHMSRQoIc3RyYXRlZ3kYASABKA4yMy5zdHJlYW0udmlkZW8u",
+            "c2Z1Lm1vZGVscy5XZWJzb2NrZXRSZWNvbm5lY3RTdHJhdGVneRI8ChBhbm5v",
+            "dW5jZWRfdHJhY2tzGAMgAygLMiIuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMu",
+            "VHJhY2tJbmZvEkgKDXN1YnNjcmlwdGlvbnMYBCADKAsyMS5zdHJlYW0udmlk",
+            "ZW8uc2Z1LnNpZ25hbC5UcmFja1N1YnNjcmlwdGlvbkRldGFpbHMSGQoRcmVj",
+            "b25uZWN0X2F0dGVtcHQYBSABKA0SEwoLZnJvbV9zZnVfaWQYBiABKAkSGwoT",
+            "cHJldmlvdXNfc2Vzc2lvbl9pZBgHIAEoCSKoAQoJTWlncmF0aW9uEhMKC2Zy",
+            "b21fc2Z1X2lkGAEgASgJEjwKEGFubm91bmNlZF90cmFja3MYAiADKAsyIi5z",
+            "dHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5UcmFja0luZm8SSAoNc3Vic2NyaXB0",
+            "aW9ucxgDIAMoCzIxLnN0cmVhbS52aWRlby5zZnUuc2lnbmFsLlRyYWNrU3Vi",
+            "c2NyaXB0aW9uRGV0YWlscyLFAQoMSm9pblJlc3BvbnNlEjYKCmNhbGxfc3Rh",
+            "dGUYASABKAsyIi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5DYWxsU3RhdGUS",
+            "EwoLcmVjb25uZWN0ZWQYAiABKAgSJwofZmFzdF9yZWNvbm5lY3RfZGVhZGxp",
+            "bmVfc2Vjb25kcxgDIAEoBRI/Cg9wdWJsaXNoX29wdGlvbnMYBCADKAsyJi5z",
+            "dHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5QdWJsaXNoT3B0aW9uImAKEVBhcnRp",
+            "Y2lwYW50Sm9pbmVkEhAKCGNhbGxfY2lkGAEgASgJEjkKC3BhcnRpY2lwYW50",
+            "GAIgASgLMiQuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUGFydGljaXBhbnQi",
+            "XgoPUGFydGljaXBhbnRMZWZ0EhAKCGNhbGxfY2lkGAEgASgJEjkKC3BhcnRp",
+            "Y2lwYW50GAIgASgLMiQuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUGFydGlj",
+            "aXBhbnQiYQoSUGFydGljaXBhbnRVcGRhdGVkEhAKCGNhbGxfY2lkGAEgASgJ",
+            "EjkKC3BhcnRpY2lwYW50GAIgASgLMiQuc3RyZWFtLnZpZGVvLnNmdS5tb2Rl",
+            "bHMuUGFydGljaXBhbnQiMwoPU3Vic2NyaWJlck9mZmVyEhMKC2ljZV9yZXN0",
+            "YXJ0GAEgASgIEgsKA3NkcBgCIAEoCSIeCg9QdWJsaXNoZXJBbnN3ZXISCwoD",
+            "c2RwGAEgASgJIm0KGENvbm5lY3Rpb25RdWFsaXR5Q2hhbmdlZBJRChpjb25u",
+            "ZWN0aW9uX3F1YWxpdHlfdXBkYXRlcxgBIAMoCzItLnN0cmVhbS52aWRlby5z",
+            "ZnUuZXZlbnQuQ29ubmVjdGlvblF1YWxpdHlJbmZvIoQBChVDb25uZWN0aW9u",
+            "UXVhbGl0eUluZm8SDwoHdXNlcl9pZBgBIAEoCRISCgpzZXNzaW9uX2lkGAIg",
+            "ASgJEkYKEmNvbm5lY3Rpb25fcXVhbGl0eRgDIAEoDjIqLnN0cmVhbS52aWRl",
+            "by5zZnUubW9kZWxzLkNvbm5lY3Rpb25RdWFsaXR5Ij0KFkRvbWluYW50U3Bl",
+            "YWtlckNoYW5nZWQSDwoHdXNlcl9pZBgBIAEoCRISCgpzZXNzaW9uX2lkGAIg",
+            "ASgJIlUKCkF1ZGlvTGV2ZWwSDwoHdXNlcl9pZBgBIAEoCRISCgpzZXNzaW9u",
+            "X2lkGAIgASgJEg0KBWxldmVsGAMgASgCEhMKC2lzX3NwZWFraW5nGAQgASgI",
+            "Ik0KEUF1ZGlvTGV2ZWxDaGFuZ2VkEjgKDGF1ZGlvX2xldmVscxgBIAMoCzIi",
+            "LnN0cmVhbS52aWRlby5zZnUuZXZlbnQuQXVkaW9MZXZlbCKPAQoLQXVkaW9T",
+            "ZW5kZXISLQoFY29kZWMYAiABKAsyHi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVs",
+            "cy5Db2RlYxI2Cgp0cmFja190eXBlGAMgASgOMiIuc3RyZWFtLnZpZGVvLnNm",
+            "dS5tb2RlbHMuVHJhY2tUeXBlEhkKEXB1Ymxpc2hfb3B0aW9uX2lkGAQgASgF",
+            "IsgBChFWaWRlb0xheWVyU2V0dGluZxIMCgRuYW1lGAEgASgJEg4KBmFjdGl2",
+            "ZRgCIAEoCBITCgttYXhfYml0cmF0ZRgDIAEoBRIgChhzY2FsZV9yZXNvbHV0",
+            "aW9uX2Rvd25fYnkYBCABKAISLQoFY29kZWMYBiABKAsyHi5zdHJlYW0udmlk",
+            "ZW8uc2Z1Lm1vZGVscy5Db2RlYxIVCg1tYXhfZnJhbWVyYXRlGAcgASgNEhgK",
+            "EHNjYWxhYmlsaXR5X21vZGUYCCABKAkiygEKC1ZpZGVvU2VuZGVyEi0KBWNv",
+            "ZGVjGAIgASgLMh4uc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuQ29kZWMSOQoG",
+            "bGF5ZXJzGAMgAygLMikuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5WaWRlb0xh",
+            "eWVyU2V0dGluZxI2Cgp0cmFja190eXBlGAQgASgOMiIuc3RyZWFtLnZpZGVv",
+            "LnNmdS5tb2RlbHMuVHJhY2tUeXBlEhkKEXB1Ymxpc2hfb3B0aW9uX2lkGAUg",
+            "ASgFIo4BChRDaGFuZ2VQdWJsaXNoUXVhbGl0eRI6Cg1hdWRpb19zZW5kZXJz",
+            "GAEgAygLMiMuc3RyZWFtLnZpZGVvLnNmdS5ldmVudC5BdWRpb1NlbmRlchI6",
+            "Cg12aWRlb19zZW5kZXJzGAIgAygLMiMuc3RyZWFtLnZpZGVvLnNmdS5ldmVu",
+            "dC5WaWRlb1NlbmRlciJhChFDYWxsR3JhbnRzVXBkYXRlZBI7Cg5jdXJyZW50",
+            "X2dyYW50cxgBIAEoCzIjLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkNhbGxH",
+            "cmFudHMSDwoHbWVzc2FnZRgCIAEoCSI/CgZHb0F3YXkSNQoGcmVhc29uGAEg",
+            "ASgOMiUuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuR29Bd2F5UmVhc29uIkUK",
+            "CUNhbGxFbmRlZBI4CgZyZWFzb24YASABKA4yKC5zdHJlYW0udmlkZW8uc2Z1",
+            "Lm1vZGVscy5DYWxsRW5kZWRSZWFzb25CZEILU2Z1RXZlbnRzVjFQAVo2Z2l0",
+            "aHViLmNvbS9HZXRTdHJlYW0vcHJvdG9jb2wvcHJvdG9idWYvdmlkZW8vc2Z1",
+            "L2V2ZW50qgIaU3RyZWFtLlZpZGVvLnYxLlNmdS5FdmVudHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor, global::StreamVideo.v1.Sfu.Signal.SignalReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.SfuEvent), global::StreamVideo.v1.Sfu.Events.SfuEvent.Parser, new[]{ "SubscriberOffer", "PublisherAnswer", "ConnectionQualityChanged", "AudioLevelChanged", "IceTrickle", "ChangePublishQuality", "ParticipantJoined", "ParticipantLeft", "DominantSpeakerChanged", "JoinResponse", "HealthCheckResponse", "TrackPublished", "TrackUnpublished", "Error", "CallGrantsUpdated", "GoAway", "IceRestart", "PinsUpdated" }, new[]{ "EventPayload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.SfuEvent), global::StreamVideo.v1.Sfu.Events.SfuEvent.Parser, new[]{ "SubscriberOffer", "PublisherAnswer", "ConnectionQualityChanged", "AudioLevelChanged", "IceTrickle", "ChangePublishQuality", "ParticipantJoined", "ParticipantLeft", "DominantSpeakerChanged", "JoinResponse", "HealthCheckResponse", "TrackPublished", "TrackUnpublished", "Error", "CallGrantsUpdated", "GoAway", "IceRestart", "PinsUpdated", "CallEnded", "ParticipantUpdated", "ParticipantMigrationComplete", "ChangePublishOptions" }, new[]{ "EventPayload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ChangePublishOptions), global::StreamVideo.v1.Sfu.Events.ChangePublishOptions.Parser, new[]{ "PublishOptions", "Reason" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ChangePublishOptionsComplete), global::StreamVideo.v1.Sfu.Events.ChangePublishOptionsComplete.Parser, null, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete), global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.PinsChanged), global::StreamVideo.v1.Sfu.Events.PinsChanged.Parser, new[]{ "Pins" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.Error), global::StreamVideo.v1.Sfu.Events.Error.Parser, new[]{ "Error_" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.Error), global::StreamVideo.v1.Sfu.Events.Error.Parser, new[]{ "Error_", "ReconnectStrategy" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ICETrickle), global::StreamVideo.v1.Sfu.Events.ICETrickle.Parser, new[]{ "PeerType", "IceCandidate" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ICERestart), global::StreamVideo.v1.Sfu.Events.ICERestart.Parser, new[]{ "PeerType" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.SfuRequest), global::StreamVideo.v1.Sfu.Events.SfuRequest.Parser, new[]{ "JoinRequest", "HealthCheckRequest" }, new[]{ "RequestPayload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.SfuRequest), global::StreamVideo.v1.Sfu.Events.SfuRequest.Parser, new[]{ "JoinRequest", "HealthCheckRequest", "LeaveCallRequest" }, new[]{ "RequestPayload" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.LeaveCallRequest), global::StreamVideo.v1.Sfu.Events.LeaveCallRequest.Parser, new[]{ "SessionId", "Reason" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.HealthCheckRequest), global::StreamVideo.v1.Sfu.Events.HealthCheckRequest.Parser, null, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.HealthCheckResponse), global::StreamVideo.v1.Sfu.Events.HealthCheckResponse.Parser, new[]{ "ParticipantCount" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.TrackPublished), global::StreamVideo.v1.Sfu.Events.TrackPublished.Parser, new[]{ "UserId", "SessionId", "Type", "Participant" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.TrackUnpublished), global::StreamVideo.v1.Sfu.Events.TrackUnpublished.Parser, new[]{ "UserId", "SessionId", "Type", "Cause", "Participant" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.JoinRequest), global::StreamVideo.v1.Sfu.Events.JoinRequest.Parser, new[]{ "Token", "SessionId", "SubscriberSdp", "ClientDetails", "Migration", "FastReconnect" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.JoinRequest), global::StreamVideo.v1.Sfu.Events.JoinRequest.Parser, new[]{ "Token", "SessionId", "SubscriberSdp", "PublisherSdp", "ClientDetails", "Migration", "FastReconnect", "ReconnectDetails", "PreferredPublishOptions", "PreferredSubscribeOptions" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ReconnectDetails), global::StreamVideo.v1.Sfu.Events.ReconnectDetails.Parser, new[]{ "Strategy", "AnnouncedTracks", "Subscriptions", "ReconnectAttempt", "FromSfuId", "PreviousSessionId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.Migration), global::StreamVideo.v1.Sfu.Events.Migration.Parser, new[]{ "FromSfuId", "AnnouncedTracks", "Subscriptions" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.JoinResponse), global::StreamVideo.v1.Sfu.Events.JoinResponse.Parser, new[]{ "CallState", "Reconnected" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.JoinResponse), global::StreamVideo.v1.Sfu.Events.JoinResponse.Parser, new[]{ "CallState", "Reconnected", "FastReconnectDeadlineSeconds", "PublishOptions" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ParticipantJoined), global::StreamVideo.v1.Sfu.Events.ParticipantJoined.Parser, new[]{ "CallCid", "Participant" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ParticipantLeft), global::StreamVideo.v1.Sfu.Events.ParticipantLeft.Parser, new[]{ "CallCid", "Participant" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ParticipantUpdated), global::StreamVideo.v1.Sfu.Events.ParticipantUpdated.Parser, new[]{ "CallCid", "Participant" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.SubscriberOffer), global::StreamVideo.v1.Sfu.Events.SubscriberOffer.Parser, new[]{ "IceRestart", "Sdp" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.PublisherAnswer), global::StreamVideo.v1.Sfu.Events.PublisherAnswer.Parser, new[]{ "Sdp" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged), global::StreamVideo.v1.Sfu.Events.ConnectionQualityChanged.Parser, new[]{ "ConnectionQualityUpdates" }, null, null, null, null),
@@ -156,14 +190,13 @@ namespace StreamVideo.v1.Sfu.Events {
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged), global::StreamVideo.v1.Sfu.Events.DominantSpeakerChanged.Parser, new[]{ "UserId", "SessionId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioLevel), global::StreamVideo.v1.Sfu.Events.AudioLevel.Parser, new[]{ "UserId", "SessionId", "Level", "IsSpeaking" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioLevelChanged), global::StreamVideo.v1.Sfu.Events.AudioLevelChanged.Parser, new[]{ "AudioLevels" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioMediaRequest), global::StreamVideo.v1.Sfu.Events.AudioMediaRequest.Parser, new[]{ "ChannelCount" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioSender), global::StreamVideo.v1.Sfu.Events.AudioSender.Parser, new[]{ "MediaRequest", "Codec" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoMediaRequest), global::StreamVideo.v1.Sfu.Events.VideoMediaRequest.Parser, new[]{ "IdealHeight", "IdealWidth", "IdealFrameRate" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting), global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Parser, new[]{ "Name", "Active", "MaxBitrate", "ScaleResolutionDownBy", "Priority", "Codec", "MaxFramerate" }, null, new[]{ typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority) }, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoSender), global::StreamVideo.v1.Sfu.Events.VideoSender.Parser, new[]{ "MediaRequest", "Codec", "Layers" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.AudioSender), global::StreamVideo.v1.Sfu.Events.AudioSender.Parser, new[]{ "Codec", "TrackType", "PublishOptionId" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoLayerSetting), global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Parser, new[]{ "Name", "Active", "MaxBitrate", "ScaleResolutionDownBy", "Codec", "MaxFramerate", "ScalabilityMode" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.VideoSender), global::StreamVideo.v1.Sfu.Events.VideoSender.Parser, new[]{ "Codec", "Layers", "TrackType", "PublishOptionId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.ChangePublishQuality), global::StreamVideo.v1.Sfu.Events.ChangePublishQuality.Parser, new[]{ "AudioSenders", "VideoSenders" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated), global::StreamVideo.v1.Sfu.Events.CallGrantsUpdated.Parser, new[]{ "CurrentGrants", "Message" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.GoAway), global::StreamVideo.v1.Sfu.Events.GoAway.Parser, new[]{ "Reason" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.GoAway), global::StreamVideo.v1.Sfu.Events.GoAway.Parser, new[]{ "Reason" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Events.CallEnded), global::StreamVideo.v1.Sfu.Events.CallEnded.Parser, new[]{ "Reason" }, null, null, null, null)
           }));
     }
     #endregion
@@ -173,6 +206,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// <summary>
   /// SFUEvent is a message that is sent from the SFU to the client.
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class SfuEvent : pb::IMessage<SfuEvent>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -261,6 +295,18 @@ namespace StreamVideo.v1.Sfu.Events {
           break;
         case EventPayloadOneofCase.PinsUpdated:
           PinsUpdated = other.PinsUpdated.Clone();
+          break;
+        case EventPayloadOneofCase.CallEnded:
+          CallEnded = other.CallEnded.Clone();
+          break;
+        case EventPayloadOneofCase.ParticipantUpdated:
+          ParticipantUpdated = other.ParticipantUpdated.Clone();
+          break;
+        case EventPayloadOneofCase.ParticipantMigrationComplete:
+          ParticipantMigrationComplete = other.ParticipantMigrationComplete.Clone();
+          break;
+        case EventPayloadOneofCase.ChangePublishOptions:
+          ChangePublishOptions = other.ChangePublishOptions.Clone();
           break;
       }
 
@@ -564,6 +610,67 @@ namespace StreamVideo.v1.Sfu.Events {
       }
     }
 
+    /// <summary>Field number for the "call_ended" field.</summary>
+    public const int CallEndedFieldNumber = 23;
+    /// <summary>
+    /// CallEnded is sent by the SFU to the client to signal that the call has ended.
+    /// The reason may specify why the call has ended.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Events.CallEnded CallEnded {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.CallEnded ? (global::StreamVideo.v1.Sfu.Events.CallEnded) eventPayload_ : null; }
+      set {
+        eventPayload_ = value;
+        eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.CallEnded;
+      }
+    }
+
+    /// <summary>Field number for the "participant_updated" field.</summary>
+    public const int ParticipantUpdatedFieldNumber = 24;
+    /// <summary>
+    /// ParticipantUpdated is sent when user data is updated
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Events.ParticipantUpdated ParticipantUpdated {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.ParticipantUpdated ? (global::StreamVideo.v1.Sfu.Events.ParticipantUpdated) eventPayload_ : null; }
+      set {
+        eventPayload_ = value;
+        eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.ParticipantUpdated;
+      }
+    }
+
+    /// <summary>Field number for the "participant_migration_complete" field.</summary>
+    public const int ParticipantMigrationCompleteFieldNumber = 25;
+    /// <summary>
+    /// ParticipantMigrationComplete is sent when the participant migration is complete
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete ParticipantMigrationComplete {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.ParticipantMigrationComplete ? (global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete) eventPayload_ : null; }
+      set {
+        eventPayload_ = value;
+        eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.ParticipantMigrationComplete;
+      }
+    }
+
+    /// <summary>Field number for the "change_publish_options" field.</summary>
+    public const int ChangePublishOptionsFieldNumber = 27;
+    /// <summary>
+    /// ChangePublishOptions is sent to signal the change in publish options such as a new codec or simulcast layers
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Events.ChangePublishOptions ChangePublishOptions {
+      get { return eventPayloadCase_ == EventPayloadOneofCase.ChangePublishOptions ? (global::StreamVideo.v1.Sfu.Events.ChangePublishOptions) eventPayload_ : null; }
+      set {
+        eventPayload_ = value;
+        eventPayloadCase_ = value == null ? EventPayloadOneofCase.None : EventPayloadOneofCase.ChangePublishOptions;
+      }
+    }
+
     private object eventPayload_;
     /// <summary>Enum of possible cases for the "event_payload" oneof.</summary>
     public enum EventPayloadOneofCase {
@@ -586,6 +693,10 @@ namespace StreamVideo.v1.Sfu.Events {
       GoAway = 20,
       IceRestart = 21,
       PinsUpdated = 22,
+      CallEnded = 23,
+      ParticipantUpdated = 24,
+      ParticipantMigrationComplete = 25,
+      ChangePublishOptions = 27,
     }
     private EventPayloadOneofCase eventPayloadCase_ = EventPayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -634,6 +745,10 @@ namespace StreamVideo.v1.Sfu.Events {
       if (!object.Equals(GoAway, other.GoAway)) return false;
       if (!object.Equals(IceRestart, other.IceRestart)) return false;
       if (!object.Equals(PinsUpdated, other.PinsUpdated)) return false;
+      if (!object.Equals(CallEnded, other.CallEnded)) return false;
+      if (!object.Equals(ParticipantUpdated, other.ParticipantUpdated)) return false;
+      if (!object.Equals(ParticipantMigrationComplete, other.ParticipantMigrationComplete)) return false;
+      if (!object.Equals(ChangePublishOptions, other.ChangePublishOptions)) return false;
       if (EventPayloadCase != other.EventPayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -660,6 +775,10 @@ namespace StreamVideo.v1.Sfu.Events {
       if (eventPayloadCase_ == EventPayloadOneofCase.GoAway) hash ^= GoAway.GetHashCode();
       if (eventPayloadCase_ == EventPayloadOneofCase.IceRestart) hash ^= IceRestart.GetHashCode();
       if (eventPayloadCase_ == EventPayloadOneofCase.PinsUpdated) hash ^= PinsUpdated.GetHashCode();
+      if (eventPayloadCase_ == EventPayloadOneofCase.CallEnded) hash ^= CallEnded.GetHashCode();
+      if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantUpdated) hash ^= ParticipantUpdated.GetHashCode();
+      if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantMigrationComplete) hash ^= ParticipantMigrationComplete.GetHashCode();
+      if (eventPayloadCase_ == EventPayloadOneofCase.ChangePublishOptions) hash ^= ChangePublishOptions.GetHashCode();
       hash ^= (int) eventPayloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -751,6 +870,22 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(178, 1);
         output.WriteMessage(PinsUpdated);
       }
+      if (eventPayloadCase_ == EventPayloadOneofCase.CallEnded) {
+        output.WriteRawTag(186, 1);
+        output.WriteMessage(CallEnded);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantUpdated) {
+        output.WriteRawTag(194, 1);
+        output.WriteMessage(ParticipantUpdated);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantMigrationComplete) {
+        output.WriteRawTag(202, 1);
+        output.WriteMessage(ParticipantMigrationComplete);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ChangePublishOptions) {
+        output.WriteRawTag(218, 1);
+        output.WriteMessage(ChangePublishOptions);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -833,6 +968,22 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(178, 1);
         output.WriteMessage(PinsUpdated);
       }
+      if (eventPayloadCase_ == EventPayloadOneofCase.CallEnded) {
+        output.WriteRawTag(186, 1);
+        output.WriteMessage(CallEnded);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantUpdated) {
+        output.WriteRawTag(194, 1);
+        output.WriteMessage(ParticipantUpdated);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantMigrationComplete) {
+        output.WriteRawTag(202, 1);
+        output.WriteMessage(ParticipantMigrationComplete);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ChangePublishOptions) {
+        output.WriteRawTag(218, 1);
+        output.WriteMessage(ChangePublishOptions);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -896,6 +1047,18 @@ namespace StreamVideo.v1.Sfu.Events {
       }
       if (eventPayloadCase_ == EventPayloadOneofCase.PinsUpdated) {
         size += 2 + pb::CodedOutputStream.ComputeMessageSize(PinsUpdated);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.CallEnded) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(CallEnded);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantUpdated) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(ParticipantUpdated);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantMigrationComplete) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(ParticipantMigrationComplete);
+      }
+      if (eventPayloadCase_ == EventPayloadOneofCase.ChangePublishOptions) {
+        size += 2 + pb::CodedOutputStream.ComputeMessageSize(ChangePublishOptions);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1017,6 +1180,30 @@ namespace StreamVideo.v1.Sfu.Events {
             PinsUpdated = new global::StreamVideo.v1.Sfu.Events.PinsChanged();
           }
           PinsUpdated.MergeFrom(other.PinsUpdated);
+          break;
+        case EventPayloadOneofCase.CallEnded:
+          if (CallEnded == null) {
+            CallEnded = new global::StreamVideo.v1.Sfu.Events.CallEnded();
+          }
+          CallEnded.MergeFrom(other.CallEnded);
+          break;
+        case EventPayloadOneofCase.ParticipantUpdated:
+          if (ParticipantUpdated == null) {
+            ParticipantUpdated = new global::StreamVideo.v1.Sfu.Events.ParticipantUpdated();
+          }
+          ParticipantUpdated.MergeFrom(other.ParticipantUpdated);
+          break;
+        case EventPayloadOneofCase.ParticipantMigrationComplete:
+          if (ParticipantMigrationComplete == null) {
+            ParticipantMigrationComplete = new global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete();
+          }
+          ParticipantMigrationComplete.MergeFrom(other.ParticipantMigrationComplete);
+          break;
+        case EventPayloadOneofCase.ChangePublishOptions:
+          if (ChangePublishOptions == null) {
+            ChangePublishOptions = new global::StreamVideo.v1.Sfu.Events.ChangePublishOptions();
+          }
+          ChangePublishOptions.MergeFrom(other.ChangePublishOptions);
           break;
       }
 
@@ -1197,6 +1384,42 @@ namespace StreamVideo.v1.Sfu.Events {
             PinsUpdated = subBuilder;
             break;
           }
+          case 186: {
+            global::StreamVideo.v1.Sfu.Events.CallEnded subBuilder = new global::StreamVideo.v1.Sfu.Events.CallEnded();
+            if (eventPayloadCase_ == EventPayloadOneofCase.CallEnded) {
+              subBuilder.MergeFrom(CallEnded);
+            }
+            input.ReadMessage(subBuilder);
+            CallEnded = subBuilder;
+            break;
+          }
+          case 194: {
+            global::StreamVideo.v1.Sfu.Events.ParticipantUpdated subBuilder = new global::StreamVideo.v1.Sfu.Events.ParticipantUpdated();
+            if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantUpdated) {
+              subBuilder.MergeFrom(ParticipantUpdated);
+            }
+            input.ReadMessage(subBuilder);
+            ParticipantUpdated = subBuilder;
+            break;
+          }
+          case 202: {
+            global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete subBuilder = new global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete();
+            if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantMigrationComplete) {
+              subBuilder.MergeFrom(ParticipantMigrationComplete);
+            }
+            input.ReadMessage(subBuilder);
+            ParticipantMigrationComplete = subBuilder;
+            break;
+          }
+          case 218: {
+            global::StreamVideo.v1.Sfu.Events.ChangePublishOptions subBuilder = new global::StreamVideo.v1.Sfu.Events.ChangePublishOptions();
+            if (eventPayloadCase_ == EventPayloadOneofCase.ChangePublishOptions) {
+              subBuilder.MergeFrom(ChangePublishOptions);
+            }
+            input.ReadMessage(subBuilder);
+            ChangePublishOptions = subBuilder;
+            break;
+          }
         }
       }
     #endif
@@ -1374,6 +1597,42 @@ namespace StreamVideo.v1.Sfu.Events {
             PinsUpdated = subBuilder;
             break;
           }
+          case 186: {
+            global::StreamVideo.v1.Sfu.Events.CallEnded subBuilder = new global::StreamVideo.v1.Sfu.Events.CallEnded();
+            if (eventPayloadCase_ == EventPayloadOneofCase.CallEnded) {
+              subBuilder.MergeFrom(CallEnded);
+            }
+            input.ReadMessage(subBuilder);
+            CallEnded = subBuilder;
+            break;
+          }
+          case 194: {
+            global::StreamVideo.v1.Sfu.Events.ParticipantUpdated subBuilder = new global::StreamVideo.v1.Sfu.Events.ParticipantUpdated();
+            if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantUpdated) {
+              subBuilder.MergeFrom(ParticipantUpdated);
+            }
+            input.ReadMessage(subBuilder);
+            ParticipantUpdated = subBuilder;
+            break;
+          }
+          case 202: {
+            global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete subBuilder = new global::StreamVideo.v1.Sfu.Events.ParticipantMigrationComplete();
+            if (eventPayloadCase_ == EventPayloadOneofCase.ParticipantMigrationComplete) {
+              subBuilder.MergeFrom(ParticipantMigrationComplete);
+            }
+            input.ReadMessage(subBuilder);
+            ParticipantMigrationComplete = subBuilder;
+            break;
+          }
+          case 218: {
+            global::StreamVideo.v1.Sfu.Events.ChangePublishOptions subBuilder = new global::StreamVideo.v1.Sfu.Events.ChangePublishOptions();
+            if (eventPayloadCase_ == EventPayloadOneofCase.ChangePublishOptions) {
+              subBuilder.MergeFrom(ChangePublishOptions);
+            }
+            input.ReadMessage(subBuilder);
+            ChangePublishOptions = subBuilder;
+            break;
+          }
         }
       }
     }
@@ -1381,6 +1640,529 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class ChangePublishOptions : pb::IMessage<ChangePublishOptions>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ChangePublishOptions> _parser = new pb::MessageParser<ChangePublishOptions>(() => new ChangePublishOptions());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ChangePublishOptions> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[1]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ChangePublishOptions() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ChangePublishOptions(ChangePublishOptions other) : this() {
+      publishOptions_ = other.publishOptions_.Clone();
+      reason_ = other.reason_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ChangePublishOptions Clone() {
+      return new ChangePublishOptions(this);
+    }
+
+    /// <summary>Field number for the "publish_options" field.</summary>
+    public const int PublishOptionsFieldNumber = 1;
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.PublishOption> _repeated_publishOptions_codec
+        = pb::FieldCodec.ForMessage(10, global::StreamVideo.v1.Sfu.Models.PublishOption.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption> publishOptions_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption> PublishOptions {
+      get { return publishOptions_; }
+    }
+
+    /// <summary>Field number for the "reason" field.</summary>
+    public const int ReasonFieldNumber = 2;
+    private string reason_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Reason {
+      get { return reason_; }
+      set {
+        reason_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ChangePublishOptions);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ChangePublishOptions other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if(!publishOptions_.Equals(other.publishOptions_)) return false;
+      if (Reason != other.Reason) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      hash ^= publishOptions_.GetHashCode();
+      if (Reason.Length != 0) hash ^= Reason.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      publishOptions_.WriteTo(output, _repeated_publishOptions_codec);
+      if (Reason.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Reason);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      publishOptions_.WriteTo(ref output, _repeated_publishOptions_codec);
+      if (Reason.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Reason);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      size += publishOptions_.CalculateSize(_repeated_publishOptions_codec);
+      if (Reason.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Reason);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ChangePublishOptions other) {
+      if (other == null) {
+        return;
+      }
+      publishOptions_.Add(other.publishOptions_);
+      if (other.Reason.Length != 0) {
+        Reason = other.Reason;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            publishOptions_.AddEntriesFrom(input, _repeated_publishOptions_codec);
+            break;
+          }
+          case 18: {
+            Reason = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            publishOptions_.AddEntriesFrom(ref input, _repeated_publishOptions_codec);
+            break;
+          }
+          case 18: {
+            Reason = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class ChangePublishOptionsComplete : pb::IMessage<ChangePublishOptionsComplete>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ChangePublishOptionsComplete> _parser = new pb::MessageParser<ChangePublishOptionsComplete>(() => new ChangePublishOptionsComplete());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ChangePublishOptionsComplete> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[2]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ChangePublishOptionsComplete() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ChangePublishOptionsComplete(ChangePublishOptionsComplete other) : this() {
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ChangePublishOptionsComplete Clone() {
+      return new ChangePublishOptionsComplete(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ChangePublishOptionsComplete);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ChangePublishOptionsComplete other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ChangePublishOptionsComplete other) {
+      if (other == null) {
+        return;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class ParticipantMigrationComplete : pb::IMessage<ParticipantMigrationComplete>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ParticipantMigrationComplete> _parser = new pb::MessageParser<ParticipantMigrationComplete>(() => new ParticipantMigrationComplete());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ParticipantMigrationComplete> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[3]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ParticipantMigrationComplete() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ParticipantMigrationComplete(ParticipantMigrationComplete other) : this() {
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ParticipantMigrationComplete Clone() {
+      return new ParticipantMigrationComplete(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ParticipantMigrationComplete);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ParticipantMigrationComplete other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ParticipantMigrationComplete other) {
+      if (other == null) {
+        return;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class PinsChanged : pb::IMessage<PinsChanged>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -1395,7 +2177,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[1]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1563,6 +2345,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class Error : pb::IMessage<Error>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -1577,7 +2360,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[2]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1598,6 +2381,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public Error(Error other) : this() {
       error_ = other.error_ != null ? other.error_.Clone() : null;
+      reconnectStrategy_ = other.reconnectStrategy_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1619,6 +2403,21 @@ namespace StreamVideo.v1.Sfu.Events {
       }
     }
 
+    /// <summary>Field number for the "reconnect_strategy" field.</summary>
+    public const int ReconnectStrategyFieldNumber = 5;
+    private global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy reconnectStrategy_ = global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified;
+    /// <summary>
+    /// returns the reconnect strategy to be used by the client
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy ReconnectStrategy {
+      get { return reconnectStrategy_; }
+      set {
+        reconnectStrategy_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -1635,6 +2434,7 @@ namespace StreamVideo.v1.Sfu.Events {
         return true;
       }
       if (!object.Equals(Error_, other.Error_)) return false;
+      if (ReconnectStrategy != other.ReconnectStrategy) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1643,6 +2443,7 @@ namespace StreamVideo.v1.Sfu.Events {
     public override int GetHashCode() {
       int hash = 1;
       if (error_ != null) hash ^= Error_.GetHashCode();
+      if (ReconnectStrategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) hash ^= ReconnectStrategy.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1665,6 +2466,10 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(34);
         output.WriteMessage(Error_);
       }
+      if (ReconnectStrategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) {
+        output.WriteRawTag(40);
+        output.WriteEnum((int) ReconnectStrategy);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1679,6 +2484,10 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(34);
         output.WriteMessage(Error_);
       }
+      if (ReconnectStrategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) {
+        output.WriteRawTag(40);
+        output.WriteEnum((int) ReconnectStrategy);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1691,6 +2500,9 @@ namespace StreamVideo.v1.Sfu.Events {
       int size = 0;
       if (error_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Error_);
+      }
+      if (ReconnectStrategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) ReconnectStrategy);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1709,6 +2521,9 @@ namespace StreamVideo.v1.Sfu.Events {
           Error_ = new global::StreamVideo.v1.Sfu.Models.Error();
         }
         Error_.MergeFrom(other.Error_);
+      }
+      if (other.ReconnectStrategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) {
+        ReconnectStrategy = other.ReconnectStrategy;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1730,6 +2545,10 @@ namespace StreamVideo.v1.Sfu.Events {
               Error_ = new global::StreamVideo.v1.Sfu.Models.Error();
             }
             input.ReadMessage(Error_);
+            break;
+          }
+          case 40: {
+            ReconnectStrategy = (global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy) input.ReadEnum();
             break;
           }
         }
@@ -1754,6 +2573,10 @@ namespace StreamVideo.v1.Sfu.Events {
             input.ReadMessage(Error_);
             break;
           }
+          case 40: {
+            ReconnectStrategy = (global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy) input.ReadEnum();
+            break;
+          }
         }
       }
     }
@@ -1761,6 +2584,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class ICETrickle : pb::IMessage<ICETrickle>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -1775,7 +2599,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[3]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1987,6 +2811,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class ICERestart : pb::IMessage<ICERestart>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2001,7 +2826,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[4]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2179,6 +3004,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// <summary>
   /// SfuRequest is a message that is sent from the client to the SFU.
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class SfuRequest : pb::IMessage<SfuRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2193,7 +3019,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[5]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2219,6 +3045,9 @@ namespace StreamVideo.v1.Sfu.Events {
           break;
         case RequestPayloadOneofCase.HealthCheckRequest:
           HealthCheckRequest = other.HealthCheckRequest.Clone();
+          break;
+        case RequestPayloadOneofCase.LeaveCallRequest:
+          LeaveCallRequest = other.LeaveCallRequest.Clone();
           break;
       }
 
@@ -2255,12 +3084,25 @@ namespace StreamVideo.v1.Sfu.Events {
       }
     }
 
+    /// <summary>Field number for the "leave_call_request" field.</summary>
+    public const int LeaveCallRequestFieldNumber = 3;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Events.LeaveCallRequest LeaveCallRequest {
+      get { return requestPayloadCase_ == RequestPayloadOneofCase.LeaveCallRequest ? (global::StreamVideo.v1.Sfu.Events.LeaveCallRequest) requestPayload_ : null; }
+      set {
+        requestPayload_ = value;
+        requestPayloadCase_ = value == null ? RequestPayloadOneofCase.None : RequestPayloadOneofCase.LeaveCallRequest;
+      }
+    }
+
     private object requestPayload_;
     /// <summary>Enum of possible cases for the "request_payload" oneof.</summary>
     public enum RequestPayloadOneofCase {
       None = 0,
       JoinRequest = 1,
       HealthCheckRequest = 2,
+      LeaveCallRequest = 3,
     }
     private RequestPayloadOneofCase requestPayloadCase_ = RequestPayloadOneofCase.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2293,6 +3135,7 @@ namespace StreamVideo.v1.Sfu.Events {
       }
       if (!object.Equals(JoinRequest, other.JoinRequest)) return false;
       if (!object.Equals(HealthCheckRequest, other.HealthCheckRequest)) return false;
+      if (!object.Equals(LeaveCallRequest, other.LeaveCallRequest)) return false;
       if (RequestPayloadCase != other.RequestPayloadCase) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -2303,6 +3146,7 @@ namespace StreamVideo.v1.Sfu.Events {
       int hash = 1;
       if (requestPayloadCase_ == RequestPayloadOneofCase.JoinRequest) hash ^= JoinRequest.GetHashCode();
       if (requestPayloadCase_ == RequestPayloadOneofCase.HealthCheckRequest) hash ^= HealthCheckRequest.GetHashCode();
+      if (requestPayloadCase_ == RequestPayloadOneofCase.LeaveCallRequest) hash ^= LeaveCallRequest.GetHashCode();
       hash ^= (int) requestPayloadCase_;
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -2330,6 +3174,10 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(18);
         output.WriteMessage(HealthCheckRequest);
       }
+      if (requestPayloadCase_ == RequestPayloadOneofCase.LeaveCallRequest) {
+        output.WriteRawTag(26);
+        output.WriteMessage(LeaveCallRequest);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -2348,6 +3196,10 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(18);
         output.WriteMessage(HealthCheckRequest);
       }
+      if (requestPayloadCase_ == RequestPayloadOneofCase.LeaveCallRequest) {
+        output.WriteRawTag(26);
+        output.WriteMessage(LeaveCallRequest);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -2363,6 +3215,9 @@ namespace StreamVideo.v1.Sfu.Events {
       }
       if (requestPayloadCase_ == RequestPayloadOneofCase.HealthCheckRequest) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(HealthCheckRequest);
+      }
+      if (requestPayloadCase_ == RequestPayloadOneofCase.LeaveCallRequest) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(LeaveCallRequest);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -2388,6 +3243,12 @@ namespace StreamVideo.v1.Sfu.Events {
             HealthCheckRequest = new global::StreamVideo.v1.Sfu.Events.HealthCheckRequest();
           }
           HealthCheckRequest.MergeFrom(other.HealthCheckRequest);
+          break;
+        case RequestPayloadOneofCase.LeaveCallRequest:
+          if (LeaveCallRequest == null) {
+            LeaveCallRequest = new global::StreamVideo.v1.Sfu.Events.LeaveCallRequest();
+          }
+          LeaveCallRequest.MergeFrom(other.LeaveCallRequest);
           break;
       }
 
@@ -2424,6 +3285,15 @@ namespace StreamVideo.v1.Sfu.Events {
             HealthCheckRequest = subBuilder;
             break;
           }
+          case 26: {
+            global::StreamVideo.v1.Sfu.Events.LeaveCallRequest subBuilder = new global::StreamVideo.v1.Sfu.Events.LeaveCallRequest();
+            if (requestPayloadCase_ == RequestPayloadOneofCase.LeaveCallRequest) {
+              subBuilder.MergeFrom(LeaveCallRequest);
+            }
+            input.ReadMessage(subBuilder);
+            LeaveCallRequest = subBuilder;
+            break;
+          }
         }
       }
     #endif
@@ -2457,6 +3327,15 @@ namespace StreamVideo.v1.Sfu.Events {
             HealthCheckRequest = subBuilder;
             break;
           }
+          case 26: {
+            global::StreamVideo.v1.Sfu.Events.LeaveCallRequest subBuilder = new global::StreamVideo.v1.Sfu.Events.LeaveCallRequest();
+            if (requestPayloadCase_ == RequestPayloadOneofCase.LeaveCallRequest) {
+              subBuilder.MergeFrom(LeaveCallRequest);
+            }
+            input.ReadMessage(subBuilder);
+            LeaveCallRequest = subBuilder;
+            break;
+          }
         }
       }
     }
@@ -2464,6 +3343,234 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class LeaveCallRequest : pb::IMessage<LeaveCallRequest>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<LeaveCallRequest> _parser = new pb::MessageParser<LeaveCallRequest>(() => new LeaveCallRequest());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<LeaveCallRequest> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[9]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public LeaveCallRequest() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public LeaveCallRequest(LeaveCallRequest other) : this() {
+      sessionId_ = other.sessionId_;
+      reason_ = other.reason_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public LeaveCallRequest Clone() {
+      return new LeaveCallRequest(this);
+    }
+
+    /// <summary>Field number for the "session_id" field.</summary>
+    public const int SessionIdFieldNumber = 1;
+    private string sessionId_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string SessionId {
+      get { return sessionId_; }
+      set {
+        sessionId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "reason" field.</summary>
+    public const int ReasonFieldNumber = 2;
+    private string reason_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Reason {
+      get { return reason_; }
+      set {
+        reason_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as LeaveCallRequest);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(LeaveCallRequest other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (SessionId != other.SessionId) return false;
+      if (Reason != other.Reason) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
+      if (Reason.Length != 0) hash ^= Reason.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (SessionId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(SessionId);
+      }
+      if (Reason.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Reason);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (SessionId.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(SessionId);
+      }
+      if (Reason.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Reason);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (SessionId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(SessionId);
+      }
+      if (Reason.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Reason);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(LeaveCallRequest other) {
+      if (other == null) {
+        return;
+      }
+      if (other.SessionId.Length != 0) {
+        SessionId = other.SessionId;
+      }
+      if (other.Reason.Length != 0) {
+        Reason = other.Reason;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            SessionId = input.ReadString();
+            break;
+          }
+          case 18: {
+            Reason = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            SessionId = input.ReadString();
+            break;
+          }
+          case 18: {
+            Reason = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class HealthCheckRequest : pb::IMessage<HealthCheckRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2478,7 +3585,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[6]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2616,6 +3723,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class HealthCheckResponse : pb::IMessage<HealthCheckResponse>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2630,7 +3738,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[7]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[11]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2814,6 +3922,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class TrackPublished : pb::IMessage<TrackPublished>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -2828,7 +3937,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[8]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[12]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3130,6 +4239,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class TrackUnpublished : pb::IMessage<TrackUnpublished>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -3144,7 +4254,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[9]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3483,6 +4593,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class JoinRequest : pb::IMessage<JoinRequest>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -3497,7 +4608,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[10]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[14]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3520,9 +4631,13 @@ namespace StreamVideo.v1.Sfu.Events {
       token_ = other.token_;
       sessionId_ = other.sessionId_;
       subscriberSdp_ = other.subscriberSdp_;
+      publisherSdp_ = other.publisherSdp_;
       clientDetails_ = other.clientDetails_ != null ? other.clientDetails_.Clone() : null;
       migration_ = other.migration_ != null ? other.migration_.Clone() : null;
       fastReconnect_ = other.fastReconnect_;
+      reconnectDetails_ = other.reconnectDetails_ != null ? other.reconnectDetails_.Clone() : null;
+      preferredPublishOptions_ = other.preferredPublishOptions_.Clone();
+      preferredSubscribeOptions_ = other.preferredSubscribeOptions_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -3571,6 +4686,18 @@ namespace StreamVideo.v1.Sfu.Events {
       }
     }
 
+    /// <summary>Field number for the "publisher_sdp" field.</summary>
+    public const int PublisherSdpFieldNumber = 8;
+    private string publisherSdp_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string PublisherSdp {
+      get { return publisherSdp_; }
+      set {
+        publisherSdp_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     /// <summary>Field number for the "client_details" field.</summary>
     public const int ClientDetailsFieldNumber = 4;
     private global::StreamVideo.v1.Sfu.Models.ClientDetails clientDetails_;
@@ -3587,9 +4714,9 @@ namespace StreamVideo.v1.Sfu.Events {
     public const int MigrationFieldNumber = 5;
     private global::StreamVideo.v1.Sfu.Events.Migration migration_;
     /// <summary>
-    /// TODO: we should know if this is going to be
-    /// - publishing and subscribing, or just subscribing for future routing
+    /// Deprecated: use ReconnectDetails instead
     /// </summary>
+    [global::System.ObsoleteAttribute]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public global::StreamVideo.v1.Sfu.Events.Migration Migration {
@@ -3613,6 +4740,7 @@ namespace StreamVideo.v1.Sfu.Events {
     /// cached, the client state is not in sync and hence it must be cleaned up before
     /// proceeding further.
     /// </summary>
+    [global::System.ObsoleteAttribute]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public bool FastReconnect {
@@ -3620,6 +4748,40 @@ namespace StreamVideo.v1.Sfu.Events {
       set {
         fastReconnect_ = value;
       }
+    }
+
+    /// <summary>Field number for the "reconnect_details" field.</summary>
+    public const int ReconnectDetailsFieldNumber = 7;
+    private global::StreamVideo.v1.Sfu.Events.ReconnectDetails reconnectDetails_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Events.ReconnectDetails ReconnectDetails {
+      get { return reconnectDetails_; }
+      set {
+        reconnectDetails_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "preferred_publish_options" field.</summary>
+    public const int PreferredPublishOptionsFieldNumber = 9;
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.PublishOption> _repeated_preferredPublishOptions_codec
+        = pb::FieldCodec.ForMessage(74, global::StreamVideo.v1.Sfu.Models.PublishOption.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption> preferredPublishOptions_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption> PreferredPublishOptions {
+      get { return preferredPublishOptions_; }
+    }
+
+    /// <summary>Field number for the "preferred_subscribe_options" field.</summary>
+    public const int PreferredSubscribeOptionsFieldNumber = 10;
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.SubscribeOption> _repeated_preferredSubscribeOptions_codec
+        = pb::FieldCodec.ForMessage(82, global::StreamVideo.v1.Sfu.Models.SubscribeOption.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.SubscribeOption> preferredSubscribeOptions_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.SubscribeOption>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.SubscribeOption> PreferredSubscribeOptions {
+      get { return preferredSubscribeOptions_; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3640,9 +4802,13 @@ namespace StreamVideo.v1.Sfu.Events {
       if (Token != other.Token) return false;
       if (SessionId != other.SessionId) return false;
       if (SubscriberSdp != other.SubscriberSdp) return false;
+      if (PublisherSdp != other.PublisherSdp) return false;
       if (!object.Equals(ClientDetails, other.ClientDetails)) return false;
       if (!object.Equals(Migration, other.Migration)) return false;
       if (FastReconnect != other.FastReconnect) return false;
+      if (!object.Equals(ReconnectDetails, other.ReconnectDetails)) return false;
+      if(!preferredPublishOptions_.Equals(other.preferredPublishOptions_)) return false;
+      if(!preferredSubscribeOptions_.Equals(other.preferredSubscribeOptions_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -3653,9 +4819,13 @@ namespace StreamVideo.v1.Sfu.Events {
       if (Token.Length != 0) hash ^= Token.GetHashCode();
       if (SessionId.Length != 0) hash ^= SessionId.GetHashCode();
       if (SubscriberSdp.Length != 0) hash ^= SubscriberSdp.GetHashCode();
+      if (PublisherSdp.Length != 0) hash ^= PublisherSdp.GetHashCode();
       if (clientDetails_ != null) hash ^= ClientDetails.GetHashCode();
       if (migration_ != null) hash ^= Migration.GetHashCode();
       if (FastReconnect != false) hash ^= FastReconnect.GetHashCode();
+      if (reconnectDetails_ != null) hash ^= ReconnectDetails.GetHashCode();
+      hash ^= preferredPublishOptions_.GetHashCode();
+      hash ^= preferredSubscribeOptions_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -3698,6 +4868,16 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(48);
         output.WriteBool(FastReconnect);
       }
+      if (reconnectDetails_ != null) {
+        output.WriteRawTag(58);
+        output.WriteMessage(ReconnectDetails);
+      }
+      if (PublisherSdp.Length != 0) {
+        output.WriteRawTag(66);
+        output.WriteString(PublisherSdp);
+      }
+      preferredPublishOptions_.WriteTo(output, _repeated_preferredPublishOptions_codec);
+      preferredSubscribeOptions_.WriteTo(output, _repeated_preferredSubscribeOptions_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -3732,6 +4912,16 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(48);
         output.WriteBool(FastReconnect);
       }
+      if (reconnectDetails_ != null) {
+        output.WriteRawTag(58);
+        output.WriteMessage(ReconnectDetails);
+      }
+      if (PublisherSdp.Length != 0) {
+        output.WriteRawTag(66);
+        output.WriteString(PublisherSdp);
+      }
+      preferredPublishOptions_.WriteTo(ref output, _repeated_preferredPublishOptions_codec);
+      preferredSubscribeOptions_.WriteTo(ref output, _repeated_preferredSubscribeOptions_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -3751,6 +4941,9 @@ namespace StreamVideo.v1.Sfu.Events {
       if (SubscriberSdp.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(SubscriberSdp);
       }
+      if (PublisherSdp.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(PublisherSdp);
+      }
       if (clientDetails_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(ClientDetails);
       }
@@ -3760,6 +4953,11 @@ namespace StreamVideo.v1.Sfu.Events {
       if (FastReconnect != false) {
         size += 1 + 1;
       }
+      if (reconnectDetails_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(ReconnectDetails);
+      }
+      size += preferredPublishOptions_.CalculateSize(_repeated_preferredPublishOptions_codec);
+      size += preferredSubscribeOptions_.CalculateSize(_repeated_preferredSubscribeOptions_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -3781,6 +4979,9 @@ namespace StreamVideo.v1.Sfu.Events {
       if (other.SubscriberSdp.Length != 0) {
         SubscriberSdp = other.SubscriberSdp;
       }
+      if (other.PublisherSdp.Length != 0) {
+        PublisherSdp = other.PublisherSdp;
+      }
       if (other.clientDetails_ != null) {
         if (clientDetails_ == null) {
           ClientDetails = new global::StreamVideo.v1.Sfu.Models.ClientDetails();
@@ -3796,6 +4997,14 @@ namespace StreamVideo.v1.Sfu.Events {
       if (other.FastReconnect != false) {
         FastReconnect = other.FastReconnect;
       }
+      if (other.reconnectDetails_ != null) {
+        if (reconnectDetails_ == null) {
+          ReconnectDetails = new global::StreamVideo.v1.Sfu.Events.ReconnectDetails();
+        }
+        ReconnectDetails.MergeFrom(other.ReconnectDetails);
+      }
+      preferredPublishOptions_.Add(other.preferredPublishOptions_);
+      preferredSubscribeOptions_.Add(other.preferredSubscribeOptions_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -3839,6 +5048,25 @@ namespace StreamVideo.v1.Sfu.Events {
           }
           case 48: {
             FastReconnect = input.ReadBool();
+            break;
+          }
+          case 58: {
+            if (reconnectDetails_ == null) {
+              ReconnectDetails = new global::StreamVideo.v1.Sfu.Events.ReconnectDetails();
+            }
+            input.ReadMessage(ReconnectDetails);
+            break;
+          }
+          case 66: {
+            PublisherSdp = input.ReadString();
+            break;
+          }
+          case 74: {
+            preferredPublishOptions_.AddEntriesFrom(input, _repeated_preferredPublishOptions_codec);
+            break;
+          }
+          case 82: {
+            preferredSubscribeOptions_.AddEntriesFrom(input, _repeated_preferredSubscribeOptions_codec);
             break;
           }
         }
@@ -3886,6 +5114,25 @@ namespace StreamVideo.v1.Sfu.Events {
             FastReconnect = input.ReadBool();
             break;
           }
+          case 58: {
+            if (reconnectDetails_ == null) {
+              ReconnectDetails = new global::StreamVideo.v1.Sfu.Events.ReconnectDetails();
+            }
+            input.ReadMessage(ReconnectDetails);
+            break;
+          }
+          case 66: {
+            PublisherSdp = input.ReadString();
+            break;
+          }
+          case 74: {
+            preferredPublishOptions_.AddEntriesFrom(ref input, _repeated_preferredPublishOptions_codec);
+            break;
+          }
+          case 82: {
+            preferredSubscribeOptions_.AddEntriesFrom(ref input, _repeated_preferredSubscribeOptions_codec);
+            break;
+          }
         }
       }
     }
@@ -3893,6 +5140,363 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class ReconnectDetails : pb::IMessage<ReconnectDetails>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ReconnectDetails> _parser = new pb::MessageParser<ReconnectDetails>(() => new ReconnectDetails());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ReconnectDetails> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[15]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ReconnectDetails() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ReconnectDetails(ReconnectDetails other) : this() {
+      strategy_ = other.strategy_;
+      announcedTracks_ = other.announcedTracks_.Clone();
+      subscriptions_ = other.subscriptions_.Clone();
+      reconnectAttempt_ = other.reconnectAttempt_;
+      fromSfuId_ = other.fromSfuId_;
+      previousSessionId_ = other.previousSessionId_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ReconnectDetails Clone() {
+      return new ReconnectDetails(this);
+    }
+
+    /// <summary>Field number for the "strategy" field.</summary>
+    public const int StrategyFieldNumber = 1;
+    private global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy strategy_ = global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy Strategy {
+      get { return strategy_; }
+      set {
+        strategy_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "announced_tracks" field.</summary>
+    public const int AnnouncedTracksFieldNumber = 3;
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.TrackInfo> _repeated_announcedTracks_codec
+        = pb::FieldCodec.ForMessage(26, global::StreamVideo.v1.Sfu.Models.TrackInfo.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo> announcedTracks_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.TrackInfo> AnnouncedTracks {
+      get { return announcedTracks_; }
+    }
+
+    /// <summary>Field number for the "subscriptions" field.</summary>
+    public const int SubscriptionsFieldNumber = 4;
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> _repeated_subscriptions_codec
+        = pb::FieldCodec.ForMessage(34, global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> subscriptions_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Signal.TrackSubscriptionDetails> Subscriptions {
+      get { return subscriptions_; }
+    }
+
+    /// <summary>Field number for the "reconnect_attempt" field.</summary>
+    public const int ReconnectAttemptFieldNumber = 5;
+    private uint reconnectAttempt_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint ReconnectAttempt {
+      get { return reconnectAttempt_; }
+      set {
+        reconnectAttempt_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "from_sfu_id" field.</summary>
+    public const int FromSfuIdFieldNumber = 6;
+    private string fromSfuId_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string FromSfuId {
+      get { return fromSfuId_; }
+      set {
+        fromSfuId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "previous_session_id" field.</summary>
+    public const int PreviousSessionIdFieldNumber = 7;
+    private string previousSessionId_ = "";
+    /// <summary>
+    /// only set in case of rejoin
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string PreviousSessionId {
+      get { return previousSessionId_; }
+      set {
+        previousSessionId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ReconnectDetails);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ReconnectDetails other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Strategy != other.Strategy) return false;
+      if(!announcedTracks_.Equals(other.announcedTracks_)) return false;
+      if(!subscriptions_.Equals(other.subscriptions_)) return false;
+      if (ReconnectAttempt != other.ReconnectAttempt) return false;
+      if (FromSfuId != other.FromSfuId) return false;
+      if (PreviousSessionId != other.PreviousSessionId) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Strategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) hash ^= Strategy.GetHashCode();
+      hash ^= announcedTracks_.GetHashCode();
+      hash ^= subscriptions_.GetHashCode();
+      if (ReconnectAttempt != 0) hash ^= ReconnectAttempt.GetHashCode();
+      if (FromSfuId.Length != 0) hash ^= FromSfuId.GetHashCode();
+      if (PreviousSessionId.Length != 0) hash ^= PreviousSessionId.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Strategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) {
+        output.WriteRawTag(8);
+        output.WriteEnum((int) Strategy);
+      }
+      announcedTracks_.WriteTo(output, _repeated_announcedTracks_codec);
+      subscriptions_.WriteTo(output, _repeated_subscriptions_codec);
+      if (ReconnectAttempt != 0) {
+        output.WriteRawTag(40);
+        output.WriteUInt32(ReconnectAttempt);
+      }
+      if (FromSfuId.Length != 0) {
+        output.WriteRawTag(50);
+        output.WriteString(FromSfuId);
+      }
+      if (PreviousSessionId.Length != 0) {
+        output.WriteRawTag(58);
+        output.WriteString(PreviousSessionId);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Strategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) {
+        output.WriteRawTag(8);
+        output.WriteEnum((int) Strategy);
+      }
+      announcedTracks_.WriteTo(ref output, _repeated_announcedTracks_codec);
+      subscriptions_.WriteTo(ref output, _repeated_subscriptions_codec);
+      if (ReconnectAttempt != 0) {
+        output.WriteRawTag(40);
+        output.WriteUInt32(ReconnectAttempt);
+      }
+      if (FromSfuId.Length != 0) {
+        output.WriteRawTag(50);
+        output.WriteString(FromSfuId);
+      }
+      if (PreviousSessionId.Length != 0) {
+        output.WriteRawTag(58);
+        output.WriteString(PreviousSessionId);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (Strategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Strategy);
+      }
+      size += announcedTracks_.CalculateSize(_repeated_announcedTracks_codec);
+      size += subscriptions_.CalculateSize(_repeated_subscriptions_codec);
+      if (ReconnectAttempt != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(ReconnectAttempt);
+      }
+      if (FromSfuId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(FromSfuId);
+      }
+      if (PreviousSessionId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(PreviousSessionId);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ReconnectDetails other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Strategy != global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy.Unspecified) {
+        Strategy = other.Strategy;
+      }
+      announcedTracks_.Add(other.announcedTracks_);
+      subscriptions_.Add(other.subscriptions_);
+      if (other.ReconnectAttempt != 0) {
+        ReconnectAttempt = other.ReconnectAttempt;
+      }
+      if (other.FromSfuId.Length != 0) {
+        FromSfuId = other.FromSfuId;
+      }
+      if (other.PreviousSessionId.Length != 0) {
+        PreviousSessionId = other.PreviousSessionId;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Strategy = (global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy) input.ReadEnum();
+            break;
+          }
+          case 26: {
+            announcedTracks_.AddEntriesFrom(input, _repeated_announcedTracks_codec);
+            break;
+          }
+          case 34: {
+            subscriptions_.AddEntriesFrom(input, _repeated_subscriptions_codec);
+            break;
+          }
+          case 40: {
+            ReconnectAttempt = input.ReadUInt32();
+            break;
+          }
+          case 50: {
+            FromSfuId = input.ReadString();
+            break;
+          }
+          case 58: {
+            PreviousSessionId = input.ReadString();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Strategy = (global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy) input.ReadEnum();
+            break;
+          }
+          case 26: {
+            announcedTracks_.AddEntriesFrom(ref input, _repeated_announcedTracks_codec);
+            break;
+          }
+          case 34: {
+            subscriptions_.AddEntriesFrom(ref input, _repeated_subscriptions_codec);
+            break;
+          }
+          case 40: {
+            ReconnectAttempt = input.ReadUInt32();
+            break;
+          }
+          case 50: {
+            FromSfuId = input.ReadString();
+            break;
+          }
+          case 58: {
+            PreviousSessionId = input.ReadString();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class Migration : pb::IMessage<Migration>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -3907,7 +5511,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[11]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[16]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4134,6 +5738,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class JoinResponse : pb::IMessage<JoinResponse>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -4148,7 +5753,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[12]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[17]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4170,6 +5775,8 @@ namespace StreamVideo.v1.Sfu.Events {
     public JoinResponse(JoinResponse other) : this() {
       callState_ = other.callState_ != null ? other.callState_.Clone() : null;
       reconnected_ = other.reconnected_;
+      fastReconnectDeadlineSeconds_ = other.fastReconnectDeadlineSeconds_;
+      publishOptions_ = other.publishOptions_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -4203,6 +5810,29 @@ namespace StreamVideo.v1.Sfu.Events {
       }
     }
 
+    /// <summary>Field number for the "fast_reconnect_deadline_seconds" field.</summary>
+    public const int FastReconnectDeadlineSecondsFieldNumber = 3;
+    private int fastReconnectDeadlineSeconds_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int FastReconnectDeadlineSeconds {
+      get { return fastReconnectDeadlineSeconds_; }
+      set {
+        fastReconnectDeadlineSeconds_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "publish_options" field.</summary>
+    public const int PublishOptionsFieldNumber = 4;
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.PublishOption> _repeated_publishOptions_codec
+        = pb::FieldCodec.ForMessage(34, global::StreamVideo.v1.Sfu.Models.PublishOption.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption> publishOptions_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption>();
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.PublishOption> PublishOptions {
+      get { return publishOptions_; }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -4220,6 +5850,8 @@ namespace StreamVideo.v1.Sfu.Events {
       }
       if (!object.Equals(CallState, other.CallState)) return false;
       if (Reconnected != other.Reconnected) return false;
+      if (FastReconnectDeadlineSeconds != other.FastReconnectDeadlineSeconds) return false;
+      if(!publishOptions_.Equals(other.publishOptions_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -4229,6 +5861,8 @@ namespace StreamVideo.v1.Sfu.Events {
       int hash = 1;
       if (callState_ != null) hash ^= CallState.GetHashCode();
       if (Reconnected != false) hash ^= Reconnected.GetHashCode();
+      if (FastReconnectDeadlineSeconds != 0) hash ^= FastReconnectDeadlineSeconds.GetHashCode();
+      hash ^= publishOptions_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -4255,6 +5889,11 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(16);
         output.WriteBool(Reconnected);
       }
+      if (FastReconnectDeadlineSeconds != 0) {
+        output.WriteRawTag(24);
+        output.WriteInt32(FastReconnectDeadlineSeconds);
+      }
+      publishOptions_.WriteTo(output, _repeated_publishOptions_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -4273,6 +5912,11 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(16);
         output.WriteBool(Reconnected);
       }
+      if (FastReconnectDeadlineSeconds != 0) {
+        output.WriteRawTag(24);
+        output.WriteInt32(FastReconnectDeadlineSeconds);
+      }
+      publishOptions_.WriteTo(ref output, _repeated_publishOptions_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -4289,6 +5933,10 @@ namespace StreamVideo.v1.Sfu.Events {
       if (Reconnected != false) {
         size += 1 + 1;
       }
+      if (FastReconnectDeadlineSeconds != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(FastReconnectDeadlineSeconds);
+      }
+      size += publishOptions_.CalculateSize(_repeated_publishOptions_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -4310,6 +5958,10 @@ namespace StreamVideo.v1.Sfu.Events {
       if (other.Reconnected != false) {
         Reconnected = other.Reconnected;
       }
+      if (other.FastReconnectDeadlineSeconds != 0) {
+        FastReconnectDeadlineSeconds = other.FastReconnectDeadlineSeconds;
+      }
+      publishOptions_.Add(other.publishOptions_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -4334,6 +5986,14 @@ namespace StreamVideo.v1.Sfu.Events {
           }
           case 16: {
             Reconnected = input.ReadBool();
+            break;
+          }
+          case 24: {
+            FastReconnectDeadlineSeconds = input.ReadInt32();
+            break;
+          }
+          case 34: {
+            publishOptions_.AddEntriesFrom(input, _repeated_publishOptions_codec);
             break;
           }
         }
@@ -4362,6 +6022,14 @@ namespace StreamVideo.v1.Sfu.Events {
             Reconnected = input.ReadBool();
             break;
           }
+          case 24: {
+            FastReconnectDeadlineSeconds = input.ReadInt32();
+            break;
+          }
+          case 34: {
+            publishOptions_.AddEntriesFrom(ref input, _repeated_publishOptions_codec);
+            break;
+          }
         }
       }
     }
@@ -4372,6 +6040,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// <summary>
   /// ParticipantJoined is fired when a user joins a call
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class ParticipantJoined : pb::IMessage<ParticipantJoined>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -4386,7 +6055,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[13]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[18]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4610,6 +6279,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// <summary>
   /// ParticipantJoined is fired when a user leaves a call
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class ParticipantLeft : pb::IMessage<ParticipantLeft>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -4624,7 +6294,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[14]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[19]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4846,8 +6516,248 @@ namespace StreamVideo.v1.Sfu.Events {
   }
 
   /// <summary>
+  /// ParticipantUpdated is fired when user data is updated
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class ParticipantUpdated : pb::IMessage<ParticipantUpdated>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<ParticipantUpdated> _parser = new pb::MessageParser<ParticipantUpdated>(() => new ParticipantUpdated());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<ParticipantUpdated> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[20]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ParticipantUpdated() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ParticipantUpdated(ParticipantUpdated other) : this() {
+      callCid_ = other.callCid_;
+      participant_ = other.participant_ != null ? other.participant_.Clone() : null;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ParticipantUpdated Clone() {
+      return new ParticipantUpdated(this);
+    }
+
+    /// <summary>Field number for the "call_cid" field.</summary>
+    public const int CallCidFieldNumber = 1;
+    private string callCid_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string CallCid {
+      get { return callCid_; }
+      set {
+        callCid_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "participant" field.</summary>
+    public const int ParticipantFieldNumber = 2;
+    private global::StreamVideo.v1.Sfu.Models.Participant participant_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.Participant Participant {
+      get { return participant_; }
+      set {
+        participant_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as ParticipantUpdated);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(ParticipantUpdated other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (CallCid != other.CallCid) return false;
+      if (!object.Equals(Participant, other.Participant)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (CallCid.Length != 0) hash ^= CallCid.GetHashCode();
+      if (participant_ != null) hash ^= Participant.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (CallCid.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(CallCid);
+      }
+      if (participant_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(Participant);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (CallCid.Length != 0) {
+        output.WriteRawTag(10);
+        output.WriteString(CallCid);
+      }
+      if (participant_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(Participant);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (CallCid.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(CallCid);
+      }
+      if (participant_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Participant);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(ParticipantUpdated other) {
+      if (other == null) {
+        return;
+      }
+      if (other.CallCid.Length != 0) {
+        CallCid = other.CallCid;
+      }
+      if (other.participant_ != null) {
+        if (participant_ == null) {
+          Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
+        }
+        Participant.MergeFrom(other.Participant);
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            CallCid = input.ReadString();
+            break;
+          }
+          case 18: {
+            if (participant_ == null) {
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
+            }
+            input.ReadMessage(Participant);
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            CallCid = input.ReadString();
+            break;
+          }
+          case 18: {
+            if (participant_ == null) {
+              Participant = new global::StreamVideo.v1.Sfu.Models.Participant();
+            }
+            input.ReadMessage(Participant);
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
   /// SubscriberOffer is sent when the SFU adds tracks to a subscription
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class SubscriberOffer : pb::IMessage<SubscriberOffer>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -4862,7 +6772,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[15]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[21]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5074,6 +6984,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class PublisherAnswer : pb::IMessage<PublisherAnswer>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -5088,7 +6999,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[16]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[22]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5267,6 +7178,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// ConnectionQuality is sent to inform about connection quality changes
   /// eg. thierry's connection is not good -> render a red icon Zoom style
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class ConnectionQualityChanged : pb::IMessage<ConnectionQualityChanged>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -5281,7 +7193,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[17]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[23]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5445,6 +7357,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class ConnectionQualityInfo : pb::IMessage<ConnectionQualityInfo>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -5459,7 +7372,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[18]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[24]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5711,6 +7624,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// <summary>
   /// DominantSpeakerChanged is sent by the SFU to notify when there is a new dominant speaker in the call
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class DominantSpeakerChanged : pb::IMessage<DominantSpeakerChanged>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -5725,7 +7639,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[19]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[25]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5937,6 +7851,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class AudioLevel : pb::IMessage<AudioLevel>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -5951,7 +7866,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[20]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[26]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6243,6 +8158,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// <summary>
   /// AudioLevelChanged is sent by the SFU to notify about audio levels by user
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class AudioLevelChanged : pb::IMessage<AudioLevelChanged>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -6257,7 +8173,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[21]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[27]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6421,195 +8337,7 @@ namespace StreamVideo.v1.Sfu.Events {
 
   }
 
-  internal sealed partial class AudioMediaRequest : pb::IMessage<AudioMediaRequest>
-  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      , pb::IBufferMessage
-  #endif
-  {
-    private static readonly pb::MessageParser<AudioMediaRequest> _parser = new pb::MessageParser<AudioMediaRequest>(() => new AudioMediaRequest());
-    private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pb::MessageParser<AudioMediaRequest> Parser { get { return _parser; } }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[22]; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    pbr::MessageDescriptor pb::IMessage.Descriptor {
-      get { return Descriptor; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public AudioMediaRequest() {
-      OnConstruction();
-    }
-
-    partial void OnConstruction();
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public AudioMediaRequest(AudioMediaRequest other) : this() {
-      channelCount_ = other.channelCount_;
-      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public AudioMediaRequest Clone() {
-      return new AudioMediaRequest(this);
-    }
-
-    /// <summary>Field number for the "channel_count" field.</summary>
-    public const int ChannelCountFieldNumber = 1;
-    private int channelCount_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int ChannelCount {
-      get { return channelCount_; }
-      set {
-        channelCount_ = value;
-      }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override bool Equals(object other) {
-      return Equals(other as AudioMediaRequest);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool Equals(AudioMediaRequest other) {
-      if (ReferenceEquals(other, null)) {
-        return false;
-      }
-      if (ReferenceEquals(other, this)) {
-        return true;
-      }
-      if (ChannelCount != other.ChannelCount) return false;
-      return Equals(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override int GetHashCode() {
-      int hash = 1;
-      if (ChannelCount != 0) hash ^= ChannelCount.GetHashCode();
-      if (_unknownFields != null) {
-        hash ^= _unknownFields.GetHashCode();
-      }
-      return hash;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override string ToString() {
-      return pb::JsonFormatter.ToDiagnosticString(this);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void WriteTo(pb::CodedOutputStream output) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      output.WriteRawMessage(this);
-    #else
-      if (ChannelCount != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(ChannelCount);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(output);
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (ChannelCount != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(ChannelCount);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(ref output);
-      }
-    }
-    #endif
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int CalculateSize() {
-      int size = 0;
-      if (ChannelCount != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ChannelCount);
-      }
-      if (_unknownFields != null) {
-        size += _unknownFields.CalculateSize();
-      }
-      return size;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(AudioMediaRequest other) {
-      if (other == null) {
-        return;
-      }
-      if (other.ChannelCount != 0) {
-        ChannelCount = other.ChannelCount;
-      }
-      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(pb::CodedInputStream input) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      input.ReadRawMessage(this);
-    #else
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
-            break;
-          case 8: {
-            ChannelCount = input.ReadInt32();
-            break;
-          }
-        }
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
-            break;
-          case 8: {
-            ChannelCount = input.ReadInt32();
-            break;
-          }
-        }
-      }
-    }
-    #endif
-
-  }
-
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class AudioSender : pb::IMessage<AudioSender>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -6624,7 +8352,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[23]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[28]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6644,8 +8372,9 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public AudioSender(AudioSender other) : this() {
-      mediaRequest_ = other.mediaRequest_ != null ? other.mediaRequest_.Clone() : null;
       codec_ = other.codec_ != null ? other.codec_.Clone() : null;
+      trackType_ = other.trackType_;
+      publishOptionId_ = other.publishOptionId_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -6653,18 +8382,6 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public AudioSender Clone() {
       return new AudioSender(this);
-    }
-
-    /// <summary>Field number for the "media_request" field.</summary>
-    public const int MediaRequestFieldNumber = 1;
-    private global::StreamVideo.v1.Sfu.Events.AudioMediaRequest mediaRequest_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::StreamVideo.v1.Sfu.Events.AudioMediaRequest MediaRequest {
-      get { return mediaRequest_; }
-      set {
-        mediaRequest_ = value;
-      }
     }
 
     /// <summary>Field number for the "codec" field.</summary>
@@ -6676,6 +8393,30 @@ namespace StreamVideo.v1.Sfu.Events {
       get { return codec_; }
       set {
         codec_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "track_type" field.</summary>
+    public const int TrackTypeFieldNumber = 3;
+    private global::StreamVideo.v1.Sfu.Models.TrackType trackType_ = global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.TrackType TrackType {
+      get { return trackType_; }
+      set {
+        trackType_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "publish_option_id" field.</summary>
+    public const int PublishOptionIdFieldNumber = 4;
+    private int publishOptionId_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int PublishOptionId {
+      get { return publishOptionId_; }
+      set {
+        publishOptionId_ = value;
       }
     }
 
@@ -6694,8 +8435,9 @@ namespace StreamVideo.v1.Sfu.Events {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(MediaRequest, other.MediaRequest)) return false;
       if (!object.Equals(Codec, other.Codec)) return false;
+      if (TrackType != other.TrackType) return false;
+      if (PublishOptionId != other.PublishOptionId) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -6703,8 +8445,9 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (mediaRequest_ != null) hash ^= MediaRequest.GetHashCode();
       if (codec_ != null) hash ^= Codec.GetHashCode();
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) hash ^= TrackType.GetHashCode();
+      if (PublishOptionId != 0) hash ^= PublishOptionId.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -6723,13 +8466,17 @@ namespace StreamVideo.v1.Sfu.Events {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (mediaRequest_ != null) {
-        output.WriteRawTag(10);
-        output.WriteMessage(MediaRequest);
-      }
       if (codec_ != null) {
         output.WriteRawTag(18);
         output.WriteMessage(Codec);
+      }
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        output.WriteRawTag(24);
+        output.WriteEnum((int) TrackType);
+      }
+      if (PublishOptionId != 0) {
+        output.WriteRawTag(32);
+        output.WriteInt32(PublishOptionId);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -6741,13 +8488,17 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (mediaRequest_ != null) {
-        output.WriteRawTag(10);
-        output.WriteMessage(MediaRequest);
-      }
       if (codec_ != null) {
         output.WriteRawTag(18);
         output.WriteMessage(Codec);
+      }
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        output.WriteRawTag(24);
+        output.WriteEnum((int) TrackType);
+      }
+      if (PublishOptionId != 0) {
+        output.WriteRawTag(32);
+        output.WriteInt32(PublishOptionId);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -6759,11 +8510,14 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (mediaRequest_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(MediaRequest);
-      }
       if (codec_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Codec);
+      }
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) TrackType);
+      }
+      if (PublishOptionId != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(PublishOptionId);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -6777,18 +8531,18 @@ namespace StreamVideo.v1.Sfu.Events {
       if (other == null) {
         return;
       }
-      if (other.mediaRequest_ != null) {
-        if (mediaRequest_ == null) {
-          MediaRequest = new global::StreamVideo.v1.Sfu.Events.AudioMediaRequest();
-        }
-        MediaRequest.MergeFrom(other.MediaRequest);
-      }
       if (other.codec_ != null) {
         if (codec_ == null) {
           Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
         }
         Codec.MergeFrom(other.Codec);
       }
+      if (other.TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        TrackType = other.TrackType;
+      }
+      if (other.PublishOptionId != 0) {
+        PublishOptionId = other.PublishOptionId;
+      }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -6804,18 +8558,19 @@ namespace StreamVideo.v1.Sfu.Events {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 10: {
-            if (mediaRequest_ == null) {
-              MediaRequest = new global::StreamVideo.v1.Sfu.Events.AudioMediaRequest();
-            }
-            input.ReadMessage(MediaRequest);
-            break;
-          }
           case 18: {
             if (codec_ == null) {
               Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
             }
             input.ReadMessage(Codec);
+            break;
+          }
+          case 24: {
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
+            break;
+          }
+          case 32: {
+            PublishOptionId = input.ReadInt32();
             break;
           }
         }
@@ -6833,13 +8588,6 @@ namespace StreamVideo.v1.Sfu.Events {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 10: {
-            if (mediaRequest_ == null) {
-              MediaRequest = new global::StreamVideo.v1.Sfu.Events.AudioMediaRequest();
-            }
-            input.ReadMessage(MediaRequest);
-            break;
-          }
           case 18: {
             if (codec_ == null) {
               Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
@@ -6847,267 +8595,12 @@ namespace StreamVideo.v1.Sfu.Events {
             input.ReadMessage(Codec);
             break;
           }
-        }
-      }
-    }
-    #endif
-
-  }
-
-  internal sealed partial class VideoMediaRequest : pb::IMessage<VideoMediaRequest>
-  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      , pb::IBufferMessage
-  #endif
-  {
-    private static readonly pb::MessageParser<VideoMediaRequest> _parser = new pb::MessageParser<VideoMediaRequest>(() => new VideoMediaRequest());
-    private pb::UnknownFieldSet _unknownFields;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pb::MessageParser<VideoMediaRequest> Parser { get { return _parser; } }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[24]; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    pbr::MessageDescriptor pb::IMessage.Descriptor {
-      get { return Descriptor; }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public VideoMediaRequest() {
-      OnConstruction();
-    }
-
-    partial void OnConstruction();
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public VideoMediaRequest(VideoMediaRequest other) : this() {
-      idealHeight_ = other.idealHeight_;
-      idealWidth_ = other.idealWidth_;
-      idealFrameRate_ = other.idealFrameRate_;
-      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public VideoMediaRequest Clone() {
-      return new VideoMediaRequest(this);
-    }
-
-    /// <summary>Field number for the "ideal_height" field.</summary>
-    public const int IdealHeightFieldNumber = 1;
-    private int idealHeight_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int IdealHeight {
-      get { return idealHeight_; }
-      set {
-        idealHeight_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "ideal_width" field.</summary>
-    public const int IdealWidthFieldNumber = 2;
-    private int idealWidth_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int IdealWidth {
-      get { return idealWidth_; }
-      set {
-        idealWidth_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "ideal_frame_rate" field.</summary>
-    public const int IdealFrameRateFieldNumber = 3;
-    private int idealFrameRate_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int IdealFrameRate {
-      get { return idealFrameRate_; }
-      set {
-        idealFrameRate_ = value;
-      }
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override bool Equals(object other) {
-      return Equals(other as VideoMediaRequest);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public bool Equals(VideoMediaRequest other) {
-      if (ReferenceEquals(other, null)) {
-        return false;
-      }
-      if (ReferenceEquals(other, this)) {
-        return true;
-      }
-      if (IdealHeight != other.IdealHeight) return false;
-      if (IdealWidth != other.IdealWidth) return false;
-      if (IdealFrameRate != other.IdealFrameRate) return false;
-      return Equals(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override int GetHashCode() {
-      int hash = 1;
-      if (IdealHeight != 0) hash ^= IdealHeight.GetHashCode();
-      if (IdealWidth != 0) hash ^= IdealWidth.GetHashCode();
-      if (IdealFrameRate != 0) hash ^= IdealFrameRate.GetHashCode();
-      if (_unknownFields != null) {
-        hash ^= _unknownFields.GetHashCode();
-      }
-      return hash;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public override string ToString() {
-      return pb::JsonFormatter.ToDiagnosticString(this);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void WriteTo(pb::CodedOutputStream output) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      output.WriteRawMessage(this);
-    #else
-      if (IdealHeight != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(IdealHeight);
-      }
-      if (IdealWidth != 0) {
-        output.WriteRawTag(16);
-        output.WriteInt32(IdealWidth);
-      }
-      if (IdealFrameRate != 0) {
-        output.WriteRawTag(24);
-        output.WriteInt32(IdealFrameRate);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(output);
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (IdealHeight != 0) {
-        output.WriteRawTag(8);
-        output.WriteInt32(IdealHeight);
-      }
-      if (IdealWidth != 0) {
-        output.WriteRawTag(16);
-        output.WriteInt32(IdealWidth);
-      }
-      if (IdealFrameRate != 0) {
-        output.WriteRawTag(24);
-        output.WriteInt32(IdealFrameRate);
-      }
-      if (_unknownFields != null) {
-        _unknownFields.WriteTo(ref output);
-      }
-    }
-    #endif
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int CalculateSize() {
-      int size = 0;
-      if (IdealHeight != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(IdealHeight);
-      }
-      if (IdealWidth != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(IdealWidth);
-      }
-      if (IdealFrameRate != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(IdealFrameRate);
-      }
-      if (_unknownFields != null) {
-        size += _unknownFields.CalculateSize();
-      }
-      return size;
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(VideoMediaRequest other) {
-      if (other == null) {
-        return;
-      }
-      if (other.IdealHeight != 0) {
-        IdealHeight = other.IdealHeight;
-      }
-      if (other.IdealWidth != 0) {
-        IdealWidth = other.IdealWidth;
-      }
-      if (other.IdealFrameRate != 0) {
-        IdealFrameRate = other.IdealFrameRate;
-      }
-      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
-    }
-
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public void MergeFrom(pb::CodedInputStream input) {
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-      input.ReadRawMessage(this);
-    #else
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
-            break;
-          case 8: {
-            IdealHeight = input.ReadInt32();
-            break;
-          }
-          case 16: {
-            IdealWidth = input.ReadInt32();
-            break;
-          }
           case 24: {
-            IdealFrameRate = input.ReadInt32();
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
             break;
           }
-        }
-      }
-    #endif
-    }
-
-    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
-      uint tag;
-      while ((tag = input.ReadTag()) != 0) {
-        switch(tag) {
-          default:
-            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
-            break;
-          case 8: {
-            IdealHeight = input.ReadInt32();
-            break;
-          }
-          case 16: {
-            IdealWidth = input.ReadInt32();
-            break;
-          }
-          case 24: {
-            IdealFrameRate = input.ReadInt32();
+          case 32: {
+            PublishOptionId = input.ReadInt32();
             break;
           }
         }
@@ -7122,6 +8615,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// The parameters are specified here - https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpEncodingParameters
   /// SDKs use these parameters sent from the server to dynamically adjust these parameters to save CPU, bandwidth
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class VideoLayerSetting : pb::IMessage<VideoLayerSetting>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -7136,7 +8630,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[25]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[29]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7160,9 +8654,9 @@ namespace StreamVideo.v1.Sfu.Events {
       active_ = other.active_;
       maxBitrate_ = other.maxBitrate_;
       scaleResolutionDownBy_ = other.scaleResolutionDownBy_;
-      priority_ = other.priority_;
       codec_ = other.codec_ != null ? other.codec_.Clone() : null;
       maxFramerate_ = other.maxFramerate_;
+      scalabilityMode_ = other.scalabilityMode_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -7220,18 +8714,6 @@ namespace StreamVideo.v1.Sfu.Events {
       }
     }
 
-    /// <summary>Field number for the "priority" field.</summary>
-    public const int PriorityFieldNumber = 5;
-    private global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority priority_ = global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority Priority {
-      get { return priority_; }
-      set {
-        priority_ = value;
-      }
-    }
-
     /// <summary>Field number for the "codec" field.</summary>
     public const int CodecFieldNumber = 6;
     private global::StreamVideo.v1.Sfu.Models.Codec codec_;
@@ -7256,6 +8738,18 @@ namespace StreamVideo.v1.Sfu.Events {
       }
     }
 
+    /// <summary>Field number for the "scalability_mode" field.</summary>
+    public const int ScalabilityModeFieldNumber = 8;
+    private string scalabilityMode_ = "";
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ScalabilityMode {
+      get { return scalabilityMode_; }
+      set {
+        scalabilityMode_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -7275,9 +8769,9 @@ namespace StreamVideo.v1.Sfu.Events {
       if (Active != other.Active) return false;
       if (MaxBitrate != other.MaxBitrate) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(ScaleResolutionDownBy, other.ScaleResolutionDownBy)) return false;
-      if (Priority != other.Priority) return false;
       if (!object.Equals(Codec, other.Codec)) return false;
       if (MaxFramerate != other.MaxFramerate) return false;
+      if (ScalabilityMode != other.ScalabilityMode) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -7289,9 +8783,9 @@ namespace StreamVideo.v1.Sfu.Events {
       if (Active != false) hash ^= Active.GetHashCode();
       if (MaxBitrate != 0) hash ^= MaxBitrate.GetHashCode();
       if (ScaleResolutionDownBy != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(ScaleResolutionDownBy);
-      if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) hash ^= Priority.GetHashCode();
       if (codec_ != null) hash ^= Codec.GetHashCode();
       if (MaxFramerate != 0) hash ^= MaxFramerate.GetHashCode();
+      if (ScalabilityMode.Length != 0) hash ^= ScalabilityMode.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -7326,10 +8820,6 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(37);
         output.WriteFloat(ScaleResolutionDownBy);
       }
-      if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
-        output.WriteRawTag(40);
-        output.WriteEnum((int) Priority);
-      }
       if (codec_ != null) {
         output.WriteRawTag(50);
         output.WriteMessage(Codec);
@@ -7337,6 +8827,10 @@ namespace StreamVideo.v1.Sfu.Events {
       if (MaxFramerate != 0) {
         output.WriteRawTag(56);
         output.WriteUInt32(MaxFramerate);
+      }
+      if (ScalabilityMode.Length != 0) {
+        output.WriteRawTag(66);
+        output.WriteString(ScalabilityMode);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -7364,10 +8858,6 @@ namespace StreamVideo.v1.Sfu.Events {
         output.WriteRawTag(37);
         output.WriteFloat(ScaleResolutionDownBy);
       }
-      if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
-        output.WriteRawTag(40);
-        output.WriteEnum((int) Priority);
-      }
       if (codec_ != null) {
         output.WriteRawTag(50);
         output.WriteMessage(Codec);
@@ -7375,6 +8865,10 @@ namespace StreamVideo.v1.Sfu.Events {
       if (MaxFramerate != 0) {
         output.WriteRawTag(56);
         output.WriteUInt32(MaxFramerate);
+      }
+      if (ScalabilityMode.Length != 0) {
+        output.WriteRawTag(66);
+        output.WriteString(ScalabilityMode);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
@@ -7398,14 +8892,14 @@ namespace StreamVideo.v1.Sfu.Events {
       if (ScaleResolutionDownBy != 0F) {
         size += 1 + 4;
       }
-      if (Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Priority);
-      }
       if (codec_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Codec);
       }
       if (MaxFramerate != 0) {
         size += 1 + pb::CodedOutputStream.ComputeUInt32Size(MaxFramerate);
+      }
+      if (ScalabilityMode.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ScalabilityMode);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -7431,9 +8925,6 @@ namespace StreamVideo.v1.Sfu.Events {
       if (other.ScaleResolutionDownBy != 0F) {
         ScaleResolutionDownBy = other.ScaleResolutionDownBy;
       }
-      if (other.Priority != global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority.HighUnspecified) {
-        Priority = other.Priority;
-      }
       if (other.codec_ != null) {
         if (codec_ == null) {
           Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
@@ -7442,6 +8933,9 @@ namespace StreamVideo.v1.Sfu.Events {
       }
       if (other.MaxFramerate != 0) {
         MaxFramerate = other.MaxFramerate;
+      }
+      if (other.ScalabilityMode.Length != 0) {
+        ScalabilityMode = other.ScalabilityMode;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -7474,10 +8968,6 @@ namespace StreamVideo.v1.Sfu.Events {
             ScaleResolutionDownBy = input.ReadFloat();
             break;
           }
-          case 40: {
-            Priority = (global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority) input.ReadEnum();
-            break;
-          }
           case 50: {
             if (codec_ == null) {
               Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
@@ -7487,6 +8977,10 @@ namespace StreamVideo.v1.Sfu.Events {
           }
           case 56: {
             MaxFramerate = input.ReadUInt32();
+            break;
+          }
+          case 66: {
+            ScalabilityMode = input.ReadString();
             break;
           }
         }
@@ -7520,10 +9014,6 @@ namespace StreamVideo.v1.Sfu.Events {
             ScaleResolutionDownBy = input.ReadFloat();
             break;
           }
-          case 40: {
-            Priority = (global::StreamVideo.v1.Sfu.Events.VideoLayerSetting.Types.Priority) input.ReadEnum();
-            break;
-          }
           case 50: {
             if (codec_ == null) {
               Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
@@ -7535,28 +9025,18 @@ namespace StreamVideo.v1.Sfu.Events {
             MaxFramerate = input.ReadUInt32();
             break;
           }
+          case 66: {
+            ScalabilityMode = input.ReadString();
+            break;
+          }
         }
       }
     }
     #endif
 
-    #region Nested types
-    /// <summary>Container for nested types declared in the VideoLayerSetting message type.</summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public static partial class Types {
-      internal enum Priority {
-        [pbr::OriginalName("PRIORITY_HIGH_UNSPECIFIED")] HighUnspecified = 0,
-        [pbr::OriginalName("PRIORITY_LOW")] Low = 1,
-        [pbr::OriginalName("PRIORITY_MEDIUM")] Medium = 2,
-        [pbr::OriginalName("PRIORITY_VERY_LOW")] VeryLow = 3,
-      }
-
-    }
-    #endregion
-
   }
 
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class VideoSender : pb::IMessage<VideoSender>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -7571,7 +9051,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[26]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[30]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7591,9 +9071,10 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public VideoSender(VideoSender other) : this() {
-      mediaRequest_ = other.mediaRequest_ != null ? other.mediaRequest_.Clone() : null;
       codec_ = other.codec_ != null ? other.codec_.Clone() : null;
       layers_ = other.layers_.Clone();
+      trackType_ = other.trackType_;
+      publishOptionId_ = other.publishOptionId_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -7601,18 +9082,6 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public VideoSender Clone() {
       return new VideoSender(this);
-    }
-
-    /// <summary>Field number for the "media_request" field.</summary>
-    public const int MediaRequestFieldNumber = 1;
-    private global::StreamVideo.v1.Sfu.Events.VideoMediaRequest mediaRequest_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::StreamVideo.v1.Sfu.Events.VideoMediaRequest MediaRequest {
-      get { return mediaRequest_; }
-      set {
-        mediaRequest_ = value;
-      }
     }
 
     /// <summary>Field number for the "codec" field.</summary>
@@ -7638,6 +9107,30 @@ namespace StreamVideo.v1.Sfu.Events {
       get { return layers_; }
     }
 
+    /// <summary>Field number for the "track_type" field.</summary>
+    public const int TrackTypeFieldNumber = 4;
+    private global::StreamVideo.v1.Sfu.Models.TrackType trackType_ = global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.TrackType TrackType {
+      get { return trackType_; }
+      set {
+        trackType_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "publish_option_id" field.</summary>
+    public const int PublishOptionIdFieldNumber = 5;
+    private int publishOptionId_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int PublishOptionId {
+      get { return publishOptionId_; }
+      set {
+        publishOptionId_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -7653,9 +9146,10 @@ namespace StreamVideo.v1.Sfu.Events {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(MediaRequest, other.MediaRequest)) return false;
       if (!object.Equals(Codec, other.Codec)) return false;
       if(!layers_.Equals(other.layers_)) return false;
+      if (TrackType != other.TrackType) return false;
+      if (PublishOptionId != other.PublishOptionId) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -7663,9 +9157,10 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (mediaRequest_ != null) hash ^= MediaRequest.GetHashCode();
       if (codec_ != null) hash ^= Codec.GetHashCode();
       hash ^= layers_.GetHashCode();
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) hash ^= TrackType.GetHashCode();
+      if (PublishOptionId != 0) hash ^= PublishOptionId.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -7684,15 +9179,19 @@ namespace StreamVideo.v1.Sfu.Events {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (mediaRequest_ != null) {
-        output.WriteRawTag(10);
-        output.WriteMessage(MediaRequest);
-      }
       if (codec_ != null) {
         output.WriteRawTag(18);
         output.WriteMessage(Codec);
       }
       layers_.WriteTo(output, _repeated_layers_codec);
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        output.WriteRawTag(32);
+        output.WriteEnum((int) TrackType);
+      }
+      if (PublishOptionId != 0) {
+        output.WriteRawTag(40);
+        output.WriteInt32(PublishOptionId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -7703,15 +9202,19 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (mediaRequest_ != null) {
-        output.WriteRawTag(10);
-        output.WriteMessage(MediaRequest);
-      }
       if (codec_ != null) {
         output.WriteRawTag(18);
         output.WriteMessage(Codec);
       }
       layers_.WriteTo(ref output, _repeated_layers_codec);
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        output.WriteRawTag(32);
+        output.WriteEnum((int) TrackType);
+      }
+      if (PublishOptionId != 0) {
+        output.WriteRawTag(40);
+        output.WriteInt32(PublishOptionId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -7722,13 +9225,16 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (mediaRequest_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(MediaRequest);
-      }
       if (codec_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Codec);
       }
       size += layers_.CalculateSize(_repeated_layers_codec);
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) TrackType);
+      }
+      if (PublishOptionId != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(PublishOptionId);
+      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -7741,12 +9247,6 @@ namespace StreamVideo.v1.Sfu.Events {
       if (other == null) {
         return;
       }
-      if (other.mediaRequest_ != null) {
-        if (mediaRequest_ == null) {
-          MediaRequest = new global::StreamVideo.v1.Sfu.Events.VideoMediaRequest();
-        }
-        MediaRequest.MergeFrom(other.MediaRequest);
-      }
       if (other.codec_ != null) {
         if (codec_ == null) {
           Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
@@ -7754,6 +9254,12 @@ namespace StreamVideo.v1.Sfu.Events {
         Codec.MergeFrom(other.Codec);
       }
       layers_.Add(other.layers_);
+      if (other.TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        TrackType = other.TrackType;
+      }
+      if (other.PublishOptionId != 0) {
+        PublishOptionId = other.PublishOptionId;
+      }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -7769,13 +9275,6 @@ namespace StreamVideo.v1.Sfu.Events {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 10: {
-            if (mediaRequest_ == null) {
-              MediaRequest = new global::StreamVideo.v1.Sfu.Events.VideoMediaRequest();
-            }
-            input.ReadMessage(MediaRequest);
-            break;
-          }
           case 18: {
             if (codec_ == null) {
               Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
@@ -7785,6 +9284,14 @@ namespace StreamVideo.v1.Sfu.Events {
           }
           case 26: {
             layers_.AddEntriesFrom(input, _repeated_layers_codec);
+            break;
+          }
+          case 32: {
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
+            break;
+          }
+          case 40: {
+            PublishOptionId = input.ReadInt32();
             break;
           }
         }
@@ -7802,13 +9309,6 @@ namespace StreamVideo.v1.Sfu.Events {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
-          case 10: {
-            if (mediaRequest_ == null) {
-              MediaRequest = new global::StreamVideo.v1.Sfu.Events.VideoMediaRequest();
-            }
-            input.ReadMessage(MediaRequest);
-            break;
-          }
           case 18: {
             if (codec_ == null) {
               Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
@@ -7818,6 +9318,14 @@ namespace StreamVideo.v1.Sfu.Events {
           }
           case 26: {
             layers_.AddEntriesFrom(ref input, _repeated_layers_codec);
+            break;
+          }
+          case 32: {
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
+            break;
+          }
+          case 40: {
+            PublishOptionId = input.ReadInt32();
             break;
           }
         }
@@ -7830,6 +9338,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// <summary>
   /// sent to users when they need to change the quality of their video
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class ChangePublishQuality : pb::IMessage<ChangePublishQuality>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -7844,7 +9353,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[27]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[31]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -8052,6 +9561,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// In simple words, this is exactly the same as muting a track on the client.
   /// Here, instead of the user instructing the client, SFU would be doing it.
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class CallGrantsUpdated : pb::IMessage<CallGrantsUpdated>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -8066,7 +9576,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[28]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[32]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -8291,6 +9801,7 @@ namespace StreamVideo.v1.Sfu.Events {
   /// Go away is sent by the SFU to the client to signal to migrate away from the SFU.
   /// The evict reason may specify why the user is being evicted.
   /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class GoAway : pb::IMessage<GoAway>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -8305,7 +9816,7 @@ namespace StreamVideo.v1.Sfu.Events {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[29]; }
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[33]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -8471,6 +9982,200 @@ namespace StreamVideo.v1.Sfu.Events {
             break;
           case 8: {
             Reason = (global::StreamVideo.v1.Sfu.Models.GoAwayReason) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// CallEnded is sent by the SFU to the client to signal that the call has ended.
+  /// The reason may specify why the call has ended.
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class CallEnded : pb::IMessage<CallEnded>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<CallEnded> _parser = new pb::MessageParser<CallEnded>(() => new CallEnded());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<CallEnded> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Events.EventsReflection.Descriptor.MessageTypes[34]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CallEnded() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CallEnded(CallEnded other) : this() {
+      reason_ = other.reason_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public CallEnded Clone() {
+      return new CallEnded(this);
+    }
+
+    /// <summary>Field number for the "reason" field.</summary>
+    public const int ReasonFieldNumber = 1;
+    private global::StreamVideo.v1.Sfu.Models.CallEndedReason reason_ = global::StreamVideo.v1.Sfu.Models.CallEndedReason.Unspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.CallEndedReason Reason {
+      get { return reason_; }
+      set {
+        reason_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as CallEnded);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(CallEnded other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Reason != other.Reason) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Reason != global::StreamVideo.v1.Sfu.Models.CallEndedReason.Unspecified) hash ^= Reason.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Reason != global::StreamVideo.v1.Sfu.Models.CallEndedReason.Unspecified) {
+        output.WriteRawTag(8);
+        output.WriteEnum((int) Reason);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Reason != global::StreamVideo.v1.Sfu.Models.CallEndedReason.Unspecified) {
+        output.WriteRawTag(8);
+        output.WriteEnum((int) Reason);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (Reason != global::StreamVideo.v1.Sfu.Models.CallEndedReason.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Reason);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(CallEnded other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Reason != global::StreamVideo.v1.Sfu.Models.CallEndedReason.Unspecified) {
+        Reason = other.Reason;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Reason = (global::StreamVideo.v1.Sfu.Models.CallEndedReason) input.ReadEnum();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Reason = (global::StreamVideo.v1.Sfu.Models.CallEndedReason) input.ReadEnum();
             break;
           }
         }

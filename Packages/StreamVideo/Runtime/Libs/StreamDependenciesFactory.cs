@@ -1,4 +1,5 @@
-﻿using StreamVideo.Libs.AppInfo;
+﻿using Libs.Websockets;
+using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.VideoClientInstanceRunner;
 using StreamVideo.Libs.Http;
@@ -27,7 +28,7 @@ namespace StreamVideo.Libs
             //StreamTodo: handle debug mode
             return new NativeWebSocketWrapper(logs, isDebugMode: isDebugMode);
 #else
-            return new WebsocketClient(logs, isDebugMode: isDebugMode);
+            return new WebsocketSharpClient(logs);
 #endif
         }
 

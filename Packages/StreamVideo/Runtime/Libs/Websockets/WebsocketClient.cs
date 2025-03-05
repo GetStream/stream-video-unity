@@ -54,6 +54,8 @@ namespace StreamVideo.Libs.Websockets
                 _connectionCts = new CancellationTokenSource();
 
                 _internalClient = new ClientWebSocket();
+                _internalClient.Options.SetRequestHeader("User-Agent", "unity-video-sdk-ws-client");
+                _internalClient.Options.SetRequestHeader("Host", serverUri.Host);
                 await _internalClient.ConnectAsync(_uri, _connectionCts.Token);
             }
             catch (OperationCanceledException e)

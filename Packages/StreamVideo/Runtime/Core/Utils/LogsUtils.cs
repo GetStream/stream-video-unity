@@ -1,4 +1,5 @@
-﻿using StreamVideo.Libs.Logs;
+﻿using System;
+using StreamVideo.Libs.Logs;
 
 namespace StreamVideo.Core.Utils
 {
@@ -22,6 +23,13 @@ namespace StreamVideo.Core.Utils
         {
 #if STREAM_DEBUG_ENABLED
             logs.Error(message);
+#endif
+        }
+        
+        public static void ExceptionIfDebug(this ILogs logs, Exception exception)
+        {
+#if STREAM_DEBUG_ENABLED
+            logs.Exception(exception);
 #endif
         }
     }

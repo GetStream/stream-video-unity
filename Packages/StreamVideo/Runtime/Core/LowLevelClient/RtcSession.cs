@@ -53,7 +53,7 @@ namespace StreamVideo.Core.LowLevelClient
         public const ulong FullPublishVideoBitrate = 1_200_000;
         public const ulong HalfPublishVideoBitrate = MaxPublishVideoBitrate / 2;
         public const ulong QuarterPublishVideoBitrate = MaxPublishVideoBitrate / 4;
-        
+
         // StreamTodo: control this via compiler flag
         public const bool LogWebRTCStats = false;
 
@@ -222,7 +222,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 // StreamTodo: perhaps failure on stats sending should be silent? This can return "call not found" if call ended before `call.ended` event was received
                 // Maybe we can wait 1-2s before displaying the error to cover this case
-                
+
                 _logs.Warning("Sending webRTC stats failed: " + response.Error.Message);
                 _logs.ErrorIfDebug("Sending webRTC stats failed: " + response.Error.Message);
             }
@@ -239,52 +239,60 @@ namespace StreamVideo.Core.LowLevelClient
                     $"Cannot start new session until previous call is active. Active call: {ActiveCall}");
             }
 
-            //StreamTodo: perhaps not necessary here
-            ClearSession();
+            try
+            {
+                //StreamTodo: perhaps not necessary here
+                ClearSession();
 
-            SubscribeToSfuEvents();
+                SubscribeToSfuEvents();
 
-            ActiveCall = call ?? throw new ArgumentNullException(nameof(call));
-            _httpClient = _httpClientFactory(ActiveCall);
+                ActiveCall = call ?? throw new ArgumentNullException(nameof(call));
+                _httpClient = _httpClientFactory(ActiveCall);
 
-            CallState = CallingState.Joining;
+                CallState = CallingState.Joining;
 
-            var sfuUrl = call.Credentials.Server.Url;
-            var sfuToken = call.Credentials.Token;
-            var iceServers = call.Credentials.IceServers;
+                var sfuUrl = call.Credentials.Server.Url;
+                var sfuToken = call.Credentials.Token;
+                var iceServers = call.Credentials.IceServers;
 
-            CreateSubscriber(iceServers);
+                CreateSubscriber(iceServers);
 
-            SessionId = Guid.NewGuid().ToString();
+                SessionId = Guid.NewGuid().ToString();
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Info($"START Session: " + SessionId);
+                _logs.Info($"START Session: " + SessionId);
 #endif
 
-            // We don't set initial offer as local. Later on we set generated answer as a local
-            var offer = await Subscriber.CreateOfferAsync();
+                // We don't set initial offer as local. Later on we set generated answer as a local
+                var offer = await Subscriber.CreateOfferAsync();
 
-            _sfuWebSocket.SetSessionData(SessionId, offer.sdp, sfuUrl, sfuToken);
-            await _sfuWebSocket.ConnectAsync();
+                _sfuWebSocket.SetSessionData(SessionId, offer.sdp, sfuUrl, sfuToken);
+                await _sfuWebSocket.ConnectAsync();
 
-            while (CallState != CallingState.Joined)
-            {
-                //StreamTodo: implement a timeout if something goes wrong
-                //StreamTodo: implement cancellation token
-                await Task.Delay(1);
+                while (CallState != CallingState.Joined)
+                {
+                    //StreamTodo: implement a timeout if something goes wrong
+                    //StreamTodo: implement cancellation token
+                    await Task.Delay(1);
+                }
+
+                // Wait for SFU connected to receive track prefix
+                if (CanPublish())
+                {
+                    CreatePublisher(iceServers);
+                }
+
+                await SubscribeToTracksAsync();
+
+                //StreamTodo: validate when this state should set
+                CallState = CallingState.Joined;
+                _videoAudioSyncBenchmark?.Init(call);
             }
-
-            // Wait for SFU connected to receive track prefix
-            if (CanPublish())
+            catch
             {
-                CreatePublisher(iceServers);
+                ClearSession();
+                throw;
             }
-
-            await SubscribeToTracksAsync();
-
-            //StreamTodo: validate when this state should set
-            CallState = CallingState.Joined;
-            _videoAudioSyncBenchmark?.Init(call);
         }
 
         public async Task StopAsync()
@@ -373,6 +381,7 @@ namespace StreamVideo.Core.LowLevelClient
             Publisher = null;
 
             ActiveCall = null;
+            CallState = CallingState.Unknown;
 
             _trackSubscriptionRequested = false;
             _trackSubscriptionRequestInProgress = false;
@@ -767,7 +776,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             // StreamTODO: Implement OnSfuPublisherAnswer
         }
-        
+
         private void OnSfuWebSocketOnChangePublishOptions(ChangePublishOptions obj)
         {
             // StreamTODO: Implement OnSfuWebSocketOnChangePublishOptions
@@ -791,7 +800,8 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: implement retry strategy like in Android SDK
         //If possible, take into account if we the update is still valid e.g. 
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
-            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false, bool postLog = true)
+            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName, bool preLog = false,
+            bool postLog = true)
         {
             //StreamTodo: use rpcCallAsync.GetMethodInfo().Name; instead debugRequestName
 
@@ -1233,7 +1243,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.ParticipantMigrationComplete += OnSfuWebSocketOnParticipantMigrationComplete;
             _sfuWebSocket.ChangePublishOptions += OnSfuWebSocketOnChangePublishOptions;
         }
-        
+
         private void UnsubscribeFromSfuEvents()
         {
             _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;

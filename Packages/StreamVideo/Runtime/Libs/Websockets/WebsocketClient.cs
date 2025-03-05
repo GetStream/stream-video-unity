@@ -61,24 +61,25 @@ namespace StreamVideo.Libs.Websockets
             catch (OperationCanceledException e)
             {
                 LogExceptionIfDebugMode(e);
+                throw;
             }
             catch (WebSocketException e)
             {
                 LogExceptionIfDebugMode(e);
                 OnConnectionFailed();
-                return;
+                throw;
             }
             catch (SocketException e)
             {
                 LogExceptionIfDebugMode(e);
                 OnConnectionFailed();
-                return;
+                throw;
             }
             catch (Exception e)
             {
                 _logs.Exception(e);
                 OnConnectionFailed();
-                return;
+                throw;
             }
 
             _backgroundSendTimer = new Timer(SendMessagesCallback, null, 0, UpdatePeriod);

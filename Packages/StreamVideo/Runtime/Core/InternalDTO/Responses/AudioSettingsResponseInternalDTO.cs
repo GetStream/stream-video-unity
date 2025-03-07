@@ -22,8 +22,8 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public bool AccessRequestEnabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("default_device", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public AudioSettingsDefaultDeviceInternalEnum DefaultDevice { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<AudioSettingsDefaultDeviceInternalEnumDTO>))]
+        public AudioSettingsDefaultDeviceInternalEnumDTO DefaultDevice { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("mic_default_on", Required = Newtonsoft.Json.Required.Default)]
         public bool MicDefaultOn { get; set; } = default!;

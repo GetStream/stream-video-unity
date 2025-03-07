@@ -25,8 +25,8 @@ namespace StreamVideo.Core.InternalDTO.Requests
         /// Resolution to set for the RTMP stream
         /// </summary>
         [Newtonsoft.Json.JsonProperty("quality", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public RTMPSettingsRequestQualityInternalEnum Quality { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<RTMPSettingsRequestQualityInternalEnumDTO>))]
+        public RTMPSettingsRequestQualityInternalEnumDTO Quality { get; set; } = default!;
 
     }
 

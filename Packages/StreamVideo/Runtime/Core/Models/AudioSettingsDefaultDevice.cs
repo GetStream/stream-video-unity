@@ -1,40 +1,42 @@
-using System;
 using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.LowLevelClient;
 
 namespace StreamVideo.Core.Models
 {
-    public enum AudioSettingsDefaultDevice
+    public readonly struct AudioSettingsDefaultDevice : System.IEquatable<AudioSettingsDefaultDevice>,
+        ILoadableFrom<AudioSettingsDefaultDeviceInternalEnumDTO, AudioSettingsDefaultDevice>, ISavableTo<AudioSettingsDefaultDeviceInternalEnumDTO>
     {
-        Speaker = 0,
-        Earpiece = 1,
-    }
+        public static readonly AudioSettingsDefaultDevice Speaker = new AudioSettingsDefaultDevice("speaker");
+        public static readonly AudioSettingsDefaultDevice Earpiece = new AudioSettingsDefaultDevice("earpiece");
 
-    internal static class AudioSettingsDefaultDeviceExt
-    {
-        public static AudioSettingsDefaultDeviceInternalEnum ToInternalEnum(
-            this AudioSettingsDefaultDevice audioSettingsDefaultDevice)
+        public AudioSettingsDefaultDevice(string value)
         {
-            switch (audioSettingsDefaultDevice)
-            {
-                case AudioSettingsDefaultDevice.Speaker: return AudioSettingsDefaultDeviceInternalEnum.Speaker;
-                case AudioSettingsDefaultDevice.Earpiece: return AudioSettingsDefaultDeviceInternalEnum.Earpiece;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(audioSettingsDefaultDevice),
-                        audioSettingsDefaultDevice, null);
-            }
+            _value = value;
         }
 
-        public static AudioSettingsDefaultDevice ToPublicEnum(
-            this AudioSettingsDefaultDeviceInternalEnum audioSettingsDefaultDevice)
-        {
-            switch (audioSettingsDefaultDevice)
-            {
-                case AudioSettingsDefaultDeviceInternalEnum.Speaker: return AudioSettingsDefaultDevice.Speaker;
-                case AudioSettingsDefaultDeviceInternalEnum.Earpiece: return AudioSettingsDefaultDevice.Earpiece;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(audioSettingsDefaultDevice),
-                        audioSettingsDefaultDevice, null);
-            }
-        }
+        public override string ToString() => _value;
+
+        public bool Equals(AudioSettingsDefaultDevice other) => _value == other._value;
+
+        public override bool Equals(object obj) => obj is AudioSettingsDefaultDevice other && Equals(other);
+
+        public override int GetHashCode() => _value.GetHashCode();
+
+        public static bool operator ==(AudioSettingsDefaultDevice left, AudioSettingsDefaultDevice right) => left.Equals(right);
+
+        public static bool operator !=(AudioSettingsDefaultDevice left, AudioSettingsDefaultDevice right) => !left.Equals(right);
+
+        public static implicit operator AudioSettingsDefaultDevice(string value) => new AudioSettingsDefaultDevice(value);
+
+        public static implicit operator string(AudioSettingsDefaultDevice type) => type._value;
+
+        AudioSettingsDefaultDevice ILoadableFrom<AudioSettingsDefaultDeviceInternalEnumDTO, AudioSettingsDefaultDevice>.
+            LoadFromDto(AudioSettingsDefaultDeviceInternalEnumDTO dto)
+            => new AudioSettingsDefaultDevice(dto.ToString());
+
+        AudioSettingsDefaultDeviceInternalEnumDTO ISavableTo<AudioSettingsDefaultDeviceInternalEnumDTO>.SaveToDto()
+            => new AudioSettingsDefaultDeviceInternalEnumDTO(_value);
+
+        private readonly string _value;
     }
 }

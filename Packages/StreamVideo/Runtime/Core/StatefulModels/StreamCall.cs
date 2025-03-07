@@ -418,8 +418,7 @@ namespace StreamVideo.Core.StatefulModels
 
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
-            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
-                cache);
+            _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(dto.OwnCapabilities);
         }
 
         void IUpdateableFrom<GetOrCreateCallResponseInternalDTO, StreamCall>.UpdateFromDto(
@@ -430,8 +429,7 @@ namespace StreamVideo.Core.StatefulModels
             Created = dto.Created;
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
-            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
-                cache);
+            _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(dto.OwnCapabilities);
         }
 
         void IUpdateableFrom<JoinCallResponseInternalDTO, StreamCall>.UpdateFromDto(JoinCallResponseInternalDTO dto,
@@ -443,8 +441,7 @@ namespace StreamVideo.Core.StatefulModels
             Credentials = cache.TryUpdateOrCreateFromDto(Credentials, dto.Credentials);
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
-            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
-                cache);
+            _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(dto.OwnCapabilities);
         }
 
         void IUpdateableFrom<CallStateResponseFieldsInternalDTO, StreamCall>.UpdateFromDto(
@@ -454,8 +451,7 @@ namespace StreamVideo.Core.StatefulModels
 
             _members.TryUpdateOrCreateFromDto(dto.Members, keySelector: dtoItem => dtoItem.UserId, Cache);
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
-            _ownCapabilities.TryReplaceEnumsFromDtoCollection(dto.OwnCapabilities, OwnCapabilityExt.ToPublicEnum,
-                cache);
+            _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(dto.OwnCapabilities);
         }
 
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
@@ -555,6 +551,7 @@ namespace StreamVideo.Core.StatefulModels
             }
         }
 
+        //StreamTOdo: check why this is not handled by UpdateFromDto
         internal void UpdateOwnCapabilitiesFrom(
             UpdatedCallPermissionsEventInternalDTO updatedCallPermissionsEvent)
         {
@@ -563,13 +560,8 @@ namespace StreamVideo.Core.StatefulModels
             {
                 return;
             }
-
-            _ownCapabilities.Clear();
-            foreach (var c in ownCapabilities)
-            {
-                var capability = c.ToPublicEnum();
-                _ownCapabilities.Add(capability);
-            }
+            
+            _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(updatedCallPermissionsEvent.OwnCapabilities);
 
             //StreamTodo: we should probably expose an event OwnCapabilitiesChanged
         }

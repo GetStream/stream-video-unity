@@ -22,12 +22,12 @@ namespace StreamVideo.Core.InternalDTO.Requests
         public bool AudioOnly { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public RecordSettingsModeInternalEnum Mode { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<RecordSettingsModeInternalEnumDTO>))]
+        public RecordSettingsModeInternalEnumDTO Mode { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("quality", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public RecordSettingsQualityInternalEnum Quality { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<RecordSettingsQualityInternalEnumDTO>))]
+        public RecordSettingsQualityInternalEnumDTO Quality { get; set; } = default!;
 
     }
 

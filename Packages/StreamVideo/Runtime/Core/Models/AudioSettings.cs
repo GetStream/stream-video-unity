@@ -2,6 +2,7 @@
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
+using StreamVideo.Core.Utils;
 
 namespace StreamVideo.Core.Models
 {
@@ -22,7 +23,7 @@ namespace StreamVideo.Core.Models
         void IStateLoadableFrom<AudioSettingsResponseInternalDTO, AudioSettings>.LoadFromDto(AudioSettingsResponseInternalDTO dto, ICache cache)
         {
             AccessRequestEnabled = dto.AccessRequestEnabled;
-            DefaultDevice = dto.DefaultDevice.ToPublicEnum();
+            DefaultDevice = DefaultDevice.TryCreateOrLoadFromDto(dto.DefaultDevice);
             MicDefaultOn = dto.MicDefaultOn;
             OpusDtxEnabled = dto.OpusDtxEnabled;
             RedundantCodingEnabled = dto.RedundantCodingEnabled;

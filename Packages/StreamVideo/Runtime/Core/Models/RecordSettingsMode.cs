@@ -1,51 +1,43 @@
-﻿using System;
-using StreamVideo.Core.InternalDTO.Models;
+﻿using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.LowLevelClient;
 
 namespace StreamVideo.Core.Models
 {
-    public enum RecordSettingsMode
+    public readonly struct RecordSettingsMode : System.IEquatable<RecordSettingsMode>,
+        ILoadableFrom<RecordSettingsModeInternalEnumDTO, RecordSettingsMode>, ISavableTo<RecordSettingsModeInternalEnumDTO>
     {
-        Available = 0,
-        Disabled = 1,
-        AutoOn = 2,
-    }
+        public static readonly RecordSettingsMode Available = new RecordSettingsMode("available");
+        public static readonly RecordSettingsMode Disabled = new RecordSettingsMode("disabled");
+        public static readonly RecordSettingsMode AutoOn = new RecordSettingsMode("auto-on");
 
-    internal static class RecordSettingsModeExt
-    {
-        public static RecordSettingsModeInternalEnum ToInternalEnum(this RecordSettingsMode domainValue)
+        public RecordSettingsMode(string value)
         {
-            switch (domainValue)
-            {
-                case RecordSettingsMode.Available: return RecordSettingsModeInternalEnum.Available;
-                case RecordSettingsMode.Disabled: return RecordSettingsModeInternalEnum.Disabled;
-                case RecordSettingsMode.AutoOn: return RecordSettingsModeInternalEnum.AutoOn;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(domainValue), domainValue, null);
-            }
+            _value = value;
         }
 
-        public static RecordSettingsMode ToPublicEnum(this RecordSettingsModeInternalEnum internalValue)
-        {
-            switch (internalValue)
-            {
-                case RecordSettingsModeInternalEnum.Available: return RecordSettingsMode.Available;
-                case RecordSettingsModeInternalEnum.Disabled: return RecordSettingsMode.Disabled;
-                case RecordSettingsModeInternalEnum.AutoOn: return RecordSettingsMode.AutoOn;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(internalValue), internalValue, null);
-            }
-        }
-        
-        public static RecordSettingsMode ParseToPublicEnum(string internalValue)
-        {
-            switch (internalValue)
-            {
-                case "available": return RecordSettingsMode.Available;
-                case "disabled": return RecordSettingsMode.Disabled;
-                case "auto-on": return RecordSettingsMode.AutoOn;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(internalValue), internalValue, $"Failed to parse `{internalValue}` to {typeof(RecordSettingsMode)}");
-            }
-        }
+        public override string ToString() => _value;
+
+        public bool Equals(RecordSettingsMode other) => _value == other._value;
+
+        public override bool Equals(object obj) => obj is RecordSettingsMode other && Equals(other);
+
+        public override int GetHashCode() => _value.GetHashCode();
+
+        public static bool operator ==(RecordSettingsMode left, RecordSettingsMode right) => left.Equals(right);
+
+        public static bool operator !=(RecordSettingsMode left, RecordSettingsMode right) => !left.Equals(right);
+
+        public static implicit operator RecordSettingsMode(string value) => new RecordSettingsMode(value);
+
+        public static implicit operator string(RecordSettingsMode type) => type._value;
+
+        RecordSettingsMode ILoadableFrom<RecordSettingsModeInternalEnumDTO, RecordSettingsMode>.
+            LoadFromDto(RecordSettingsModeInternalEnumDTO dto)
+            => new RecordSettingsMode(dto.ToString());
+
+        RecordSettingsModeInternalEnumDTO ISavableTo<RecordSettingsModeInternalEnumDTO>.SaveToDto()
+            => new RecordSettingsModeInternalEnumDTO(_value);
+
+        private readonly string _value;
     }
 }

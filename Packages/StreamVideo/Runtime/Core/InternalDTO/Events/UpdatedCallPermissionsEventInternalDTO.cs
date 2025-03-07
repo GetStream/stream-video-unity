@@ -30,8 +30,8 @@ namespace StreamVideo.Core.InternalDTO.Events
         /// <summary>
         /// The capabilities of the current user
         /// </summary>
-        [Newtonsoft.Json.JsonProperty("own_capabilities", Required = Newtonsoft.Json.Required.Default, ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public System.Collections.Generic.List<OwnCapabilityInternalEnum> OwnCapabilities { get; set; } = new System.Collections.Generic.List<OwnCapabilityInternalEnum>();
+        [Newtonsoft.Json.JsonProperty("own_capabilities", Required = Newtonsoft.Json.Required.Default, ItemConverterType = typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<OwnCapabilityInternalEnumDTO>))]
+        public System.Collections.Generic.List<OwnCapabilityInternalEnumDTO> OwnCapabilities { get; set; } = new System.Collections.Generic.List<OwnCapabilityInternalEnumDTO>();
 
         /// <summary>
         /// The type of event: "call.permissions_updated" in this case

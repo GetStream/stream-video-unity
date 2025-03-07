@@ -19,17 +19,17 @@ namespace StreamVideo.Core.InternalDTO.Requests
     internal partial class VideoSettingsRequestInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("access_request_enabled", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public bool? AccessRequestEnabled { get; set; } = default!;
+        public bool AccessRequestEnabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("camera_default_on", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public bool? CameraDefaultOn { get; set; } = default!;
+        public bool CameraDefaultOn { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("camera_facing", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public VideoSettingsCameraFacingInternalEnum? CameraFacing { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<VideoSettingsCameraFacingInternalEnumDTO>))]
+        public VideoSettingsCameraFacingInternalEnumDTO CameraFacing { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public bool? Enabled { get; set; } = default!;
+        public bool Enabled { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("target_resolution", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public TargetResolutionInternalDTO TargetResolution { get; set; } = default!;

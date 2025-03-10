@@ -97,8 +97,10 @@ namespace StreamVideo.Core.DeviceManagers
 
                 // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
 
+                const int recordingSampleRate = 16000;
+                
                 targetAudioSource.clip
-                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 10, AudioSettings.outputSampleRate);
+                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 10, recordingSampleRate);
                 targetAudioSource.loop = true;
 
                 using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))

@@ -19,8 +19,8 @@ namespace StreamVideo.Core.InternalDTO.Models
     internal partial class NoiseCancellationSettingsInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public NoiseCancellationSettingsModeInternalEnum Mode { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<NoiseCancellationSettingsModeInternalEnumDTO>))]
+        public NoiseCancellationSettingsModeInternalEnumDTO Mode { get; set; } = default!;
 
     }
 

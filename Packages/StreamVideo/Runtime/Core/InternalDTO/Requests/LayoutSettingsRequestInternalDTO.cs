@@ -28,8 +28,8 @@ namespace StreamVideo.Core.InternalDTO.Requests
         public string ExternalCssUrl { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("name", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public LayoutSettingsRequestNameInternalEnum Name { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<LayoutSettingsRequestNameInternalEnumDTO>))]
+        public LayoutSettingsRequestNameInternalEnumDTO Name { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("options", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.Dictionary<string, object> Options { get; set; } = default!;

@@ -25,8 +25,8 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public bool CameraDefaultOn { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("camera_facing", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public VideoSettingsCameraFacingInternalEnum? CameraFacing { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<VideoSettingsCameraFacingInternalEnumDTO>))]
+        public VideoSettingsCameraFacingInternalEnumDTO CameraFacing { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("enabled", Required = Newtonsoft.Json.Required.Default)]
         public bool Enabled { get; set; } = default!;

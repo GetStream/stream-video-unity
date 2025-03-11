@@ -37,8 +37,8 @@ namespace StreamVideo.Core.InternalDTO.Requests
         /// If provided, will override the call's RTMP settings quality
         /// </summary>
         [Newtonsoft.Json.JsonProperty("quality", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public RTMPBroadcastRequestQualityInternalEnum Quality { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<RTMPBroadcastRequestQualityInternalEnumDTO>))]
+        public RTMPBroadcastRequestQualityInternalEnumDTO Quality { get; set; } = default!;
 
         /// <summary>
         /// If provided, will be appended at the end of stream_url

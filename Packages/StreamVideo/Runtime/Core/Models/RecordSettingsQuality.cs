@@ -1,79 +1,50 @@
-﻿using System;
-using StreamVideo.Core.InternalDTO.Models;
+﻿using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.LowLevelClient;
 
 namespace StreamVideo.Core.Models
 {
-    public enum RecordSettingsQuality
-    {
-        _360p = 0,
-        _480p = 1,
-        _720p = 2,
-        _1080p = 3,
-        _1440p = 4,
-        Portrait360x640 = 5,
-        Portrait480x854 = 6,
-        Portrait720x1280 = 7,
-        Portrait1080x1920 = 8,
-        Portrait1440x2560 = 9
-    }
+   public readonly struct RecordSettingsQuality : System.IEquatable<RecordSettingsQuality>,
+       ILoadableFrom<RecordSettingsQualityInternalEnumDTO, RecordSettingsQuality>, ISavableTo<RecordSettingsQualityInternalEnumDTO>
+   {
+       public static readonly RecordSettingsQuality _360p = new RecordSettingsQuality("360p");
+       public static readonly RecordSettingsQuality _480p = new RecordSettingsQuality("480p");
+       public static readonly RecordSettingsQuality _720p = new RecordSettingsQuality("720p");
+       public static readonly RecordSettingsQuality _1080p = new RecordSettingsQuality("1080p");
+       public static readonly RecordSettingsQuality _1440p = new RecordSettingsQuality("1440p");
+       public static readonly RecordSettingsQuality Portrait_360x640 = new RecordSettingsQuality("portrait-360x640");
+       public static readonly RecordSettingsQuality Portrait_480x854 = new RecordSettingsQuality("portrait-480x854");
+       public static readonly RecordSettingsQuality Portrait_720x1280 = new RecordSettingsQuality("portrait-720x1280");
+       public static readonly RecordSettingsQuality Portrait_1080x1920 = new RecordSettingsQuality("portrait-1080x1920");
+       public static readonly RecordSettingsQuality Portrait_1440x2560 = new RecordSettingsQuality("portrait-1440x2560");
 
-    internal static class RecordSettingsQualityInternalEnumExt
-    {
-        public static RecordSettingsQuality ToPublicEnum(this RecordSettingsQualityInternalEnum internalValue)
-        {
-            switch (internalValue)
-            {
-                case RecordSettingsQualityInternalEnum._360p: return RecordSettingsQuality._360p;
-                case RecordSettingsQualityInternalEnum._480p: return RecordSettingsQuality._480p;
-                case RecordSettingsQualityInternalEnum._720p: return RecordSettingsQuality._720p;
-                case RecordSettingsQualityInternalEnum._1080p: return RecordSettingsQuality._1080p;
-                case RecordSettingsQualityInternalEnum._1440p: return RecordSettingsQuality._1440p;
-                case RecordSettingsQualityInternalEnum.Portrait360x640: return RecordSettingsQuality.Portrait360x640;
-                case RecordSettingsQualityInternalEnum.Portrait480x854: return RecordSettingsQuality.Portrait480x854;
-                case RecordSettingsQualityInternalEnum.Portrait720x1280: return RecordSettingsQuality.Portrait720x1280;
-                case RecordSettingsQualityInternalEnum.Portrait1080x1920: return RecordSettingsQuality.Portrait1080x1920;
-                case RecordSettingsQualityInternalEnum.Portrait1440x2560: return RecordSettingsQuality.Portrait1440x2560;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(internalValue), internalValue, null);
-            }
-        }
+       public RecordSettingsQuality(string value)
+       {
+           _value = value;
+       }
 
-        public static RecordSettingsQualityInternalEnum ToInternalEnum(this RecordSettingsQuality publicValue)
-        {
-            switch (publicValue)
-            {
-                case RecordSettingsQuality._360p: return RecordSettingsQualityInternalEnum._360p;
-                case RecordSettingsQuality._480p: return RecordSettingsQualityInternalEnum._480p;
-                case RecordSettingsQuality._720p: return RecordSettingsQualityInternalEnum._720p;
-                case RecordSettingsQuality._1080p: return RecordSettingsQualityInternalEnum._1080p;
-                case RecordSettingsQuality._1440p: return RecordSettingsQualityInternalEnum._1440p;
-                case RecordSettingsQuality.Portrait360x640: return RecordSettingsQualityInternalEnum.Portrait360x640;
-                case RecordSettingsQuality.Portrait480x854: return RecordSettingsQualityInternalEnum.Portrait480x854;
-                case RecordSettingsQuality.Portrait720x1280: return RecordSettingsQualityInternalEnum.Portrait720x1280;
-                case RecordSettingsQuality.Portrait1080x1920: return RecordSettingsQualityInternalEnum.Portrait1080x1920;
-                case RecordSettingsQuality.Portrait1440x2560: return RecordSettingsQualityInternalEnum.Portrait1440x2560;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(publicValue), publicValue, null);
-            }
-        }
-        
-        public static RecordSettingsQuality ParseToPublicEnum(string internalValue)
-        {
-            switch (internalValue)
-            {
-                case "360p": return RecordSettingsQuality._360p;
-                case "480p": return RecordSettingsQuality._480p;
-                case "720p": return RecordSettingsQuality._720p;
-                case "1080p": return RecordSettingsQuality._1080p;
-                case "1440p": return RecordSettingsQuality._1440p;
-                case "portrait-360x640": return RecordSettingsQuality.Portrait360x640;
-                case "portrait-480x854": return RecordSettingsQuality.Portrait480x854;
-                case "portrait-720x1280": return RecordSettingsQuality.Portrait720x1280;
-                case "portrait-1080x1920": return RecordSettingsQuality.Portrait1080x1920;
-                case "portrait-1440x2560": return RecordSettingsQuality.Portrait1440x2560;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(internalValue), internalValue, null);
-            }
-        }
-    }
+       public override string ToString() => _value;
+
+       public bool Equals(RecordSettingsQuality other) => _value == other._value;
+
+       public override bool Equals(object obj) => obj is RecordSettingsQuality other && Equals(other);
+
+       public override int GetHashCode() => _value.GetHashCode();
+
+       public static bool operator ==(RecordSettingsQuality left, RecordSettingsQuality right) => left.Equals(right);
+
+       public static bool operator !=(RecordSettingsQuality left, RecordSettingsQuality right) => !left.Equals(right);
+
+       public static implicit operator RecordSettingsQuality(string value) => new RecordSettingsQuality(value);
+
+       public static implicit operator string(RecordSettingsQuality type) => type._value;
+
+       RecordSettingsQuality ILoadableFrom<RecordSettingsQualityInternalEnumDTO, RecordSettingsQuality>.
+           LoadFromDto(RecordSettingsQualityInternalEnumDTO dto)
+           => new RecordSettingsQuality(dto.ToString());
+
+       RecordSettingsQualityInternalEnumDTO ISavableTo<RecordSettingsQualityInternalEnumDTO>.SaveToDto()
+           => new RecordSettingsQualityInternalEnumDTO(_value);
+
+       private readonly string _value;
+   }
 }

@@ -1,41 +1,43 @@
-﻿using System;
-using StreamVideo.Core.InternalDTO.Models;
+﻿using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.LowLevelClient;
 
 namespace StreamVideo.Core.Models
 {
-    public enum TranscriptionSettingsMode
-    {
-        Available = 0,
-        Disabled = 1,
-        AutoOn = 2,
-    }
+   public readonly struct TranscriptionSettingsMode : System.IEquatable<TranscriptionSettingsMode>,
+       ILoadableFrom<TranscriptionSettingsModeInternalEnumDTO, TranscriptionSettingsMode>, ISavableTo<TranscriptionSettingsModeInternalEnumDTO>
+   {
+       public static readonly TranscriptionSettingsMode Available = new TranscriptionSettingsMode("available");
+       public static readonly TranscriptionSettingsMode Disabled = new TranscriptionSettingsMode("disabled");
+       public static readonly TranscriptionSettingsMode AutoOn = new TranscriptionSettingsMode("auto-on");
 
-    internal static class TranscriptionSettingsModeExt
-    {
-        public static TranscriptionSettingsModeInternalEnum ToInternalEnum(this
-            TranscriptionSettingsMode domainValue)
-        {
-            switch (domainValue)
-            {
-                case TranscriptionSettingsMode.Available: return TranscriptionSettingsModeInternalEnum.Available;
-                case TranscriptionSettingsMode.Disabled: return TranscriptionSettingsModeInternalEnum.Disabled;
-                case TranscriptionSettingsMode.AutoOn: return TranscriptionSettingsModeInternalEnum.AutoOn;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(domainValue), domainValue, null);
-            }
-        }
+       public TranscriptionSettingsMode(string value)
+       {
+           _value = value;
+       }
 
-        public static TranscriptionSettingsMode ToPublicEnum(this
-            TranscriptionSettingsModeInternalEnum internalValue)
-        {
-            switch (internalValue)
-            {
-                case TranscriptionSettingsModeInternalEnum.Available: return TranscriptionSettingsMode.Available;
-                case TranscriptionSettingsModeInternalEnum.Disabled: return TranscriptionSettingsMode.Disabled;
-                case TranscriptionSettingsModeInternalEnum.AutoOn: return TranscriptionSettingsMode.AutoOn;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(internalValue), internalValue, null);
-            }
-        }
-    }
+       public override string ToString() => _value;
+
+       public bool Equals(TranscriptionSettingsMode other) => _value == other._value;
+
+       public override bool Equals(object obj) => obj is TranscriptionSettingsMode other && Equals(other);
+
+       public override int GetHashCode() => _value.GetHashCode();
+
+       public static bool operator ==(TranscriptionSettingsMode left, TranscriptionSettingsMode right) => left.Equals(right);
+
+       public static bool operator !=(TranscriptionSettingsMode left, TranscriptionSettingsMode right) => !left.Equals(right);
+
+       public static implicit operator TranscriptionSettingsMode(string value) => new TranscriptionSettingsMode(value);
+
+       public static implicit operator string(TranscriptionSettingsMode type) => type._value;
+
+       TranscriptionSettingsMode ILoadableFrom<TranscriptionSettingsModeInternalEnumDTO, TranscriptionSettingsMode>.
+           LoadFromDto(TranscriptionSettingsModeInternalEnumDTO dto)
+           => new TranscriptionSettingsMode(dto.ToString());
+
+       TranscriptionSettingsModeInternalEnumDTO ISavableTo<TranscriptionSettingsModeInternalEnumDTO>.SaveToDto()
+           => new TranscriptionSettingsModeInternalEnumDTO(_value);
+
+       private readonly string _value;
+   }
 }

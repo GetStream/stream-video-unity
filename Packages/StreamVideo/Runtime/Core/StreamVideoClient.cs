@@ -599,6 +599,7 @@ namespace StreamVideo.Core
                 return;
             }
 
+            //StreamTOdo: event has `User` field that is not being used. Check other events. We should parse all data from the events to update the state.
             InternalLowLevelClient.RtcSession.ActiveCall.UpdateOwnCapabilitiesFrom(eventData);
         }
 

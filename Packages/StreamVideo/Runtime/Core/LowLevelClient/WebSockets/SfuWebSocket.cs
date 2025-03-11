@@ -5,6 +5,7 @@ using Google.Protobuf;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.Core.Auth;
+using StreamVideo.Core.Utils;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Logs;
@@ -80,58 +81,69 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             _connectUserTaskSource = new TaskCompletionSource<bool>(cancellationToken);
 
-            var joinRequest = new JoinRequest
+            try
             {
-                Token = _sfuToken,
-                SessionId = _sessionId,
-                SubscriberSdp = _sdpOffer,
-                ClientDetails = new ClientDetails
+                //StreamTOdo: implement missing fields: PublisherSdp, ReconnectDetails
+                var joinRequest = new JoinRequest
                 {
-                    Sdk = new Sdk
+                    Token = _sfuToken,
+                    SessionId = _sessionId,
+                    SubscriberSdp = _sdpOffer,
+                    ClientDetails = new ClientDetails
                     {
-                        Type = SdkType.Unity,
-                        Major = _sdkVersion.Major.ToString(),
-                        Minor = _sdkVersion.Minor.ToString(),
-                        Patch = _sdkVersion.Revision.ToString()
+                        Sdk = new Sdk
+                        {
+                            Type = SdkType.Unity,
+                            Major = _sdkVersion.Major.ToString(),
+                            Minor = _sdkVersion.Minor.ToString(),
+                            Patch = _sdkVersion.Revision.ToString()
+                        },
+                        Os = new OS
+                        {
+                            Name = _applicationInfo.OperatingSystemFamily,
+                            Version = _applicationInfo.OperatingSystem,
+                            Architecture = _applicationInfo.CpuArchitecture
+                        },
+                        Device = new Device
+                        {
+                            Name = _applicationInfo.DeviceName,
+                            Version = _applicationInfo.DeviceModel
+                        }
                     },
-                    Os = new OS
-                    {
-                        Name = _applicationInfo.OperatingSystemFamily,
-                        Version = _applicationInfo.OperatingSystem,
-                        Architecture = _applicationInfo.CpuArchitecture
-                    },
-                    Device = new Device
-                    {
-                        Name = _applicationInfo.DeviceName,
-                        Version = _applicationInfo.DeviceModel
-                    }
-                },
-            };
+                };
 
-            var sfuJoinRequest = new SfuRequest
-            {
-                JoinRequest = joinRequest,
-            };
+                var sfuJoinRequest = new SfuRequest
+                {
+                    JoinRequest = joinRequest,
+                };
 
 #if STREAM_DEBUG_ENABLED
-            var debugJson = Serializer.Serialize(sfuJoinRequest);
-            Logs.Warning(debugJson);
+                var debugJson = Serializer.Serialize(sfuJoinRequest);
+                Logs.Warning(debugJson);
 #endif
 
-            var sfuJoinRequestEncoded = sfuJoinRequest.ToByteArray();
+                var sfuJoinRequestEncoded = sfuJoinRequest.ToByteArray();
 
-            var sfuUri = UriFactory.CreateSfuConnectionUri(_sfuUrl);
+                var sfuUri = UriFactory.CreateSfuConnectionUri(_sfuUrl);
 
-            Logs.Info($"{LogsPrefix} Connect URI: " + sfuUri);
-            await WebsocketClient.ConnectAsync(sfuUri);
-            Logs.Info($"{LogsPrefix} Connected");
+                await WebsocketClient.ConnectAsync(sfuUri);
 
-            //StreamTodo: review when is the actual "connected state" - perhaps not the WS connection itself but receiving an appropriate event should set the flag
-            //e.g. are we able to send any data as soon as the connection is established?
+                //StreamTodo: review when is the actual "connected state" - perhaps not the WS connection itself but receiving an appropriate event should set the flag
+                //e.g. are we able to send any data as soon as the connection is established?
 
-            WebsocketClient.Send(sfuJoinRequestEncoded);
+                WebsocketClient.Send(sfuJoinRequestEncoded);
 
-            await _connectUserTaskSource.Task;
+                await _connectUserTaskSource.Task;
+            }
+            catch (Exception e)
+            {
+                if (!_connectUserTaskSource.TrySetException(e))
+                {
+                    Logs.Error($"Failed set exception in {nameof(_connectUserTaskSource)}. Exception:" + e.Message);
+                }
+
+                throw;
+            }
         }
 
         protected override void ProcessMessages()
@@ -310,10 +322,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
                 case SfuEvent.EventPayloadOneofCase.GoAway:
                     return GoAway != null;
-                
+
                 case SfuEvent.EventPayloadOneofCase.IceRestart:
                     return IceRestart != null;
-                
+
                 case SfuEvent.EventPayloadOneofCase.PinsUpdated:
                     return PinsUpdated != null;
 

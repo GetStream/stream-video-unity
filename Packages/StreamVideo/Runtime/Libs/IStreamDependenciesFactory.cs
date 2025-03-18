@@ -1,4 +1,5 @@
-﻿using StreamVideo.Libs.AppInfo;
+﻿using Libs.NativeAudioManagers;
+using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Http;
 using StreamVideo.Libs.Logs;
@@ -29,5 +30,7 @@ namespace StreamVideo.Libs
         IStreamVideoClientRunner CreateClientRunner();
 
         INetworkMonitor CreateNetworkMonitor();
+
+        INativeAudioManager CreateNativeAudioManager();
     }
 }

@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Libs.NativeAudioManagers;
 using StreamVideo.Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
@@ -73,9 +75,10 @@ namespace StreamVideo.Core
             var timeService = factory.CreateTimeService();
             var networkMonitor = factory.CreateNetworkMonitor();
             var gameObjectRunner = factory.CreateClientRunner();
+            var nativeAudioManager = factory.CreateNativeAudioManager();
 
             var client = new StreamVideoClient(coordinatorWebSocket, sfuWebSocket, httpClient,
-                serializer, timeService, networkMonitor, applicationInfo, logs, config);
+                serializer, timeService, networkMonitor, applicationInfo, logs, nativeAudioManager, config);
 
             gameObjectRunner?.RunClientInstance(client);
 
@@ -112,7 +115,7 @@ namespace StreamVideo.Core
         public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify)
         {
-            //StreamTodo: check if we're already in a call?
+            //StreamTodo: check if we're already in a call or alredy joining a call
 
             IStreamCall call;
             if (!create)
@@ -131,6 +134,43 @@ namespace StreamVideo.Core
 
             // StreamTodo: check state if we don't have an active session already
             var locationHint = await InternalLowLevelClient.GetLocationHintAsync();
+
+            //StreamTodo: duplicated logic + don't print debug info if not debug mode
+            var audioDebugInfo = new Dictionary<string, string>();
+            InternalLowLevelClient.NativeAudioManager.GetAudioDebugInfo(audioDebugInfo, out var error);
+            var sb = new StringBuilder();
+            sb.AppendLine("[BEFORE Setup] Audio debug info:");
+            foreach (var (key, value) in audioDebugInfo)
+            {
+                sb.AppendLine($"{key}: {value}");
+            }
+            _logs.Warning(sb.ToString());
+            if (!string.IsNullOrEmpty(error))
+            {
+                _logs.Error(error);
+            }
+            
+            InternalLowLevelClient.NativeAudioManager.SetupAudioModeForVideoCall(out var error2);
+            if (!string.IsNullOrEmpty(error2))
+            {
+                _logs.Error(error2);
+            }
+            
+            //StreamTodo: duplicated logic + don't print debug info if not debug mode
+            audioDebugInfo.Clear();
+            sb.Length = 0;
+            InternalLowLevelClient.NativeAudioManager.GetAudioDebugInfo(audioDebugInfo, out var error3);
+            sb.AppendLine("[AFTER Setup] Audio debug info:");
+            foreach (var (key, value) in audioDebugInfo)
+            {
+                sb.AppendLine($"{key}: {value}");
+            }
+            _logs.Warning(sb.ToString());
+            if (!string.IsNullOrEmpty(error3))
+            {
+                _logs.Error(error3);
+            }
+                
 
             //StreamTodo: move this logic to call.Join, this way user can create call object and join later on 
 
@@ -401,12 +441,12 @@ namespace StreamVideo.Core
 
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
-            IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
+            IApplicationInfo applicationInfo, ILogs logs, INativeAudioManager nativeAudioManager, IStreamClientConfig config)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
 
             InternalLowLevelClient = new StreamVideoLowLevelClient(coordinatorWebSocket, sfuWebSocket, httpClient,
-                serializer, timeService, networkMonitor, applicationInfo, logs, config);
+                serializer, timeService, networkMonitor, applicationInfo, logs, nativeAudioManager, config);
 
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);

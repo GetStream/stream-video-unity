@@ -1,4 +1,5 @@
-﻿using StreamVideo.Libs.AppInfo;
+﻿using Libs.NativeAudioManagers;
+using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.VideoClientInstanceRunner;
 using StreamVideo.Libs.Http;
@@ -17,12 +18,10 @@ namespace StreamVideo.Libs
     /// </summary>
     public class StreamDependenciesFactory : IStreamDependenciesFactory
     {
-        public virtual ILogs CreateLogger(LogLevel logLevel = LogLevel.All)
-            => new UnityLogs(logLevel);
+        public virtual ILogs CreateLogger(LogLevel logLevel = LogLevel.All) => new UnityLogs(logLevel);
 
         public virtual IWebsocketClient CreateWebsocketClient(ILogs logs, bool isDebugMode = false)
         {
-
 #if UNITY_WEBGL
             //StreamTodo: handle debug mode
             return new NativeWebSocketWrapper(logs, isDebugMode: isDebugMode);
@@ -45,8 +44,9 @@ namespace StreamVideo.Libs
         public virtual ITimeService CreateTimeService() => new UnityTime();
 
         public virtual IApplicationInfo CreateApplicationInfo() => new UnityApplicationInfo();
-        
-        public virtual ITokenProvider CreateTokenProvider(TokenProvider.TokenUriHandler urlFactory) => new TokenProvider(CreateHttpClient(), urlFactory);
+
+        public virtual ITokenProvider CreateTokenProvider(TokenProvider.TokenUriHandler urlFactory)
+            => new TokenProvider(CreateHttpClient(), urlFactory);
 
         public virtual IStreamVideoClientRunner CreateClientRunner()
         {
@@ -61,5 +61,14 @@ namespace StreamVideo.Libs
         }
 
         public virtual INetworkMonitor CreateNetworkMonitor() => new UnityNetworkMonitor();
+
+        public virtual INativeAudioManager CreateNativeAudioManager()
+        {
+#if !UNITY_ANDROID
+            return new EmptyNativeAudioManager();
+#else
+            return new NativeAudioManager();
+#endif
+        }
     }
 }

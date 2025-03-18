@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Libs.NativeAudioManagers;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Exceptions;
@@ -58,7 +59,10 @@ namespace StreamVideo.Core.LowLevelClient
         /// Local user DTO - only available when the coordinator is connected
         /// </summary>
         public OwnUserResponseInternalDTO LocalUserDto { get; private set; }
+        
+        internal INativeAudioManager NativeAudioManager => _nativeAudioManager;
 
+        //StreamTodo: probably remote this. This class is now internal
         /// <summary>
         /// Use this method to create the main client instance or use StreamChatClient constructor to create a client instance with custom dependencies
         /// </summary>
@@ -78,9 +82,10 @@ namespace StreamVideo.Core.LowLevelClient
             var serializer = factory.CreateSerializer();
             var timeService = factory.CreateTimeService();
             var networkMonitor = factory.CreateNetworkMonitor();
+            var nativeAudioManager = new NativeAudioManager();
 
             return new StreamVideoLowLevelClient(coordinatorWebSocket, sfuWebSocket, httpClient,
-                serializer, timeService, networkMonitor, applicationInfo, logs, config);
+                serializer, timeService, networkMonitor, applicationInfo, logs, nativeAudioManager, config);
         }
 
         //StreamTodo: review if this is valid for video SDK
@@ -119,7 +124,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public StreamVideoLowLevelClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
-            IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
+            IApplicationInfo applicationInfo, ILogs logs, INativeAudioManager nativeAudioManager, IStreamClientConfig config)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
@@ -127,6 +132,7 @@ namespace StreamVideo.Core.LowLevelClient
             _networkMonitor = networkMonitor ?? throw new ArgumentNullException(nameof(networkMonitor));
             _applicationInfo = applicationInfo ?? throw new ArgumentNullException(nameof(applicationInfo));
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
+            _nativeAudioManager = nativeAudioManager ?? throw new ArgumentNullException(nameof(nativeAudioManager));
             _config = config ?? throw new ArgumentNullException(nameof(config));
 
             _logs.Prefix = "[Stream Video] ";
@@ -304,6 +310,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IHttpClient _httpClient;
         private readonly IStreamClientConfig _config;
         private readonly IApplicationInfo _applicationInfo;
+        private readonly INativeAudioManager _nativeAudioManager;
         private readonly RtcSession _rtcSession;
 
         private readonly List<(string Key, string Value)> _defaultHttpRequestHeaders

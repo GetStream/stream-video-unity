@@ -19,16 +19,16 @@ namespace StreamVideo.Core.InternalDTO.Responses
     internal partial class TranscriptionSettingsResponseInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("closed_caption_mode", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public TranscriptionSettingsResponseClosedCaptionModeInternalEnum ClosedCaptionMode { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<TranscriptionSettingsResponseClosedCaptionModeInternalEnumDTO>))]
+        public TranscriptionSettingsResponseClosedCaptionModeInternalEnumDTO ClosedCaptionMode { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("language", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public TranscriptionSettingsResponseLanguageInternalEnum? Language { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<TranscriptionSettingsResponseLanguageInternalEnumDTO>))]
+        public TranscriptionSettingsResponseLanguageInternalEnumDTO Language { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public TranscriptionSettingsModeInternalEnum Mode { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<TranscriptionSettingsModeInternalEnumDTO>))]
+        public TranscriptionSettingsModeInternalEnumDTO Mode { get; set; } = default!;
 
     }
 

@@ -4,6 +4,7 @@ using StreamVideo.Core.State.Caches;
 
 namespace StreamVideo.Core.State
 {
+    //StreamTODO: this can probably be replaced with ILoadableFrom to simplify things
     /// <summary>
     /// Supports loading object from DTO of a given type.
     /// This is different from <see cref="ILoadableFrom{TDto,TDomain}"/> because it loads data from the app state if needed
@@ -67,7 +68,7 @@ namespace StreamVideo.Core.State
         /// Otherwise, clear list and populate from DTO collection
         /// </summary>
         public static void TryReplaceEnumsFromDtoCollection<TDto, TDomain>(this List<TDomain> target, IEnumerable<TDto> enums, 
-            Func<TDto, TDomain> converter, ICache cache)
+            Func<TDto, TDomain> converter)
         {
             if (enums == null)
             {
@@ -79,6 +80,23 @@ namespace StreamVideo.Core.State
             foreach (var dto in enums)
             {
                 var obj = converter(dto);
+                target.Add(obj);
+            }
+        }
+        
+        public static void TryReplaceEnumStructsFromDtoCollection<TDto, TDomain>(this List<TDomain> target,
+            IEnumerable<TDto> enums) where TDomain : struct, ILoadableFrom<TDto, TDomain>
+        {
+            if (enums == null)
+            {
+                return;
+            }
+
+            target.Clear();
+
+            foreach (var dto in enums)
+            {
+                var obj = default(TDomain).LoadFromDto(dto);
                 target.Add(obj);
             }
         }

@@ -111,7 +111,7 @@ namespace StreamVideo.Core.StatefulModels
         {
             UserId = dto.UserId;
             SessionId = dto.SessionId;
-            _publishedTracks.TryReplaceEnumsFromDtoCollection(dto.PublishedTracks, TrackTypeExt.ToPublicEnum, cache);
+            _publishedTracks.TryReplaceEnumsFromDtoCollection(dto.PublishedTracks, TrackTypeExt.ToPublicEnum);
             TrackLookupPrefix = dto.TrackLookupPrefix;
             ConnectionQuality = dto.ConnectionQuality.ToPublicEnum();
             IsSpeaking = dto.IsSpeaking;

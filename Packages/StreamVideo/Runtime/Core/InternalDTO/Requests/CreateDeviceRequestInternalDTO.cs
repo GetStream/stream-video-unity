@@ -31,8 +31,8 @@ namespace StreamVideo.Core.InternalDTO.Requests
         /// Push provider
         /// </summary>
         [Newtonsoft.Json.JsonProperty("push_provider", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public CreateDeviceRequestPushProviderInternalEnum PushProvider { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<CreateDeviceRequestPushProviderInternalEnumDTO>))]
+        public CreateDeviceRequestPushProviderInternalEnumDTO PushProvider { get; set; } = default!;
 
         /// <summary>
         /// Push provider name

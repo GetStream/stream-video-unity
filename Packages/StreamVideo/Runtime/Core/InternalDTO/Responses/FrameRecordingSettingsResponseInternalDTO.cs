@@ -22,8 +22,8 @@ namespace StreamVideo.Core.InternalDTO.Responses
         public int CaptureIntervalInSeconds { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("mode", Required = Newtonsoft.Json.Required.Default)]
-        [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public FrameRecordingSettingsResponseModeInternalEnum Mode { get; set; } = default!;
+        [Newtonsoft.Json.JsonConverter(typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<FrameRecordingSettingsResponseModeInternalEnumDTO>))]
+        public FrameRecordingSettingsResponseModeInternalEnumDTO Mode { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("quality", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Quality { get; set; } = default!;

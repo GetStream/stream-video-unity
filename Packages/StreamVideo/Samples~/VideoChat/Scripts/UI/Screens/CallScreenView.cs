@@ -68,8 +68,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected override void OnShow(ShowArgs showArgs)
         {
-            Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            
             _activeCall = showArgs.ActiveCall;
 
             // If local user is the call owner we can "end" the call for all participants, otherwise we can only "leave" the call
@@ -100,8 +98,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected override void OnHide()
         {
-            Screen.sleepTimeout = SleepTimeout.SystemSetting;
-            
             if (_activeCall != null)
             {
                 _activeCall.ParticipantJoined -= OnParticipantJoined;

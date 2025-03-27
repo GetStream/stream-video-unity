@@ -18,6 +18,9 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class UserSessionStatsInternalDTO
     {
+        [Newtonsoft.Json.JsonProperty("average_connection_time", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public float AverageConnectionTime { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("browser", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Browser { get; set; } = default!;
 
@@ -44,6 +47,9 @@ namespace StreamVideo.Core.InternalDTO.Models
 
         [Newtonsoft.Json.JsonProperty("geolocation", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public GeolocationResultInternalDTO Geolocation { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("group", Required = Newtonsoft.Json.Required.Default)]
+        public string Group { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("jitter", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public TimeStatsInternalDTO Jitter { get; set; } = default!;
@@ -75,6 +81,9 @@ namespace StreamVideo.Core.InternalDTO.Models
         [Newtonsoft.Json.JsonProperty("max_receiving_video_quality", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public VideoQualityInternalDTO MaxReceivingVideoQuality { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("min_event_ts", Required = Newtonsoft.Json.Required.Default)]
+        public int MinEventTs { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("os", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Os { get; set; } = default!;
 
@@ -89,9 +98,6 @@ namespace StreamVideo.Core.InternalDTO.Models
 
         [Newtonsoft.Json.JsonProperty("published_tracks", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.List<PublishedTrackInfoInternalDTO> PublishedTracks { get; set; } = default!;
-
-        [Newtonsoft.Json.JsonProperty("publisher_audio_mos", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public MOSStatsInternalDTO PublisherAudioMos { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("publisher_jitter", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public TimeStatsInternalDTO PublisherJitter { get; set; } = default!;
@@ -140,9 +146,6 @@ namespace StreamVideo.Core.InternalDTO.Models
 
         [Newtonsoft.Json.JsonProperty("session_id", Required = Newtonsoft.Json.Required.Default)]
         public string SessionId { get; set; } = default!;
-
-        [Newtonsoft.Json.JsonProperty("subscriber_audio_mos", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public MOSStatsInternalDTO SubscriberAudioMos { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("subscriber_jitter", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public TimeStatsInternalDTO SubscriberJitter { get; set; } = default!;

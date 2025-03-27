@@ -600,11 +600,7 @@ namespace StreamVideo.Core.LowLevelClient
                 => c.mimeType.IndexOf(codecKey, StringComparison.OrdinalIgnoreCase) != -1);
 
 #if STREAM_DEBUG_ENABLED
-            foreach (var codec in capabilities.codecs)
-            {
-                _logs.Info($"Available codec of kind `{kind}`: {codec.mimeType}");
-            }
-
+            _logs.Info($"Available codec of kind `{kind}`: " + string.Join(", ", capabilities.codecs.Select(c => c.mimeType)));
 #endif
 
             if (!forcedCodecs.Any())
@@ -625,7 +621,7 @@ namespace StreamVideo.Core.LowLevelClient
             var error = transceiver.SetCodecPreferences(forcedCodecs.ToArray());
             if (error != RTCErrorType.None)
             {
-                _logs.Error($"Failed to set codecs for kind kind `{kind}` due to error: {error}");
+                _logs.Error($"Failed to set codecs for kind `{kind}` due to error: {error}");
             }
         }
     }

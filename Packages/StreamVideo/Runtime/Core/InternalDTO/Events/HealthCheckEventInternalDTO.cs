@@ -18,7 +18,7 @@ namespace StreamVideo.Core.InternalDTO.Events
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class HealthCheckEventInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("cid", Required = Newtonsoft.Json.Required.Default)]
+        [Newtonsoft.Json.JsonProperty("cid", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Cid { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("connection_id", Required = Newtonsoft.Json.Required.Default)]
@@ -27,8 +27,11 @@ namespace StreamVideo.Core.InternalDTO.Events
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("me", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public OwnUserInternalDTO Me { get; set; } = default!;
+        [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
+        public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("received_at", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.DateTimeOffset ReceivedAt { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("type", Required = Newtonsoft.Json.Required.Default)]
         public string Type { get; set; } = "health.check";

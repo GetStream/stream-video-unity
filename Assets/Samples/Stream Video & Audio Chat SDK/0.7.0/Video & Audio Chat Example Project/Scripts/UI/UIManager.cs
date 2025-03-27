@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using StreamVideo.Core;
@@ -8,9 +6,6 @@ using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
-#if UNITY_ANDROID
-using UnityEngine.Android;
-#endif
 
 namespace StreamVideo.ExampleProject.UI
 {
@@ -21,76 +16,10 @@ namespace StreamVideo.ExampleProject.UI
         public VideoResolution SenderVideoResolution => new VideoResolution(_senderVideoWidth, _senderVideoHeight);
         public int SenderVideoFps => _senderVideoFps;
 
-        public void RequestCameraPermissions(Action onGranted = null, Action onDenied = null)
-        {
-#if UNITY_ANDROID
-            var callbacks = new PermissionCallbacks();
-            Permission.RequestUserPermission(Permission.Camera, callbacks);
-
-            callbacks.PermissionGranted += _ => { onGranted?.Invoke(); };
-            callbacks.PermissionDenied += permissionName =>
-            {
-                onDenied?.Invoke();
-                Debug.LogError($"{permissionName} permission was not granted. Video capturing will not work.");
-            };
-            callbacks.PermissionDeniedAndDontAskAgain += (permissionName) =>
-            {
-                onDenied?.Invoke();
-                Debug.LogError($"{permissionName} permission was not granted. Video capturing will not work.");
-            };
-#elif UNITY_IOS
-            Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
-#endif
-        }
-
-        public bool HasUserAuthorizedCameraPermission()
-        {
-#if UNITY_STANDALONE
-            return true; //StreamTodo: check if this is true for all platforms    
-#elif UNITY_ANDROID
-            return Permission.HasUserAuthorizedPermission(Permission.Camera);
-#else
-            Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
-#endif
-        }
-
-        public void RequestMicrophonePermissions(Action onGranted = null, Action onDenied = null)
-        {
-#if UNITY_ANDROID
-            var callbacks = new PermissionCallbacks();
-
-            callbacks.PermissionGranted += _ => { onGranted?.Invoke(); };
-            callbacks.PermissionDenied += permissionName =>
-            {
-                onDenied?.Invoke();
-                Debug.LogError($"{permissionName} permission was not granted. Video capturing will not work.");
-            };
-            callbacks.PermissionDeniedAndDontAskAgain += (permissionName) =>
-            {
-                onDenied?.Invoke();
-                Debug.LogError($"{permissionName} permission was not granted. Video capturing will not work.");
-            };
-            
-            Permission.RequestUserPermission(Permission.Microphone, callbacks);
-
-#else
-            Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
-#endif
-        }
-
-        public bool HasUserAuthorizedMicrophonePermission()
-        {
-#if UNITY_STANDALONE
-            return true; //StreamTodo: check if this is true for all platforms    
-#elif UNITY_ANDROID
-            return Permission.HasUserAuthorizedPermission(Permission.Microphone);
-#else
-            Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
-#endif
-        }
-
         protected void Awake()
         {
+            _permissionsManager = new PermissionsManager(this);
+
             _videoManager.Init();
 
             _videoManager.CallStarted += OnCallStarted;
@@ -102,20 +31,22 @@ namespace StreamVideo.ExampleProject.UI
             _portraitModeUIScreensSet.Init(_videoManager, uiManager: this);
             _landscapeModeUIScreensSet.Init(_videoManager, uiManager: this);
 
-            if (!HasUserAuthorizedCameraPermission())
+            if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Camera))
             {
-                RequestCameraPermissions(onGranted: () => { SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed(); },
+                _permissionsManager.RequestPermission(PermissionsManager.PermissionType.Camera,
+                    onGranted: () => { SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed(); },
                     onDenied: ()
                         => Debug.LogError("Camera permission was not granted. Video capturing will not work."));
             }
             else
             {
-                //SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed();
+                SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed();
             }
 
-            if (!HasUserAuthorizedMicrophonePermission())
+            if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Microphone))
             {
-                RequestMicrophonePermissions(onGranted: SelectFirstMicrophone,
+                _permissionsManager.RequestPermission(PermissionsManager.PermissionType.Microphone,
+                    onGranted: SelectFirstMicrophone,
                     onDenied: ()
                         => Debug.LogError("Microphone permission was not granted. Audio capturing will not work."));
             }
@@ -153,24 +84,16 @@ namespace StreamVideo.ExampleProject.UI
 
         [SerializeField]
         private UIScreensSet _landscapeModeUIScreensSet;
-        
+
         [SerializeField]
         private UIScreensSet _portraitModeUIScreensSet;
-        
+
         [SerializeField]
         private bool _forceTestPortraitMode;
 
-        [SerializeField]
-        private Texture2D _texture1;
-        
-        [SerializeField]
-        private Texture2D _texture2;
+        private PermissionsManager _permissionsManager;
 
-        private void OnCallStarted(IStreamCall call)
-        {
-            InitTextureSending();
-            ShowCallScreen(call);
-        }
+        private void OnCallStarted(IStreamCall call) => ShowCallScreen(call);
 
         private void OnCallEnded() => ShowMainScreen();
 
@@ -254,10 +177,10 @@ namespace StreamVideo.ExampleProject.UI
         private UIScreensSet GetCurrentScreenSet()
         {
             var isPortraitMode = IsPotraitMode();
-            
+
             _portraitModeUIScreensSet.gameObject.SetActive(isPortraitMode);
             _landscapeModeUIScreensSet.gameObject.SetActive(!isPortraitMode);
-            
+
             return isPortraitMode ? _portraitModeUIScreensSet : _landscapeModeUIScreensSet;
         }
 
@@ -272,30 +195,6 @@ namespace StreamVideo.ExampleProject.UI
             return true;
 #endif
             return false;
-        }
-
-        private RenderTexture _renderTexture;
-        private Texture2D _currentTexture;
-
-        private void InitTextureSending()
-        {
-            _renderTexture = new RenderTexture(1920, 1080, depth: 0, RenderTextureFormat.ARGB32);
-            _renderTexture.Create();
-            
-            _videoManager.Client.VideoDeviceManager.SelectSource(_renderTexture, enable: true);
-            
-            StartCoroutine(RotateTextures());
-        }
-        
-        private IEnumerator RotateTextures()
-        {
-            while (_videoManager.Client != null && _videoManager.Client.ActiveCall != null)
-            {
-                _currentTexture = _currentTexture == _texture1 ? _texture2 : _texture1;
-                Graphics.Blit(_currentTexture, _renderTexture);
-                
-                yield return new WaitForSeconds(0.5f);
-            }
         }
     }
 }

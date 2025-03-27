@@ -54,29 +54,32 @@ namespace StreamVideo.Libs.Websockets
                 _connectionCts = new CancellationTokenSource();
 
                 _internalClient = new ClientWebSocket();
+                _internalClient.Options.SetRequestHeader("User-Agent", "unity-video-sdk-ws-client");
+                _internalClient.Options.SetRequestHeader("Host", serverUri.Host);
                 await _internalClient.ConnectAsync(_uri, _connectionCts.Token);
             }
             catch (OperationCanceledException e)
             {
                 LogExceptionIfDebugMode(e);
+                throw;
             }
             catch (WebSocketException e)
             {
                 LogExceptionIfDebugMode(e);
                 OnConnectionFailed();
-                return;
+                throw;
             }
             catch (SocketException e)
             {
                 LogExceptionIfDebugMode(e);
                 OnConnectionFailed();
-                return;
+                throw;
             }
             catch (Exception e)
             {
                 _logs.Exception(e);
                 OnConnectionFailed();
-                return;
+                throw;
             }
 
             _backgroundSendTimer = new Timer(SendMessagesCallback, null, 0, UpdatePeriod);

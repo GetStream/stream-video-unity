@@ -15,6 +15,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
 {
     using System = global::System;
 
+    /// <summary>
+    /// BroadcastSettingsResponse is the payload for broadcasting settings
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class BroadcastSettingsResponseInternalDTO
     {
@@ -23,6 +26,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
 
         [Newtonsoft.Json.JsonProperty("hls", Required = Newtonsoft.Json.Required.Default)]
         public HLSSettingsResponseInternalDTO Hls { get; set; } = new HLSSettingsResponseInternalDTO();
+
+        [Newtonsoft.Json.JsonProperty("rtmp", Required = Newtonsoft.Json.Required.Default)]
+        public RTMPSettingsResponseInternalDTO Rtmp { get; set; } = new RTMPSettingsResponseInternalDTO();
 
     }
 

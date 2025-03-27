@@ -15,6 +15,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
 {
     using System = global::System;
 
+    /// <summary>
+    /// List devices response
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class ListDevicesResponseInternalDTO
     {
@@ -22,7 +25,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
         /// List of devices
         /// </summary>
         [Newtonsoft.Json.JsonProperty("devices", Required = Newtonsoft.Json.Required.Default)]
-        public System.Collections.Generic.List<DeviceInternalDTO> Devices { get; set; } = new System.Collections.Generic.List<DeviceInternalDTO>();
+        public System.Collections.Generic.List<DeviceResponseInternalDTO> Devices { get; set; } = new System.Collections.Generic.List<DeviceResponseInternalDTO>();
 
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;

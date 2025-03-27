@@ -16,7 +16,7 @@ namespace StreamVideo.Core.InternalDTO.Responses
     using System = global::System;
 
     /// <summary>
-    /// Represents a call
+    /// Response for updating a call
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class UpdateCallResponseInternalDTO
@@ -33,8 +33,8 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("membership", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public MemberResponseInternalDTO Membership { get; set; } = default!;
 
-        [Newtonsoft.Json.JsonProperty("own_capabilities", Required = Newtonsoft.Json.Required.Default, ItemConverterType = typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public System.Collections.Generic.List<OwnCapabilityInternalEnum> OwnCapabilities { get; set; } = new System.Collections.Generic.List<OwnCapabilityInternalEnum>();
+        [Newtonsoft.Json.JsonProperty("own_capabilities", Required = Newtonsoft.Json.Required.Default, ItemConverterType = typeof(StreamVideo.Core.Serialization.EnumeratedStructConverter<OwnCapabilityInternalEnumDTO>))]
+        public System.Collections.Generic.List<OwnCapabilityInternalEnumDTO> OwnCapabilities { get; set; } = new System.Collections.Generic.List<OwnCapabilityInternalEnumDTO>();
 
     }
 

@@ -18,9 +18,6 @@ namespace StreamVideo.Core.InternalDTO.Models
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class AggregatedStatsInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("countrywise_aggregate_stats", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public System.Collections.Generic.Dictionary<string, CountrywiseAggregateStatsInternalDTO?> CountrywiseAggregateStats { get; set; } = default!;
-
         [Newtonsoft.Json.JsonProperty("publisher_aggregate_stats", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public PublisherAggregateStatsInternalDTO PublisherAggregateStats { get; set; } = default!;
 

@@ -8,6 +8,7 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
+using StreamVideo.Core.IssueReporters;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.State.Caches;
@@ -38,7 +39,7 @@ namespace StreamVideo.Core
         public event ConnectHandler Connected;
 
         public event CallHandler CallStarted;
-        
+
         //StreamTodo: not sure if this should pass instance because we want to destroy call instance when the call is over??
         public event CallHandler CallEnded;
 
@@ -49,7 +50,7 @@ namespace StreamVideo.Core
 
         public IStreamVideoDeviceManager VideoDeviceManager => _videoDeviceManager;
         public IStreamAudioDeviceManager AudioDeviceManager => _audioDeviceManager;
-        
+
         private StreamVideoDeviceManager _videoDeviceManager;
         private StreamAudioDeviceManager _audioDeviceManager;
 
@@ -164,6 +165,9 @@ namespace StreamVideo.Core
 
         public void Dispose()
         {
+#if STREAM_DEBUG_ENABLED
+            _logsCollector?.Dispose();
+#endif
             UnsubscribeFrom(InternalLowLevelClient);
             InternalLowLevelClient?.Dispose();
             Destroyed?.Invoke();
@@ -171,7 +175,7 @@ namespace StreamVideo.Core
 
         //StreamTodo: Consider removing this overload and exposing ConnectAsync() DisconnectAsync() only. The config would contain credentials (token or token provider), etc.
         //Similar to Android SDK: https://getstream.io/video/docs/android/guides/client-auth/
-        
+
         public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials)
         {
             await InternalLowLevelClient.ConnectUserAsync(credentials);
@@ -198,10 +202,10 @@ namespace StreamVideo.Core
             {
                 throw new ArgumentNullException(nameof(audioSource));
             }
-            
+
             InternalLowLevelClient.RtcSession.AudioInput = audioSource;
         }
-        
+
         //StreamTodo: add IsActive flag to SetCameraInputSource  SetAudioInputSource SetCameraInputSource
 
         //StreamTodo: should we also add TextureProvider? E.g. publisher is generating texture and we want to read it per frame without having to call SetVideoInputSource each frame
@@ -293,17 +297,13 @@ namespace StreamVideo.Core
 
         #endregion
 
-
         StreamVideoLowLevelClient IInternalStreamVideoClient.InternalLowLevelClient => InternalLowLevelClient;
 
         Task IInternalStreamVideoClient.LeaveCallAsync(IStreamCall call) => LeaveCallAsync(call);
 
-        async Task IInternalStreamVideoClient.EndCallAsync(IStreamCall call)
-        {
-            //StreamTodo: check if call is active
-            await InternalLowLevelClient.InternalVideoClientApi.EndCallAsync(call.Type, call.Id);
-            await LeaveCallAsync(call);
-        }
+        // Leaving the call will be triggered by the received `call.ended` event
+        Task IInternalStreamVideoClient.EndCallAsync(IStreamCall call)
+            => InternalLowLevelClient.InternalVideoClientApi.EndCallAsync(call.Type, call.Id);
 
         Task IInternalStreamVideoClient.StartHLSAsync(IStreamCall call)
             => InternalLowLevelClient.InternalVideoClientApi.StartBroadcastingAsync(call.Type, call.Id);
@@ -388,6 +388,11 @@ namespace StreamVideo.Core
             return activeCall.SyncParticipantCustomDataAsync(participant, internalCustomData);
         }
 
+#if STREAM_DEBUG_ENABLED
+        public Task SendDebugLogs(string callId, string participantId)
+            => _feedbackReporter?.SendCallReport(callId, participantId) ?? Task.CompletedTask;
+#endif
+
         private StreamVideoLowLevelClient InternalLowLevelClient { get; }
 
         private event Action Destroyed;
@@ -395,10 +400,22 @@ namespace StreamVideo.Core
         private readonly ILogs _logs;
         private readonly ICache _cache;
 
+#if STREAM_DEBUG_ENABLED
+        private readonly ILogsCollector _logsCollector;
+        private readonly IFeedbackReporter _feedbackReporter;
+#endif
+
         private async Task LeaveCallAsync(IStreamCall call)
         {
-            //StreamTodo: check if call is active
-            await InternalLowLevelClient.RtcSession.StopAsync();
+            try
+            {
+                await InternalLowLevelClient.RtcSession.StopAsync();
+            }
+            catch (Exception e)
+            {
+                _logs.Exception(e);
+            }
+
             CallEnded?.Invoke(call);
         }
 
@@ -413,11 +430,21 @@ namespace StreamVideo.Core
 
             _cache = new Cache(this, serializer, _logs);
             InternalLowLevelClient.RtcSession.SetCache(_cache);
-            
+
             _videoDeviceManager = new StreamVideoDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
             _audioDeviceManager = new StreamAudioDeviceManager(InternalLowLevelClient.RtcSession, this, _logs);
 
             SubscribeTo(InternalLowLevelClient);
+
+            // StreamTODO: Change condition
+#if STREAM_DEBUG_ENABLED
+            _logsCollector = new LogsCollector();
+
+#if UNITY_IOS || UNITY_ANDROID
+            _logsCollector.Enable();
+#endif
+            _feedbackReporter = new FeedbackReporterFactory(_logsCollector, serializer).CreateTrelloReporter();
+#endif
         }
 
         private void SubscribeTo(StreamVideoLowLevelClient lowLevelClient)
@@ -503,6 +530,11 @@ namespace StreamVideo.Core
         private void OnInternalCallEndedEvent(CallEndedEventInternalDTO eventData)
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
+            if (call == null)
+            {
+                _logs.Error($"Received call ended event for a call that doesn't exist. {nameof(eventData.Call.Cid)}:" + eventData?.Call?.Cid);
+                return;
+            }
             call.LeaveAsync().LogIfFailed();
         }
 
@@ -587,6 +619,7 @@ namespace StreamVideo.Core
                 return;
             }
 
+            //StreamTOdo: event has `User` field that is not being used. Check other events. We should parse all data from the events to update the state.
             InternalLowLevelClient.RtcSession.ActiveCall.UpdateOwnCapabilitiesFrom(eventData);
         }
 

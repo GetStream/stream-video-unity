@@ -1,112 +1,73 @@
-﻿using System;
-using StreamVideo.Core.InternalDTO.Models;
+﻿using StreamVideo.Core.InternalDTO.Models;
+using StreamVideo.Core.LowLevelClient;
 
 namespace StreamVideo.Core.Models
 {
-    public enum OwnCapability
+    /// <summary>
+    /// Represents permission capability of a user
+    /// </summary>
+    public readonly struct OwnCapability : System.IEquatable<OwnCapability>,
+        ILoadableFrom<OwnCapabilityInternalEnumDTO, OwnCapability>, ISavableTo<OwnCapabilityInternalEnumDTO>
     {
-        BlockUsers = 0,
-        CreateCall = 1,
-        CreateReaction = 2,
-        EndCall = 3,
-        JoinBackstage = 4,
-        JoinCall = 5,
-        JoinEndedCall = 6,
-        MuteUsers = 7,
-        PinForEveryone = 8,
-        ReadCall = 9,
-        RemoveCallMember = 10,
-        Screenshare = 11,
-        SendAudio = 12,
-        SendVideo = 13,
-        StartBroadcastCall = 14,
-        StartRecordCall = 15,
-        StartTranscriptionCall = 16,
-        StopBroadcastCall = 17,
-        StopRecordCall = 18,
-        StopTranscriptionCall = 19,
-        UpdateCall = 20,
-        UpdateCallMember = 21,
-        UpdateCallPermissions = 22,
-        UpdateCallSettings = 23,
-        EnableNoiseCancellation = 24,
-        ChangeMaxDuration = 25,
-        StartClosedCaptionsCall = 26,
-        StopClosedCaptionsCall = 27,
-    }
+        public static readonly OwnCapability BlockUsers = new OwnCapability("block-users");
+        public static readonly OwnCapability ChangeMaxDuration = new OwnCapability("change-max-duration");
+        public static readonly OwnCapability CreateCall = new OwnCapability("create-call");
+        public static readonly OwnCapability CreateReaction = new OwnCapability("create-reaction");
+        public static readonly OwnCapability EnableNoiseCancellation = new OwnCapability("enable-noise-cancellation");
+        public static readonly OwnCapability EndCall = new OwnCapability("end-call");
+        public static readonly OwnCapability JoinBackstage = new OwnCapability("join-backstage");
+        public static readonly OwnCapability JoinCall = new OwnCapability("join-call");
+        public static readonly OwnCapability JoinEndedCall = new OwnCapability("join-ended-call");
+        public static readonly OwnCapability MuteUsers = new OwnCapability("mute-users");
+        public static readonly OwnCapability PinForEveryone = new OwnCapability("pin-for-everyone");
+        public static readonly OwnCapability ReadCall = new OwnCapability("read-call");
+        public static readonly OwnCapability RemoveCallMember = new OwnCapability("remove-call-member");
+        public static readonly OwnCapability ScreenShare = new OwnCapability("screenshare");
+        public static readonly OwnCapability SendAudio = new OwnCapability("send-audio");
+        public static readonly OwnCapability SendVideo = new OwnCapability("send-video");
+        public static readonly OwnCapability StartBroadcastCall = new OwnCapability("start-broadcast-call");
+        public static readonly OwnCapability StartClosedCaptionsCall = new OwnCapability("start-closed-captions-call");
+        public static readonly OwnCapability StartFrameRecordCall = new OwnCapability("start-frame-record-call");
+        public static readonly OwnCapability StartRecordCall = new OwnCapability("start-record-call");
+        public static readonly OwnCapability StartTranscriptionCall = new OwnCapability("start-transcription-call");
+        public static readonly OwnCapability StopBroadcastCall = new OwnCapability("stop-broadcast-call");
+        public static readonly OwnCapability StopClosedCaptionsCall = new OwnCapability("stop-closed-captions-call");
+        public static readonly OwnCapability StopFrameRecordCall = new OwnCapability("stop-frame-record-call");
+        public static readonly OwnCapability StopRecordCall = new OwnCapability("stop-record-call");
+        public static readonly OwnCapability StopTranscriptionCall = new OwnCapability("stop-transcription-call");
+        public static readonly OwnCapability UpdateCall = new OwnCapability("update-call");
+        public static readonly OwnCapability UpdateCallMember = new OwnCapability("update-call-member");
+        public static readonly OwnCapability UpdateCallPermissions = new OwnCapability("update-call-permissions");
+        public static readonly OwnCapability UpdateCallSettings = new OwnCapability("update-call-settings");
 
-    internal static class OwnCapabilityExt
-    {
-        public static OwnCapabilityInternalEnum ToInternalEnum(this OwnCapability ownCapability)
+        public OwnCapability(string value)
         {
-            switch (ownCapability)
-            {
-                case OwnCapability.BlockUsers: return OwnCapabilityInternalEnum.BlockUsers;
-                case OwnCapability.CreateCall: return OwnCapabilityInternalEnum.CreateCall;
-                case OwnCapability.CreateReaction: return OwnCapabilityInternalEnum.CreateReaction;
-                case OwnCapability.EndCall: return OwnCapabilityInternalEnum.EndCall;
-                case OwnCapability.JoinBackstage: return OwnCapabilityInternalEnum.JoinBackstage;
-                case OwnCapability.JoinCall: return OwnCapabilityInternalEnum.JoinCall;
-                case OwnCapability.JoinEndedCall: return OwnCapabilityInternalEnum.JoinEndedCall;
-                case OwnCapability.MuteUsers: return OwnCapabilityInternalEnum.MuteUsers;
-                case OwnCapability.PinForEveryone: return OwnCapabilityInternalEnum.PinForEveryone;
-                case OwnCapability.ReadCall: return OwnCapabilityInternalEnum.ReadCall;
-                case OwnCapability.RemoveCallMember: return OwnCapabilityInternalEnum.RemoveCallMember;
-                case OwnCapability.Screenshare: return OwnCapabilityInternalEnum.Screenshare;
-                case OwnCapability.SendAudio: return OwnCapabilityInternalEnum.SendAudio;
-                case OwnCapability.SendVideo: return OwnCapabilityInternalEnum.SendVideo;
-                case OwnCapability.StartBroadcastCall: return OwnCapabilityInternalEnum.StartBroadcastCall;
-                case OwnCapability.StartRecordCall: return OwnCapabilityInternalEnum.StartRecordCall;
-                case OwnCapability.StartTranscriptionCall: return OwnCapabilityInternalEnum.StartTranscriptionCall;
-                case OwnCapability.StopBroadcastCall: return OwnCapabilityInternalEnum.StopBroadcastCall;
-                case OwnCapability.StopRecordCall: return OwnCapabilityInternalEnum.StopRecordCall;
-                case OwnCapability.StopTranscriptionCall: return OwnCapabilityInternalEnum.StopTranscriptionCall;
-                case OwnCapability.UpdateCall: return OwnCapabilityInternalEnum.UpdateCall;
-                case OwnCapability.UpdateCallMember: return OwnCapabilityInternalEnum.UpdateCallMember;
-                case OwnCapability.UpdateCallPermissions: return OwnCapabilityInternalEnum.UpdateCallPermissions;
-                case OwnCapability.UpdateCallSettings: return OwnCapabilityInternalEnum.UpdateCallSettings;
-                case OwnCapability.EnableNoiseCancellation: return OwnCapabilityInternalEnum.EnableNoiseCancellation;
-                case OwnCapability.ChangeMaxDuration: return OwnCapabilityInternalEnum.ChangeMaxDuration;
-                case OwnCapability.StartClosedCaptionsCall: return OwnCapabilityInternalEnum.StartClosedCaptionsCall;
-                case OwnCapability.StopClosedCaptionsCall: return OwnCapabilityInternalEnum.StopClosedCaptionsCall;
-                default: throw new ArgumentOutOfRangeException(nameof(ownCapability), ownCapability, null);
-            }
+            _value = value;
         }
 
-        public static OwnCapability ToPublicEnum(this OwnCapabilityInternalEnum ownCapability)
-        {
-            switch (ownCapability)
-            {
-                case OwnCapabilityInternalEnum.BlockUsers: return OwnCapability.BlockUsers;
-                case OwnCapabilityInternalEnum.CreateCall: return OwnCapability.CreateCall;
-                case OwnCapabilityInternalEnum.CreateReaction: return OwnCapability.CreateReaction;
-                case OwnCapabilityInternalEnum.EndCall: return OwnCapability.EndCall;
-                case OwnCapabilityInternalEnum.JoinBackstage: return OwnCapability.JoinBackstage;
-                case OwnCapabilityInternalEnum.JoinCall: return OwnCapability.JoinCall;
-                case OwnCapabilityInternalEnum.JoinEndedCall: return OwnCapability.JoinEndedCall;
-                case OwnCapabilityInternalEnum.MuteUsers: return OwnCapability.MuteUsers;
-                case OwnCapabilityInternalEnum.PinForEveryone: return OwnCapability.PinForEveryone;
-                case OwnCapabilityInternalEnum.ReadCall: return OwnCapability.ReadCall;
-                case OwnCapabilityInternalEnum.RemoveCallMember: return OwnCapability.RemoveCallMember;
-                case OwnCapabilityInternalEnum.Screenshare: return OwnCapability.Screenshare;
-                case OwnCapabilityInternalEnum.SendAudio: return OwnCapability.SendAudio;
-                case OwnCapabilityInternalEnum.SendVideo: return OwnCapability.SendVideo;
-                case OwnCapabilityInternalEnum.StartBroadcastCall: return OwnCapability.StartBroadcastCall;
-                case OwnCapabilityInternalEnum.StartRecordCall: return OwnCapability.StartRecordCall;
-                case OwnCapabilityInternalEnum.StartTranscriptionCall: return OwnCapability.StartTranscriptionCall;
-                case OwnCapabilityInternalEnum.StopBroadcastCall: return OwnCapability.StopBroadcastCall;
-                case OwnCapabilityInternalEnum.StopRecordCall: return OwnCapability.StopRecordCall;
-                case OwnCapabilityInternalEnum.StopTranscriptionCall: return OwnCapability.StopTranscriptionCall;
-                case OwnCapabilityInternalEnum.UpdateCall: return OwnCapability.UpdateCall;
-                case OwnCapabilityInternalEnum.UpdateCallMember: return OwnCapability.UpdateCallMember;
-                case OwnCapabilityInternalEnum.UpdateCallPermissions: return OwnCapability.UpdateCallPermissions;
-                case OwnCapabilityInternalEnum.UpdateCallSettings: return OwnCapability.UpdateCallSettings;
-                case OwnCapabilityInternalEnum.EnableNoiseCancellation: return OwnCapability.EnableNoiseCancellation;
-                case OwnCapabilityInternalEnum.ChangeMaxDuration: return OwnCapability.ChangeMaxDuration;
-                case OwnCapabilityInternalEnum.StartClosedCaptionsCall: return OwnCapability.StartClosedCaptionsCall;
-                case OwnCapabilityInternalEnum.StopClosedCaptionsCall: return OwnCapability.StopClosedCaptionsCall;
-                default: throw new ArgumentOutOfRangeException(nameof(ownCapability), ownCapability, null);
-            }
-        }
+        public override string ToString() => _value;
+
+        public bool Equals(OwnCapability other) => _value == other._value;
+
+        public override bool Equals(object obj) => obj is OwnCapability other && Equals(other);
+
+        public override int GetHashCode() => _value.GetHashCode();
+
+        public static bool operator ==(OwnCapability left, OwnCapability right) => left.Equals(right);
+
+        public static bool operator !=(OwnCapability left, OwnCapability right) => !left.Equals(right);
+
+        public static implicit operator OwnCapability(string value) => new OwnCapability(value);
+
+        public static implicit operator string(OwnCapability type) => type._value;
+
+        OwnCapability ILoadableFrom<OwnCapabilityInternalEnumDTO, OwnCapability>.
+            LoadFromDto(OwnCapabilityInternalEnumDTO dto)
+            => new OwnCapability(dto.ToString());
+
+        OwnCapabilityInternalEnumDTO ISavableTo<OwnCapabilityInternalEnumDTO>.SaveToDto()
+            => new OwnCapabilityInternalEnumDTO(_value);
+
+        private readonly string _value;
     }
 }

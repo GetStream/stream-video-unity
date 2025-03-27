@@ -15,11 +15,17 @@ namespace StreamVideo.Core.InternalDTO.Responses
 {
     using System = global::System;
 
+    /// <summary>
+    /// Basic response information
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class GetCallStatsResponseInternalDTO
     {
         [Newtonsoft.Json.JsonProperty("aggregated", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public AggregatedStatsInternalDTO Aggregated { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("average_connection_time", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public float AverageConnectionTime { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("call_duration_seconds", Required = Newtonsoft.Json.Required.Default)]
         public int CallDurationSeconds { get; set; } = default!;

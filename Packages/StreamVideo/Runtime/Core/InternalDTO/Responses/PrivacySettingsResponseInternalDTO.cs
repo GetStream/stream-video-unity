@@ -18,11 +18,6 @@ namespace StreamVideo.Core.InternalDTO.Responses
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class PrivacySettingsResponseInternalDTO
     {
-        [Newtonsoft.Json.JsonProperty("read_receipts", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public ReadReceiptsResponseInternalDTO ReadReceipts { get; set; } = default!;
-
-        [Newtonsoft.Json.JsonProperty("typing_indicators", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public TypingIndicatorsResponseInternalDTO TypingIndicators { get; set; } = default!;
 
     }
 

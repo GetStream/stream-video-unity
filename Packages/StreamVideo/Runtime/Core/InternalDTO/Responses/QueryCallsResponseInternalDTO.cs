@@ -21,6 +21,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("calls", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<CallStateResponseFieldsInternalDTO> Calls { get; set; } = new System.Collections.Generic.List<CallStateResponseFieldsInternalDTO>();
 
+        /// <summary>
+        /// Duration of the request in milliseconds
+        /// </summary>
         [Newtonsoft.Json.JsonProperty("duration", Required = Newtonsoft.Json.Required.Default)]
         public string Duration { get; set; } = default!;
 

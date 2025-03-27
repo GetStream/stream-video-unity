@@ -21,11 +21,17 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("recording_storage_name", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string RecordingStorageName { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("start_closed_caption", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool StartClosedCaption { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("start_hls", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool StartHls { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("start_recording", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool StartRecording { get; set; } = default!;
+
+        [Newtonsoft.Json.JsonProperty("start_rtmp_broadcasts", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool StartRtmpBroadcasts { get; set; } = default!;
 
         [Newtonsoft.Json.JsonProperty("start_transcription", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public bool StartTranscription { get; set; } = default!;

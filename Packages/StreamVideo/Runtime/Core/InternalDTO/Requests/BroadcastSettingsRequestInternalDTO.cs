@@ -24,6 +24,9 @@ namespace StreamVideo.Core.InternalDTO.Requests
         [Newtonsoft.Json.JsonProperty("hls", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public HLSSettingsRequestInternalDTO Hls { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("rtmp", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public RTMPSettingsRequestInternalDTO Rtmp { get; set; } = default!;
+
     }
 
 }

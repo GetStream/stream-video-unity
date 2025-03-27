@@ -27,6 +27,9 @@ namespace StreamVideo.Core.InternalDTO.Events
         [Newtonsoft.Json.JsonProperty("created_at", Required = Newtonsoft.Json.Required.Default)]
         public System.DateTimeOffset CreatedAt { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("egress_id", Required = Newtonsoft.Json.Required.Default)]
+        public string EgressId { get; set; } = default!;
+
         /// <summary>
         /// The type of event: "call.recording_stopped" in this case
         /// </summary>

@@ -21,6 +21,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("custom", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.Dictionary<string, object> Custom { get; set; } = default!;
 
+        [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Default)]
+        public string Id { get; set; } = default!;
+
         [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Default)]
         public string Image { get; set; } = default!;
 

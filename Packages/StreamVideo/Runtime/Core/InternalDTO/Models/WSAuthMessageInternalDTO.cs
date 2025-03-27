@@ -15,6 +15,9 @@ namespace StreamVideo.Core.InternalDTO.Models
 {
     using System = global::System;
 
+    /// <summary>
+    /// Websocket auth message
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v10.0.0.0))")]
     internal partial class WSAuthMessageInternalDTO
     {

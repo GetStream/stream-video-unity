@@ -27,6 +27,9 @@ namespace StreamVideo.Core.InternalDTO.Responses
         [Newtonsoft.Json.JsonProperty("blocked_user_ids", Required = Newtonsoft.Json.Required.Default)]
         public System.Collections.Generic.List<string> BlockedUserIds { get; set; } = new System.Collections.Generic.List<string>();
 
+        [Newtonsoft.Json.JsonProperty("captioning", Required = Newtonsoft.Json.Required.Default)]
+        public bool Captioning { get; set; } = default!;
+
         /// <summary>
         /// The unique identifier for a call (&lt;type&gt;:&lt;id&gt;)
         /// </summary>

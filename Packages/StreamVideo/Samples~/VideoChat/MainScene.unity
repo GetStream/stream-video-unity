@@ -600,8 +600,6 @@ MonoBehaviour:
   _landscapeModeUIScreensSet: {fileID: 716394319}
   _portraitModeUIScreensSet: {fileID: 835210816}
   _forceTestPortraitMode: 0
-  _texture1: {fileID: 2800000, guid: 0210dae56abf9a448a915de0b335e155, type: 3}
-  _texture2: {fileID: 2800000, guid: 5248aab8432c2d942945a0d8e9dc6c1e, type: 3}
 --- !u!1 &1354881823
 GameObject:
   m_ObjectHideFlags: 0

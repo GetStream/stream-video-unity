@@ -91,30 +91,31 @@ namespace StreamVideo.Core.DeviceManagers
         {
             if (isEnabled && SelectedDevice.IsValid)
             {
-                TryStopRecording(SelectedDevice);
+                //TryStopRecording(SelectedDevice);
                 
                 var targetAudioSource = GetOrCreateTargetAudioSource();
 
                 // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
 
-                targetAudioSource.clip
-                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 10, AudioSettings.outputSampleRate);
-                targetAudioSource.loop = true;
-
-                using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
-                {
-                    while (!(Microphone.GetPosition(SelectedDevice.Name) > 0))
-                    {
-                        // StreamTodo: add timeout. Otherwise might hang application
-                    }
-                }
-
-                targetAudioSource.Play();
+                // Sample rate must probably match the one used in AudioCustomFilter (this is what's being sent to webRTC). It's currently using AudioSettings.outputSampleRate
+                // targetAudioSource.clip
+                //     = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 1, AudioSettings.outputSampleRate);
+                // targetAudioSource.loop = true;
+                //
+                // using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
+                // {
+                //     while (!(Microphone.GetPosition(SelectedDevice.Name) > 0))
+                //     {
+                //         // StreamTodo: add timeout. Otherwise might hang application
+                //     }
+                // }
+                //
+                // targetAudioSource.Play();
             }
 
             if (!isEnabled)
             {
-                TryStopRecording(SelectedDevice);
+                //TryStopRecording(SelectedDevice);
             }
 
             RtcSession.TrySetAudioTrackEnabled(isEnabled);

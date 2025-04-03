@@ -28,6 +28,7 @@ using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
 using StreamVideo.Core.Sfu;
 using StreamVideo.Core.Stats;
+using AudioSettings = UnityEngine.AudioSettings;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -325,7 +326,16 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            Publisher.PublisherAudioTrack.Enabled = isEnabled;
+            //Publisher.PublisherAudioTrack.Enabled = isEnabled;
+
+            if (isEnabled)
+            {
+                Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioSettings.outputSampleRate, 2);
+            }
+            else
+            {
+                Publisher.PublisherAudioTrack.StopLocalAudioCapture();
+            }
         }
 
         public void TrySetVideoTrackEnabled(bool isEnabled)

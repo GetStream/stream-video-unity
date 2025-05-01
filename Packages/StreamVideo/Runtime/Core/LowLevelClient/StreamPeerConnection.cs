@@ -549,7 +549,8 @@ namespace StreamVideo.Core.LowLevelClient
             return track;
         }
 
-        private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack(_mediaInputProvider.AudioInput);
+        // Removed AudioSource so that AudioFilter is not created and ProcessLocalAudio is not called
+        private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack();
 
         private void ForceCodec(RTCRtpTransceiver transceiver, string codecKey, TrackKind kind)
         {

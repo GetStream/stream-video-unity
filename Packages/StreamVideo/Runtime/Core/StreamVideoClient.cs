@@ -196,7 +196,7 @@ namespace StreamVideo.Core
 
         public Task DisconnectAsync() => InternalLowLevelClient.DisconnectAsync();
 
-        void IInternalStreamVideoClient.SetAudioInputSource(AudioSource audioSource)
+        void IInternalStreamVideoClient.SetAudioInputSource(AudioSource audioSource) //StreamTodo order mismatch - put this lower
         {
             if (audioSource == null)
             {
@@ -250,6 +250,17 @@ namespace StreamVideo.Core
             }
 
             return new QueryCallsResult(calls, response.Prev, response.Next);
+        }
+
+        public void GetAudioProcessingModuleConfig(out bool enabled, out bool echoCancellationEnabled,
+            out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel)
+        {
+            WebRTC.GetAudioProcessingModuleConfig(out enabled, out echoCancellationEnabled, out autoGainEnabled, out noiseSuppressionEnabled, out noiseSuppressionLevel);
+        }
+        
+        public void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel)
+        {
+            WebRTC.SetAudioProcessingModule(enabled, echoCancellationEnabled, autoGainEnabled, noiseSuppressionEnabled, noiseSuppressionLevel);
         }
 
         #region IStreamVideoClientEventsListener

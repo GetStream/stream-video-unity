@@ -97,5 +97,8 @@ namespace StreamVideo.Core
 #if STREAM_DEBUG_ENABLED
         Task SendDebugLogs(string callId, string participantId);
 #endif
+        void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel);
+        
+        void GetAudioProcessingModuleConfig(out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel);
     }
 }

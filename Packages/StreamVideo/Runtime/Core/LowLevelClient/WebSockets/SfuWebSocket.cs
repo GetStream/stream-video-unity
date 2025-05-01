@@ -328,6 +328,18 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
                 case SfuEvent.EventPayloadOneofCase.PinsUpdated:
                     return PinsUpdated != null;
+                
+                case SfuEvent.EventPayloadOneofCase.CallEnded:
+                   return CallEnded != null;
+                
+                case SfuEvent.EventPayloadOneofCase.ParticipantUpdated:
+                    return ParticipantUpdated != null;
+                
+                case SfuEvent.EventPayloadOneofCase.ParticipantMigrationComplete:
+                    return ParticipantMigrationComplete != null;
+                
+                case SfuEvent.EventPayloadOneofCase.ChangePublishOptions:
+                    return ChangePublishOptions != null;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(tag),

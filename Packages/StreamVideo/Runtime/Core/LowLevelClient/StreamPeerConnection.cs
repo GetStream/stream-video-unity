@@ -395,6 +395,7 @@ namespace StreamVideo.Core.LowLevelClient
             PublisherAudioMediaStream.RemoveTrack(PublisherAudioTrack);
             _peerConnection.RemoveTrack(_audioTransceiver.Sender);
 
+            PublisherAudioTrack.StopLocalAudioCapture();
             PublisherAudioTrack = null;
         }
 

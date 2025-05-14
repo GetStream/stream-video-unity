@@ -330,6 +330,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (isEnabled)
             {
+                //StreamTODO: don't take sample rate from AudioSettings.outputSampleRate We need to start with default value and later we can expose few predefined options if needed
+                // According to AI we should se 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
+                // Also, use single channel only
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioSettings.outputSampleRate, 2);
             }
             else

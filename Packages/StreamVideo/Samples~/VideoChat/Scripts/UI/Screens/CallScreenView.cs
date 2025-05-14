@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.ExampleProject.UI.Devices;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject.UI.Screens
@@ -47,15 +49,31 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         [SerializeField]
         private TMP_InputField _joinCallIdInput;
-        
+
         [SerializeField]
         private CameraMediaDevicePanel _cameraPanel;
 
         [SerializeField]
         private MicrophoneMediaDevicePanel _microphonePanel;
 
+        [SerializeField]
+        private Button _apmToggleBtn;
+
+        [SerializeField]
+        private Button _echoToggleBtn;
+
+        [SerializeField]
+        private Button _gainToggleBtn;
+
+        [SerializeField]
+        private Button _noiseToggleBtn;
+
+        [SerializeField]
+        private Button _noiseLvlBtn;
+
         private IStreamCall _activeCall;
         private ParticipantView _currentDominantSpeakerView;
+        private AudioProcessingConfig _audioProcessingConfig;
 
         protected override void OnInit()
         {
@@ -64,6 +82,19 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             _cameraPanel.Init(VideoManager.Client, UIManager);
             _microphonePanel.Init(VideoManager.Client, UIManager);
+
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+            _apmToggleBtn.onClick.AddListener(OnApmToggleClicked);
+            _echoToggleBtn.onClick.AddListener(OnEchoToggleClicked);
+            _noiseToggleBtn.onClick.AddListener(OnNoiseToggleClicked);
+            _gainToggleBtn.onClick.AddListener(OnGainToggleClicked);
+            _noiseLvlBtn.onClick.AddListener(OnNoiseLvlClicked);
+
+            _audioProcessingConfig = new AudioProcessingConfig(VideoManager.Client);
+            _audioProcessingConfig.Updated += AudioProcessingConfigUpdated;
+
+            _audioProcessingConfig.LoadCurrentConfig();
+#endif
         }
 
         protected override void OnShow(ShowArgs showArgs)
@@ -233,5 +264,69 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 localParticipant.SetLocalCameraSource(activeCamera);
             }
         }
+        
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+        private void OnNoiseLvlClicked()
+        {
+            _audioProcessingConfig.NoiseLvl++;
+            _audioProcessingConfig.Apply();
+            _audioProcessingConfig.LoadCurrentConfig();
+        }
+
+        private void OnNoiseToggleClicked()
+        {
+            _audioProcessingConfig.NoiseEnabled = !_audioProcessingConfig.NoiseEnabled;
+            _audioProcessingConfig.Apply();
+            _audioProcessingConfig.LoadCurrentConfig();
+        }
+
+        private void OnGainToggleClicked()
+        {
+            _audioProcessingConfig.AutoGainEnabled = !_audioProcessingConfig.AutoGainEnabled;
+            _audioProcessingConfig.Apply();
+            _audioProcessingConfig.LoadCurrentConfig();
+        }
+
+        private void OnEchoToggleClicked()
+        {
+            _audioProcessingConfig.EchoEnabled = !_audioProcessingConfig.EchoEnabled;
+            _audioProcessingConfig.Apply();
+            _audioProcessingConfig.LoadCurrentConfig();
+        }
+
+        private void OnApmToggleClicked()
+        {
+            _audioProcessingConfig.Enabled = !_audioProcessingConfig.Enabled;
+            _audioProcessingConfig.Apply();
+            _audioProcessingConfig.LoadCurrentConfig();
+        }
+        
+        void AudioProcessingConfigUpdated()
+        {
+            var apmOn = _audioProcessingConfig.Enabled;
+
+            try
+            {
+                _apmToggleBtn.gameObject.GetComponentInChildren<TMP_Text>().text = apmOn ? "APM: ON" : "APM: OFF";
+                _apmToggleBtn.gameObject.GetComponent<Image>().color = apmOn ? Color.green : Color.red;
+            
+                _echoToggleBtn.gameObject.GetComponentInChildren<TMP_Text>().text = _audioProcessingConfig.EchoEnabled ? "Echo: ON" : "Echo: OFF";
+                _echoToggleBtn.gameObject.GetComponent<Image>().color = _audioProcessingConfig.EchoEnabled ? Color.green : Color.red;
+            
+            
+                _noiseToggleBtn.gameObject.GetComponentInChildren<TMP_Text>().text = _audioProcessingConfig.NoiseEnabled ? "Noise - ON" : "Noise - OFF";
+                _noiseToggleBtn.gameObject.GetComponent<Image>().color = _audioProcessingConfig.NoiseEnabled ? Color.green : Color.red;
+            
+                _gainToggleBtn.gameObject.GetComponentInChildren<TMP_Text>().text = _audioProcessingConfig.AutoGainEnabled ? "Auto Gain: ON" : "Auto Gain: OFF";
+                _gainToggleBtn.gameObject.GetComponent<Image>().color = _audioProcessingConfig.AutoGainEnabled ? Color.green : Color.red;
+            
+                _noiseLvlBtn.gameObject.GetComponentInChildren<TMP_Text>().text = "Noise Lvl: " + _audioProcessingConfig.NoiseLvl;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+#endif
     }
 }

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using StreamVideo.Core.Sfu;
 using StreamVideo.ExampleProject.UI.Devices;
 using TMPro;
 using UnityEngine;
@@ -91,7 +94,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             try
             {
-                var callId = CreateRandomCallId();
+                var callId = await CreateRandomCallId();
                 await VideoManager.JoinAsync(callId, create: true);
             }
             catch (Exception e)
@@ -105,6 +108,40 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _localCameraImage.texture = activeCamera;
         }
 
-        private static string CreateRandomCallId() => Guid.NewGuid().ToString().Replace("-", "");
+        private async Task<string> CreateRandomCallId()
+        {
+            var length = 4;
+            for (var i = 0; i < 10; i++)
+            {
+                var callId = GenerateShortId(length);
+                var isAvailable = await VideoManager.IsCallIdAvailableToTake(callId);
+                if (isAvailable)
+                {
+                    return callId;
+                }
+
+                if (i > 3)
+                {
+                    length = 6;
+                }
+
+                if (i > 5)
+                {
+                    length = 8;
+                }
+                
+            }
+            
+            throw new Exception("Failed to generate a unique call ID");
+        }
+
+        public static string GenerateShortId(int length = 8)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new System.Random();
+    
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
     }
 }

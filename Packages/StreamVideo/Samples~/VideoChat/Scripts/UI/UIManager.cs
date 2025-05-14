@@ -28,8 +28,7 @@ namespace StreamVideo.ExampleProject.UI
             _videoManager.Client.VideoDeviceManager.SelectedDeviceChanged += OnCameraDeviceChanged;
             _videoManager.Client.AudioDeviceManager.SelectedDeviceChanged += OnMicrophoneDeviceChanged;
 
-            _portraitModeUIScreensSet.Init(_videoManager, uiManager: this);
-            _landscapeModeUIScreensSet.Init(_videoManager, uiManager: this);
+            GetCurrentScreenSet().Init(_videoManager, uiManager: this);
 
             if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Camera))
             {
@@ -176,7 +175,7 @@ namespace StreamVideo.ExampleProject.UI
 
         private UIScreensSet GetCurrentScreenSet()
         {
-            var isPortraitMode = IsPotraitMode();
+            var isPortraitMode = IsPortraitMode();
 
             _portraitModeUIScreensSet.gameObject.SetActive(isPortraitMode);
             _landscapeModeUIScreensSet.gameObject.SetActive(!isPortraitMode);
@@ -184,7 +183,7 @@ namespace StreamVideo.ExampleProject.UI
             return isPortraitMode ? _portraitModeUIScreensSet : _landscapeModeUIScreensSet;
         }
 
-        private bool IsPotraitMode()
+        private bool IsPortraitMode()
         {
 #if UNITY_EDITOR
             if (_forceTestPortraitMode)

@@ -32,6 +32,15 @@ namespace StreamVideo.ExampleProject
         }
 
         /// <summary>
+        /// Check if we can use this call ID to create a new call or is it already taken
+        /// </summary>
+        public async Task<bool> IsCallIdAvailableToTake(string callId)
+        {
+            var call = await Client.GetCallAsync(StreamCallType.Default, callId);
+            return call == null;
+        }
+
+        /// <summary>
         /// Join the Call with a given ID. We can either create it or try to join only.
         /// </summary>
         /// <param name="callId">Call ID</param>

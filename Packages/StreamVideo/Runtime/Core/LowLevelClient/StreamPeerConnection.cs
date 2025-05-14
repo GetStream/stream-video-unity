@@ -204,6 +204,12 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"Disposing PeerConnection [{_peerType}]");            
 #endif
+
+            //StreamTODO: we shouldn't need to call this directly
+            if (PublisherAudioTrack != null)
+            {
+                PublisherAudioTrack.StopLocalAudioCapture();
+            }
             
             PublisherAudioTrack?.Stop();
             PublisherVideoTrack?.Stop();

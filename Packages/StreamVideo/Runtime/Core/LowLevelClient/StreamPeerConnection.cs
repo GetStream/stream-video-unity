@@ -201,6 +201,15 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void Dispose()
         {
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"Disposing PeerConnection [{_peerType}]");            
+#endif
+            
+            PublisherAudioTrack?.Stop();
+            PublisherVideoTrack?.Stop();
+            PublisherAudioTrack = null;
+            PublisherVideoTrack = null;
+            
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
@@ -212,10 +221,11 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnConnectionStateChange -= OnConnectionStateChange;
             _peerConnection.OnTrack -= OnTrack;
 
-            PublisherAudioTrack?.Stop();
-            PublisherVideoTrack?.Stop();
-
             _peerConnection.Close();
+            
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"Disposed PeerConnection [{_peerType}]");            
+#endif
         }
 
         private const string VideoCodecKeyH264 = "h264";

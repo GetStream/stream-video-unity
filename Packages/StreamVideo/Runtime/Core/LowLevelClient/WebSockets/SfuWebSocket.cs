@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf;
@@ -153,7 +154,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
 
 #if STREAM_DEBUG_ENABLED
-                DebugLogEvent(sfuEvent);
+                DebugLogEvent(sfuEvent, msg);
 #endif
 
                 switch (sfuEvent.EventPayloadCase)
@@ -347,7 +348,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        private void DebugLogEvent(SfuEvent sfuEvent)
+        private void DebugLogEvent(SfuEvent sfuEvent, byte[] rawMessage)
         {
             if (sfuEvent.EventPayloadCase == SfuEvent.EventPayloadOneofCase.HealthCheckResponse)
             {
@@ -357,6 +358,15 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             if (!IsEventSubscribedTo(sfuEvent.EventPayloadCase))
             {
                 Logs.Warning($"-----------------------{LogsPrefix} UNHANDLED WS message: " + sfuEvent);
+                return;
+            }
+            
+            var decodedMessage = System.Text.Encoding.UTF8.GetString(rawMessage);
+            
+            // Ignoring some messages for causing too much noise in logs
+            var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
+            if(ignoredMessages.Any(decodedMessage.Contains))
+            {
                 return;
             }
 

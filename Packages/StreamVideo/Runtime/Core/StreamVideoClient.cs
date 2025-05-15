@@ -82,6 +82,7 @@ namespace StreamVideo.Core
             return client;
         }
 
+        //StreamTODO: this throws exception if the call doesn't exist. Check with other SDKs what is the expected behavior
         /// <summary>
         /// Will return null if the call doesn't exist
         /// </summary>

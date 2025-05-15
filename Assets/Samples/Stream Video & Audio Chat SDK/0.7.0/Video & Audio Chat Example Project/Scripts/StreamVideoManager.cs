@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
+using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Serialization;
@@ -18,14 +19,14 @@ namespace StreamVideo.ExampleProject
         public event Action CallEnded;
 
         public IStreamVideoClient Client { get; private set; }
-        
+
         public void Init()
         {
             _clientConfig = new StreamClientConfig
             {
                 LogLevel = StreamLogLevel.Debug,
             };
-            
+
             Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
             Client.CallStarted += OnCallStarted;
             Client.CallEnded += OnCallEnded;
@@ -36,8 +37,16 @@ namespace StreamVideo.ExampleProject
         /// </summary>
         public async Task<bool> IsCallIdAvailableToTake(string callId)
         {
-            var call = await Client.GetCallAsync(StreamCallType.Default, callId);
-            return call == null;
+            try
+            {
+                var call = await Client.GetCallAsync(StreamCallType.Default, callId);
+                return call == null;
+            }
+            catch (StreamApiException streamApiException)
+            {
+                return streamApiException.StatusCode == StreamApiException.NotFoundHttpStatusCode &&
+                       streamApiException.Code == StreamApiException.NotFoundStreamCode;
+            }
         }
 
         /// <summary>
@@ -140,13 +149,14 @@ namespace StreamVideo.ExampleProject
         {
             public string Error;
         }
-        
+
 #pragma warning disable CS0414 //Disable warning that _info is unused. It's purpose is to display info box in the Unity Inspector only
-        
+
         [SerializeField]
         [TextArea]
-        private string _info = "Get your credentials from https://dashboard.getstream.io/. If you leave the credentials empty then Stream's Demo credentials will be used automatically.";
-        
+        private string _info
+            = "Get your credentials from https://dashboard.getstream.io/. If you leave the credentials empty then Stream's Demo credentials will be used automatically.";
+
 #pragma warning restore CS0414
 
         [Header("Authorization Credentials")]
@@ -214,7 +224,7 @@ namespace StreamVideo.ExampleProject
         {
             _activeCall = call;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            
+
             CallStarted?.Invoke(call);
         }
 
@@ -232,10 +242,10 @@ namespace StreamVideo.ExampleProject
                 Debug.LogException(e);
             }
 #endif
-            
+
             _activeCall = null;
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
-            
+
             CallEnded?.Invoke();
         }
     }

@@ -13,7 +13,10 @@ namespace StreamVideo.Core.Exceptions
         public const int RateLimitErrorHttpStatusCode = 429;
         public const int RateLimitErrorStreamCode = 9;
 
-        //Stream
+        public const int NotFoundHttpStatusCode = 404;
+        public const int NotFoundStreamCode = 16;
+
+        //StreamTODO: change StatusCode and Code to enums
         public int? StatusCode { get; }
         public int? Code { get; }
         public string Duration { get; }

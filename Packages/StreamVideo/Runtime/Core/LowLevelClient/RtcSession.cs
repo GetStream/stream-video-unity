@@ -57,6 +57,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         // StreamTodo: control this via compiler flag
         public const bool LogWebRTCStats = false;
+        
+        public const int AudioInputSampleRate = 48_000;
+        
+        // Recording should use single channel only. E.g. on One Plus 9 Pro recording with 2 channels breaks the audio.
+        public const int AudioInputChannels = 1;
 
         public CallingState CallState
         {
@@ -326,14 +331,19 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            //Publisher.PublisherAudioTrack.Enabled = isEnabled;
+            if (Publisher.PublisherAudioTrack.Enabled == isEnabled)
+            {
+                return;
+            }
 
+            //StreamTodo: investigate what this flag does internally in the webrtc package
+            Publisher.PublisherAudioTrack.Enabled = isEnabled;
+            
             if (isEnabled)
             {
-                //StreamTODO: don't take sample rate from AudioSettings.outputSampleRate We need to start with default value and later we can expose few predefined options if needed
                 // According to AI we should se 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
                 // Also, use single channel only
-                Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioSettings.outputSampleRate, 2);
+                Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioInputSampleRate, AudioInputChannels);
             }
             else
             {
@@ -1206,6 +1216,7 @@ namespace StreamVideo.Core.LowLevelClient
                 this, _config.Audio, _publisherVideoSettings);
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
+            Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
         }
 
         private void DisposePublisher()
@@ -1214,9 +1225,22 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 Publisher.IceTrickled -= OnIceTrickled;
                 Publisher.NegotiationNeeded -= OnPublisherNegotiationNeeded;
+                Publisher.PublisherAudioTrackChanged -= OnPublisherAudioTrackChanged;
                 Publisher.Dispose();
                 Publisher = null;
             }
+        }
+
+
+        private void OnPublisherAudioTrackChanged(AudioStreamTrack audioTrack)
+        {
+            if (audioTrack == null)
+            {
+                return;
+            }
+
+            // Needed when we re-join the call and the audio capturing was already enabled
+            TrySetAudioTrackEnabled(audioTrack.Enabled);
         }
 
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)

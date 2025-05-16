@@ -370,7 +370,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
-            Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
+            //Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
         }
 #endif
     }

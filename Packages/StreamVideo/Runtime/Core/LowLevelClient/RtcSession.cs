@@ -325,28 +325,33 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void TrySetAudioTrackEnabled(bool isEnabled)
         {
+            _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled isEnabled: " + isEnabled);     
             if (Publisher?.PublisherAudioTrack == null)
             {
                 //StreamTodo: we probably want to cache this here and use once the track is available
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> RETURN Audio track is null");   
                 return;
             }
 
             if (Publisher.PublisherAudioTrack.Enabled == isEnabled)
             {
-                return;
+                //_logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> RETURN The state didn't change");   
+                //return;
             }
 
             //StreamTodo: investigate what this flag does internally in the webrtc package
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
-            
+  
             if (isEnabled)
             {
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");   
                 // According to AI we should se 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
                 // Also, use single channel only
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioInputSampleRate, AudioInputChannels);
             }
             else
             {
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
                 Publisher.PublisherAudioTrack.StopLocalAudioCapture();
             }
         }

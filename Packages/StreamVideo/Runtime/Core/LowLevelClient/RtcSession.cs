@@ -62,6 +62,9 @@ namespace StreamVideo.Core.LowLevelClient
         
         // Recording should use single channel only. E.g. on One Plus 9 Pro recording with 2 channels breaks the audio.
         public const int AudioInputChannels = 1;
+        
+        public const int AudioOutputSampleRate = 48_000;
+        public const int AudioOutputChannels = 2;
 
         public CallingState CallState
         {
@@ -289,6 +292,8 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 await SubscribeToTracksAsync();
+                
+                WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
 
                 //StreamTodo: validate when this state should set
                 CallState = CallingState.Joined;
@@ -303,6 +308,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public async Task StopAsync()
         {
+            WebRTC.StopAudioPlayback();
             ClearSession();
             //StreamTodo: check with js definition of "offline" 
             CallState = CallingState.Offline;

@@ -62,7 +62,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        protected override async Task OnConnectAsync(CancellationToken cancellationToken = default)
+        protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
         {
             //StreamTodo: 2. timeout
             //StreamTodo: 3. multiple attempts (should be covered by reconnect scheduler)

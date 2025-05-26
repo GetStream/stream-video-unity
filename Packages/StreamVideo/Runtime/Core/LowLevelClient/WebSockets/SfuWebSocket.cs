@@ -58,6 +58,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _sfuUrl = sfuUrl;
             _sdpOffer = sdpOffer;
             _sessionId = sessionId;
+            
+#if STREAM_DEBUG_ENABLED
+            Logs.Info($"[SFU WS] SetSessionData: sessionId: {_sessionId}, sdpOffer: {_sdpOffer}, sfuUrl: {_sfuUrl}, sfuToken: {_sfuToken}");
+#endif
         }
 
         protected override string LogsPrefix { get; set; } = "[SFU WS]";
@@ -76,7 +80,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             WebsocketClient.Send(sfuRequestByteArray);
         }
 
-        protected override async Task OnConnectAsync(CancellationToken cancellationToken = default)
+        protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
         {
             //StreamTodo: validate session data
 

@@ -335,7 +335,8 @@ namespace StreamVideo.Core.LowLevelClient
             if (Publisher?.PublisherAudioTrack == null)
             {
                 //StreamTodo: we probably want to cache this here and use once the track is available
-                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> RETURN Audio track is null");   
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> RETURN Audio track is null");
+                _publisherAudioTrackDefaultIsEnabled = isEnabled;
                 return;
             }
 
@@ -351,7 +352,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (isEnabled)
             {
                 _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");   
-                // According to AI we should se 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
+                // According to AI we should set 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
                 // Also, use single channel only
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioInputSampleRate, AudioInputChannels);
             }
@@ -367,6 +368,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (Publisher?.PublisherVideoTrack == null)
             {
                 //StreamTodo: we probably want to cache this here and use once the track is available
+                _publisherVideoTrackDefaultIsEnabled = isEnabled;
                 return;
             }
 
@@ -399,6 +401,9 @@ namespace StreamVideo.Core.LowLevelClient
         private float _lastTrackSubscriptionRequestTime;
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
+
+        private bool _publisherAudioTrackDefaultIsEnabled;
+        private bool _publisherVideoTrackDefaultIsEnabled;
 
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
@@ -1228,6 +1233,9 @@ namespace StreamVideo.Core.LowLevelClient
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
+
+            TrySetAudioTrackEnabled(_publisherAudioTrackDefaultIsEnabled);
+            TrySetVideoTrackEnabled(_publisherVideoTrackDefaultIsEnabled);
         }
 
         private void DisposePublisher()

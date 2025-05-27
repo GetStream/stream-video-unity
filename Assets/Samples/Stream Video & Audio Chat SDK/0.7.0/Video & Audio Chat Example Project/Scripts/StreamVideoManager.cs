@@ -233,6 +233,17 @@ namespace StreamVideo.ExampleProject
 #if STREAM_DEBUG_ENABLED
             try
             {
+                if (_activeCall == null)
+                {
+                    Debug.LogError("Active call was null when trying to end it. call is null " + (call == null));
+                    return;
+                }
+
+                if (_activeCall.Participants == null)
+                {
+                    Debug.LogError("Active call participants were null when trying to end it. call is null " + (call == null));
+                    return;
+                }
                 var callId = _activeCall.Id;
                 var localParticipant = _activeCall.Participants.First(p => p.IsLocalParticipant);
                 Client.SendDebugLogs(call.Id, localParticipant.SessionId);

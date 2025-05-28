@@ -397,6 +397,8 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
 
             PublisherAudioTrack = audioTrack;
+            
+            _logs.WarningIfDebug($"Executed {nameof(SetPublisherActiveAudioTrack)} for audio track not null: {audioTrack != null}");
         }
 
         private void TryClearPublisherAudioTrack()
@@ -441,6 +443,7 @@ namespace StreamVideo.Core.LowLevelClient
             _videoTransceiver.Sender.ReplaceTrack(videoTrack);
 
             PublisherVideoTrack = videoTrack;
+            _logs.WarningIfDebug($"Executed {nameof(ReplaceActiveVideoTrack)} for video track not null: {videoTrack != null}");
         }
 
         private void TryClearVideoTrack()
@@ -550,7 +553,9 @@ namespace StreamVideo.Core.LowLevelClient
                 $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
 #endif
 
-            return new VideoStreamTrack(_publisherVideoTrackTexture);
+            var track = new VideoStreamTrack(_publisherVideoTrackTexture);
+            track.Enabled = false;
+            return track;
         }
 
         //StreamTodo: CreatePublisherVideoTrackFromSceneCamera() is not used in any path
@@ -563,11 +568,17 @@ namespace StreamVideo.Core.LowLevelClient
             _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
 
             var track = _mediaInputProvider.VideoSceneInput.CaptureStreamTrack(1920, 1080);
+            track.Enabled = false;
             return track;
         }
 
         // Removed AudioSource so that AudioFilter is not created and ProcessLocalAudio is not called
-        private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack();
+        private AudioStreamTrack CreatePublisherAudioTrack()
+        {
+            var track = new AudioStreamTrack();
+            track.Enabled = false;
+            return track;
+        }
 
         private void ForceCodec(RTCRtpTransceiver transceiver, string codecKey, TrackKind kind)
         {

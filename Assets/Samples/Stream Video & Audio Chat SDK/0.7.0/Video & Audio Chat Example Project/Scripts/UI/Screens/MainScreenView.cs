@@ -150,6 +150,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 {
                     return callId;
                 }
+                
+                #if STREAM_DEBUG_ENABLED
+                Debug.LogWarning($"Failed to generate a unique call ID: {callId}, trying again...");
+                #endif
 
                 if (i > 3)
                 {

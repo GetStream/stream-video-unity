@@ -32,7 +32,10 @@ namespace StreamVideo.ExampleProject.UI.Devices
         {
             base.OnParentShow();
 
-            SelectDeviceWithoutNotify(SelectedDevice);
+            if (SelectedDevice != default)
+            {
+                SelectDeviceWithoutNotify(SelectedDevice);
+            }
         }
 
         protected override void OnParentHide()

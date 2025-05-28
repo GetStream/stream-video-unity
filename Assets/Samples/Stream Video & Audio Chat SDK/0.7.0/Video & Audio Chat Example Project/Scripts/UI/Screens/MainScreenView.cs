@@ -71,11 +71,19 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         private WebCamDevice _defaultCamera;
         private string _defaultMicrophoneDeviceName;
+        private bool _isProcessing;
 
         private async void OnJoinCallButtonClicked()
         {
             try
             {
+                if (_isProcessing)
+                {
+                    return;
+                }
+
+                _isProcessing = true;
+
                 if (string.IsNullOrEmpty(_joinCallIdInput.text))
                 {
                     Debug.LogError("`Call ID` is required when trying to join a call");
@@ -88,18 +96,33 @@ namespace StreamVideo.ExampleProject.UI.Screens
             {
                 Debug.LogException(e);
             }
+            finally
+            {
+                _isProcessing = false;
+            }
         }
 
         private async void OnCreateAndJoinCallButtonClicked()
         {
             try
             {
+                if (_isProcessing)
+                {
+                    return;
+                }
+
+                _isProcessing = true;
+                
                 var callId = await CreateRandomCallId();
                 await VideoManager.JoinAsync(callId, create: true);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
+            }
+            finally
+            {
+                _isProcessing = false;
             }
         }
 

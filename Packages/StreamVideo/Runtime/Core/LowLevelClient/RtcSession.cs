@@ -331,12 +331,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void TrySetAudioTrackEnabled(bool isEnabled)
         {
+            _publisherAudioTrackIsEnabled = isEnabled;
             _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled isEnabled: " + isEnabled);     
             if (Publisher?.PublisherAudioTrack == null)
             {
-                //StreamTodo: we probably want to cache this here and use once the track is available
-                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> RETURN Audio track is null");
-                _publisherAudioTrackDefaultIsEnabled = isEnabled;
                 return;
             }
 
@@ -365,10 +363,9 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void TrySetVideoTrackEnabled(bool isEnabled)
         {
+            _publisherVideoTrackIsEnabled = isEnabled;
             if (Publisher?.PublisherVideoTrack == null)
             {
-                //StreamTodo: we probably want to cache this here and use once the track is available
-                _publisherVideoTrackDefaultIsEnabled = isEnabled;
                 return;
             }
 
@@ -402,8 +399,8 @@ namespace StreamVideo.Core.LowLevelClient
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
 
-        private bool _publisherAudioTrackDefaultIsEnabled;
-        private bool _publisherVideoTrackDefaultIsEnabled;
+        private bool _publisherAudioTrackIsEnabled;
+        private bool _publisherVideoTrackIsEnabled;
 
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
@@ -1234,8 +1231,8 @@ namespace StreamVideo.Core.LowLevelClient
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
 
-            TrySetAudioTrackEnabled(_publisherAudioTrackDefaultIsEnabled);
-            TrySetVideoTrackEnabled(_publisherVideoTrackDefaultIsEnabled);
+            TrySetAudioTrackEnabled(_publisherAudioTrackIsEnabled);
+            TrySetVideoTrackEnabled(_publisherVideoTrackIsEnabled);
         }
 
         private void DisposePublisher()

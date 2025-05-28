@@ -125,6 +125,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             // Show active call ID so user can copy it and send others to join
             _joinCallIdInput.text = _activeCall.Id;
+            
+            // Notify child components
+            _cameraPanel.NotifyParentShow();
+            _microphonePanel.NotifyParentShow();
         }
 
         protected override void OnHide()
@@ -141,6 +145,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
             RemoveAllParticipants();
 
             UIManager.LocalCameraChanged -= OnLocalCameraChanged;
+            
+            // Notify child components
+            _cameraPanel.NotifyParentHide();
+            _microphonePanel.NotifyParentHide();
         }
 
         private void OnDominantSpeakerChanged(IStreamVideoCallParticipant currentDominantSpeaker,

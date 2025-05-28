@@ -35,6 +35,23 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
             _dropdown.SetValueWithoutNotify(index);
         }
+
+        /// <summary>
+        /// Called when parent screen is shown.
+        /// </summary>
+        public void NotifyParentShow()
+        {
+            _deviceButton.UpdateSprite(IsDeviceEnabled);
+            OnParentShow();
+        }
+
+        /// <summary>
+        /// Called when parent screen is hidden
+        /// </summary>
+        public void NotifyParentHide()
+        {
+            OnParentHide();
+        }
         
         protected IStreamVideoClient Client { get; private set; }
 
@@ -85,6 +102,16 @@ namespace StreamVideo.ExampleProject.UI.Devices
         protected abstract string GetDeviceName(TDevice device);
 
         protected abstract void ChangeDevice(TDevice device);
+
+        protected virtual void OnParentShow()
+        {
+            
+        }
+        
+        protected virtual void OnParentHide()
+        {
+            
+        }
 
         private readonly List<TDevice> _devices = new List<TDevice>();
         

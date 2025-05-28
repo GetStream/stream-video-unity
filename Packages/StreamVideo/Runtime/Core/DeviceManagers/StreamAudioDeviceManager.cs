@@ -93,6 +93,7 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 //TryStopRecording(SelectedDevice);
                 
+                //StreamTODO: We currently need this because in StreamPeerConnection ctor we check for audio source to create audio track. Refactor this dependency because we're progressively moving towards native audio handling
                 var targetAudioSource = GetOrCreateTargetAudioSource();
 
                 // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start

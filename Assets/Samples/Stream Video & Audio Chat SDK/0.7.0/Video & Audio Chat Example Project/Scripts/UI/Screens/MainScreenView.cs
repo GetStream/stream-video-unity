@@ -38,11 +38,19 @@ namespace StreamVideo.ExampleProject.UI.Screens
         protected override void OnShow(CallScreenView.ShowArgs showArgs)
         {
             UIManager.LocalCameraChanged += OnLocalCameraChanged;
+            
+            // Notify child components
+            _cameraPanel.NotifyParentShow();
+            _microphonePanel.NotifyParentShow();
         }
 
         protected override void OnHide()
         {
             UIManager.LocalCameraChanged -= OnLocalCameraChanged;
+            
+            // Notify child components
+            _cameraPanel.NotifyParentHide();
+            _microphonePanel.NotifyParentHide();
         }
 
         [SerializeField]

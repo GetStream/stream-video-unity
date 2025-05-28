@@ -145,8 +145,11 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private void OnDeviceButtonClicked()
         {
-            IsDeviceEnabled = !IsDeviceEnabled;
-            _deviceButton.UpdateSprite(IsDeviceEnabled);
+            var newState = !IsDeviceEnabled;
+
+            // Update UI first to reflect the change immediately
+            _deviceButton.UpdateSprite(newState);
+            IsDeviceEnabled = newState;
         }
 
         // User can add/remove devices any time so we must constantly monitor the devices list

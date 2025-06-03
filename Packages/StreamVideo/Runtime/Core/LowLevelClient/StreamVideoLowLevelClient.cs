@@ -294,7 +294,7 @@ namespace StreamVideo.Core.LowLevelClient
         internal static Uri LocalSfuWebSocketUri = new Uri("ws://localhost:3031/ws");
         internal static Uri LocalSfuRpcUri = new Uri("http://localhost:3031/twirp");
 
-        private readonly IPersistentWebSocket _coordinatorWS;
+        private readonly CoordinatorWebSocket _coordinatorWS;
 
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
@@ -320,6 +320,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnCoordinatorConnectionStateChanged(ConnectionState previous, ConnectionState current)
         {
+            if (current == ConnectionState.Connected)
+            {
+                _connectionId = _coordinatorWS.ConnectionId;
+                Connected?.Invoke();
+            }
             ConnectionStateChanged?.Invoke(previous, current);
 
             if (current == ConnectionState.Disconnected)

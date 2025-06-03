@@ -22,6 +22,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             Action<TEvent, TDto> handler, Action<TDto> internalHandler = null)
             where TEvent : ILoadableFrom<TDto, TEvent>, new();
 
+        //StreamTodo: rename to RegisterMessageHandler
         void RegisterEventType<TDto>(string key,
             Action<TDto> internalHandler = null);
     }

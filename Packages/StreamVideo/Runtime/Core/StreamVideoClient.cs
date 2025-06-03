@@ -11,6 +11,7 @@ using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.IssueReporters;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.QueryBuilders.Filters;
+using StreamVideo.Core.QueryBuilders.Filters.Calls;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs;
@@ -143,7 +144,7 @@ namespace StreamVideo.Core
                     Custom = null,
                     Members = null,
                     SettingsOverride = null,
-                    StartsAt = DateTimeOffset.Now,
+                    StartsAt = DateTimeOffset.Now, //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
                     Team = null
                 },
                 Location = locationHint,

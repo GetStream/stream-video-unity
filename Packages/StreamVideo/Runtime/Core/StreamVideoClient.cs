@@ -10,8 +10,10 @@ using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.IssueReporters;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Models;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.QueryBuilders.Filters.Calls;
+using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs;
@@ -43,6 +45,8 @@ namespace StreamVideo.Core
 
         //StreamTodo: not sure if this should pass instance because we want to destroy call instance when the call is over??
         public event CallHandler CallEnded;
+
+        public event Action<CallEvent> CallEventReceived;
 
         public IStreamVideoUser LocalUser { get; private set; }
         public IStreamCall ActiveCall => InternalLowLevelClient.RtcSession.ActiveCall;
@@ -695,6 +699,12 @@ namespace StreamVideo.Core
         private void OnInternalCustomVideoEvent(SendCallEventRequestInternalDTO eventData)
         {
             //StreamTodo: Implement handling logic for CustomVideoEventInternalDTO here
+
+            var callEvent = new CallEvent();
+            var loadable = (IStateLoadableFrom<SendCallEventRequestInternalDTO, CallEvent>)callEvent;
+            loadable.LoadFromDto(eventData, _cache);
+            
+            CallEventReceived?.Invoke(callEvent);
         }
 
         private bool AssertCidMatch(string cidA, string cidB)

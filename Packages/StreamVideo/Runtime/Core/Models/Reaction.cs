@@ -31,7 +31,7 @@ namespace StreamVideo.Core.Models
             EmojiCode = dto.EmojiCode;
             Type = dto.Type;
             User = cache.TryCreateOrUpdate(dto.User);
-            CreatedAt = DateTimeOffset.UtcNow;;
+            CreatedAt = DateTimeOffset.UtcNow;
         }
         
         private readonly Dictionary<string, object> _custom = new Dictionary<string, object>();

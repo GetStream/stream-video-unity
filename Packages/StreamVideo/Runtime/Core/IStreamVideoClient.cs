@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core.DeviceManagers;
-using StreamVideo.Core.Models;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Auth;
@@ -30,11 +29,6 @@ namespace StreamVideo.Core
         /// Event fired when a call ended
         /// </summary>
         event CallHandler CallEnded;
-        
-        /// <summary>
-        /// Event fired when a call event is received
-        /// </summary>
-        event Action<CallEvent> CallEventReceived;
 
         /// <summary>
         /// Currently ongoing call session. This will be NULL if there's no call active.

@@ -58,6 +58,11 @@ namespace StreamVideo.Core.StatefulModels
         /// Notifies that the <see cref="SortedParticipants"/> collection was updated
         /// </summary>
         event Action SortedParticipantsUpdated;
+        
+        /// <summary>
+        /// Event fired when a call event is received
+        /// </summary>
+        event Action<CallEvent> EventReceived;
 
         Credentials Credentials { get; }
         

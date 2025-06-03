@@ -157,14 +157,6 @@ namespace StreamVideo.Core
             var joinCallResponse
                 = await InternalLowLevelClient.InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
             _cache.TryCreateOrUpdate(joinCallResponse);
-            
-            var filters = new List<IFieldFilterRule>
-            {
-                CallFilter.Cid.EqualsTo(call.Cid),
-            };
-
-            // Watch this call to receive all coordinator events
-            await QueryCallsAsync(filters, sort: null, limit: 1, watch: true);
 
             await InternalLowLevelClient.StartCallSessionAsync((StreamCall)call);
 

@@ -276,7 +276,7 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CallSessionStartedEventInternalDTO> InternalCallSessionStartedEvent;
         internal event Action<BlockedUserEventInternalDTO> InternalCallUnblockedUserEvent;
         internal event Action<ConnectionErrorEventInternalDTO> InternalConnectionErrorEvent;
-        internal event Action<SendCallEventRequestInternalDTO> InternalCustomVideoEvent;
+        internal event Action<CustomVideoEventInternalDTO> InternalCustomVideoEvent;
 
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
         internal RtcSession RtcSession { get; }
@@ -458,7 +458,7 @@ namespace StreamVideo.Core.LowLevelClient
                 e => InternalConnectionErrorEvent?.Invoke(e));
 
             //StreamTodo: this was previously CustomVideoEvent that was removed from OpenAPI spec. Try to test this event to check what is being received
-            _coordinatorWS.RegisterEventType<SendCallEventRequestInternalDTO>(CoordinatorEventType.Custom,
+            _coordinatorWS.RegisterEventType<CustomVideoEventInternalDTO>(CoordinatorEventType.Custom,
                 e => InternalCustomVideoEvent?.Invoke(e));
         }
 

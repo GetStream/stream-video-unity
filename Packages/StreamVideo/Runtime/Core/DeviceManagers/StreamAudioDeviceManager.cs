@@ -81,7 +81,8 @@ namespace StreamVideo.Core.DeviceManagers
         /// You can check the currently selected audio device with <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDevice"/>, and
         /// get notified when the selected device changes by subscribing to <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDeviceChanged"/>.
         /// </summary>
-        /// <param name="device"></param>
+        /// <param name="device">Device to set as currently selected one. Only devices obtained via <see cref="EnumerateDevices"/> are valid</param>
+        /// <param name="enable">Should the device get enabled right away? For a microphone device, it means the audio capturing will start immediately</param>
         /// <exception cref="ArgumentException">Thrown when the provided device has an invalid name</exception>
         public void SelectDevice(MicrophoneDeviceInfo device, bool enable)
         {
@@ -119,28 +120,7 @@ namespace StreamVideo.Core.DeviceManagers
 #if !STREAM_NATIVE_AUDIO
                 TryStopRecording(SelectedDevice);
 #endif
-                
-                //StreamTODO: We currently need this because in StreamPeerConnection ctor we check for audio source to create audio track. Refactor this dependency because we're progressively moving towards native audio handling
-                var targetAudioSource = GetOrCreateTargetAudioSource();
-
-#if !STREAM_NATIVE_AUDIO
-                // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
-
-                // Sample rate must probably match the one used in AudioCustomFilter (this is what's being sent to webRTC). It's currently using AudioSettings.outputSampleRate
-                targetAudioSource.clip
-                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 1, AudioSettings.outputSampleRate);
-                targetAudioSource.loop = true;
-                
-                using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
-                {
-                    while (!(Microphone.GetPosition(SelectedDevice.Name) > 0))
-                    {
-                        // StreamTodo: add timeout. Otherwise might hang application
-                    }
-                }
-                
-                targetAudioSource.Play();
-#endif
+                StartRecording(SelectedDevice);
             }
 
             if (!isEnabled)
@@ -200,6 +180,36 @@ namespace StreamVideo.Core.DeviceManagers
             _targetAudioSource = _targetAudioSourceContainer.AddComponent<AudioSource>();
             Client.SetAudioInputSource(_targetAudioSource);
             return _targetAudioSource;
+        }
+
+        private void StartRecording(MicrophoneDeviceInfo device)
+        {
+            if (!device.IsValid)
+            {
+                Logs.Error("Cannot start recording: the selected microphone device is not valid.");
+                return;
+            }
+            //StreamTODO: We currently need this because in StreamPeerConnection ctor we check for audio source to create audio track. Refactor this dependency because we're progressively moving towards native audio handling
+            var targetAudioSource = GetOrCreateTargetAudioSource();
+
+#if !STREAM_NATIVE_AUDIO
+            // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
+
+            // Sample rate must probably match the one used in AudioCustomFilter (this is what's being sent to webRTC). It's currently using AudioSettings.outputSampleRate
+            targetAudioSource.clip
+                = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 1, AudioSettings.outputSampleRate);
+            targetAudioSource.loop = true;
+                
+            using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
+            {
+                while (!(Microphone.GetPosition(SelectedDevice.Name) > 0))
+                {
+                    // StreamTodo: add timeout. Otherwise might hang application
+                }
+            }
+                
+            targetAudioSource.Play();
+#endif
         }
 
         private static void TryStopRecording(MicrophoneDeviceInfo device)

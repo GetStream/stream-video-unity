@@ -52,11 +52,11 @@ namespace StreamVideo.Libs.DeviceManagers
             MultichannelGroup = 32,
         }
 
-        public static void GetAudioInputDevices(ref AudioDeviceManager.AudioDeviceInfo[] result)
-            => GetAudioInputDevices(ref result, ref _audioInputDevicesBuffer, AudioDeviceManager.Direction.Input);
+        public static void GetAudioInputDevices(ref NativeAudioDeviceManager.AudioDeviceInfo[] result)
+            => GetAudioInputDevices(ref result, ref _audioInputDevicesBuffer, NativeAudioDeviceManager.Direction.Input);
 
-        public static void GetAudioOutputDevices(ref AudioDeviceManager.AudioDeviceInfo[] result)
-            => GetAudioInputDevices(ref result, ref _audioOutputDevicesBuffer, AudioDeviceManager.Direction.Output);
+        public static void GetAudioOutputDevices(ref NativeAudioDeviceManager.AudioDeviceInfo[] result)
+            => GetAudioInputDevices(ref result, ref _audioOutputDevicesBuffer, NativeAudioDeviceManager.Direction.Output);
 
         // Java class name with full namespace. This file needs to be included in the .aar file
         private const string AndroidAudioWrapperJavaClassFullPath
@@ -65,13 +65,13 @@ namespace StreamVideo.Libs.DeviceManagers
         private static string[] _audioInputDevicesBuffer = new string[64];
         private static string[] _audioOutputDevicesBuffer = new string[64];
 
-        private static void GetAudioInputDevices(ref AudioDeviceManager.AudioDeviceInfo[] result,
-            ref string[] internalBuffer, AudioDeviceManager.Direction direction)
+        private static void GetAudioInputDevices(ref NativeAudioDeviceManager.AudioDeviceInfo[] result,
+            ref string[] internalBuffer, NativeAudioDeviceManager.Direction direction)
         {
             AudioDeviceManagerHelper.ClearBuffer(ref internalBuffer);
             AudioDeviceManagerHelper.ClearBuffer(ref result);
 
-            var methodName = direction == AudioDeviceManager.Direction.Input
+            var methodName = direction == NativeAudioDeviceManager.Direction.Input
                 ? "getAudioInputDevices"
                 : "getAudioOutputDevices";
             var javaArray = CallStatic<AndroidJavaObject>(methodName);
@@ -111,8 +111,8 @@ namespace StreamVideo.Libs.DeviceManagers
             }
         }
 
-        private static bool ParseDeviceString(string deviceString, AudioDeviceManager.Direction direction,
-            out AudioDeviceManager.AudioDeviceInfo audioDeviceInfo)
+        private static bool ParseDeviceString(string deviceString, NativeAudioDeviceManager.Direction direction,
+            out NativeAudioDeviceManager.AudioDeviceInfo audioDeviceInfo)
         {
             var parts = deviceString.Split(':');
             if (parts.Length < 7)
@@ -130,7 +130,7 @@ namespace StreamVideo.Libs.DeviceManagers
             var sampleRates = Array.ConvertAll(parts[5].Split('|'), int.Parse);
             var encodings = Array.ConvertAll(parts[6].Split('|'), int.Parse);
 
-            audioDeviceInfo = new AudioDeviceManager.AudioDeviceInfo(
+            audioDeviceInfo = new NativeAudioDeviceManager.AudioDeviceInfo(
                 id,
                 name,
                 friendlyName,
@@ -155,33 +155,33 @@ namespace StreamVideo.Libs.DeviceManagers
             }
         }
 
-        private static AudioDeviceManager.AudioDeviceType GetAudioDeviceType(NativeDeviceType nativeType)
+        private static NativeAudioDeviceManager.AudioDeviceType GetAudioDeviceType(NativeDeviceType nativeType)
         {
             switch (nativeType)
             {
                 case NativeDeviceType.Unknown:
-                    return AudioDeviceManager.AudioDeviceType.Unknown;
+                    return NativeAudioDeviceManager.AudioDeviceType.Unknown;
                 case NativeDeviceType.BuiltinEarpiece:
-                    return AudioDeviceManager.AudioDeviceType.BuiltinEarpiece;
+                    return NativeAudioDeviceManager.AudioDeviceType.BuiltinEarpiece;
                 case NativeDeviceType.BuiltinSpeaker:
-                    return AudioDeviceManager.AudioDeviceType.BuiltinSpeaker;
+                    return NativeAudioDeviceManager.AudioDeviceType.BuiltinSpeaker;
                 case NativeDeviceType.WiredHeadset:
                 case NativeDeviceType.WiredHeadphones:
                 case NativeDeviceType.LineAnalog:
                 case NativeDeviceType.LineDigital:
-                    return AudioDeviceManager.AudioDeviceType.Other;
+                    return NativeAudioDeviceManager.AudioDeviceType.Other;
                 case NativeDeviceType.BluetoothSCO:
                 case NativeDeviceType.BluetoothA2DP:
-                    return AudioDeviceManager.AudioDeviceType.Bluetooth;
+                    return NativeAudioDeviceManager.AudioDeviceType.Bluetooth;
                 case NativeDeviceType.HDMI:
                 case NativeDeviceType.HDMIARC:
                 case NativeDeviceType.USBDevice:
                 case NativeDeviceType.USBAccessory:
                 case NativeDeviceType.Dock:
                 case NativeDeviceType.FM:
-                    return AudioDeviceManager.AudioDeviceType.Other;
+                    return NativeAudioDeviceManager.AudioDeviceType.Other;
                 case NativeDeviceType.BuiltinMic:
-                    return AudioDeviceManager.AudioDeviceType.BuiltinMic;
+                    return NativeAudioDeviceManager.AudioDeviceType.BuiltinMic;
                 case NativeDeviceType.FMTuner:
                 case NativeDeviceType.TVTuner:
                 case NativeDeviceType.Telephony:
@@ -190,9 +190,9 @@ namespace StreamVideo.Libs.DeviceManagers
                 case NativeDeviceType.Bus:
                 case NativeDeviceType.USBHeadset:
                 case NativeDeviceType.HearingAid:
-                    return AudioDeviceManager.AudioDeviceType.Other;
+                    return NativeAudioDeviceManager.AudioDeviceType.Other;
                 case NativeDeviceType.BuiltinSpeakerSafe:
-                    return AudioDeviceManager.AudioDeviceType.BuiltinSpeaker;
+                    return NativeAudioDeviceManager.AudioDeviceType.BuiltinSpeaker;
                 case NativeDeviceType.RemoteSubmix:
                 case NativeDeviceType.BluetoothLEHeadset:
                 case NativeDeviceType.BluetoothLESpeaker:
@@ -200,9 +200,9 @@ namespace StreamVideo.Libs.DeviceManagers
                 case NativeDeviceType.BluetoothLEBroadcast:
                 case NativeDeviceType.DockAnalog:
                 case NativeDeviceType.MultichannelGroup:
-                    return AudioDeviceManager.AudioDeviceType.Other;
+                    return NativeAudioDeviceManager.AudioDeviceType.Other;
                 default:
-                    return AudioDeviceManager.AudioDeviceType.Unknown;
+                    return NativeAudioDeviceManager.AudioDeviceType.Unknown;
             }
         }
     }

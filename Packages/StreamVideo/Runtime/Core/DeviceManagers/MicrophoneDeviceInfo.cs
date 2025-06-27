@@ -1,4 +1,5 @@
 ﻿using System;
+using StreamVideo.Libs.DeviceManagers;
 
 namespace StreamVideo.Core.DeviceManagers
 {
@@ -9,9 +10,25 @@ namespace StreamVideo.Core.DeviceManagers
     {
         public string Name { get; }
 
-        public MicrophoneDeviceInfo(string name)
+        public NativeAudioDeviceManager.AudioDeviceInfo DeviceInfo { get; }
+
+        /// <summary>
+        /// Legacy constructor for platforms on which native binding to audio devices is not yet supported, and we fall back to Unity's Audio API.
+        /// </summary>
+        /// <param name="name"></param>
+        internal MicrophoneDeviceInfo(string name)
         {
             Name = name;
+            DeviceInfo = default;
+        }
+
+        internal MicrophoneDeviceInfo(NativeAudioDeviceManager.AudioDeviceInfo audioDeviceInfo)
+        {
+            Name = string.IsNullOrEmpty(audioDeviceInfo.FriendlyName)
+                ? audioDeviceInfo.Name
+                : audioDeviceInfo.FriendlyName;
+            
+            DeviceInfo = audioDeviceInfo;
         }
 
         public bool Equals(MicrophoneDeviceInfo other) => Name == other.Name;
@@ -27,5 +44,7 @@ namespace StreamVideo.Core.DeviceManagers
         public override string ToString() => string.IsNullOrEmpty(Name) ? "None" : Name;
 
         internal bool IsValid => !string.IsNullOrEmpty(Name);
+        
+
     }
 }

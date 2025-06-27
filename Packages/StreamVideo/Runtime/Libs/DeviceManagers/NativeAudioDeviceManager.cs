@@ -1,6 +1,9 @@
+using UnityEngine;
+
 namespace StreamVideo.Libs.DeviceManagers
 {
-    public static class AudioDeviceManager
+    // StreamTodo: implement detecting when device list changed so we can be notified about devices being added/removed and not have to query the list periodically.
+    public static class NativeAudioDeviceManager
     {
         public struct AudioDeviceInfo
         {
@@ -56,6 +59,8 @@ namespace StreamVideo.Libs.DeviceManagers
             Input,
             Output
         }
+
+        public static bool IsPlatformSupported(RuntimePlatform platform) => platform == RuntimePlatform.Android;
 
         public static void GetAudioInputDevices(ref AudioDeviceInfo[] result)
         {

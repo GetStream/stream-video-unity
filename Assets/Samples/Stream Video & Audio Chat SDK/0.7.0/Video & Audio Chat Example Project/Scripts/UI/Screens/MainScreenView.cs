@@ -172,7 +172,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         public static string GenerateShortId(int length = 8)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            // Some symbols, very close visually, are removed like: (1, l, I) or (O, 0)
+            const string chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789SBZGUV";
             var random = new System.Random();
     
             return new string(Enumerable.Repeat(chars, length)

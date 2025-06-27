@@ -20,6 +20,7 @@ namespace StreamVideo.Core.DeviceManagers
         {
             Name = name;
             DeviceInfo = default;
+            _isUnityApiDevice = true;
         }
 
         internal MicrophoneDeviceInfo(NativeAudioDeviceManager.AudioDeviceInfo audioDeviceInfo)
@@ -29,6 +30,7 @@ namespace StreamVideo.Core.DeviceManagers
                 : audioDeviceInfo.FriendlyName;
             
             DeviceInfo = audioDeviceInfo;
+            _isUnityApiDevice = false;
         }
 
         public bool Equals(MicrophoneDeviceInfo other) => Name == other.Name;
@@ -43,8 +45,8 @@ namespace StreamVideo.Core.DeviceManagers
         
         public override string ToString() => string.IsNullOrEmpty(Name) ? "None" : Name;
 
-        internal bool IsValid => !string.IsNullOrEmpty(Name);
-        
+        internal bool IsValid => (_isUnityApiDevice && !string.IsNullOrEmpty(Name)) || (!_isUnityApiDevice && DeviceInfo.IsValid);
 
+        private readonly bool _isUnityApiDevice;
     }
 }

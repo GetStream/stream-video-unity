@@ -1,9 +1,11 @@
-﻿namespace StreamVideo.Core.DeviceManagers
+﻿using System;
+
+namespace StreamVideo.Core.DeviceManagers
 {
     /// <summary>
     /// Manages interactions with audio recording devices (Microphones).
     /// </summary>
-    public interface IStreamAudioDeviceManager : IDeviceManager<MicrophoneDeviceInfo>
+    public interface IStreamAudioDeviceManager : IDeviceManager<MicrophoneDeviceInfo>, IDisposable
     {
         /// <summary>
         /// Select a microphone device for audio capturing.

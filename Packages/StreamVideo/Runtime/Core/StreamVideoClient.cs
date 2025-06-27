@@ -51,9 +51,6 @@ namespace StreamVideo.Core
         public IStreamVideoDeviceManager VideoDeviceManager => _videoDeviceManager;
         public IStreamAudioDeviceManager AudioDeviceManager => _audioDeviceManager;
 
-        private StreamVideoDeviceManager _videoDeviceManager;
-        private StreamAudioDeviceManager _audioDeviceManager;
-
         /// <summary>
         /// Use this method to create the Video Client. You should have only one instance of this class
         /// </summary>
@@ -169,6 +166,9 @@ namespace StreamVideo.Core
 #if STREAM_DEBUG_ENABLED
             _logsCollector?.Dispose();
 #endif
+            AudioDeviceManager?.Dispose();
+            VideoDeviceManager?.Dispose();
+            
             UnsubscribeFrom(InternalLowLevelClient);
             InternalLowLevelClient?.Dispose();
             Destroyed?.Invoke();
@@ -386,6 +386,9 @@ namespace StreamVideo.Core
 #endif
 
         private StreamVideoLowLevelClient InternalLowLevelClient { get; }
+        
+        private readonly StreamVideoDeviceManager _videoDeviceManager;
+        private readonly StreamAudioDeviceManager _audioDeviceManager;
 
         private event Action Destroyed;
 

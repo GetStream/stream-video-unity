@@ -1,3 +1,6 @@
+#if UNITY_ANDROID && !UNITY_EDITOR
+#define STREAM_NATIVE_AUDIO
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +12,7 @@ using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
 using StreamVideo.Core.Configs;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Models.Sfu;
@@ -28,7 +32,6 @@ using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
 using StreamVideo.Core.Sfu;
 using StreamVideo.Core.Stats;
-using AudioSettings = UnityEngine.AudioSettings;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -57,14 +60,22 @@ namespace StreamVideo.Core.LowLevelClient
 
         // StreamTodo: control this via compiler flag
         public const bool LogWebRTCStats = false;
-        
+
+        // Some sources claim the 48kHz is the most optimal sample rate for WebRTC, other cause internal resampling
         public const int AudioInputSampleRate = 48_000;
-        
-        // Recording should use single channel only. E.g. on One Plus 9 Pro recording with 2 channels breaks the audio.
+
+        // Recording should use single channel only. E.g. on One Plus 9 Pro, recording with 2 channels breaks the audio.
         public const int AudioInputChannels = 1;
-        
+
+        // Some sources claim the 48kHz is the most optimal sample rate for WebRTC, other cause internal resampling
         public const int AudioOutputSampleRate = 48_000;
         public const int AudioOutputChannels = 2;
+
+#if STREAM_NATIVE_AUDIO
+        public const bool UseNativeAudioBindings = true;
+#else
+        public const bool UseNativeAudioBindings = false;
+#endif
 
         public CallingState CallState
         {
@@ -292,8 +303,11 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 await SubscribeToTracksAsync();
-                
-                WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+
+                if (UseNativeAudioBindings)
+                {
+                    WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+                }
 
                 //StreamTodo: validate when this state should set
                 CallState = CallingState.Joined;
@@ -308,7 +322,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         public async Task StopAsync()
         {
-            WebRTC.StopAudioPlayback();
+            if (UseNativeAudioBindings)
+            {
+                WebRTC.StopAudioPlayback();
+            }
             ClearSession();
             //StreamTodo: check with js definition of "offline" 
             CallState = CallingState.Offline;
@@ -329,10 +346,20 @@ namespace StreamVideo.Core.LowLevelClient
             QueueTracksSubscriptionRequest();
         }
 
+        public void SetAudioRecordingDevice(MicrophoneDeviceInfo device)
+        {
+            _logs.WarningIfDebug("RtcSession.SetAudioRecordingDevice device: " + device);
+            _activeAudioRecordingDevice = device;
+            UpdateAudioRecording();
+        }
+
+        private MicrophoneDeviceInfo _activeAudioRecordingDevice;
+
+        //StreamTodo: rename to TrySetPublisherAudioTrackEnabled?
         public void TrySetAudioTrackEnabled(bool isEnabled)
         {
             _publisherAudioTrackIsEnabled = isEnabled;
-            _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled isEnabled: " + isEnabled);     
+            _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled isEnabled: " + isEnabled);
             if (Publisher?.PublisherAudioTrack == null)
             {
                 return;
@@ -342,17 +369,52 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 //_logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> RETURN The state didn't change");   
                 //return;
+
+                // This was commented out because by default, the track is enabled, but we still need to call StartLocalAudioCapture
             }
 
             //StreamTodo: investigate what this flag does internally in the webrtc package
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
-  
-            if (isEnabled)
+
+            UpdateAudioRecording();
+
+            // if (isEnabled)
+            // {
+            //     _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");   
+            //     // According to AI we should set 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
+            //     // Also, use single channel only
+            //     Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioInputSampleRate, AudioInputChannels);
+            // }
+            // else
+            // {
+            //     _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
+            //     Publisher.PublisherAudioTrack.StopLocalAudioCapture();
+            // }
+        }
+
+        private void UpdateAudioRecording()
+        {
+            if (Publisher?.PublisherAudioTrack == null)
             {
-                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");   
+                return;
+            }
+
+            if (_activeAudioRecordingDevice.IsValid && _activeAudioRecordingDevice.IsUnityApiDevice)
+            {
+                // Audio recording was already handled in StreamAudioDeviceManager
+                return;
+            }
+
+            var shouldRecord = _activeAudioRecordingDevice.IsValid && _publisherAudioTrackIsEnabled;
+
+            if (shouldRecord)
+            {
+                //StreamTODO: pass Active DeviceID
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
                 // According to AI we should set 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
                 // Also, use single channel only
-                Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioInputSampleRate, AudioInputChannels);
+                Publisher.PublisherAudioTrack.StartLocalAudioCapture(_activeAudioRecordingDevice.DeviceInfo.Id,
+                    AudioInputSampleRate, AudioInputChannels);
             }
             else
             {

@@ -1,7 +1,4 @@
-﻿#if UNITY_ANDROID && ! UNITY_EDITOR
-#define STREAM_NATIVE_AUDIO
-#endif
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
@@ -18,8 +15,7 @@ namespace StreamVideo.Core.DeviceManagers
         //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
         {
-            //StreamTODO: replace IsPlatformSupported with STREAM_NATIVE_AUDIO flag so we don't compile unused code
-            if (NativeAudioDeviceManager.IsPlatformSupported(Application.platform))
+            if (RtcSession.UseNativeAudioBindings)
             {
                 NativeAudioDeviceManager.GetAudioInputDevices(ref _inputDevicesBuffer);
                 foreach (var device in _inputDevicesBuffer)
@@ -28,25 +24,25 @@ namespace StreamVideo.Core.DeviceManagers
                     {
                         continue;
                     }
+
                     yield return new MicrophoneDeviceInfo(device);
                 }
             }
-            else
+
+            foreach (var deviceName in Microphone.devices)
             {
-                foreach (var deviceName in Microphone.devices)
-                {
-                    yield return new MicrophoneDeviceInfo(deviceName);
-                }
+                yield return new MicrophoneDeviceInfo(deviceName);
             }
         }
 
         protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msTimeout)
         {
-            if (NativeAudioDeviceManager.IsPlatformSupported(Application.platform))
+            if (RtcSession.UseNativeAudioBindings)
             {
                 //StreamTODO: Implement device testing via native binding
                 return false;
             }
+
             const int sampleRate = 44100;
             var maxRecordingTime = (int)Math.Ceiling(msTimeout / 1000f);
 
@@ -117,20 +113,23 @@ namespace StreamVideo.Core.DeviceManagers
         {
             if (isEnabled && SelectedDevice.IsValid)
             {
-#if !STREAM_NATIVE_AUDIO
                 TryStopRecording(SelectedDevice);
-#endif
+
                 StartRecording(SelectedDevice);
             }
 
             if (!isEnabled)
             {
-#if !STREAM_NATIVE_AUDIO
                 TryStopRecording(SelectedDevice);
-#endif
             }
 
             RtcSession.TrySetAudioTrackEnabled(isEnabled);
+        }
+
+        protected override void OnDeviceChanging(MicrophoneDeviceInfo prev, MicrophoneDeviceInfo current)
+        {
+            base.OnDeviceChanging(prev, current);
+            RtcSession.SetAudioRecordingDevice(current);
         }
 
         protected override void OnUpdate()
@@ -157,8 +156,9 @@ namespace StreamVideo.Core.DeviceManagers
 
         private AudioSource _targetAudioSource;
         private GameObject _targetAudioSourceContainer;
-        
-        private NativeAudioDeviceManager.AudioDeviceInfo[] _inputDevicesBuffer = new NativeAudioDeviceManager.AudioDeviceInfo[128];
+
+        private NativeAudioDeviceManager.AudioDeviceInfo[] _inputDevicesBuffer
+            = new NativeAudioDeviceManager.AudioDeviceInfo[128];
 
         private AudioSource GetOrCreateTargetAudioSource()
         {
@@ -189,17 +189,22 @@ namespace StreamVideo.Core.DeviceManagers
                 Logs.Error("Cannot start recording: the selected microphone device is not valid.");
                 return;
             }
+
             //StreamTODO: We currently need this because in StreamPeerConnection ctor we check for audio source to create audio track. Refactor this dependency because we're progressively moving towards native audio handling
             var targetAudioSource = GetOrCreateTargetAudioSource();
 
-#if !STREAM_NATIVE_AUDIO
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                return;
+            }
+
             // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
 
             // Sample rate must probably match the one used in AudioCustomFilter (this is what's being sent to webRTC). It's currently using AudioSettings.outputSampleRate
             targetAudioSource.clip
                 = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 1, AudioSettings.outputSampleRate);
             targetAudioSource.loop = true;
-                
+
             using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
             {
                 while (!(Microphone.GetPosition(SelectedDevice.Name) > 0))
@@ -207,41 +212,47 @@ namespace StreamVideo.Core.DeviceManagers
                     // StreamTodo: add timeout. Otherwise might hang application
                 }
             }
-                
+
             targetAudioSource.Play();
-#endif
         }
 
         private static void TryStopRecording(MicrophoneDeviceInfo device)
         {
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                return;
+            }
+
             if (!device.IsValid)
             {
                 return;
             }
 
-#if !STREAM_NATIVE_AUDIO
             if (Microphone.IsRecording(device.Name))
             {
                 Microphone.End(device.Name);
             }
-#endif
         }
-        
+
         private void TrySyncMicrophoneAudioSourceReadPosWithMicrophoneWritePos()
         {
-#if !STREAM_NATIVE_AUDIO
-            var isRecording = IsEnabled && SelectedDevice.IsValid && Microphone.IsRecording(SelectedDevice.Name) && _targetAudioSource != null;
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                return;
+            }
+
+            var isRecording = IsEnabled && SelectedDevice.IsValid && Microphone.IsRecording(SelectedDevice.Name) &&
+                              _targetAudioSource != null;
             if (!isRecording)
             {
                 return;
             }
-            
+
             var microphonePosition = Microphone.GetPosition(SelectedDevice.Name);
             if (microphonePosition >= 0 && _targetAudioSource.timeSamples > microphonePosition)
             {
                 _targetAudioSource.timeSamples = microphonePosition;
             }
-#endif
         }
     }
 }

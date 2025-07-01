@@ -44,9 +44,12 @@ namespace StreamVideo.Core.DeviceManagers
 
                 var prev = _selectedDevice;
                 _selectedDevice = value;
+                OnDeviceChanging(prev, value);
                 SelectedDeviceChanged?.Invoke(prev, value);
             }
         }
+
+
 
         public void Enable() => SetEnabled(true);
 
@@ -123,6 +126,10 @@ namespace StreamVideo.Core.DeviceManagers
         }
 
         protected virtual void OnDisposing()
+        {
+        }
+        
+        protected virtual void OnDeviceChanging(TDeviceInfo prev, TDeviceInfo current)
         {
         }
 

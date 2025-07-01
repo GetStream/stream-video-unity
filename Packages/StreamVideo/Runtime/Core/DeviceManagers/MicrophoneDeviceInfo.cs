@@ -11,6 +11,7 @@ namespace StreamVideo.Core.DeviceManagers
         public string Name { get; }
 
         public NativeAudioDeviceManager.AudioDeviceInfo DeviceInfo { get; }
+        public readonly bool IsUnityApiDevice;
 
         /// <summary>
         /// Legacy constructor for platforms on which native binding to audio devices is not yet supported, and we fall back to Unity's Audio API.
@@ -20,7 +21,7 @@ namespace StreamVideo.Core.DeviceManagers
         {
             Name = name;
             DeviceInfo = default;
-            _isUnityApiDevice = true;
+            IsUnityApiDevice = true;
         }
 
         internal MicrophoneDeviceInfo(NativeAudioDeviceManager.AudioDeviceInfo audioDeviceInfo)
@@ -30,10 +31,18 @@ namespace StreamVideo.Core.DeviceManagers
                 : audioDeviceInfo.FriendlyName;
             
             DeviceInfo = audioDeviceInfo;
-            _isUnityApiDevice = false;
+            IsUnityApiDevice = false;
         }
 
-        public bool Equals(MicrophoneDeviceInfo other) => Name == other.Name;
+        public bool Equals(MicrophoneDeviceInfo other)
+        {
+            if (IsUnityApiDevice)
+            {
+                return Name == other.Name;
+            }
+
+            return DeviceInfo.Equals(other.DeviceInfo);
+        }
 
         public override bool Equals(object obj) => obj is MicrophoneDeviceInfo other && Equals(other);
 
@@ -43,10 +52,15 @@ namespace StreamVideo.Core.DeviceManagers
 
         public static bool operator !=(MicrophoneDeviceInfo left, MicrophoneDeviceInfo right) => !left.Equals(right);
         
-        public override string ToString() => string.IsNullOrEmpty(Name) ? "None" : Name;
+        public override string ToString()
+        {
+            if (IsUnityApiDevice)
+            {
+                return DeviceInfo.IsValid ? DeviceInfo.ToString() : "None";
+            }
+            return string.IsNullOrEmpty(Name) ? "None" : Name;
+        }
 
-        internal bool IsValid => (_isUnityApiDevice && !string.IsNullOrEmpty(Name)) || (!_isUnityApiDevice && DeviceInfo.IsValid);
-
-        private readonly bool _isUnityApiDevice;
+        internal bool IsValid => (IsUnityApiDevice && !string.IsNullOrEmpty(Name)) || (!IsUnityApiDevice && DeviceInfo.IsValid);
     }
 }

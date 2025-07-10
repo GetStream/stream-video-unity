@@ -14,81 +14,48 @@ namespace StreamVideo.Libs.DeviceManagers
     internal static class AndroidAudioDeviceManager
     {
         /// <summary>
-        /// This maps int types defined here: https://developer.android.com/reference/android/media/AudioDeviceInfo#constants_1
+        /// When calling <see cref="GetAudioInputDevices"/>, the returned devices Ids represent audio routing options.
         /// </summary>
-        public enum NativeDeviceType
+        /// <param name="audioRoute"></param>
+        public static void SetPreferredAudioRoute(NativeAudioDeviceManager.AudioRouting audioRoute)
         {
-            Unknown = 0,
-            BuiltinEarpiece = 1,
-            BuiltinSpeaker = 2,
-            WiredHeadset = 3,
-            WiredHeadphones = 4,
-            LineAnalog = 5,
-            LineDigital = 6,
-            BluetoothSCO = 7,
-            BluetoothA2DP = 8,
-            HDMI = 9,
-            HDMIARC = 10,
-            USBDevice = 11,
-            USBAccessory = 12,
-            Dock = 13,
-            FM = 14,
-            BuiltinMic = 15,
-            FMTuner = 16,
-            TVTuner = 17,
-            Telephony = 18,
-            AuxiliaryLine = 19,
-            IP = 20,
-            Bus = 21,
-            USBHeadset = 22,
-            HearingAid = 23,
-            BuiltinSpeakerSafe = 24,
-            RemoteSubmix = 25,
-            BluetoothLEHeadset = 26,
-            BluetoothLESpeaker = 27,
-            HDMI_EARC = 29,
-            BluetoothLEBroadcast = 30,
-            DockAnalog = 31,
-            MultichannelGroup = 32,
+            CallStatic("setAudioRoute", (int)audioRoute);
         }
-
+        
+        /// <summary>
+        /// For Android, the devices represent available audio routing options instead of physical devices.
+        /// </summary>
+        /// <param name="result"></param>
         public static void GetAudioInputDevices(ref NativeAudioDeviceManager.AudioDeviceInfo[] result)
-            => GetAudioInputDevices(ref result, ref _audioInputDevicesBuffer, NativeAudioDeviceManager.Direction.Input);
-
-        public static void GetAudioOutputDevices(ref NativeAudioDeviceManager.AudioDeviceInfo[] result)
-            => GetAudioInputDevices(ref result, ref _audioOutputDevicesBuffer, NativeAudioDeviceManager.Direction.Output);
+            => GetAudioInputDevices(ref result, ref _audioInputDevicesBuffer);
+        
+        private static void GetAudioInputDevices(ref NativeAudioDeviceManager.AudioDeviceInfo[] result,
+            ref string[] internalBuffer)
+        {
+            AudioDeviceManagerHelper.ClearBuffer(ref internalBuffer);
+            AudioDeviceManagerHelper.ClearBuffer(ref result);
+        
+            var javaArray = CallStatic<AndroidJavaObject>("getAvailableAudioInputDevices");
+        
+            AndroidJavaArrayToStringArray(javaArray, ref internalBuffer);
+        
+            var index = 0;
+            foreach (var entry in internalBuffer)
+            {
+                if (entry == null || !ParseDeviceString(entry, out var deviceInfo))
+                {
+                    continue;
+                }
+        
+                result[index++] = deviceInfo;
+            }
+        }
 
         // Java class name with full namespace. This file needs to be included in the .aar file
         private const string AndroidAudioWrapperJavaClassFullPath
             = "io.getstream.unityaudiomanagerwrapper.UnityAudioManagerWrapper";
 
-        private static string[] _audioInputDevicesBuffer = new string[64];
-        private static string[] _audioOutputDevicesBuffer = new string[64];
-
-        private static void GetAudioInputDevices(ref NativeAudioDeviceManager.AudioDeviceInfo[] result,
-            ref string[] internalBuffer, NativeAudioDeviceManager.Direction direction)
-        {
-            AudioDeviceManagerHelper.ClearBuffer(ref internalBuffer);
-            AudioDeviceManagerHelper.ClearBuffer(ref result);
-
-            var methodName = direction == NativeAudioDeviceManager.Direction.Input
-                ? "getAudioInputDevices"
-                : "getAudioOutputDevices";
-            var javaArray = CallStatic<AndroidJavaObject>(methodName);
-
-            AndroidJavaArrayToStringArray(javaArray, ref internalBuffer);
-
-            var index = 0;
-            foreach (var entry in internalBuffer)
-            {
-                if (entry == null || !ParseDeviceString(entry, direction, out var deviceInfo))
-                {
-                    continue;
-                }
-
-                result[index++] = deviceInfo;
-            }
-        }
+        private static string[] _audioInputDevicesBuffer = new string[128];
 
         private static void AndroidJavaArrayToStringArray(AndroidJavaObject javaArray, ref string[] result)
         {
@@ -111,11 +78,10 @@ namespace StreamVideo.Libs.DeviceManagers
             }
         }
 
-        private static bool ParseDeviceString(string deviceString, NativeAudioDeviceManager.Direction direction,
-            out NativeAudioDeviceManager.AudioDeviceInfo audioDeviceInfo)
+        private static bool ParseDeviceString(string deviceString, out NativeAudioDeviceManager.AudioDeviceInfo audioDeviceInfo)
         {
-            var parts = deviceString.Split(':');
-            if (parts.Length < 7)
+            var parts = deviceString.Split('|');
+            if (parts.Length < 2)
             {
                 Debug.LogError("Invalid device string format: " + deviceString);
                 audioDeviceInfo = default;
@@ -124,22 +90,10 @@ namespace StreamVideo.Libs.DeviceManagers
 
             var id = int.Parse(parts[0]);
             var name = parts[1];
-            var friendlyName = parts[2];
-            var deviceType = (NativeDeviceType)Enum.Parse(typeof(NativeDeviceType), parts[3]);
-            var channelCounts = Array.ConvertAll(parts[4].Split('|'), int.Parse);
-            var sampleRates = Array.ConvertAll(parts[5].Split('|'), int.Parse);
-            var encodings = Array.ConvertAll(parts[6].Split('|'), int.Parse);
 
             audioDeviceInfo = new NativeAudioDeviceManager.AudioDeviceInfo(
                 id,
-                name,
-                friendlyName,
-                direction,
-                GetAudioDeviceType(deviceType),
-                channelCounts,
-                sampleRates,
-                encodings,
-                deviceString + ", NativeType:" + Enum.GetName(typeof(NativeDeviceType), deviceType)
+                name
             );
 
             return true;
@@ -154,55 +108,17 @@ namespace StreamVideo.Libs.DeviceManagers
                 return helperClass.CallStatic<TReturn>(methodName, currentActivity);
             }
         }
-
-        private static NativeAudioDeviceManager.AudioDeviceType GetAudioDeviceType(NativeDeviceType nativeType)
+        
+        private static void CallStatic(string methodName, params object[] args)
         {
-            switch (nativeType)
+            using (var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            using (var currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
+            using (var helperClass = new AndroidJavaClass(AndroidAudioWrapperJavaClassFullPath))
             {
-                case NativeDeviceType.Unknown:
-                    return NativeAudioDeviceManager.AudioDeviceType.Unknown;
-                case NativeDeviceType.BuiltinEarpiece:
-                    return NativeAudioDeviceManager.AudioDeviceType.BuiltinEarpiece;
-                case NativeDeviceType.BuiltinSpeaker:
-                    return NativeAudioDeviceManager.AudioDeviceType.BuiltinSpeaker;
-                case NativeDeviceType.WiredHeadset:
-                case NativeDeviceType.WiredHeadphones:
-                case NativeDeviceType.LineAnalog:
-                case NativeDeviceType.LineDigital:
-                    return NativeAudioDeviceManager.AudioDeviceType.Other;
-                case NativeDeviceType.BluetoothSCO:
-                case NativeDeviceType.BluetoothA2DP:
-                    return NativeAudioDeviceManager.AudioDeviceType.Bluetooth;
-                case NativeDeviceType.HDMI:
-                case NativeDeviceType.HDMIARC:
-                case NativeDeviceType.USBDevice:
-                case NativeDeviceType.USBAccessory:
-                case NativeDeviceType.Dock:
-                case NativeDeviceType.FM:
-                    return NativeAudioDeviceManager.AudioDeviceType.Other;
-                case NativeDeviceType.BuiltinMic:
-                    return NativeAudioDeviceManager.AudioDeviceType.BuiltinMic;
-                case NativeDeviceType.FMTuner:
-                case NativeDeviceType.TVTuner:
-                case NativeDeviceType.Telephony:
-                case NativeDeviceType.AuxiliaryLine:
-                case NativeDeviceType.IP:
-                case NativeDeviceType.Bus:
-                case NativeDeviceType.USBHeadset:
-                case NativeDeviceType.HearingAid:
-                    return NativeAudioDeviceManager.AudioDeviceType.Other;
-                case NativeDeviceType.BuiltinSpeakerSafe:
-                    return NativeAudioDeviceManager.AudioDeviceType.BuiltinSpeaker;
-                case NativeDeviceType.RemoteSubmix:
-                case NativeDeviceType.BluetoothLEHeadset:
-                case NativeDeviceType.BluetoothLESpeaker:
-                case NativeDeviceType.HDMI_EARC:
-                case NativeDeviceType.BluetoothLEBroadcast:
-                case NativeDeviceType.DockAnalog:
-                case NativeDeviceType.MultichannelGroup:
-                    return NativeAudioDeviceManager.AudioDeviceType.Other;
-                default:
-                    return NativeAudioDeviceManager.AudioDeviceType.Unknown;
+                var fullArgs = new object[args.Length + 1];
+                fullArgs[0] = currentActivity;
+                Array.Copy(args, 0, fullArgs, 1, args.Length);
+                helperClass.CallStatic(methodName, fullArgs);
             }
         }
     }

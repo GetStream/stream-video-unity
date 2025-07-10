@@ -371,37 +371,19 @@ namespace StreamVideo.Core.LowLevelClient
                 //return;
 
                 // This was commented out because by default, the track is enabled, but we still need to call StartLocalAudioCapture
+                //StreamTodo: maybe we should keep track of the recording state separately from the track enabled state?
             }
 
             //StreamTodo: investigate what this flag does internally in the webrtc package
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
 
             UpdateAudioRecording();
-
-            // if (isEnabled)
-            // {
-            //     _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");   
-            //     // According to AI we should set 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
-            //     // Also, use single channel only
-            //     Publisher.PublisherAudioTrack.StartLocalAudioCapture(AudioInputSampleRate, AudioInputChannels);
-            // }
-            // else
-            // {
-            //     _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
-            //     Publisher.PublisherAudioTrack.StopLocalAudioCapture();
-            // }
         }
 
         private void UpdateAudioRecording()
         {
-            if (Publisher?.PublisherAudioTrack == null)
+            if (Publisher?.PublisherAudioTrack == null || !UseNativeAudioBindings)
             {
-                return;
-            }
-
-            if (_activeAudioRecordingDevice.IsValid && _activeAudioRecordingDevice.IsUnityApiDevice)
-            {
-                // Audio recording was already handled in StreamAudioDeviceManager
                 return;
             }
 
@@ -409,18 +391,32 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (shouldRecord)
             {
-                //StreamTODO: pass Active DeviceID
+                //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
+                //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
+                
                 _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
                 // According to AI we should set 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
                 // Also, use single channel only
-                Publisher.PublisherAudioTrack.StartLocalAudioCapture(_activeAudioRecordingDevice.DeviceInfo.Id,
-                    AudioInputSampleRate, AudioInputChannels);
+                Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate, AudioInputChannels);
             }
             else
             {
                 _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
                 Publisher.PublisherAudioTrack.StopLocalAudioCapture();
             }
+        }
+
+        public void TryRestartAudioRecording() => UpdateAudioRecording();
+        
+        public void TryRestartAudioPlayback()
+        {
+            if (!UseNativeAudioBindings)
+            {
+                return;
+            }
+            
+            WebRTC.StopAudioPlayback();
+            WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
         }
 
         public void TrySetVideoTrackEnabled(bool isEnabled)

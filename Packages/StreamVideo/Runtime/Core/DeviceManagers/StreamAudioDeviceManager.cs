@@ -5,8 +5,8 @@ using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.DeviceManagers;
 using StreamVideo.Libs.Logs;
+using StreamVideo.Libs.Utils;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.DeviceManagers
 {
@@ -15,23 +15,31 @@ namespace StreamVideo.Core.DeviceManagers
         //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
         {
+            // Dummy call to ensure Unity requests Android permissions for audio recording. StreamTODO: create AndroidManifest with proper permissions and ensure it's being composed into final manifest file.
+            var devices = Microphone.devices;
+            foreach (var d in devices)
+            {
+            }
+
             if (RtcSession.UseNativeAudioBindings)
             {
                 NativeAudioDeviceManager.GetAudioInputDevices(ref _inputDevicesBuffer);
                 foreach (var device in _inputDevicesBuffer)
                 {
-                    if (!device.IsValid)
+                    if (device == default)
                     {
                         continue;
                     }
 
-                    yield return new MicrophoneDeviceInfo(device);
+                    yield return new MicrophoneDeviceInfo(device.Id, device.Name);
                 }
             }
-
-            foreach (var deviceName in Microphone.devices)
+            else
             {
-                yield return new MicrophoneDeviceInfo(deviceName);
+                foreach (var deviceName in Microphone.devices)
+                {
+                    yield return new MicrophoneDeviceInfo(deviceName);
+                }
             }
         }
 
@@ -82,9 +90,19 @@ namespace StreamVideo.Core.DeviceManagers
         /// <exception cref="ArgumentException">Thrown when the provided device has an invalid name</exception>
         public void SelectDevice(MicrophoneDeviceInfo device, bool enable)
         {
+            Logs.WarningIfDebug(
+                $"{nameof(SelectedDevice)} CALLED. SelectedDevice: {SelectedDevice}, IsEnabled: {IsEnabled}, New Device: {device}, Enable: {enable}");
+
             if (!device.IsValid)
             {
                 throw new ArgumentException($"{nameof(device)} argument is not valid. The device name is empty.");
+            }
+
+            if (SelectedDevice == device && IsEnabled == enable)
+            {
+                Logs.WarningIfDebug(
+                    $"{nameof(SelectedDevice)} call ignored. Nothing changed. SelectedDevice: {SelectedDevice}, IsEnabled: {IsEnabled}, New Device: {device}, Enable: {enable}");
+                return;
             }
 
             TryStopRecording(device);
@@ -92,14 +110,31 @@ namespace StreamVideo.Core.DeviceManagers
             SelectedDevice = device;
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"Changed microphone device to: {SelectedDevice}");
+            Logs.Info($"Changed microphone device to: {SelectedDevice}, Enable: {enable}");
 #endif
 
-            //StreamTodo: in some cases starting the mic recording before the call was causing the recorded audio being played in speakers
+            //StreamTodo: in some cases starting the mic recording before the call was causing the recorded audio being played in speakers with Unity Audio API
             //I think the reason was that AudioSource was being captured by an AudioListener but once I've joined the call, this disappeared
             //Check if we can have this AudioSource to be ignored by AudioListener's or otherwise mute it when there is not active call session
 
-            SetEnabled(enable);
+            IsEnabled = enable;
+
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                SetAudioRoutingAsync((NativeAudioDeviceManager.AudioRouting)SelectedDevice.IntId.Value).LogIfFailed();
+            }
+        }
+        
+        private async Task SetAudioRoutingAsync(NativeAudioDeviceManager.AudioRouting audioRoute)
+        {
+            Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name);
+            NativeAudioDeviceManager.SetPreferredAudioRoute(audioRoute);
+
+            // StreamTODO: fix this. The audio route change takes some time. We need a callback or polling to know when to restart the native audio playback and recording
+            await Task.Delay(500);
+            Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name + " RESTARTING OBOE");
+            RtcSession.TryRestartAudioRecording();
+            RtcSession.TryRestartAudioPlayback();
         }
 
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio
@@ -107,6 +142,7 @@ namespace StreamVideo.Core.DeviceManagers
         internal StreamAudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
             : base(rtcSession, client, logs)
         {
+            logs.WarningIfDebug("------------ USE NATIVE BINDINGS: " + RtcSession.UseNativeAudioBindings);
         }
 
         protected override void OnSetEnabled(bool isEnabled)
@@ -145,7 +181,7 @@ namespace StreamVideo.Core.DeviceManagers
 
             if (_targetAudioSourceContainer != null)
             {
-                Object.Destroy(_targetAudioSourceContainer);
+                UnityEngine.Object.Destroy(_targetAudioSourceContainer);
             }
 
             base.OnDisposing();

@@ -20,7 +20,7 @@ namespace StreamVideo.Core.DeviceManagers
         public bool IsEnabled
         {
             get => _isEnabled;
-            private set
+            protected set
             {
                 if (value == _isEnabled)
                 {
@@ -28,6 +28,7 @@ namespace StreamVideo.Core.DeviceManagers
                 }
 
                 _isEnabled = value;
+                OnSetEnabled(value);
                 IsEnabledChanged?.Invoke(IsEnabled);
             }
         }
@@ -63,7 +64,7 @@ namespace StreamVideo.Core.DeviceManagers
             }
 
             IsEnabled = isEnabled;
-            OnSetEnabled(isEnabled);
+
         }
 
         public abstract IEnumerable<TDeviceInfo> EnumerateDevices();

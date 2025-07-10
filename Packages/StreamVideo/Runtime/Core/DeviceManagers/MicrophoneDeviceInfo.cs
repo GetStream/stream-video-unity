@@ -1,5 +1,4 @@
 ﻿using System;
-using StreamVideo.Libs.DeviceManagers;
 
 namespace StreamVideo.Core.DeviceManagers
 {
@@ -8,10 +7,12 @@ namespace StreamVideo.Core.DeviceManagers
     /// </summary>
     public readonly struct MicrophoneDeviceInfo : IEquatable<MicrophoneDeviceInfo>
     {
+        internal int? IntId { get; }
+        internal string StringId { get; }
+
         public string Name { get; }
 
-        public NativeAudioDeviceManager.AudioDeviceInfo DeviceInfo { get; }
-        public readonly bool IsUnityApiDevice;
+        public readonly bool UseUnityAudioSystem;
 
         /// <summary>
         /// Legacy constructor for platforms on which native binding to audio devices is not yet supported, and we fall back to Unity's Audio API.
@@ -19,48 +20,53 @@ namespace StreamVideo.Core.DeviceManagers
         /// <param name="name"></param>
         internal MicrophoneDeviceInfo(string name)
         {
-            Name = name;
-            DeviceInfo = default;
-            IsUnityApiDevice = true;
+            IntId = default;
+            StringId = Name = name;
+            UseUnityAudioSystem = true;
         }
 
-        internal MicrophoneDeviceInfo(NativeAudioDeviceManager.AudioDeviceInfo audioDeviceInfo)
+        internal MicrophoneDeviceInfo(int id, string name)
         {
-            Name = string.IsNullOrEmpty(audioDeviceInfo.FriendlyName)
-                ? audioDeviceInfo.Name
-                : audioDeviceInfo.FriendlyName;
-            
-            DeviceInfo = audioDeviceInfo;
-            IsUnityApiDevice = false;
+            IntId = id;
+            Name = name;
+            StringId = string.Empty;
+            UseUnityAudioSystem = false;
         }
 
         public bool Equals(MicrophoneDeviceInfo other)
         {
-            if (IsUnityApiDevice)
+            if (UseUnityAudioSystem)
             {
-                return Name == other.Name;
+                return string.Equals(StringId, other.StringId);
             }
 
-            return DeviceInfo.Equals(other.DeviceInfo);
+            return IntId == other.IntId;
         }
 
         public override bool Equals(object obj) => obj is MicrophoneDeviceInfo other && Equals(other);
 
-        public override int GetHashCode() => (Name != null ? Name.GetHashCode() : 0);
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                if (UseUnityAudioSystem)
+                {
+                    return (UseUnityAudioSystem.GetHashCode() * 397) ^ (StringId?.GetHashCode() ?? 0);
+                }
+
+                return (UseUnityAudioSystem.GetHashCode() * 397) ^ (IntId?.GetHashCode() ?? 0);
+            }
+        }
 
         public static bool operator ==(MicrophoneDeviceInfo left, MicrophoneDeviceInfo right) => left.Equals(right);
 
         public static bool operator !=(MicrophoneDeviceInfo left, MicrophoneDeviceInfo right) => !left.Equals(right);
-        
+
         public override string ToString()
         {
-            if (IsUnityApiDevice)
-            {
-                return DeviceInfo.IsValid ? DeviceInfo.ToString() : "None";
-            }
-            return string.IsNullOrEmpty(Name) ? "None" : Name;
+            return string.IsNullOrEmpty(Name) ? "Invalid" : Name;
         }
 
-        internal bool IsValid => (IsUnityApiDevice && !string.IsNullOrEmpty(Name)) || (!IsUnityApiDevice && DeviceInfo.IsValid);
+        public bool IsValid => UseUnityAudioSystem ? !string.IsNullOrEmpty(StringId) : IntId.HasValue;
     }
 }

@@ -29,7 +29,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
             var index = _devices.IndexOf(device);
             if (index == -1)
             {
-                Debug.LogError($"Failed to find index for device: {device}");
+                Debug.LogError($"Failed to find index for device: {device}. Available devices: " +
+                               string.Join(", ", _devices));
                 return;
             }
 
@@ -187,7 +188,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
             if (!EqualityComparer<TDevice>.Default.Equals(SelectedDevice, default) && !devices.Contains(SelectedDevice))
             {
-                Debug.LogError($"Previously active device was unplugged: {SelectedDevice}");
+                Debug.LogError($"Previously active device was unplugged: {SelectedDevice}. Devices: " + string.Join(", ", devices));
                 //StreamTodo: handle case when user unplugged active device
             }
         }

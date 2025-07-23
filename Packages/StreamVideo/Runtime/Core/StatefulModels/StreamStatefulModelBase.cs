@@ -34,6 +34,7 @@ namespace StreamVideo.Core.StatefulModels
 
             InternalCustomData = new StreamCustomData(context.Serializer, SyncCustomDataAsync);
 
+            // StreamTodo: refactor this to remove "Virtual member call in constructor"
             InternalUniqueId = uniqueId;
             Repository.Track(Self);
         }

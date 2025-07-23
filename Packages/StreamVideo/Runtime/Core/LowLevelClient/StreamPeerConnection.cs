@@ -1,4 +1,8 @@
-﻿using System;
+﻿//StreamTodo: duplicated declaration of STREAM_NATIVE_AUDIO (also in RtcSession.cs) easy to get out of sync.
+#if UNITY_ANDROID && !UNITY_EDITOR
+#define STREAM_NATIVE_AUDIO //Defined in multiple files
+#endif
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,7 +24,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
-        
+
         public event Action<VideoStreamTrack> PublisherVideoTrackChanged;
         public event Action<AudioStreamTrack> PublisherAudioTrackChanged;
 
@@ -202,20 +206,22 @@ namespace StreamVideo.Core.LowLevelClient
         public void Dispose()
         {
 #if STREAM_DEBUG_ENABLED
-            _logs.Warning($"Disposing PeerConnection [{_peerType}]");            
+            _logs.Warning($"Disposing PeerConnection [{_peerType}]");
 #endif
 
+#if STREAM_NATIVE_AUDIO
             //StreamTODO: we shouldn't need to call this directly
             if (PublisherAudioTrack != null)
             {
                 PublisherAudioTrack.StopLocalAudioCapture();
             }
-            
+#endif
+
             PublisherAudioTrack?.Stop();
             PublisherVideoTrack?.Stop();
             PublisherAudioTrack = null;
             PublisherVideoTrack = null;
-            
+
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
@@ -228,9 +234,9 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnTrack -= OnTrack;
 
             _peerConnection.Close();
-            
+
 #if STREAM_DEBUG_ENABLED
-            _logs.Warning($"Disposed PeerConnection [{_peerType}]");            
+            _logs.Warning($"Disposed PeerConnection [{_peerType}]");
 #endif
         }
 
@@ -397,8 +403,9 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
 
             PublisherAudioTrack = audioTrack;
-            
-            _logs.WarningIfDebug($"Executed {nameof(SetPublisherActiveAudioTrack)} for audio track not null: {audioTrack != null}");
+
+            _logs.WarningIfDebug(
+                $"Executed {nameof(SetPublisherActiveAudioTrack)} for audio track not null: {audioTrack != null}");
         }
 
         private void TryClearPublisherAudioTrack()
@@ -413,7 +420,9 @@ namespace StreamVideo.Core.LowLevelClient
             PublisherAudioMediaStream.RemoveTrack(PublisherAudioTrack);
             _peerConnection.RemoveTrack(_audioTransceiver.Sender);
 
+#if STREAM_NATIVE_AUDIO
             PublisherAudioTrack.StopLocalAudioCapture();
+#endif
             PublisherAudioTrack = null;
         }
 
@@ -443,7 +452,8 @@ namespace StreamVideo.Core.LowLevelClient
             _videoTransceiver.Sender.ReplaceTrack(videoTrack);
 
             PublisherVideoTrack = videoTrack;
-            _logs.WarningIfDebug($"Executed {nameof(ReplaceActiveVideoTrack)} for video track not null: {videoTrack != null}");
+            _logs.WarningIfDebug(
+                $"Executed {nameof(ReplaceActiveVideoTrack)} for video track not null: {videoTrack != null}");
         }
 
         private void TryClearVideoTrack()
@@ -587,7 +597,8 @@ namespace StreamVideo.Core.LowLevelClient
                 => c.mimeType.IndexOf(codecKey, StringComparison.OrdinalIgnoreCase) != -1);
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Info($"Available codec of kind `{kind}`: " + string.Join(", ", capabilities.codecs.Select(c => c.mimeType)));
+            _logs.Info($"Available codec of kind `{kind}`: " +
+                       string.Join(", ", capabilities.codecs.Select(c => c.mimeType)));
 #endif
 
             if (!forcedCodecs.Any())

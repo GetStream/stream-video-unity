@@ -1,5 +1,5 @@
 #if UNITY_ANDROID && !UNITY_EDITOR
-#define STREAM_NATIVE_AUDIO
+#define STREAM_NATIVE_AUDIO //Defined in multiple files
 #endif
 using System;
 using System.Collections.Generic;
@@ -306,7 +306,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (UseNativeAudioBindings)
                 {
+                    //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
+#if STREAM_NATIVE_AUDIO
                     WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+#endif
                 }
 
                 //StreamTodo: validate when this state should set
@@ -324,8 +327,11 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (UseNativeAudioBindings)
             {
+#if STREAM_NATIVE_AUDIO
                 WebRTC.StopAudioPlayback();
+#endif
             }
+
             ClearSession();
             //StreamTodo: check with js definition of "offline" 
             CallState = CallingState.Offline;
@@ -387,13 +393,14 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
+#if STREAM_NATIVE_AUDIO
             var shouldRecord = _activeAudioRecordingDevice.IsValid && _publisherAudioTrackIsEnabled;
 
             if (shouldRecord)
             {
                 //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
                 //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
-                
+
                 _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
                 // According to AI we should set 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
                 // Also, use single channel only
@@ -404,19 +411,21 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
                 Publisher.PublisherAudioTrack.StopLocalAudioCapture();
             }
+#endif
         }
 
         public void TryRestartAudioRecording() => UpdateAudioRecording();
-        
+
         public void TryRestartAudioPlayback()
         {
             if (!UseNativeAudioBindings)
             {
                 return;
             }
-            
+#if STREAM_NATIVE_AUDIO
             WebRTC.StopAudioPlayback();
             WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+#endif
         }
 
         public void TrySetVideoTrackEnabled(bool isEnabled)

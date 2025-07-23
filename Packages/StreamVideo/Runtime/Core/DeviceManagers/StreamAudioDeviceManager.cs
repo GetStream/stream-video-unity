@@ -8,6 +8,7 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
 
+#pragma warning disable CS0162 // Disable unreachable code warning
 namespace StreamVideo.Core.DeviceManagers
 {
     internal class StreamAudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IStreamAudioDeviceManager
@@ -80,6 +81,7 @@ namespace StreamVideo.Core.DeviceManagers
             return hasData;
         }
 
+
         /// <summary>
         /// Select microphone device to capture audio input. Available microphone devices are listed in <see cref="EnumerateDevices"/>.
         /// You can check the currently selected audio device with <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDevice"/>, and
@@ -119,12 +121,13 @@ namespace StreamVideo.Core.DeviceManagers
 
             IsEnabled = enable;
 
+
             if (RtcSession.UseNativeAudioBindings)
             {
                 SetAudioRoutingAsync((NativeAudioDeviceManager.AudioRouting)SelectedDevice.IntId.Value).LogIfFailed();
             }
         }
-        
+
         private async Task SetAudioRoutingAsync(NativeAudioDeviceManager.AudioRouting audioRoute)
         {
             Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name);
@@ -132,7 +135,8 @@ namespace StreamVideo.Core.DeviceManagers
 
             // StreamTODO: fix this. The audio route change takes some time. We need a callback or polling to know when to restart the native audio playback and recording
             await Task.Delay(500);
-            Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name + " RESTARTING OBOE");
+            Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name +
+                                " RESTARTING OBOE");
             RtcSession.TryRestartAudioRecording();
             RtcSession.TryRestartAudioPlayback();
         }
@@ -292,3 +296,4 @@ namespace StreamVideo.Core.DeviceManagers
         }
     }
 }
+#pragma warning restore CS0162 // Re-enable unreachable code warning

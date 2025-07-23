@@ -1,3 +1,6 @@
+#if UNITY_ANDROID && !UNITY_EDITOR
+#define STREAM_NATIVE_AUDIO //Defined in multiple files
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -168,7 +171,7 @@ namespace StreamVideo.Core
 #endif
             AudioDeviceManager?.Dispose();
             VideoDeviceManager?.Dispose();
-            
+
             UnsubscribeFrom(InternalLowLevelClient);
             InternalLowLevelClient?.Dispose();
             Destroyed?.Invoke();
@@ -197,7 +200,8 @@ namespace StreamVideo.Core
 
         public Task DisconnectAsync() => InternalLowLevelClient.DisconnectAsync();
 
-        void IInternalStreamVideoClient.SetAudioInputSource(AudioSource audioSource) //StreamTodo order mismatch - put this lower
+        void IInternalStreamVideoClient.
+            SetAudioInputSource(AudioSource audioSource) //StreamTodo order mismatch - put this lower
         {
             if (audioSource == null)
             {
@@ -256,12 +260,24 @@ namespace StreamVideo.Core
         public void GetAudioProcessingModuleConfig(out bool enabled, out bool echoCancellationEnabled,
             out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel)
         {
+#if STREAM_NATIVE_AUDIO
             WebRTC.GetAudioProcessingModuleConfig(out enabled, out echoCancellationEnabled, out autoGainEnabled, out noiseSuppressionEnabled, out noiseSuppressionLevel);
+#else
+            throw new NotSupportedException(
+                $"{nameof(GetAudioProcessingModuleConfig)} is not supported on this platform.");
+#endif
         }
-        
-        public void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel)
+
+        public void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled,
+            bool noiseSuppressionEnabled, int noiseSuppressionLevel)
         {
-            WebRTC.SetAudioProcessingModule(enabled, echoCancellationEnabled, autoGainEnabled, noiseSuppressionEnabled, noiseSuppressionLevel);
+#if STREAM_NATIVE_AUDIO
+            WebRTC.SetAudioProcessingModule(enabled, echoCancellationEnabled, autoGainEnabled, noiseSuppressionEnabled,
+                noiseSuppressionLevel);
+#else
+            throw new NotSupportedException(
+                $"{nameof(SetAudioProcessingModule)} is not supported on this platform.");
+#endif
         }
 
         #region IStreamVideoClientEventsListener
@@ -386,7 +402,7 @@ namespace StreamVideo.Core
 #endif
 
         private StreamVideoLowLevelClient InternalLowLevelClient { get; }
-        
+
         private readonly StreamVideoDeviceManager _videoDeviceManager;
         private readonly StreamAudioDeviceManager _audioDeviceManager;
 
@@ -527,9 +543,11 @@ namespace StreamVideo.Core
             var call = _cache.TryCreateOrUpdate(eventData.Call);
             if (call == null)
             {
-                _logs.Error($"Received call ended event for a call that doesn't exist. {nameof(eventData.Call.Cid)}:" + eventData?.Call?.Cid);
+                _logs.Error($"Received call ended event for a call that doesn't exist. {nameof(eventData.Call.Cid)}:" +
+                            eventData?.Call?.Cid);
                 return;
             }
+
             call.LeaveAsync().LogIfFailed();
         }
 

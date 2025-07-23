@@ -66,7 +66,7 @@ namespace StreamVideo.Libs.DeviceManagers
 #if UNITY_ANDROID
             AndroidAudioDeviceManager.SetPreferredAudioRoute(audioRoute);
 #else
-            UnityEngine.Debug.LogWarning($"{nameof(GetAudioInputDevices)} is not supported on this platform: " + Application.platform);
+            UnityEngine.Debug.LogWarning($"{nameof(GetAudioInputDevices)} is not supported on this platform: " + UnityEngine.Application.platform);
 #endif
         }
 
@@ -75,7 +75,7 @@ namespace StreamVideo.Libs.DeviceManagers
 #if UNITY_ANDROID
             AndroidAudioDeviceManager.GetAudioInputDevices(ref result);
 #else
-            UnityEngine.Debug.LogWarning($"{nameof(GetAudioInputDevices)} is not supported on this platform: " + Application.platform);
+            UnityEngine.Debug.LogWarning($"{nameof(GetAudioInputDevices)} is not supported on this platform: " + UnityEngine.Application.platform);
 #endif
         }
     }

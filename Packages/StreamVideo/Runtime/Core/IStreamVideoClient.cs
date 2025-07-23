@@ -29,7 +29,7 @@ namespace StreamVideo.Core
         /// Event fired when a call ended
         /// </summary>
         event CallHandler CallEnded;
-        
+
         /// <summary>
         /// Currently ongoing call session. This will be NULL if there's no call active.
         /// You can subscribe to <see cref="CallStarted"/> and <see cref="CallEnded"/> events to get notified when a call is started/ended.

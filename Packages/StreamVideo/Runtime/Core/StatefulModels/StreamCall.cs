@@ -51,6 +51,8 @@ namespace StreamVideo.Core.StatefulModels
 
         public event Action RecordingStarted;
         public event Action RecordingStopped;
+        
+        public event Action<CallEvent> EventReceived;
 
         public IStreamCustomData CustomData => InternalCustomData;
 
@@ -513,6 +515,11 @@ namespace StreamVideo.Core.StatefulModels
         //StreamTodo: missing TrackRemoved or perhaps we should not care whether a track was added/removed but only published/unpublished -> enabled/disabled
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
             => ParticipantTrackAdded?.Invoke(participant, track);
+
+        internal void NotifyCallEventReceived(CallEvent callEvent)
+        {
+            EventReceived?.Invoke(callEvent);
+        }
 
         internal void UpdateCapabilitiesByRoleFromDto(CallUpdatedEventInternalDTO callUpdatedEvent)
             => UpdateCapabilitiesByRole(callUpdatedEvent.CapabilitiesByRole);

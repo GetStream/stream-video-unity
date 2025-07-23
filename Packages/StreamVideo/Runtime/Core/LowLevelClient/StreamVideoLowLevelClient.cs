@@ -281,7 +281,7 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CallSessionStartedEventInternalDTO> InternalCallSessionStartedEvent;
         internal event Action<BlockedUserEventInternalDTO> InternalCallUnblockedUserEvent;
         internal event Action<ConnectionErrorEventInternalDTO> InternalConnectionErrorEvent;
-        internal event Action<SendCallEventRequestInternalDTO> InternalCustomVideoEvent;
+        internal event Action<CustomVideoEventInternalDTO> InternalCustomVideoEvent;
 
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
         internal RtcSession RtcSession { get; }
@@ -299,7 +299,7 @@ namespace StreamVideo.Core.LowLevelClient
         internal static Uri LocalSfuWebSocketUri = new Uri("ws://localhost:3031/ws");
         internal static Uri LocalSfuRpcUri = new Uri("http://localhost:3031/twirp");
 
-        private readonly IPersistentWebSocket _coordinatorWS;
+        private readonly CoordinatorWebSocket _coordinatorWS;
 
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
@@ -325,6 +325,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnCoordinatorConnectionStateChanged(ConnectionState previous, ConnectionState current)
         {
+            if (current == ConnectionState.Connected)
+            {
+                _connectionId = _coordinatorWS.ConnectionId;
+                Connected?.Invoke();
+            }
             ConnectionStateChanged?.Invoke(previous, current);
 
             if (current == ConnectionState.Disconnected)
@@ -458,7 +463,7 @@ namespace StreamVideo.Core.LowLevelClient
                 e => InternalConnectionErrorEvent?.Invoke(e));
 
             //StreamTodo: this was previously CustomVideoEvent that was removed from OpenAPI spec. Try to test this event to check what is being received
-            _coordinatorWS.RegisterEventType<SendCallEventRequestInternalDTO>(CoordinatorEventType.Custom,
+            _coordinatorWS.RegisterEventType<CustomVideoEventInternalDTO>(CoordinatorEventType.Custom,
                 e => InternalCustomVideoEvent?.Invoke(e));
         }
 

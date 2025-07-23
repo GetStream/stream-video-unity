@@ -13,7 +13,10 @@ using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.IssueReporters;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Models;
 using StreamVideo.Core.QueryBuilders.Filters;
+using StreamVideo.Core.QueryBuilders.Filters.Calls;
+using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs;
@@ -144,7 +147,7 @@ namespace StreamVideo.Core
                     Custom = null,
                     Members = null,
                     SettingsOverride = null,
-                    StartsAt = DateTimeOffset.Now,
+                    StartsAt = DateTimeOffset.Now, //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
                     Team = null
                 },
                 Location = locationHint,
@@ -716,9 +719,19 @@ namespace StreamVideo.Core
             // Implement handling logic for ConnectionErrorEventInternalDTO here
         }
 
-        private void OnInternalCustomVideoEvent(SendCallEventRequestInternalDTO eventData)
+        private void OnInternalCustomVideoEvent(CustomVideoEventInternalDTO eventData)
         {
-            //StreamTodo: Implement handling logic for CustomVideoEventInternalDTO here
+            var activeCall = InternalLowLevelClient.RtcSession.ActiveCall;
+            if (activeCall == null || activeCall.Cid != eventData.CallCid)
+            {
+                return;
+            }
+            
+            var callEvent = new CallEvent();
+            var loadable = (IStateLoadableFrom<CustomVideoEventInternalDTO, CallEvent>)callEvent;
+            loadable.LoadFromDto(eventData, _cache);
+            
+            activeCall.NotifyCallEventReceived(callEvent);
         }
 
         private bool AssertCidMatch(string cidA, string cidB)

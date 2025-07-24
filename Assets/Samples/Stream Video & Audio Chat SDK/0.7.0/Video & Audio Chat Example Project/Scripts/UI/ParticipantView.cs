@@ -56,6 +56,7 @@ namespace StreamVideo.ExampleProject.UI
         protected void Awake()
         {
             _videoRectTransform = _video.GetComponent<RectTransform>();
+            _baseVideoRotation = _videoRectTransform.rotation;
         }
 
         // Called by Unity Engine
@@ -71,6 +72,26 @@ namespace StreamVideo.ExampleProject.UI
                 // To optimize bandwidth we always request the video resolution that matches what we're actually rendering
                 Participant.UpdateRequestedVideoResolution(videoResolution);
                 Debug.Log($"Rendered resolution changed for participant `{Participant.UserId}`. Requested video resolution update to: {videoResolution}");
+            }
+
+            FixVideoTextureRotation();
+        }
+
+        /// <summary>
+        /// Mobile users can either stream in landscape mode or portrait mode. We must rotate the video texture to match the orientation of the device.
+        /// </summary>
+        private void FixVideoTextureRotation()
+        {
+            // Fix rotation of the received video texture based video track VideoRotationAngle
+            if (Participant != null && Participant.VideoTrack != null && Participant.VideoTrack is StreamVideoTrack streamVideoTrack)
+            {
+                _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-streamVideoTrack.VideoRotationAngle, Vector3.forward);
+            }
+            
+            // For local user, we don't have a video track
+            if (Participant != null && Participant.IsLocalParticipant && _video.texture is WebCamTexture sourceWebCamTexture)
+            {
+                _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-sourceWebCamTexture.videoRotationAngle, Vector3.forward);
             }
         }
 
@@ -101,6 +122,7 @@ namespace StreamVideo.ExampleProject.UI
         private AudioSource _audioSource;
         private RectTransform _videoRectTransform;
         private Vector2 _lastVideoRenderedSize;
+        private Quaternion _baseVideoRotation;
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {

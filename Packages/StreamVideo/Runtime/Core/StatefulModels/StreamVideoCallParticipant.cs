@@ -48,8 +48,24 @@ namespace StreamVideo.Core.StatefulModels
 
         public IStreamVideoUser User { get; set; }
 
-        //StreamTODO: investigate why we have UserSessionID and SessionId
-        public string UserSessionId { get; private set; }
+        //StreamTODO: investigate why we have UserSessionID and SessionId. On a user that was joining the call I had null SessionId while UserSessionId had value
+        // They probably represent the same thing and one is set by coordinator and the other by SFU but let's verify
+        public string UserSessionId
+        {
+            get => _userSessionId;
+            private set
+            {
+                Logs.WarningIfDebug($"UserSessionId set to: {value} for participant: {UserId} and Session ID: {SessionId}");
+                _userSessionId = value;
+
+                if (string.IsNullOrEmpty(SessionId))
+                {
+                    SessionId = value;
+                }
+            }
+        }
+
+        private string _userSessionId;
 
         #endregion
 

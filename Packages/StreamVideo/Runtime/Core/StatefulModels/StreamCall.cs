@@ -813,6 +813,9 @@ namespace StreamVideo.Core.StatefulModels
                 InternalCustomData.InternalDictionary[ParticipantsCustomDataPrefix] = allParticipantsCustomData;
             }
             
+            // TryGet uses json conversion and hence always returns a new instance of Dictionary<string, object>
+            InternalCustomData.InternalDictionary[ParticipantsCustomDataPrefix] = allParticipantsCustomData;
+            
             if (!allParticipantsCustomData.ContainsKey(participant.SessionId))
             {
                 allParticipantsCustomData[participant.SessionId] = new Dictionary<string, object>();

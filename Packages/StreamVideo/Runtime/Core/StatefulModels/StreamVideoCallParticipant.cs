@@ -159,6 +159,7 @@ namespace StreamVideo.Core.StatefulModels
         {
             var serializer = new NewtonsoftJsonSerializer();
             serializer.TryConvertTo<float>("aa");
+            serializer.TryConvertTo<int>("aa");
         }
 
         internal void SetTrack(TrackType type, MediaStreamTrack mediaStreamTrack, out IStreamTrack streamTrack)
@@ -265,13 +266,14 @@ namespace StreamVideo.Core.StatefulModels
             }
 
             var angle = Client.InternalLowLevelClient.RtcSession.VideoInput.videoRotationAngle;
-            var hasPrevAngle = CustomData.TryGet<float>(VideoRotationAngleKey, out var prevAngle);
+            var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);
 
-            if (!hasPrevAngle || Mathf.Abs(angle - prevAngle) > 0.01f)
+            if (!hasPrevAngle || Mathf.Abs(angle - prevAngle) > 0)
             {
                 //StreamTodo: there can be potentially multiple video tracks so best to store this by track ID
                 CustomData.SetAsync(VideoRotationAngleKey, angle);
-                Logs.WarningIfDebug($"videoRotationAngle changed from: {prevAngle} to: {angle}");
+                Logs.WarningIfDebug($"videoRotationAngle changed from: {prevAngle} to: {angle}, hasPrevAngle: {hasPrevAngle}. Participant: {UserSessionId}");
+                Logs.WarningIfDebug($"videoRotationAngle angle from custom data: {CustomData.Get<int>(VideoRotationAngleKey)}. Participant: {UserSessionId}");
             }
         }
     }

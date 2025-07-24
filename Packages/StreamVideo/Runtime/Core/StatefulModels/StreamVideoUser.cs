@@ -53,7 +53,7 @@ namespace StreamVideo.Core.StatefulModels
         protected override string InternalUniqueId { get => Id; set => Id = value; }
         protected override StreamVideoUser Self => this;
 
-        protected override Task SyncCustomDataAsync()
+        protected override Task UploadCustomDataAsync()
         {
             //StreamTodo: implement user custom data writing once the API exposes such functionality
             throw new NotImplementedException();

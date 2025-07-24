@@ -11,14 +11,13 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
-using StreamVideo.Core.IssueReporters;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.QueryBuilders.Filters;
-using StreamVideo.Core.QueryBuilders.Filters.Calls;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.Utils;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
@@ -147,7 +146,8 @@ namespace StreamVideo.Core
                     Custom = null,
                     Members = null,
                     SettingsOverride = null,
-                    StartsAt = DateTimeOffset.Now, //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
+                    StartsAt = DateTimeOffset
+                        .Now, //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
                     Team = null
                 },
                 Location = locationHint,
@@ -396,7 +396,7 @@ namespace StreamVideo.Core
                     "Tried to set custom data for a participant but there is no active call session.");
             }
 
-            return activeCall.SyncParticipantCustomDataAsync(participant, internalCustomData);
+            return activeCall.UploadParticipantCustomDataAsync(participant, internalCustomData);
         }
 
 #if STREAM_DEBUG_ENABLED
@@ -538,7 +538,7 @@ namespace StreamVideo.Core
         private void OnInternalCallUpdatedEvent(CallUpdatedEventInternalDTO eventData)
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
-            call.UpdateCapabilitiesByRoleFromDto(eventData);
+            call.UpdateCallFromDto(eventData);
         }
 
         private void OnInternalCallEndedEvent(CallEndedEventInternalDTO eventData)
@@ -717,6 +717,9 @@ namespace StreamVideo.Core
         private void OnInternalConnectionErrorEvent(ConnectionErrorEventInternalDTO eventData)
         {
             // Implement handling logic for ConnectionErrorEventInternalDTO here
+#if STREAM_DEBUG_ENABLED
+            _logs.Error("Connection error received: " + eventData.Error.Message);
+#endif
         }
 
         private void OnInternalCustomVideoEvent(CustomVideoEventInternalDTO eventData)
@@ -726,11 +729,11 @@ namespace StreamVideo.Core
             {
                 return;
             }
-            
+
             var callEvent = new CallEvent();
             var loadable = (IStateLoadableFrom<CustomVideoEventInternalDTO, CallEvent>)callEvent;
             loadable.LoadFromDto(eventData, _cache);
-            
+
             activeCall.NotifyCallEventReceived(callEvent);
         }
 

@@ -63,6 +63,11 @@ namespace StreamVideo.Core.StatefulModels
         /// Event fired when a call event is received
         /// </summary>
         event Action<CallEvent> EventReceived;
+        
+        /// <summary>
+        /// Event fired when call data was updated
+        /// </summary>
+        event Action Updated;
 
         Credentials Credentials { get; }
         

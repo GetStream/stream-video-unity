@@ -789,6 +789,11 @@ namespace StreamVideo.Core.StatefulModels
 
         private void LoadParticipantsCustomData()
         {
+            if (Session == null)
+            {
+                return;
+            }
+            
             foreach (StreamVideoCallParticipant p in Participants)
             {
                 GetOrCreateParticipantsCustomDataSection(p, out var participantCustomData);

@@ -253,6 +253,12 @@ namespace StreamVideo.Core.StatefulModels
 
         private void UploadLocalParticipantPublishedVideoRotationAngle()
         {
+            if (Client.InternalLowLevelClient.RtcSession == null ||
+                Client.InternalLowLevelClient.RtcSession.VideoInput == null)
+            {
+                return;
+            }
+
             if (!IsLocalParticipant)
             {
                 return;

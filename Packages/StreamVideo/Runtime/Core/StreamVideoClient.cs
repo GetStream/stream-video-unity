@@ -415,8 +415,8 @@ namespace StreamVideo.Core
         private readonly ICache _cache;
 
 #if STREAM_DEBUG_ENABLED
-        private readonly ILogsCollector _logsCollector;
-        private readonly IFeedbackReporter _feedbackReporter;
+        private readonly StreamVideo.Core.IssueReporters.ILogsCollector _logsCollector;
+        private readonly StreamVideo.Core.IssueReporters.IFeedbackReporter _feedbackReporter;
 #endif
 
         private async Task LeaveCallAsync(IStreamCall call)
@@ -452,12 +452,12 @@ namespace StreamVideo.Core
 
             // StreamTODO: Change condition
 #if STREAM_DEBUG_ENABLED
-            _logsCollector = new LogsCollector();
+            _logsCollector = new StreamVideo.Core.IssueReporters.LogsCollector();
 
 #if UNITY_IOS || UNITY_ANDROID
             _logsCollector.Enable();
 #endif
-            _feedbackReporter = new FeedbackReporterFactory(_logsCollector, serializer).CreateTrelloReporter();
+            _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer).CreateTrelloReporter();
 #endif
         }
 

@@ -148,7 +148,7 @@ namespace StreamVideo.Core.StatefulModels
         {
             InternalCustomData.ReplaceAllWith(participantCustomData);
 
-            if (_videoTrack != null && CustomData.TryGet<float>(VideoRotationAngleKey, out var angle))
+            if (_videoTrack != null && CustomData.TryGet<int>(VideoRotationAngleKey, out var angle))
             {
                 _videoTrack.VideoRotationAngle = angle;
             }

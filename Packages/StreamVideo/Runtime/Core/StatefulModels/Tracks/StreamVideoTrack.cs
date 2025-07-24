@@ -9,7 +9,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
     {
         public event Action VideoRotationAngleChanged;
 
-        public float VideoRotationAngle
+        public int VideoRotationAngle
         {
             get => _videoRotationAngle;
             internal set
@@ -22,7 +22,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
                 var prev = value;
                 _videoRotationAngle = value;
                 VideoRotationAngleChanged?.Invoke();
-                Debug.LogWarning($"StreamVideoTrack VideoRotationAngleChanged from {prev}: to " + value);
+                Debug.LogWarning($"StreamVideoTrack VideoRotationAngleChanged from {prev}: to {value}");
             }
         }
         
@@ -53,7 +53,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 
         private RenderTexture _targetTexture;
         private RawImage _targetImage;
-        private float _videoRotationAngle;
+        private int _videoRotationAngle;
 
         private void CopyTextureFromTrackSourceToTargetTexture()
         {

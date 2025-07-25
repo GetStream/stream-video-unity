@@ -74,21 +74,21 @@ namespace StreamVideo.ExampleProject.UI
                 Debug.Log($"Rendered resolution changed for participant `{Participant.UserId}`. Requested video resolution update to: {videoResolution}");
             }
 
-            FixVideoTextureRotation();
+            FixVideoOrientation();
         }
 
         /// <summary>
         /// Mobile users can either stream in landscape mode or portrait mode. We must rotate the video texture to match the orientation of the device.
         /// </summary>
-        private void FixVideoTextureRotation()
+        private void FixVideoOrientation()
         {
-            // Fix rotation of the received video texture based video track VideoRotationAngle
+            // For remote users we can video track -> fix rotation based on the video track rotation angle
             if (Participant != null && Participant.VideoTrack != null && Participant.VideoTrack is StreamVideoTrack streamVideoTrack)
             {
                 _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-streamVideoTrack.VideoRotationAngle, Vector3.forward);
             }
             
-            // For local user, we don't have a video track
+            // For local user, we don't have a video track, so we get the video rotation angle directly from WebCamTexture
             if (Participant != null && Participant.IsLocalParticipant && _video.texture is WebCamTexture sourceWebCamTexture)
             {
                 _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-sourceWebCamTexture.videoRotationAngle, Vector3.forward);

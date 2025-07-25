@@ -14,15 +14,14 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             get => _videoRotationAngle;
             internal set
             {
-                if (Mathf.Abs(value - _videoRotationAngle) < Mathf.Epsilon)
+                if (_videoRotationAngle == value)
                 {
                     return;
                 }
 
-                var prev = value;
+                var prev = _videoRotationAngle;
                 _videoRotationAngle = value;
                 VideoRotationAngleChanged?.Invoke();
-                Debug.LogWarning($"StreamVideoTrack VideoRotationAngleChanged from {prev}: to {value}");
             }
         }
         

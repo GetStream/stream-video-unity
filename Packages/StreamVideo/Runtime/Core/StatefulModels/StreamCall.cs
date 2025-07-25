@@ -61,7 +61,7 @@ namespace StreamVideo.Core.StatefulModels
         public IStreamCustomData CustomData => InternalCustomData;
 
         //StreamTodo: Maybe add OtherParticipants -> All participants except for the local participant?
-        public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
+        public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session?.Participants;
 
         public bool IsLocalUserOwner
         {
@@ -417,7 +417,6 @@ namespace StreamVideo.Core.StatefulModels
             CreatedAt = dto.CreatedAt;
             CreatedBy = cache.TryCreateOrUpdate(dto.CreatedBy);
             CurrentSessionId = dto.CurrentSessionId;
-            LoadCustomData(dto.Custom);
             Egress = cache.TryUpdateOrCreateFromDto(Egress, dto.Egress);
             EndedAt = dto.EndedAt;
             Id = dto.Id;
@@ -430,6 +429,9 @@ namespace StreamVideo.Core.StatefulModels
             Transcribing = dto.Transcribing;
             Type = new StreamCallType(dto.Type);
             UpdatedAt = dto.UpdatedAt;
+            
+            // Depends on Session.Participants so load as last
+            LoadCustomData(dto.Custom);
         }
 
         void IUpdateableFrom<GetCallResponseInternalDTO, StreamCall>.UpdateFromDto(GetCallResponseInternalDTO dto,
@@ -789,7 +791,7 @@ namespace StreamVideo.Core.StatefulModels
 
         private void LoadParticipantsCustomData()
         {
-            if (Session == null)
+            if (Session == null || Session.Participants == null)
             {
                 return;
             }

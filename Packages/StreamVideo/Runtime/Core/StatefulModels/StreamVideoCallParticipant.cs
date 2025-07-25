@@ -146,8 +146,18 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void LoadCustomDataFromOwningCallCustomData(Dictionary<string, object> participantCustomData)
         {
-            InternalCustomData.ReplaceAllWith(participantCustomData);
+            if (participantCustomData == null || participantCustomData.Count == 0)
+            {
+                InternalCustomData.InternalDictionary.Clear();
+                return;
+            }
 
+            InternalCustomData.ReplaceAllWith(participantCustomData);
+            TrySetVideoTrackRotationAngle();
+        }
+
+        private void TrySetVideoTrackRotationAngle()
+        {
             if (_videoTrack != null && CustomData.TryGet<int>(VideoRotationAngleKey, out var angle))
             {
                 _videoTrack.VideoRotationAngle = angle;
@@ -194,6 +204,7 @@ namespace StreamVideo.Core.StatefulModels
                     break;
                 case TrackType.Video:
                     streamTrack = _videoTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
+                    TrySetVideoTrackRotationAngle();
                     break;
                 case TrackType.ScreenShare:
                     streamTrack = _screenShareTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
@@ -288,8 +299,6 @@ namespace StreamVideo.Core.StatefulModels
             {
                 //StreamTodo: there can be potentially multiple video tracks so best to store this by track ID
                 CustomData.SetAsync(VideoRotationAngleKey, angle);
-                Logs.WarningIfDebug($"videoRotationAngle changed from: {prevAngle} to: {angle}, hasPrevAngle: {hasPrevAngle}. Participant: {UserSessionId}");
-                Logs.WarningIfDebug($"videoRotationAngle angle from custom data: {CustomData.Get<int>(VideoRotationAngleKey)}. Participant: {UserSessionId}");
             }
         }
     }

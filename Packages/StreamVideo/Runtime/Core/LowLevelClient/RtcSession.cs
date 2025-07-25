@@ -216,7 +216,7 @@ namespace StreamVideo.Core.LowLevelClient
             _videoAudioSyncBenchmark?.Update();
 
             //StreamTodo: we could remove this if we'd maintain a collection of tracks and update them directly
-            if (ActiveCall != null)
+            if (ActiveCall != null && ActiveCall.Participants != null)
             {
                 foreach (StreamVideoCallParticipant p in ActiveCall.Participants)
                 {

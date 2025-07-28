@@ -38,11 +38,19 @@ namespace StreamVideo.ExampleProject.UI.Screens
         protected override void OnShow(CallScreenView.ShowArgs showArgs)
         {
             UIManager.LocalCameraChanged += OnLocalCameraChanged;
+            
+            // Notify child components
+            _cameraPanel.NotifyParentShow();
+            _microphonePanel.NotifyParentShow();
         }
 
         protected override void OnHide()
         {
             UIManager.LocalCameraChanged -= OnLocalCameraChanged;
+            
+            // Notify child components
+            _cameraPanel.NotifyParentHide();
+            _microphonePanel.NotifyParentHide();
         }
 
         [SerializeField]
@@ -71,11 +79,19 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         private WebCamDevice _defaultCamera;
         private string _defaultMicrophoneDeviceName;
+        private bool _isProcessing;
 
         private async void OnJoinCallButtonClicked()
         {
             try
             {
+                if (_isProcessing)
+                {
+                    return;
+                }
+
+                _isProcessing = true;
+
                 if (string.IsNullOrEmpty(_joinCallIdInput.text))
                 {
                     Debug.LogError("`Call ID` is required when trying to join a call");
@@ -88,18 +104,33 @@ namespace StreamVideo.ExampleProject.UI.Screens
             {
                 Debug.LogException(e);
             }
+            finally
+            {
+                _isProcessing = false;
+            }
         }
 
         private async void OnCreateAndJoinCallButtonClicked()
         {
             try
             {
+                if (_isProcessing)
+                {
+                    return;
+                }
+
+                _isProcessing = true;
+                
                 var callId = await CreateRandomCallId();
                 await VideoManager.JoinAsync(callId, create: true);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
+            }
+            finally
+            {
+                _isProcessing = false;
             }
         }
 
@@ -119,6 +150,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 {
                     return callId;
                 }
+                
+                #if STREAM_DEBUG_ENABLED
+                Debug.LogWarning($"Failed to generate a unique call ID: {callId}, trying again...");
+                #endif
 
                 if (i > 3)
                 {
@@ -137,7 +172,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         public static string GenerateShortId(int length = 8)
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            // Some symbols, very close visually, are removed like: (1, l, I) or (O, 0)
+            const string chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789SBZGUV";
             var random = new System.Random();
     
             return new string(Enumerable.Repeat(chars, length)

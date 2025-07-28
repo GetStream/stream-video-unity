@@ -28,6 +28,21 @@ namespace StreamVideo.ExampleProject.UI.Devices
             Client.VideoDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
         }
         
+        protected override void OnParentShow()
+        {
+            base.OnParentShow();
+
+            if (SelectedDevice != default)
+            {
+                SelectDeviceWithoutNotify(SelectedDevice);
+            }
+        }
+
+        protected override void OnParentHide()
+        {
+            base.OnParentHide();
+        }
+        
         protected override void OnDestroying()
         {
             Client.VideoDeviceManager.SelectedDeviceChanged -= OnSelectedDeviceChanged;

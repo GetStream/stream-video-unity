@@ -29,11 +29,29 @@ namespace StreamVideo.ExampleProject.UI.Devices
             var index = _devices.IndexOf(device);
             if (index == -1)
             {
-                Debug.LogError($"Failed to find index for device: {device}");
+                Debug.LogError($"Failed to find index for device: {device}. Available devices: " +
+                               string.Join(", ", _devices));
                 return;
             }
 
             _dropdown.SetValueWithoutNotify(index);
+        }
+
+        /// <summary>
+        /// Called when parent screen is shown.
+        /// </summary>
+        public void NotifyParentShow()
+        {
+            _deviceButton.UpdateSprite(IsDeviceEnabled);
+            OnParentShow();
+        }
+
+        /// <summary>
+        /// Called when parent screen is hidden
+        /// </summary>
+        public void NotifyParentHide()
+        {
+            OnParentHide();
         }
         
         protected IStreamVideoClient Client { get; private set; }
@@ -86,6 +104,16 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         protected abstract void ChangeDevice(TDevice device);
 
+        protected virtual void OnParentShow()
+        {
+            
+        }
+        
+        protected virtual void OnParentHide()
+        {
+            
+        }
+
         private readonly List<TDevice> _devices = new List<TDevice>();
         
         [SerializeField]
@@ -118,8 +146,11 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private void OnDeviceButtonClicked()
         {
-            IsDeviceEnabled = !IsDeviceEnabled;
-            _deviceButton.UpdateSprite(IsDeviceEnabled);
+            var newState = !IsDeviceEnabled;
+
+            // Update UI first to reflect the change immediately
+            _deviceButton.UpdateSprite(newState);
+            IsDeviceEnabled = newState;
         }
 
         // User can add/remove devices any time so we must constantly monitor the devices list
@@ -157,7 +188,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
             if (!EqualityComparer<TDevice>.Default.Equals(SelectedDevice, default) && !devices.Contains(SelectedDevice))
             {
-                Debug.LogError($"Previously active device was unplugged: {SelectedDevice}");
+                Debug.LogError($"Previously active device was unplugged: {SelectedDevice}. Devices: " + string.Join(", ", devices));
                 //StreamTodo: handle case when user unplugged active device
             }
         }

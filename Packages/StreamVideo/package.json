@@ -7,8 +7,8 @@
   "documentationUrl": "https://getstream.io/video/docs/unity/",
   "licensesUrl": "https://github.com/GetStream/stream-video-unity/blob/main/LICENSE",
   "dependencies": {
-    "com.unity.webrtc": "3.0.0-pre.6",
-    "com.unity.nuget.newtonsoft-json": "3.2.0"
+    "com.unity.nuget.newtonsoft-json": "3.2.0",
+	"io.stream.unity.webrtc": "https://github.com/GetStream/io.stream.unity.webrtc.git",
   },
   "keywords": [
     "video chat",

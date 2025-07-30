@@ -6,6 +6,9 @@ namespace StreamVideo.ExampleProject
     internal class AudioProcessingConfig
     {
         public event Action Updated; 
+        
+        public const int NoiseLevels = 4;
+        
         public bool Enabled { get; set; }
         public bool EchoEnabled { get; set; }
         public bool AutoGainEnabled { get; set; }
@@ -14,10 +17,8 @@ namespace StreamVideo.ExampleProject
         public int NoiseLvl
         {
             get => _noiseLvl;
-            set => _noiseLvl = value % 4;
+            set => _noiseLvl = value % NoiseLevels;
         }
-
-        private int _noiseLvl;
 
         public AudioProcessingConfig(IStreamVideoClient client)
         {
@@ -42,5 +43,7 @@ namespace StreamVideo.ExampleProject
         }
 
         private readonly IStreamVideoClient _client;
+        private int _noiseLvl;
+
     }
 }

@@ -54,7 +54,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
                 if(!ignoredMessages.Any(decodedMessage.Contains))
                 {
-                    //Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
+                    Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
                 }
 #endif
 

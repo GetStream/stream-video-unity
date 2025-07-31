@@ -1,4 +1,5 @@
 ﻿//StreamTodo: duplicated declaration of STREAM_NATIVE_AUDIO (also in RtcSession.cs) easy to get out of sync.
+
 #if UNITY_ANDROID && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
 #endif
@@ -210,9 +211,9 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
 #if STREAM_NATIVE_AUDIO
-            //StreamTODO: we shouldn't need to call this directly
             if (PublisherAudioTrack != null)
             {
+                //StreamTODO: call this when PublisherAudioTrack is set to null
                 PublisherAudioTrack.StopLocalAudioCapture();
             }
 #endif
@@ -582,10 +583,15 @@ namespace StreamVideo.Core.LowLevelClient
             return track;
         }
 
-        // Removed AudioSource so that AudioFilter is not created and ProcessLocalAudio is not called
         private AudioStreamTrack CreatePublisherAudioTrack()
         {
+#if STREAM_NATIVE_AUDIO
+            // Removed passing AudioSource so that AudioFilter is not created and ProcessLocalAudio is not called inside webrtc plugin
             var track = new AudioStreamTrack();
+#else
+            var track = new AudioStreamTrack(_mediaInputProvider.AudioInput);
+#endif
+
             track.Enabled = false;
             return track;
         }

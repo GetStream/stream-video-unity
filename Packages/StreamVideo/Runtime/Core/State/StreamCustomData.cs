@@ -30,8 +30,8 @@ namespace StreamVideo.Core.State
                 return true;
             }
 
-            //StreamTOdo: convertion can fail but TryGet will still return true. We either need to return string and let user handle conversion or check if conversion is successful
-            // Currently, invalid cast will just return default value for TType. Check how will float conversion to int behave
+            //StreamTOdo: conversion can fail but TryGet will still return true. We either need to return string and let user handle conversion or check if conversion is successful
+            // Currently, invalid cast will just return default value for TType.
             value = _serializer.TryConvertTo<TType>(_customData[key]);
             return true;
         }

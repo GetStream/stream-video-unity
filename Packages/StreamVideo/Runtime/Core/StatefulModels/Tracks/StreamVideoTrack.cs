@@ -75,8 +75,8 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             if (sizeChanged)
             {
 #if STREAM_DEBUG_ENABLED
-                //Debug.LogWarning(
-                //$"Size changed from {_targetTexture.width}:{_targetTexture.height} to {source.width}:{source.height}");
+                Debug.LogWarning(
+                $"Size changed from {_targetTexture.width}:{_targetTexture.height} to {source.width}:{source.height}");
 #endif
 
                 _targetTexture.Release();

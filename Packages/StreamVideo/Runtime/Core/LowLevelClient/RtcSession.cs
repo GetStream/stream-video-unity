@@ -373,11 +373,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (Publisher.PublisherAudioTrack.Enabled == isEnabled)
             {
-                //_logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> RETURN The state didn't change");   
+                //StreamTODO: solve this better. By default, the track is enabled, but we still need to call StartLocalAudioCapture so we can't return
                 //return;
-
-                // This was commented out because by default, the track is enabled, but we still need to call StartLocalAudioCapture
-                //StreamTodo: maybe we should keep track of the recording state separately from the track enabled state?
             }
 
             //StreamTodo: investigate what this flag does internally in the webrtc package
@@ -402,8 +399,6 @@ namespace StreamVideo.Core.LowLevelClient
                 //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
 
                 _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
-                // According to AI we should set 48000 Hz - it is supposed to be what webRTC uses internally and thus would avoid resampling
-                // Also, use single channel only
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate, AudioInputChannels);
             }
             else
@@ -1319,9 +1314,11 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (audioTrack == null)
             {
+                //StreamTODO: check if we should stop native recording here
                 return;
             }
 
+            //StreamTODO: change this later UpdateAudioRecording
             // Needed when we re-join the call and the audio capturing was already enabled
             TrySetAudioTrackEnabled(audioTrack.Enabled);
         }

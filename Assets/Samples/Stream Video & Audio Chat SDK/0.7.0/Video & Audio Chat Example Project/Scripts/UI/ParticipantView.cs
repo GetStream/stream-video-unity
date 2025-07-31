@@ -82,7 +82,7 @@ namespace StreamVideo.ExampleProject.UI
         /// </summary>
         private void FixVideoOrientation()
         {
-            // For remote users we can video track -> fix rotation based on the video track rotation angle
+            // For remote users we have their video track -> fix rotation based on the video track rotation angle
             if (Participant != null && Participant.VideoTrack != null && Participant.VideoTrack is StreamVideoTrack streamVideoTrack)
             {
                 _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-streamVideoTrack.VideoRotationAngle, Vector3.forward);

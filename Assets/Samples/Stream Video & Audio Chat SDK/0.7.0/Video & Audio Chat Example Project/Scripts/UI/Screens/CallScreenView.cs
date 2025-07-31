@@ -1,4 +1,7 @@
-﻿using System;
+﻿#if UNITY_ANDROID && !UNITY_EDITOR
+#define AUDIO_PROCESSING_ENABLED
+#endif
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using StreamVideo.Core.StatefulModels;
@@ -83,7 +86,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _cameraPanel.Init(VideoManager.Client, UIManager);
             _microphonePanel.Init(VideoManager.Client, UIManager);
 
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+#if AUDIO_PROCESSING_ENABLED
             _apmToggleBtn.onClick.AddListener(OnApmToggleClicked);
             _echoToggleBtn.onClick.AddListener(OnEchoToggleClicked);
             _noiseToggleBtn.onClick.AddListener(OnNoiseToggleClicked);
@@ -273,7 +276,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             }
         }
         
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+#if AUDIO_PROCESSING_ENABLED
         private void OnNoiseLvlClicked()
         {
             _audioProcessingConfig.NoiseLvl++;

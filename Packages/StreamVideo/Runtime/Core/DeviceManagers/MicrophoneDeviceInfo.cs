@@ -35,9 +35,15 @@ namespace StreamVideo.Core.DeviceManagers
 
         public bool Equals(MicrophoneDeviceInfo other)
         {
+            var sameKind = UseUnityAudioSystem == other.UseUnityAudioSystem;
+            if (!sameKind)
+            {
+                return false;
+            }
+            
             if (UseUnityAudioSystem)
             {
-                return string.Equals(StringId, other.StringId);
+                return string.Equals(StringId, other.StringId, StringComparison.Ordinal);
             }
 
             return IntId == other.IntId;

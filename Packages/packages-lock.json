@@ -78,9 +78,9 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {
+        "com.unity.modules.audio": "1.0.0",
         "com.unity.modules.director": "1.0.0",
         "com.unity.modules.animation": "1.0.0",
-        "com.unity.modules.audio": "1.0.0",
         "com.unity.modules.particlesystem": "1.0.0"
       },
       "url": "https://packages.unity.com"
@@ -104,25 +104,25 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.unity.webrtc": {
-      "version": "3.0.0-pre.6",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.modules.jsonserialize": "1.0.0",
-        "com.unity.editorcoroutines": "1.0.0",
-        "com.unity.modules.audio": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
-    },
     "io.getstream.video": {
       "version": "file:StreamVideo",
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.unity.webrtc": "3.0.0-pre.6",
-        "com.unity.nuget.newtonsoft-json": "3.2.0"
+        "com.unity.nuget.newtonsoft-json": "3.2.0",
+        "io.stream.unity.webrtc": "https://github.com/GetStream/io.stream.unity.webrtc.git"
       }
+    },
+    "io.stream.unity.webrtc": {
+      "version": "https://github.com/GetStream/io.stream.unity.webrtc.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.editorcoroutines": "1.0.0",
+        "com.unity.modules.audio": "1.0.0"
+      },
+      "hash": "963fb8c4a7a3dc17bd071d9ba4dfe803b799f9f7"
     },
     "net.tnrd.nsubstitute": {
       "version": "https://github.com/Thundernerd/Unity3D-NSubstitute.git",

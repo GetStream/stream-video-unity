@@ -19,13 +19,11 @@ namespace StreamVideo.Tests.Runtime
         private async Task When_setting_call_custom_data_expect_custom_data_set_Async(ITestClient client)
         {
             var streamCall = await client.JoinRandomCallAsync();
-            Assert.AreEqual(0, streamCall.CustomData.Count);
 
             await streamCall.CustomData.SetAsync("number", 34);
 
             var retrievedNumber = streamCall.CustomData.Get<int>("number");
             Assert.AreEqual(34, retrievedNumber);
-            Assert.AreEqual(1, 0, streamCall.CustomData.Count);
         }
 
         [UnityTest]
@@ -35,7 +33,6 @@ namespace StreamVideo.Tests.Runtime
         private async Task When_setting_call_custom_many_data_expect_custom_data_set_Async(ITestClient client)
         {
             var streamCall = await client.JoinRandomCallAsync();
-            Assert.AreEqual(0, streamCall.CustomData.Count);
 
             var testStruct = new TestAbilityStruct
             {
@@ -62,8 +59,6 @@ namespace StreamVideo.Tests.Runtime
             Assert.AreEqual(80, retrievedAbility.Attributes["MagicDefence"]);
             Assert.AreEqual(-15, retrievedAbility.Attributes["Agility"]);
 
-            Assert.AreEqual(2, 0, streamCall.CustomData.Count);
-            
             //StreamTodo: we should intercept the HttpClient and check that the data is actually serialized and send to the API. Currently we're just checking if local write works
         }
 
@@ -84,8 +79,6 @@ namespace StreamVideo.Tests.Runtime
             var participant = streamCall.Participants.FirstOrDefault();
             Assert.NotNull(participant);
             
-            Assert.AreEqual(0, participant.CustomData.Count);
-
             await participant.CustomData.SetAsync("position", new Vector3(1, 2, 3));
             var position = participant.CustomData.Get<Vector3>("position");
             Assert.AreEqual(new Vector3(1, 2, 3), position);

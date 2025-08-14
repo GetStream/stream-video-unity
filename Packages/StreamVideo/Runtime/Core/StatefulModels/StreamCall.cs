@@ -16,6 +16,7 @@ using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
+using UnityEngine;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 
 namespace StreamVideo.Core.StatefulModels
@@ -51,13 +52,16 @@ namespace StreamVideo.Core.StatefulModels
 
         public event Action RecordingStarted;
         public event Action RecordingStopped;
-        
+
+        //StreamTodo: rename to CustomEventReceived? It's a special kind of user-made event
         public event Action<CallEvent> EventReceived;
+
+        public event Action Updated;
 
         public IStreamCustomData CustomData => InternalCustomData;
 
         //StreamTodo: Maybe add OtherParticipants -> All participants except for the local participant?
-        public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session.Participants;
+        public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session?.Participants;
 
         public bool IsLocalUserOwner
         {
@@ -389,6 +393,21 @@ namespace StreamVideo.Core.StatefulModels
             return true;
         }
 
+        public Task UploadParticipantCustomDataAsync(IStreamVideoCallParticipant participant,
+            Dictionary<string, object> internalCustomData)
+        {
+            GetOrCreateParticipantsCustomDataSection(participant, out var participantCustomData);
+
+            // Replace StreamCall.CustomData section dedicated for participant with custom data coming from participant object
+            participantCustomData.Clear();
+            foreach (var keyValuePair in internalCustomData)
+            {
+                participantCustomData[keyValuePair.Key] = keyValuePair.Value;
+            }
+
+            return UploadCustomDataAsync();
+        }
+
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
         {
@@ -398,7 +417,6 @@ namespace StreamVideo.Core.StatefulModels
             CreatedAt = dto.CreatedAt;
             CreatedBy = cache.TryCreateOrUpdate(dto.CreatedBy);
             CurrentSessionId = dto.CurrentSessionId;
-            LoadCustomData(dto.Custom);
             Egress = cache.TryUpdateOrCreateFromDto(Egress, dto.Egress);
             EndedAt = dto.EndedAt;
             Id = dto.Id;
@@ -411,6 +429,9 @@ namespace StreamVideo.Core.StatefulModels
             Transcribing = dto.Transcribing;
             Type = new StreamCallType(dto.Type);
             UpdatedAt = dto.UpdatedAt;
+            
+            // Depends on Session.Participants so load as last
+            LoadCustomData(dto.Custom);
         }
 
         void IUpdateableFrom<GetCallResponseInternalDTO, StreamCall>.UpdateFromDto(GetCallResponseInternalDTO dto,
@@ -455,6 +476,8 @@ namespace StreamVideo.Core.StatefulModels
             Membership = cache.TryUpdateOrCreateFromDto(Membership, dto.Membership);
             _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(dto.OwnCapabilities);
         }
+
+        internal const string ParticipantsCustomDataPrefix = "pXwf2Z1mFOOEXV_participants_data";
 
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
@@ -521,8 +544,13 @@ namespace StreamVideo.Core.StatefulModels
             EventReceived?.Invoke(callEvent);
         }
 
-        internal void UpdateCapabilitiesByRoleFromDto(CallUpdatedEventInternalDTO callUpdatedEvent)
-            => UpdateCapabilitiesByRole(callUpdatedEvent.CapabilitiesByRole);
+        internal void UpdateCallFromDto(CallUpdatedEventInternalDTO callUpdatedEvent)
+        {
+            UpdateCapabilitiesByRole(callUpdatedEvent.CapabilitiesByRole);
+            Cache.TryCreateOrUpdate(callUpdatedEvent.Call);
+
+            Updated?.Invoke();
+        }
 
         internal void UpdateCapabilitiesByRoleFromDto(
             CallMemberUpdatedPermissionEventInternalDTO callMemberUpdatedPermissionEvent)
@@ -567,7 +595,7 @@ namespace StreamVideo.Core.StatefulModels
             {
                 return;
             }
-            
+
             _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(updatedCallPermissionsEvent.OwnCapabilities);
 
             //StreamTodo: we should probably expose an event OwnCapabilitiesChanged
@@ -614,12 +642,18 @@ namespace StreamVideo.Core.StatefulModels
 
         protected override StreamCall Self => this;
 
-        protected override Task SyncCustomDataAsync()
+        protected override Task UploadCustomDataAsync()
         {
             return InternalUpdateCallAsync(new UpdateCallRequestInternalDTO
             {
                 Custom = InternalCustomData.InternalDictionary
             });
+        }
+
+        protected override void OnCustomDataLoaded()
+        {
+            base.OnCustomDataLoaded();
+            LoadParticipantsCustomData();
         }
 
         private Task InternalUpdateCallAsync(UpdateCallRequestInternalDTO request)
@@ -755,32 +789,41 @@ namespace StreamVideo.Core.StatefulModels
             //StreamTodo: according to description in CallUpdatedEventInternalDTO we should use also update the _ownCapabilities here based on the user role
         }
 
-        public Task SyncParticipantCustomDataAsync(IStreamVideoCallParticipant participant,
-            Dictionary<string, object> internalCustomData)
+        private void LoadParticipantsCustomData()
         {
-            const string participantsCustomDataPrefix = "pXwf2Z1mFOOEXV_participants_data";
+            if (Session == null || Session.Participants == null)
+            {
+                return;
+            }
+            
+            foreach (StreamVideoCallParticipant p in Participants)
+            {
+                GetOrCreateParticipantsCustomDataSection(p, out var participantCustomData);
+                p.LoadCustomDataFromOwningCallCustomData(participantCustomData);
+            }
+        }
 
-            if (!CustomData.TryGet<Dictionary<string, Dictionary<string, object>>>(participantsCustomDataPrefix,
-                    out var allParticipantsCustomData))
+        /// <summary>
+        /// <see cref="StreamVideoCallParticipant"/> model currently doesn't support custom data, but we're creating a custom section in <see cref="StreamCall"/> custom data to use for participants.
+        /// </summary>
+        private void GetOrCreateParticipantsCustomDataSection(IStreamVideoCallParticipant participant, out Dictionary<string, object> participantCustomData)
+        {
+            if (!InternalCustomData.TryGet<Dictionary<string, Dictionary<string, object>>>(ParticipantsCustomDataPrefix, out var allParticipantsCustomData))
             {
                 allParticipantsCustomData = new Dictionary<string, Dictionary<string, object>>();
-                InternalCustomData.InternalDictionary[participantsCustomDataPrefix] = allParticipantsCustomData;
-            }
 
+                InternalCustomData.InternalDictionary[ParticipantsCustomDataPrefix] = allParticipantsCustomData;
+            }
+            
+            // TryGet uses json conversion and hence always returns a new instance of Dictionary<string, object>
+            InternalCustomData.InternalDictionary[ParticipantsCustomDataPrefix] = allParticipantsCustomData;
+            
             if (!allParticipantsCustomData.ContainsKey(participant.SessionId))
             {
                 allParticipantsCustomData[participant.SessionId] = new Dictionary<string, object>();
             }
 
-            var participantCustomData = allParticipantsCustomData[participant.SessionId];
-
-            participantCustomData.Clear();
-            foreach (var keyValuePair in internalCustomData)
-            {
-                participantCustomData[keyValuePair.Key] = keyValuePair.Value;
-            }
-
-            return SyncCustomDataAsync();
+            participantCustomData = allParticipantsCustomData[participant.SessionId];
         }
     }
 }

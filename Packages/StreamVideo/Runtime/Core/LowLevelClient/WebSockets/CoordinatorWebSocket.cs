@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +50,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var decodedMessage = Encoding.UTF8.GetString(msg);
 
 #if STREAM_DEBUG_ENABLED
-                if (!decodedMessage.Contains("health.check"))
+                // Ignoring some messages for causing too much noise in logs
+                var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
+                if(!ignoredMessages.Any(decodedMessage.Contains))
                 {
                     Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
                 }
@@ -59,7 +62,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        protected override async Task OnConnectAsync(CancellationToken cancellationToken = default)
+        protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
         {
             //StreamTodo: 2. timeout
             //StreamTodo: 3. multiple attempts (should be covered by reconnect scheduler)

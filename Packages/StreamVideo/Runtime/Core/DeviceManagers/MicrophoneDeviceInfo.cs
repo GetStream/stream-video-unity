@@ -7,25 +7,72 @@ namespace StreamVideo.Core.DeviceManagers
     /// </summary>
     public readonly struct MicrophoneDeviceInfo : IEquatable<MicrophoneDeviceInfo>
     {
+        internal int? IntId { get; }
+        internal string StringId { get; }
+
         public string Name { get; }
 
-        public MicrophoneDeviceInfo(string name)
+        public readonly bool UseUnityAudioSystem;
+
+        /// <summary>
+        /// Legacy constructor for platforms on which native binding to audio devices is not yet supported, and we fall back to Unity's Audio API.
+        /// </summary>
+        /// <param name="name"></param>
+        internal MicrophoneDeviceInfo(string name)
         {
-            Name = name;
+            IntId = default;
+            StringId = Name = name;
+            UseUnityAudioSystem = true;
         }
 
-        public bool Equals(MicrophoneDeviceInfo other) => Name == other.Name;
+        internal MicrophoneDeviceInfo(int id, string name)
+        {
+            IntId = id;
+            Name = name;
+            StringId = string.Empty;
+            UseUnityAudioSystem = false;
+        }
+
+        public bool Equals(MicrophoneDeviceInfo other)
+        {
+            var sameKind = UseUnityAudioSystem == other.UseUnityAudioSystem;
+            if (!sameKind)
+            {
+                return false;
+            }
+            
+            if (UseUnityAudioSystem)
+            {
+                return string.Equals(StringId, other.StringId, StringComparison.Ordinal);
+            }
+
+            return IntId == other.IntId;
+        }
 
         public override bool Equals(object obj) => obj is MicrophoneDeviceInfo other && Equals(other);
 
-        public override int GetHashCode() => (Name != null ? Name.GetHashCode() : 0);
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                if (UseUnityAudioSystem)
+                {
+                    return (UseUnityAudioSystem.GetHashCode() * 397) ^ (StringId?.GetHashCode() ?? 0);
+                }
+
+                return (UseUnityAudioSystem.GetHashCode() * 397) ^ (IntId?.GetHashCode() ?? 0);
+            }
+        }
 
         public static bool operator ==(MicrophoneDeviceInfo left, MicrophoneDeviceInfo right) => left.Equals(right);
 
         public static bool operator !=(MicrophoneDeviceInfo left, MicrophoneDeviceInfo right) => !left.Equals(right);
-        
-        public override string ToString() => string.IsNullOrEmpty(Name) ? "None" : Name;
 
-        internal bool IsValid => !string.IsNullOrEmpty(Name);
+        public override string ToString()
+        {
+            return string.IsNullOrEmpty(Name) ? "Invalid" : Name;
+        }
+
+        public bool IsValid => UseUnityAudioSystem ? !string.IsNullOrEmpty(StringId) : IntId.HasValue;
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf;
@@ -57,6 +58,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _sfuUrl = sfuUrl;
             _sdpOffer = sdpOffer;
             _sessionId = sessionId;
+            
+#if STREAM_DEBUG_ENABLED
+            Logs.Info($"[SFU WS] SetSessionData: sessionId: {_sessionId}, sdpOffer: {_sdpOffer}, sfuUrl: {_sfuUrl}, sfuToken: {_sfuToken}");
+#endif
         }
 
         protected override string LogsPrefix { get; set; } = "[SFU WS]";
@@ -75,7 +80,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             WebsocketClient.Send(sfuRequestByteArray);
         }
 
-        protected override async Task OnConnectAsync(CancellationToken cancellationToken = default)
+        protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
         {
             //StreamTodo: validate session data
 
@@ -153,7 +158,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
 
 #if STREAM_DEBUG_ENABLED
-                DebugLogEvent(sfuEvent);
+                DebugLogEvent(sfuEvent, msg);
 #endif
 
                 switch (sfuEvent.EventPayloadCase)
@@ -328,6 +333,18 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
                 case SfuEvent.EventPayloadOneofCase.PinsUpdated:
                     return PinsUpdated != null;
+                
+                case SfuEvent.EventPayloadOneofCase.CallEnded:
+                   return CallEnded != null;
+                
+                case SfuEvent.EventPayloadOneofCase.ParticipantUpdated:
+                    return ParticipantUpdated != null;
+                
+                case SfuEvent.EventPayloadOneofCase.ParticipantMigrationComplete:
+                    return ParticipantMigrationComplete != null;
+                
+                case SfuEvent.EventPayloadOneofCase.ChangePublishOptions:
+                    return ChangePublishOptions != null;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(tag),
@@ -335,7 +352,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        private void DebugLogEvent(SfuEvent sfuEvent)
+        private void DebugLogEvent(SfuEvent sfuEvent, byte[] rawMessage)
         {
             if (sfuEvent.EventPayloadCase == SfuEvent.EventPayloadOneofCase.HealthCheckResponse)
             {
@@ -345,6 +362,15 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             if (!IsEventSubscribedTo(sfuEvent.EventPayloadCase))
             {
                 Logs.Warning($"-----------------------{LogsPrefix} UNHANDLED WS message: " + sfuEvent);
+                return;
+            }
+            
+            var decodedMessage = System.Text.Encoding.UTF8.GetString(rawMessage);
+            
+            // Ignoring some messages for causing too much noise in logs
+            var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
+            if(ignoredMessages.Any(decodedMessage.Contains))
+            {
                 return;
             }
 

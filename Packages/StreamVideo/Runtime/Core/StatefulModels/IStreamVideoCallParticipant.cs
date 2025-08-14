@@ -57,7 +57,7 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         bool IsLocalParticipant { get; }
         IStreamVideoUser User { get; set; }
-        IStreamTrack VideoTrack { get; }
+        IStreamTrack VideoTrack { get; } //StreamTOdo: change to IVideoStreamTrack
         IStreamTrack AudioTrack { get; }
         IStreamTrack ScreenShareTrack { get; }
         DateTimeOffset JoinedAt { get; }

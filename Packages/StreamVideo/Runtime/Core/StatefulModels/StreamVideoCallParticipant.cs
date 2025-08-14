@@ -8,7 +8,9 @@ using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
+using StreamVideo.Libs.Serialization;
 using Unity.WebRTC;
+using UnityEngine;
 using Participant = StreamVideo.v1.Sfu.Models.Participant;
 
 namespace StreamVideo.Core.StatefulModels
@@ -46,7 +48,24 @@ namespace StreamVideo.Core.StatefulModels
 
         public IStreamVideoUser User { get; set; }
 
-        public string UserSessionId { get; private set; }
+        //StreamTODO: investigate why we have UserSessionID and SessionId. On a user that was joining the call I had null SessionId while UserSessionId had value
+        // They probably represent the same thing and one is set by coordinator and the other by SFU but let's verify
+        public string UserSessionId
+        {
+            get => _userSessionId;
+            private set
+            {
+                Logs.WarningIfDebug($"UserSessionId set to: {value} for participant: {UserId} and Session ID: {SessionId}");
+                _userSessionId = value;
+
+                if (string.IsNullOrEmpty(SessionId))
+                {
+                    SessionId = value;
+                }
+            }
+        }
+
+        private string _userSessionId;
 
         #endregion
 
@@ -100,12 +119,6 @@ namespace StreamVideo.Core.StatefulModels
         public override string ToString()
             => $"{nameof(StreamVideoCallParticipant)} with User ID: {UserId} & Session ID: {SessionId}";
 
-        //StreamTodo: solve with a generic interface and best to be handled by cache layer
-        internal void UpdateFromSfu(Participant dto)
-        {
-            ((IUpdateableFrom<Participant, StreamVideoCallParticipant>)this).UpdateFromDto(dto, Cache);
-        }
-
         //StreamTodo: perhaps distinguish to UpdateFromSfu interface
         void IUpdateableFrom<Participant, StreamVideoCallParticipant>.UpdateFromDto(Participant dto, ICache cache)
         {
@@ -131,11 +144,48 @@ namespace StreamVideo.Core.StatefulModels
             UserSessionId = dto.UserSessionId;
         }
 
+        internal void LoadCustomDataFromOwningCallCustomData(Dictionary<string, object> participantCustomData)
+        {
+            if (participantCustomData == null || participantCustomData.Count == 0)
+            {
+                InternalCustomData.InternalDictionary.Clear();
+                return;
+            }
+
+            InternalCustomData.ReplaceAllWith(participantCustomData);
+            TrySetVideoTrackRotationAngle();
+        }
+
+        private void TrySetVideoTrackRotationAngle()
+        {
+            if (_videoTrack != null && CustomData.TryGet<int>(VideoRotationAngleKey, out var angle))
+            {
+                _videoTrack.VideoRotationAngle = angle;
+            }
+        }
+
+        //StreamTodo: solve with a generic interface and best to be handled by cache layer
+        internal void UpdateFromSfu(Participant dto)
+        {
+            ((IUpdateableFrom<Participant, StreamVideoCallParticipant>)this).UpdateFromDto(dto, Cache);
+        }
+
         internal void Update()
         {
             _audioTrack?.Update();
             _videoTrack?.Update();
             _screenShareTrack?.Update();
+
+            UploadLocalParticipantPublishedVideoRotationAngle();
+        }
+
+        //StreamTodo: solve this better. IL2CPP fails to generate C++ code for TryConvertTo and fails with
+        //"Attempting to call method 'StreamVideo.Libs.Serialization.NewtonsoftJsonSerializer::TryConvertTo<System.Single>' for which no ahead of time (AOT) code was generated."
+        internal static void Dummy()
+        {
+            var serializer = new NewtonsoftJsonSerializer();
+            serializer.TryConvertTo<float>("aa");
+            serializer.TryConvertTo<int>("aa");
         }
 
         internal void SetTrack(TrackType type, MediaStreamTrack mediaStreamTrack, out IStreamTrack streamTrack)
@@ -154,6 +204,7 @@ namespace StreamVideo.Core.StatefulModels
                     break;
                 case TrackType.Video:
                     streamTrack = _videoTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
+                    TrySetVideoTrackRotationAngle();
                     break;
                 case TrackType.ScreenShare:
                     streamTrack = _screenShareTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
@@ -192,8 +243,10 @@ namespace StreamVideo.Core.StatefulModels
 
         protected override StreamVideoCallParticipant Self => this;
 
-        protected override Task SyncCustomDataAsync()
+        protected override Task UploadCustomDataAsync()
             => Client.SetParticipantCustomDataAsync(this, InternalCustomData.InternalDictionary);
+
+        private const string VideoRotationAngleKey = "videoRotationAngle";
 
         #region Tracks
 
@@ -223,6 +276,29 @@ namespace StreamVideo.Core.StatefulModels
                 case TrackType.ScreenShareAudio: return _screenShareAudioTrack;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
+        }
+
+        private void UploadLocalParticipantPublishedVideoRotationAngle()
+        {
+            if (Client.InternalLowLevelClient.RtcSession == null ||
+                Client.InternalLowLevelClient.RtcSession.VideoInput == null)
+            {
+                return;
+            }
+
+            if (!IsLocalParticipant)
+            {
+                return;
+            }
+
+            var angle = Client.InternalLowLevelClient.RtcSession.VideoInput.videoRotationAngle;
+            var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);
+
+            if (!hasPrevAngle || Mathf.Abs(angle - prevAngle) > 0)
+            {
+                //StreamTodo: there can be potentially multiple video tracks so best to store this by track ID
+                CustomData.SetAsync(VideoRotationAngleKey, angle);
             }
         }
     }

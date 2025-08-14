@@ -1,4 +1,9 @@
-﻿using System;
+﻿//StreamTodo: duplicated declaration of STREAM_NATIVE_AUDIO (also in RtcSession.cs) easy to get out of sync.
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+#define STREAM_NATIVE_AUDIO //Defined in multiple files
+#endif
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,7 +25,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled;
-        
+
         public event Action<VideoStreamTrack> PublisherVideoTrackChanged;
         public event Action<AudioStreamTrack> PublisherAudioTrackChanged;
 
@@ -201,6 +206,23 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void Dispose()
         {
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"Disposing PeerConnection [{_peerType}]");
+#endif
+
+#if STREAM_NATIVE_AUDIO
+            if (PublisherAudioTrack != null)
+            {
+                //StreamTODO: call this when PublisherAudioTrack is set to null
+                PublisherAudioTrack.StopLocalAudioCapture();
+            }
+#endif
+
+            PublisherAudioTrack?.Stop();
+            PublisherVideoTrack?.Stop();
+            PublisherAudioTrack = null;
+            PublisherVideoTrack = null;
+
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
@@ -212,10 +234,11 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnConnectionStateChange -= OnConnectionStateChange;
             _peerConnection.OnTrack -= OnTrack;
 
-            PublisherAudioTrack?.Stop();
-            PublisherVideoTrack?.Stop();
-
             _peerConnection.Close();
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"Disposed PeerConnection [{_peerType}]");
+#endif
         }
 
         private const string VideoCodecKeyH264 = "h264";
@@ -381,6 +404,9 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.AddTrack(audioTrack, PublisherAudioMediaStream);
 
             PublisherAudioTrack = audioTrack;
+
+            _logs.WarningIfDebug(
+                $"Executed {nameof(SetPublisherActiveAudioTrack)} for audio track not null: {audioTrack != null}");
         }
 
         private void TryClearPublisherAudioTrack()
@@ -395,6 +421,9 @@ namespace StreamVideo.Core.LowLevelClient
             PublisherAudioMediaStream.RemoveTrack(PublisherAudioTrack);
             _peerConnection.RemoveTrack(_audioTransceiver.Sender);
 
+#if STREAM_NATIVE_AUDIO
+            PublisherAudioTrack.StopLocalAudioCapture();
+#endif
             PublisherAudioTrack = null;
         }
 
@@ -424,6 +453,8 @@ namespace StreamVideo.Core.LowLevelClient
             _videoTransceiver.Sender.ReplaceTrack(videoTrack);
 
             PublisherVideoTrack = videoTrack;
+            _logs.WarningIfDebug(
+                $"Executed {nameof(ReplaceActiveVideoTrack)} for video track not null: {videoTrack != null}");
         }
 
         private void TryClearVideoTrack()
@@ -533,7 +564,9 @@ namespace StreamVideo.Core.LowLevelClient
                 $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
 #endif
 
-            return new VideoStreamTrack(_publisherVideoTrackTexture);
+            var track = new VideoStreamTrack(_publisherVideoTrackTexture);
+            track.Enabled = false;
+            return track;
         }
 
         //StreamTodo: CreatePublisherVideoTrackFromSceneCamera() is not used in any path
@@ -546,10 +579,22 @@ namespace StreamVideo.Core.LowLevelClient
             _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
 
             var track = _mediaInputProvider.VideoSceneInput.CaptureStreamTrack(1920, 1080);
+            track.Enabled = false;
             return track;
         }
 
-        private AudioStreamTrack CreatePublisherAudioTrack() => new AudioStreamTrack(_mediaInputProvider.AudioInput);
+        private AudioStreamTrack CreatePublisherAudioTrack()
+        {
+#if STREAM_NATIVE_AUDIO
+            // Removed passing AudioSource so that AudioFilter is not created and ProcessLocalAudio is not called inside webrtc plugin
+            var track = new AudioStreamTrack();
+#else
+            var track = new AudioStreamTrack(_mediaInputProvider.AudioInput);
+#endif
+
+            track.Enabled = false;
+            return track;
+        }
 
         private void ForceCodec(RTCRtpTransceiver transceiver, string codecKey, TrackKind kind)
         {
@@ -558,7 +603,8 @@ namespace StreamVideo.Core.LowLevelClient
                 => c.mimeType.IndexOf(codecKey, StringComparison.OrdinalIgnoreCase) != -1);
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Info($"Available codec of kind `{kind}`: " + string.Join(", ", capabilities.codecs.Select(c => c.mimeType)));
+            _logs.Info($"Available codec of kind `{kind}`: " +
+                       string.Join(", ", capabilities.codecs.Select(c => c.mimeType)));
 #endif
 
             if (!forcedCodecs.Any())

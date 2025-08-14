@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace StreamVideo.Core.DeviceManagers
 {
@@ -6,7 +7,7 @@ namespace StreamVideo.Core.DeviceManagers
     /// <summary>
     /// Manages interactions with video recording devices - Cameras.
     /// </summary>
-    public interface IStreamVideoDeviceManager : IDeviceManager<CameraDeviceInfo>
+    public interface IStreamVideoDeviceManager : IDeviceManager<CameraDeviceInfo>, IDisposable
     {
         //StreamTodo: probably move all members from IDeviceManager here so we can have all comments specifically about video or audio
         

@@ -1,3 +1,6 @@
+#if UNITY_ANDROID && !UNITY_EDITOR
+#define STREAM_NATIVE_AUDIO //Defined in multiple files
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +12,7 @@ using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
 using StreamVideo.Core.Configs;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Models.Sfu;
@@ -56,6 +60,22 @@ namespace StreamVideo.Core.LowLevelClient
 
         // StreamTodo: control this via compiler flag
         public const bool LogWebRTCStats = false;
+
+        // Some sources claim the 48kHz is the most optimal sample rate for WebRTC, other cause internal resampling
+        public const int AudioInputSampleRate = 48_000;
+
+        // Recording should use single channel only. E.g. on One Plus 9 Pro, recording with 2 channels breaks the audio.
+        public const int AudioInputChannels = 1;
+
+        // Some sources claim the 48kHz is the most optimal sample rate for WebRTC, other cause internal resampling
+        public const int AudioOutputSampleRate = 48_000;
+        public const int AudioOutputChannels = 2;
+
+#if STREAM_NATIVE_AUDIO
+        public const bool UseNativeAudioBindings = true;
+#else
+        public const bool UseNativeAudioBindings = false;
+#endif
 
         public CallingState CallState
         {
@@ -196,7 +216,7 @@ namespace StreamVideo.Core.LowLevelClient
             _videoAudioSyncBenchmark?.Update();
 
             //StreamTodo: we could remove this if we'd maintain a collection of tracks and update them directly
-            if (ActiveCall != null)
+            if (ActiveCall != null && ActiveCall.Participants != null)
             {
                 foreach (StreamVideoCallParticipant p in ActiveCall.Participants)
                 {
@@ -284,6 +304,14 @@ namespace StreamVideo.Core.LowLevelClient
 
                 await SubscribeToTracksAsync();
 
+                if (UseNativeAudioBindings)
+                {
+                    //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
+#if STREAM_NATIVE_AUDIO
+                    WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+#endif
+                }
+
                 //StreamTodo: validate when this state should set
                 CallState = CallingState.Joined;
                 _videoAudioSyncBenchmark?.Init(call);
@@ -297,6 +325,13 @@ namespace StreamVideo.Core.LowLevelClient
 
         public async Task StopAsync()
         {
+            if (UseNativeAudioBindings)
+            {
+#if STREAM_NATIVE_AUDIO
+                WebRTC.StopAudioPlayback();
+#endif
+            }
+
             ClearSession();
             //StreamTodo: check with js definition of "offline" 
             CallState = CallingState.Offline;
@@ -317,22 +352,82 @@ namespace StreamVideo.Core.LowLevelClient
             QueueTracksSubscriptionRequest();
         }
 
+        public void SetAudioRecordingDevice(MicrophoneDeviceInfo device)
+        {
+            _logs.WarningIfDebug("RtcSession.SetAudioRecordingDevice device: " + device);
+            _activeAudioRecordingDevice = device;
+            UpdateAudioRecording();
+        }
+
+        private MicrophoneDeviceInfo _activeAudioRecordingDevice;
+
+        //StreamTodo: rename to TrySetPublisherAudioTrackEnabled?
         public void TrySetAudioTrackEnabled(bool isEnabled)
         {
+            _publisherAudioTrackIsEnabled = isEnabled;
+            _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled isEnabled: " + isEnabled);
             if (Publisher?.PublisherAudioTrack == null)
             {
-                //StreamTodo: we probably want to cache this here and use once the track is available
                 return;
             }
 
+            if (Publisher.PublisherAudioTrack.Enabled == isEnabled)
+            {
+                //StreamTODO: solve this better. By default, the track is enabled, but we still need to call StartLocalAudioCapture so we can't return
+                //return;
+            }
+
+            //StreamTodo: investigate what this flag does internally in the webrtc package
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
+
+            UpdateAudioRecording();
+        }
+
+        private void UpdateAudioRecording()
+        {
+            if (Publisher?.PublisherAudioTrack == null || !UseNativeAudioBindings)
+            {
+                return;
+            }
+
+#if STREAM_NATIVE_AUDIO
+            var shouldRecord = _activeAudioRecordingDevice.IsValid && _publisherAudioTrackIsEnabled;
+
+            if (shouldRecord)
+            {
+                //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
+                //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
+
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
+                Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate, AudioInputChannels);
+            }
+            else
+            {
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
+                Publisher.PublisherAudioTrack.StopLocalAudioCapture();
+            }
+#endif
+        }
+
+        public void TryRestartAudioRecording() => UpdateAudioRecording();
+
+        public void TryRestartAudioPlayback()
+        {
+            if (!UseNativeAudioBindings)
+            {
+                return;
+            }
+#if STREAM_NATIVE_AUDIO
+            WebRTC.StopAudioPlayback();
+            WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+#endif
         }
 
         public void TrySetVideoTrackEnabled(bool isEnabled)
         {
+            _publisherVideoTrackIsEnabled = isEnabled;
             if (Publisher?.PublisherVideoTrack == null)
             {
-                //StreamTodo: we probably want to cache this here and use once the track is available
                 return;
             }
 
@@ -365,6 +460,9 @@ namespace StreamVideo.Core.LowLevelClient
         private float _lastTrackSubscriptionRequestTime;
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
+
+        private bool _publisherAudioTrackIsEnabled;
+        private bool _publisherVideoTrackIsEnabled;
 
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
@@ -1193,6 +1291,10 @@ namespace StreamVideo.Core.LowLevelClient
                 this, _config.Audio, _publisherVideoSettings);
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
+            Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
+
+            TrySetAudioTrackEnabled(_publisherAudioTrackIsEnabled);
+            TrySetVideoTrackEnabled(_publisherVideoTrackIsEnabled);
         }
 
         private void DisposePublisher()
@@ -1201,9 +1303,24 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 Publisher.IceTrickled -= OnIceTrickled;
                 Publisher.NegotiationNeeded -= OnPublisherNegotiationNeeded;
+                Publisher.PublisherAudioTrackChanged -= OnPublisherAudioTrackChanged;
                 Publisher.Dispose();
                 Publisher = null;
             }
+        }
+
+
+        private void OnPublisherAudioTrackChanged(AudioStreamTrack audioTrack)
+        {
+            if (audioTrack == null)
+            {
+                //StreamTODO: check if we should stop native recording here
+                return;
+            }
+
+            //StreamTODO: change this later UpdateAudioRecording
+            // Needed when we re-join the call and the audio capturing was already enabled
+            TrySetAudioTrackEnabled(audioTrack.Enabled);
         }
 
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)

@@ -7,7 +7,23 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 {
     public class StreamVideoTrack : BaseStreamTrack<VideoStreamTrack>
     {
-        internal RenderTexture TargetTexture => _targetTexture;
+        public event Action VideoRotationAngleChanged;
+
+        public int VideoRotationAngle
+        {
+            get => _videoRotationAngle;
+            internal set
+            {
+                if (_videoRotationAngle == value)
+                {
+                    return;
+                }
+
+                var prev = _videoRotationAngle;
+                _videoRotationAngle = value;
+                VideoRotationAngleChanged?.Invoke();
+            }
+        }
         
         public StreamVideoTrack(MediaStreamTrack track)
             : base(track)
@@ -24,16 +40,27 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 
             _targetImage = targetImage;
         }
+        
+        internal RenderTexture TargetTexture => _targetTexture;
 
         internal override void Update()
         {
             base.Update();
 
+            CopyTextureFromTrackSourceToTargetTexture();
+        }
+
+        private RenderTexture _targetTexture;
+        private RawImage _targetImage;
+        private int _videoRotationAngle;
+
+        private void CopyTextureFromTrackSourceToTargetTexture()
+        {
             if (_targetImage == null || Track == null || Track.Texture == null)
             {
                 return;
             }
-
+            
             var source = Track.Texture;
 
             if (_targetTexture == null)
@@ -49,7 +76,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             {
 #if STREAM_DEBUG_ENABLED
                 Debug.LogWarning(
-                    $"Sized changed from {_targetTexture.width}:{_targetTexture.height} to {source.width}:{source.height}");
+                $"Size changed from {_targetTexture.width}:{_targetTexture.height} to {source.width}:{source.height}");
 #endif
 
                 _targetTexture.Release();
@@ -69,8 +96,5 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             Graphics.Blit(source, _targetTexture);
             _targetTexture.IncrementUpdateCount();
         }
-
-        private RenderTexture _targetTexture;
-        private RawImage _targetImage;
     }
 }

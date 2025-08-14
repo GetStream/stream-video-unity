@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Libs.Serialization;
+using UnityEngine;
 
 namespace StreamVideo.Core.State
 {
@@ -23,6 +24,14 @@ namespace StreamVideo.Core.State
                 return false;
             }
 
+            if (_customData[key] is TType castedType)
+            {
+                value = castedType;
+                return true;
+            }
+
+            //StreamTOdo: conversion can fail but TryGet will still return true. We either need to return string and let user handle conversion or check if conversion is successful
+            // Currently, invalid cast will just return default value for TType.
             value = _serializer.TryConvertTo<TType>(_customData[key]);
             return true;
         }

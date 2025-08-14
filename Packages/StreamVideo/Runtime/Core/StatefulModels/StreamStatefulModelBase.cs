@@ -32,8 +32,9 @@ namespace StreamVideo.Core.StatefulModels
             Repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _serializer = context.Serializer ?? throw new ArgumentNullException(nameof(context.Serializer));
 
-            InternalCustomData = new StreamCustomData(context.Serializer, SyncCustomDataAsync);
+            InternalCustomData = new StreamCustomData(context.Serializer, UploadCustomDataAsync);
 
+            // StreamTodo: refactor this to remove "Virtual member call in constructor"
             InternalUniqueId = uniqueId;
             Repository.Track(Self);
         }
@@ -51,9 +52,14 @@ namespace StreamVideo.Core.StatefulModels
         protected void LoadCustomData(Dictionary<string, object> customData)
         {
             InternalCustomData.ReplaceAllWith(customData);
+            OnCustomDataLoaded();
         }
 
-        protected abstract Task SyncCustomDataAsync();
+        protected virtual void OnCustomDataLoaded()
+        {
+        }
+
+        protected abstract Task UploadCustomDataAsync();
 
         protected static T GetOrDefault<T>(T? source, T defaultValue)
             where T : struct

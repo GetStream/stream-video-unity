@@ -73,6 +73,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             {
                 return;
             }
+            
+            #if STREAM_DEBUG_ENABLED
+            Logs.Info($"{GetType()} TryToReconnect");
+            #endif
 
             ConnectAsync().LogIfFailed();
         }
@@ -83,7 +87,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             ConnectionState = ConnectionState.Connecting;
             try
             {
-                return OnConnectAsync(cancellationToken);
+                return ExecuteConnectAsync(cancellationToken);
             }
             catch (Exception)
             {
@@ -200,7 +204,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected abstract void SendHealthCheck();
 
-        protected abstract Task OnConnectAsync(CancellationToken cancellationToken = default);
+        protected abstract Task ExecuteConnectAsync(CancellationToken cancellationToken = default);
 
         protected void OnHealthCheckReceived()
         {

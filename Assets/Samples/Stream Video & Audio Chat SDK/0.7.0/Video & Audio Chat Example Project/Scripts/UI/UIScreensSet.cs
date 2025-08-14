@@ -14,8 +14,8 @@ namespace StreamVideo.ExampleProject.UI
         
         public void ShowMainScreen()
         {
-            _mainScreen.Show();
             _callScreen.Hide();
+            _mainScreen.Show();
         }
         
         public void ShowCallScreen(IStreamCall call)

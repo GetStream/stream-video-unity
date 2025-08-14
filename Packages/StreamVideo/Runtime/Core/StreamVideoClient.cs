@@ -1,3 +1,6 @@
+#if UNITY_ANDROID && !UNITY_EDITOR
+#define STREAM_NATIVE_AUDIO //Defined in multiple files
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,14 +11,13 @@ using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.InternalDTO.Events;
 using StreamVideo.Core.InternalDTO.Requests;
-using StreamVideo.Core.IssueReporters;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.QueryBuilders.Filters;
-using StreamVideo.Core.QueryBuilders.Filters.Calls;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.Utils;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
@@ -54,9 +56,6 @@ namespace StreamVideo.Core
         public IStreamVideoDeviceManager VideoDeviceManager => _videoDeviceManager;
         public IStreamAudioDeviceManager AudioDeviceManager => _audioDeviceManager;
 
-        private StreamVideoDeviceManager _videoDeviceManager;
-        private StreamAudioDeviceManager _audioDeviceManager;
-
         /// <summary>
         /// Use this method to create the Video Client. You should have only one instance of this class
         /// </summary>
@@ -85,6 +84,7 @@ namespace StreamVideo.Core
             return client;
         }
 
+        //StreamTODO: this throws exception if the call doesn't exist. Check with other SDKs what is the expected behavior
         /// <summary>
         /// Will return null if the call doesn't exist
         /// </summary>
@@ -146,7 +146,8 @@ namespace StreamVideo.Core
                     Custom = null,
                     Members = null,
                     SettingsOverride = null,
-                    StartsAt = DateTimeOffset.Now, //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
+                    StartsAt = DateTimeOffset
+                        .Now, //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
                     Team = null
                 },
                 Location = locationHint,
@@ -171,6 +172,9 @@ namespace StreamVideo.Core
 #if STREAM_DEBUG_ENABLED
             _logsCollector?.Dispose();
 #endif
+            AudioDeviceManager?.Dispose();
+            VideoDeviceManager?.Dispose();
+
             UnsubscribeFrom(InternalLowLevelClient);
             InternalLowLevelClient?.Dispose();
             Destroyed?.Invoke();
@@ -199,7 +203,8 @@ namespace StreamVideo.Core
 
         public Task DisconnectAsync() => InternalLowLevelClient.DisconnectAsync();
 
-        void IInternalStreamVideoClient.SetAudioInputSource(AudioSource audioSource)
+        void IInternalStreamVideoClient.
+            SetAudioInputSource(AudioSource audioSource) //StreamTodo order mismatch - put this lower
         {
             if (audioSource == null)
             {
@@ -253,6 +258,29 @@ namespace StreamVideo.Core
             }
 
             return new QueryCallsResult(calls, response.Prev, response.Next);
+        }
+
+        public void GetAudioProcessingModuleConfig(out bool enabled, out bool echoCancellationEnabled,
+            out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel)
+        {
+#if STREAM_NATIVE_AUDIO
+            WebRTC.GetAudioProcessingModuleConfig(out enabled, out echoCancellationEnabled, out autoGainEnabled, out noiseSuppressionEnabled, out noiseSuppressionLevel);
+#else
+            throw new NotSupportedException(
+                $"{nameof(GetAudioProcessingModuleConfig)} is not supported on this platform.");
+#endif
+        }
+
+        public void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled,
+            bool noiseSuppressionEnabled, int noiseSuppressionLevel)
+        {
+#if STREAM_NATIVE_AUDIO
+            WebRTC.SetAudioProcessingModule(enabled, echoCancellationEnabled, autoGainEnabled, noiseSuppressionEnabled,
+                noiseSuppressionLevel);
+#else
+            throw new NotSupportedException(
+                $"{nameof(SetAudioProcessingModule)} is not supported on this platform.");
+#endif
         }
 
         #region IStreamVideoClientEventsListener
@@ -368,7 +396,7 @@ namespace StreamVideo.Core
                     "Tried to set custom data for a participant but there is no active call session.");
             }
 
-            return activeCall.SyncParticipantCustomDataAsync(participant, internalCustomData);
+            return activeCall.UploadParticipantCustomDataAsync(participant, internalCustomData);
         }
 
 #if STREAM_DEBUG_ENABLED
@@ -378,14 +406,17 @@ namespace StreamVideo.Core
 
         private StreamVideoLowLevelClient InternalLowLevelClient { get; }
 
+        private readonly StreamVideoDeviceManager _videoDeviceManager;
+        private readonly StreamAudioDeviceManager _audioDeviceManager;
+
         private event Action Destroyed;
 
         private readonly ILogs _logs;
         private readonly ICache _cache;
 
 #if STREAM_DEBUG_ENABLED
-        private readonly ILogsCollector _logsCollector;
-        private readonly IFeedbackReporter _feedbackReporter;
+        private readonly StreamVideo.Core.IssueReporters.ILogsCollector _logsCollector;
+        private readonly StreamVideo.Core.IssueReporters.IFeedbackReporter _feedbackReporter;
 #endif
 
         private async Task LeaveCallAsync(IStreamCall call)
@@ -421,12 +452,12 @@ namespace StreamVideo.Core
 
             // StreamTODO: Change condition
 #if STREAM_DEBUG_ENABLED
-            _logsCollector = new LogsCollector();
+            _logsCollector = new StreamVideo.Core.IssueReporters.LogsCollector();
 
 #if UNITY_IOS || UNITY_ANDROID
             _logsCollector.Enable();
 #endif
-            _feedbackReporter = new FeedbackReporterFactory(_logsCollector, serializer).CreateTrelloReporter();
+            _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer).CreateTrelloReporter();
 #endif
         }
 
@@ -507,7 +538,7 @@ namespace StreamVideo.Core
         private void OnInternalCallUpdatedEvent(CallUpdatedEventInternalDTO eventData)
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
-            call.UpdateCapabilitiesByRoleFromDto(eventData);
+            call.UpdateCallFromDto(eventData);
         }
 
         private void OnInternalCallEndedEvent(CallEndedEventInternalDTO eventData)
@@ -515,9 +546,11 @@ namespace StreamVideo.Core
             var call = _cache.TryCreateOrUpdate(eventData.Call);
             if (call == null)
             {
-                _logs.Error($"Received call ended event for a call that doesn't exist. {nameof(eventData.Call.Cid)}:" + eventData?.Call?.Cid);
+                _logs.Error($"Received call ended event for a call that doesn't exist. {nameof(eventData.Call.Cid)}:" +
+                            eventData?.Call?.Cid);
                 return;
             }
+
             call.LeaveAsync().LogIfFailed();
         }
 
@@ -684,6 +717,9 @@ namespace StreamVideo.Core
         private void OnInternalConnectionErrorEvent(ConnectionErrorEventInternalDTO eventData)
         {
             // Implement handling logic for ConnectionErrorEventInternalDTO here
+#if STREAM_DEBUG_ENABLED
+            _logs.Error("Connection error received: " + eventData.Error.Message);
+#endif
         }
 
         private void OnInternalCustomVideoEvent(CustomVideoEventInternalDTO eventData)
@@ -693,11 +729,11 @@ namespace StreamVideo.Core
             {
                 return;
             }
-            
+
             var callEvent = new CallEvent();
             var loadable = (IStateLoadableFrom<CustomVideoEventInternalDTO, CallEvent>)callEvent;
             loadable.LoadFromDto(eventData, _cache);
-            
+
             activeCall.NotifyCallEventReceived(callEvent);
         }
 

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Utils;
+using StreamVideo.Libs.DeviceManagers;
 using StreamVideo.Libs.Logs;
+using StreamVideo.Libs.Utils;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
+#pragma warning disable CS0162 // Disable unreachable code warning
 namespace StreamVideo.Core.DeviceManagers
 {
     internal class StreamAudioDeviceManager : DeviceManagerBase<MicrophoneDeviceInfo>, IStreamAudioDeviceManager
@@ -14,14 +16,42 @@ namespace StreamVideo.Core.DeviceManagers
         //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
         {
-            foreach (var device in Microphone.devices)
+            // Dummy call to ensure Unity requests Android permissions for audio recording. StreamTODO: create AndroidManifest with proper permissions and ensure it's being composed into final manifest file.
+            var devices = Microphone.devices;
+            foreach (var d in devices)
             {
-                yield return new MicrophoneDeviceInfo(device);
+            }
+
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                NativeAudioDeviceManager.GetAudioInputDevices(ref _inputDevicesBuffer);
+                foreach (var device in _inputDevicesBuffer)
+                {
+                    if (device == default)
+                    {
+                        continue;
+                    }
+
+                    yield return new MicrophoneDeviceInfo(device.Id, device.Name);
+                }
+            }
+            else
+            {
+                foreach (var deviceName in Microphone.devices)
+                {
+                    yield return new MicrophoneDeviceInfo(deviceName);
+                }
             }
         }
 
         protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msTimeout)
         {
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                //StreamTODO: Implement device testing via native binding
+                return false;
+            }
+
             const int sampleRate = 44100;
             var maxRecordingTime = (int)Math.Ceiling(msTimeout / 1000f);
 
@@ -51,18 +81,30 @@ namespace StreamVideo.Core.DeviceManagers
             return hasData;
         }
 
+
         /// <summary>
         /// Select microphone device to capture audio input. Available microphone devices are listed in <see cref="EnumerateDevices"/>.
         /// You can check the currently selected audio device with <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDevice"/>, and
         /// get notified when the selected device changes by subscribing to <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDeviceChanged"/>.
         /// </summary>
-        /// <param name="device"></param>
+        /// <param name="device">Device to set as currently selected one. Only devices obtained via <see cref="EnumerateDevices"/> are valid</param>
+        /// <param name="enable">Should the device get enabled right away? For a microphone device, it means the audio capturing will start immediately</param>
         /// <exception cref="ArgumentException">Thrown when the provided device has an invalid name</exception>
         public void SelectDevice(MicrophoneDeviceInfo device, bool enable)
         {
+            Logs.WarningIfDebug(
+                $"{nameof(SelectedDevice)} CALLED. SelectedDevice: {SelectedDevice}, IsEnabled: {IsEnabled}, New Device: {device}, Enable: {enable}");
+
             if (!device.IsValid)
             {
                 throw new ArgumentException($"{nameof(device)} argument is not valid. The device name is empty.");
+            }
+
+            if (SelectedDevice == device && IsEnabled == enable)
+            {
+                Logs.WarningIfDebug(
+                    $"{nameof(SelectedDevice)} call ignored. Nothing changed. SelectedDevice: {SelectedDevice}, IsEnabled: {IsEnabled}, New Device: {device}, Enable: {enable}");
+                return;
             }
 
             TryStopRecording(device);
@@ -70,14 +112,33 @@ namespace StreamVideo.Core.DeviceManagers
             SelectedDevice = device;
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"Changed microphone device to: {SelectedDevice}");
+            Logs.Info($"Changed microphone device to: {SelectedDevice}, Enable: {enable}");
 #endif
 
-            //StreamTodo: in some cases starting the mic recording before the call was causing the recorded audio being played in speakers
+            //StreamTodo: in some cases starting the mic recording before the call was causing the recorded audio being played in speakers with Unity Audio API
             //I think the reason was that AudioSource was being captured by an AudioListener but once I've joined the call, this disappeared
             //Check if we can have this AudioSource to be ignored by AudioListener's or otherwise mute it when there is not active call session
 
-            SetEnabled(enable);
+            IsEnabled = enable;
+
+
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                SetAudioRoutingAsync((NativeAudioDeviceManager.AudioRouting)SelectedDevice.IntId.Value).LogIfFailed();
+            }
+        }
+
+        private async Task SetAudioRoutingAsync(NativeAudioDeviceManager.AudioRouting audioRoute)
+        {
+            Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name);
+            NativeAudioDeviceManager.SetPreferredAudioRoute(audioRoute);
+
+            // StreamTODO: fix this. The audio route change takes some time. We need a callback or polling to know when to restart the native audio playback and recording
+            await Task.Delay(500);
+            Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name +
+                                " RESTARTING OBOE");
+            RtcSession.TryRestartAudioRecording();
+            RtcSession.TryRestartAudioPlayback();
         }
 
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio
@@ -85,6 +146,7 @@ namespace StreamVideo.Core.DeviceManagers
         internal StreamAudioDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
             : base(rtcSession, client, logs)
         {
+            logs.WarningIfDebug("------------ USE NATIVE BINDINGS: " + RtcSession.UseNativeAudioBindings);
         }
 
         protected override void OnSetEnabled(bool isEnabled)
@@ -92,24 +154,8 @@ namespace StreamVideo.Core.DeviceManagers
             if (isEnabled && SelectedDevice.IsValid)
             {
                 TryStopRecording(SelectedDevice);
-                
-                var targetAudioSource = GetOrCreateTargetAudioSource();
 
-                // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
-
-                targetAudioSource.clip
-                    = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 10, AudioSettings.outputSampleRate);
-                targetAudioSource.loop = true;
-
-                using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
-                {
-                    while (!(Microphone.GetPosition(SelectedDevice.Name) > 0))
-                    {
-                        // StreamTodo: add timeout. Otherwise might hang application
-                    }
-                }
-
-                targetAudioSource.Play();
+                StartRecording(SelectedDevice);
             }
 
             if (!isEnabled)
@@ -118,6 +164,12 @@ namespace StreamVideo.Core.DeviceManagers
             }
 
             RtcSession.TrySetAudioTrackEnabled(isEnabled);
+        }
+
+        protected override void OnDeviceChanging(MicrophoneDeviceInfo prev, MicrophoneDeviceInfo current)
+        {
+            base.OnDeviceChanging(prev, current);
+            RtcSession.SetAudioRecordingDevice(current);
         }
 
         protected override void OnUpdate()
@@ -133,7 +185,7 @@ namespace StreamVideo.Core.DeviceManagers
 
             if (_targetAudioSourceContainer != null)
             {
-                Object.Destroy(_targetAudioSourceContainer);
+                UnityEngine.Object.Destroy(_targetAudioSourceContainer);
             }
 
             base.OnDisposing();
@@ -144,6 +196,9 @@ namespace StreamVideo.Core.DeviceManagers
 
         private AudioSource _targetAudioSource;
         private GameObject _targetAudioSourceContainer;
+
+        private NativeAudioDeviceManager.AudioDeviceInfo[] _inputDevicesBuffer
+            = new NativeAudioDeviceManager.AudioDeviceInfo[128];
 
         private AudioSource GetOrCreateTargetAudioSource()
         {
@@ -167,8 +222,47 @@ namespace StreamVideo.Core.DeviceManagers
             return _targetAudioSource;
         }
 
+        private void StartRecording(MicrophoneDeviceInfo device)
+        {
+            if (!device.IsValid)
+            {
+                Logs.Error("Cannot start recording: the selected microphone device is not valid.");
+                return;
+            }
+
+            //StreamTODO: We currently need this because in StreamPeerConnection ctor we check for audio source to create audio track. Refactor this dependency because we're progressively moving towards native audio handling
+            var targetAudioSource = GetOrCreateTargetAudioSource();
+
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                return;
+            }
+
+            // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
+
+            // Sample rate must probably match the one used in AudioCustomFilter (this is what's being sent to webRTC). It's currently using AudioSettings.outputSampleRate
+            targetAudioSource.clip
+                = Microphone.Start(SelectedDevice.Name, loop: true, lengthSec: 1, AudioSettings.outputSampleRate);
+            targetAudioSource.loop = true;
+
+            using (new DebugStopwatchScope(Logs, "Waiting for microphone to start recording"))
+            {
+                while (!(Microphone.GetPosition(SelectedDevice.Name) > 0))
+                {
+                    // StreamTodo: add timeout. Otherwise might hang application
+                }
+            }
+
+            targetAudioSource.Play();
+        }
+
         private static void TryStopRecording(MicrophoneDeviceInfo device)
         {
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                return;
+            }
+
             if (!device.IsValid)
             {
                 return;
@@ -179,15 +273,21 @@ namespace StreamVideo.Core.DeviceManagers
                 Microphone.End(device.Name);
             }
         }
-        
+
         private void TrySyncMicrophoneAudioSourceReadPosWithMicrophoneWritePos()
         {
-            var isRecording = IsEnabled && SelectedDevice.IsValid && Microphone.IsRecording(SelectedDevice.Name) && _targetAudioSource != null;
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                return;
+            }
+
+            var isRecording = IsEnabled && SelectedDevice.IsValid && Microphone.IsRecording(SelectedDevice.Name) &&
+                              _targetAudioSource != null;
             if (!isRecording)
             {
                 return;
             }
-            
+
             var microphonePosition = Microphone.GetPosition(SelectedDevice.Name);
             if (microphonePosition >= 0 && _targetAudioSource.timeSamples > microphonePosition)
             {
@@ -196,3 +296,4 @@ namespace StreamVideo.Core.DeviceManagers
         }
     }
 }
+#pragma warning restore CS0162 // Re-enable unreachable code warning

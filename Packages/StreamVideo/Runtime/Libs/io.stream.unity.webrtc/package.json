@@ -1,0 +1,22 @@
+{
+  "name": "io.stream.unity.webrtc",
+  "displayName": "Stream WebRTC",
+  "version": "3.0.0-pre.8-stream.1",
+  "unity": "2020.3",
+  "description": "Modified version of Unity’s com.unity.webrtc with custom patches. The WebRTC package provides browsers and mobile applications with Real-Time Communications (RTC) capabilities.",
+  "keywords": [
+    "webrtc",
+    "web"
+  ],
+  "dependencies": {
+    "com.unity.modules.jsonserialize": "1.0.0",
+    "com.unity.editorcoroutines": "1.0.0",
+    "com.unity.modules.audio": "1.0.0"
+  },
+  "samples": [{
+      "displayName": "Example",
+      "description": "WebRTC sample",
+      "path": "Samples~"
+    }
+  ]
+}

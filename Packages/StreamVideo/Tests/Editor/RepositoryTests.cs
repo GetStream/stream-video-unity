@@ -12,7 +12,7 @@ using StreamVideo.Tests.Shared;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Tests.Editor
+namespace StreamVideo.Tests.Editor
 {
     internal class RepositoryTests
     {

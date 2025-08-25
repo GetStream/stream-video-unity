@@ -1,5 +1,3 @@
 <linker>
-<assembly fullname="StreamVideo.Libs">
-	<namespace fullname="StreamVideo.Libs.Serialization" preserve="all"/>
-</assembly>
+	<assembly fullname="StreamVideo.Libs" preserve="all"/>
 </linker>

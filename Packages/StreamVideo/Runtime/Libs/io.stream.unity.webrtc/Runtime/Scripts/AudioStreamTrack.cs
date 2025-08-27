@@ -468,7 +468,7 @@ namespace Unity.WebRTC
                 _streamRenderer.onReceived -= value;
             }
         }
-
+#if UNITY_ANDROID && !UNITY_EDITOR
         public void StartLocalAudioCapture(int deviceId, int sampleRate, int numChannels)
         {
             WebRTC.Context.StartAudioCapture(_trackSource.self, deviceId, sampleRate, numChannels);
@@ -483,6 +483,7 @@ namespace Unity.WebRTC
         {
             WebRTC.Context.StopAudioCapture(_trackSource.self);
         }
+#endif
     }
 
     internal class AudioTrackSource : RefCountedObject

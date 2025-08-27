@@ -376,6 +376,7 @@ namespace Unity.WebRTC
             NativeMethods.ContextGetReceiverCapabilities(self, kind, out capabilities);
         }
 
+#if UNITY_ANDROID && !UNITY_EDITOR
         public void GetAudioProcessingModuleConfig(out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel)
         {
             NativeMethods.GetAudioProcessingModuleConfig(self, out enabled, out echoCancellationEnabled, out autoGainEnabled, out noiseSuppressionEnabled, out noiseSuppressionLevel);
@@ -410,6 +411,7 @@ namespace Unity.WebRTC
         {
             NativeMethods.StopAudioPlayback(self);
         }
+#endif
 
         internal void BatchUpdate(IntPtr batchData)
         {

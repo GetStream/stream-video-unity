@@ -898,7 +898,8 @@ namespace Unity.WebRTC
                 NativeMethods.RegisterDebugLog(null, false, nativeLoggingSeverity);
             }
         }
-
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
         /// <summary>
         /// Sets the graphics sync timeout.
         /// Graphics sync timeout determines how long the graphics device will wait on the frame copy for encoding before timing out.
@@ -909,6 +910,7 @@ namespace Unity.WebRTC
         {
             NativeMethods.SetGraphicsSyncTimeout(nSecTimeout);
         }
+#endif
 
         internal static void DisposeInternal()
         {
@@ -1109,7 +1111,7 @@ namespace Unity.WebRTC
             var graphicsFormat = GetSupportedGraphicsFormat(type);
             return GraphicsFormatUtility.GetTextureFormat(graphicsFormat);
         }
-
+#if UNITY_ANDROID && !UNITY_EDITOR
         public static void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel)
         {
             WebRTC.Context.SetAudioProcessingModule(enabled, echoCancellationEnabled, autoGainEnabled, noiseSuppressionEnabled, noiseSuppressionLevel);
@@ -1129,6 +1131,8 @@ namespace Unity.WebRTC
         {
             Context.StopAudioPlayback();
         }
+
+#endif
 
         class CallbackObject
         {
@@ -1809,6 +1813,7 @@ namespace Unity.WebRTC
         [DllImport(WebRTC.Lib)]
         public static extern void FrameTransformerSendFrameToSink(IntPtr transform, IntPtr frame);
 
+#if UNITY_ANDROID && !UNITY_EDITOR
         [DllImport(WebRTC.Lib)]
         public static extern void SetGraphicsSyncTimeout(uint nSecTimeout);
 
@@ -1833,7 +1838,7 @@ namespace Unity.WebRTC
 
         [DllImport(WebRTC.Lib)]
         public static extern void GetAudioProcessingModuleConfig(IntPtr context, out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel);
-
+#endif
     }
 
     internal static class VideoUpdateMethods

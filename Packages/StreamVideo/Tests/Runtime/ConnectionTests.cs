@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿#if STREAM_TESTS_ENABLED
+using System.Collections;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Libs.Auth;
@@ -32,3 +33,4 @@ namespace StreamVideo.Tests.Runtime
         }
     }
 }
+#endif

@@ -14,6 +14,8 @@ using Debug = UnityEngine.Debug;
 
 namespace StreamVideo.Tests.Shared
 {
+    public delegate Task NoClientTestHandler();
+    
     public delegate Task SingleClientTestHandler(ITestClient client);
 
     public delegate Task TwoClientsTestHandler(ITestClient client1, ITestClient client2);
@@ -96,6 +98,11 @@ namespace StreamVideo.Tests.Shared
         {
             yield return ConnectAndExecuteAsync(clients => test(clients[0], clients[1]), clientsToSpawn: 2)
                 .RunAsIEnumerator(ignoreFailingMessages: ignoreFailingMessages);
+        }
+
+        protected static IEnumerator Execute(NoClientTestHandler test)
+        {
+            yield return test().RunAsIEnumerator();
         }
 
         private static bool IgnoreConditionKeyNoCameraDeviceIsSet;

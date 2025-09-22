@@ -1,3 +1,18 @@
+0.8.2
+## Added:
+- Enabled generating developer tokens. This allows generating authentication tokens inside the Unity app without needing a backend server. This is only suitable for the development phase and should not be used in production. The newly available static methods are: `StreamVideoClient.CreateDeveloperAuthToken(userId)` and `StreamVideoClient.SanitizeUserId(userName)` (for removing disallowed chars from a userId). This feature requires having the `Disable Auth Checks` flag enabled in Stream Dashboard.
+
+0.8.1
+- Fix IOS build process failing due to missing symbols like: `_StartAudioCapture`, `_StopAudioPlayback`, `_GetAudioProcessingModuleConfig`, `_PeerConnectionCanTrickleIceCandidates`
+
+0.8.0
+
+Android platform improvements
+- Added echo cancellation and noise reduction to audio
+- Fixed video rotation in portrait mode
+- Fixed Unity ExecutionEngineException: Attempting to call method `StreamVideo.Libs.Serialization.NewtonsoftJsonSerializer::TryConvertTo<System.Single>` for which no ahead of time (AOT) code was generated.
+- Improvements to call stability
+
 0.7.0:
 
 ## Improvements:

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using StreamVideo.Core;
@@ -9,6 +10,9 @@ using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
+#if STREAM_DEBUG_ENABLED
+using System.Linq;
+#endif
 
 namespace StreamVideo.ExampleProject
 {

@@ -17,7 +17,6 @@ using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
-using StreamVideo.Core.Utils;
 using StreamVideo.Libs;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
@@ -83,6 +82,13 @@ namespace StreamVideo.Core
 
             return client;
         }
+        
+        /// <inheritdoc cref="StreamVideoLowLevelClient.CreateDeveloperAuthToken"/>
+        public static string CreateDeveloperAuthToken(string userId)
+            => StreamVideoLowLevelClient.CreateDeveloperAuthToken(userId);
+
+        /// <inheritdoc cref="StreamVideoLowLevelClient.SanitizeUserId"/>
+        public static string SanitizeUserId(string userId) => StreamVideoLowLevelClient.SanitizeUserId(userId);
 
         //StreamTODO: this throws exception if the call doesn't exist. Check with other SDKs what is the expected behavior
         /// <summary>

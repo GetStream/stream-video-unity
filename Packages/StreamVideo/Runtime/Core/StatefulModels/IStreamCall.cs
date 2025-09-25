@@ -277,6 +277,10 @@ namespace StreamVideo.Core.StatefulModels
 
         Task MuteUsersAsync(IEnumerable<IStreamVideoCallParticipant> participants, bool audio, bool video,
             bool screenShare);
+        
+        void MuteSelf(bool audio, bool video, bool screenShare);
+
+        void MuteOthers(bool audio, bool video, bool screenShare);
 
         /// <summary>
         /// Query members in this call. The result won't be stored in the call state.

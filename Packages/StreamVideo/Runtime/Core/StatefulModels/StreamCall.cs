@@ -210,6 +210,20 @@ namespace StreamVideo.Core.StatefulModels
             bool screenShare)
             => MuteUsersAsync(participants.Select(u => u.UserId), audio, video, screenShare);
 
+        public void MuteSelf(bool audio, bool video, bool screenShare)
+        {
+            var localParticipant = Participants.Single(p => p.IsLocalParticipant);
+            MuteUsersAsync(new[] { localParticipant.UserId }, audio: true, video: false, screenShare: false);
+        }
+
+        public void MuteOthers(bool audio, bool video, bool screenShare)
+        {
+            var localParticipant = Participants.Single(p => p.IsLocalParticipant);
+            var otherParticipants = Participants.Select(p => p.UserId).Where(id => id != localParticipant.UserId).ToArray();
+            
+            MuteUsersAsync(otherParticipants, audio: true, video: false, screenShare: false);
+        }
+        
         public Task BlockUserAsync(string userId) => Client.BlockUserAsync(this, userId);
 
         public Task BlockUserAsync(IStreamVideoUser user) => Client.BlockUserAsync(this, user.Id);

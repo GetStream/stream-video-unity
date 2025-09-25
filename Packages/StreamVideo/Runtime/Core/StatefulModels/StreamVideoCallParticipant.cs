@@ -228,6 +228,11 @@ namespace StreamVideo.Core.StatefulModels
                 return;
             }
 
+#if STREAM_DEBUG_ENABLED
+            Logs.Warning(
+                $"[Participant] Local: {IsLocalParticipant}, Session ID: {SessionId} set track enabled of type {type} to {enabled}");
+#endif
+            
             streamTrack.SetEnabled(enabled);
 
             //StreamTodo: we should trigger some event that track status changed

@@ -13,25 +13,13 @@ namespace StreamVideo.Core.DeviceManagers
 
     internal abstract class DeviceManagerBase<TDeviceInfo> : IDeviceManager<TDeviceInfo> where TDeviceInfo : struct
     {
-        public event DeviceEnabledChangeHandler IsEnabledChanged;
+        public abstract event DeviceEnabledChangeHandler IsEnabledChanged;
 
         public event SelectedDeviceChangeHandler<TDeviceInfo> SelectedDeviceChanged;
 
-        public bool IsEnabled
-        {
-            get => _isEnabled;
-            protected set
-            {
-                if (value == _isEnabled)
-                {
-                    return;
-                }
-
-                _isEnabled = value;
-                OnSetEnabled(value);
-                IsEnabledChanged?.Invoke(IsEnabled);
-            }
-        }
+        //StreamTODO: remove _isEnabled. Make this abstract co that derived classes map directly to RtcSession._publisherAudioTrackIsEnabled & RtcSession._publisherVideoTrackIsEnabled
+        //The IsEnabledChanged event would be triggered in reaction to RtcSession events. This way anyone can directly interact with RtcSession and the DeviceManager would reflect the same state
+        public abstract bool IsEnabled { get; protected set; }
 
         public TDeviceInfo SelectedDevice
         {
@@ -50,8 +38,6 @@ namespace StreamVideo.Core.DeviceManagers
             }
         }
 
-
-
         public void Enable() => SetEnabled(true);
 
         public void Disable() => SetEnabled(false);
@@ -64,7 +50,6 @@ namespace StreamVideo.Core.DeviceManagers
             }
 
             IsEnabled = isEnabled;
-
         }
 
         public abstract IEnumerable<TDeviceInfo> EnumerateDevices();
@@ -118,8 +103,6 @@ namespace StreamVideo.Core.DeviceManagers
         protected IInternalStreamVideoClient Client { get; }
         protected ILogs Logs { get; }
 
-        protected abstract void OnSetEnabled(bool isEnabled);
-
         protected abstract Task<bool> OnTestDeviceAsync(TDeviceInfo device, int msTimeout);
 
         protected virtual void OnUpdate()
@@ -135,6 +118,5 @@ namespace StreamVideo.Core.DeviceManagers
         }
 
         private TDeviceInfo _selectedDevice;
-        private bool _isEnabled;
     }
 }

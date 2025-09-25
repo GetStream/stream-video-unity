@@ -97,6 +97,9 @@ namespace StreamVideo.Core.LowLevelClient
                 _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
                 _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
                 _mediaInputProvider.VideoInputChanged += OnVideoInputChanged;
+                
+                _mediaInputProvider.PublisherAudioTrackIsEnabledChanged += OnPublisherAudioTrackIsEnabledChanged;
+                _mediaInputProvider.PublisherVideoTrackIsEnabledChanged += OnPublisherVideoTrackIsEnabledChanged;
             }
 
             var rtcIceServers = new List<RTCIceServer>();
@@ -127,19 +130,19 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnNegotiationNeeded += OnNegotiationNeeded;
             _peerConnection.OnConnectionStateChange += OnConnectionStateChange;
             _peerConnection.OnTrack += OnTrack;
+        }
 
+        /// <summary>
+        /// Init publisher track in a separate method so that RtcSession can subscribe to events before creating tracks
+        /// </summary>
+        public void InitPublisherTracks()
+        {
             if (_peerType == StreamPeerType.Publisher)
             {
-                if (mediaInputProvider.AudioInput != null)
-                {
-                    CreatePublisherAudioTransceiver();
-                }
-
+                ReplacePublisherAudioTrack();
+                ReplacePublisherVideoTrack();
+                
                 // StreamTodo: VideoSceneInput is not handled
-                if (mediaInputProvider.VideoInput != null)
-                {
-                    CreatePublisherVideoTransceiver();
-                }
             }
         }
 
@@ -226,6 +229,9 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
+            
+            _mediaInputProvider.PublisherAudioTrackIsEnabledChanged -= OnPublisherAudioTrackIsEnabledChanged;
+            _mediaInputProvider.PublisherVideoTrackIsEnabledChanged -= OnPublisherVideoTrackIsEnabledChanged;
 
             _peerConnection.OnIceCandidate -= OnIceCandidate;
             _peerConnection.OnIceConnectionChange -= OnIceConnectionChange;
@@ -315,17 +321,33 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void OnAudioInputChanged(AudioSource audio)
+        private void OnAudioInputChanged(AudioSource audio) => ReplacePublisherAudioTrack();
+
+        private void OnPublisherAudioTrackIsEnabledChanged(bool isEnabled)
         {
-            if (_mediaInputProvider.AudioInput == null)
+            if (isEnabled && PublisherAudioTrack == null)
+            {
+                ReplacePublisherAudioTrack();
+            }
+        }
+
+        /// <summary>
+        /// Needed to init or when device changes
+        /// </summary>
+        private void ReplacePublisherAudioTrack()
+        {
+            var isActive = _mediaInputProvider.AudioInput != null && _mediaInputProvider.PublisherAudioTrackIsEnabled;
+            if (!isActive)
             {
                 TryClearPublisherAudioTrack();
                 return;
             }
+            
+            _logs.WarningIfDebug("[Audio] Replacing publisher audio track");
 
             if (_audioTransceiver == null)
             {
-                CreatePublisherAudioTransceiver();
+                CreatePublisherAudioTransceiverAndTrack();
                 return;
             }
 
@@ -335,9 +357,23 @@ namespace StreamVideo.Core.LowLevelClient
             SetPublisherActiveAudioTrack(newAudioTrack);
         }
 
-        private void OnVideoInputChanged(WebCamTexture webCamTexture)
+        private void OnVideoInputChanged(WebCamTexture webCamTexture) => ReplacePublisherVideoTrack();
+        
+        private void OnPublisherVideoTrackIsEnabledChanged(bool isEnabled)
         {
-            if (_mediaInputProvider.VideoInput == null)
+            if (isEnabled && _publisherVideoTrack == null)
+            {
+                ReplacePublisherVideoTrack();
+            }
+        }
+
+        /// <summary>
+        /// Needed to init or when device changes
+        /// </summary>
+        private void ReplacePublisherVideoTrack()
+        {
+            var isActive = _mediaInputProvider.VideoInput != null && _mediaInputProvider.PublisherVideoTrackIsEnabled;
+            if (!isActive)
             {
                 TryClearVideoTrack();
                 return;
@@ -380,7 +416,7 @@ namespace StreamVideo.Core.LowLevelClient
             };
         }
 
-        private void CreatePublisherAudioTransceiver()
+        private void CreatePublisherAudioTransceiverAndTrack()
         {
             var audioTransceiverInit = BuildTransceiverInit(_peerType, TrackKind.Audio, _publisherVideoSettings);
             _audioTransceiver = _peerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
@@ -565,7 +601,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             var track = new VideoStreamTrack(_publisherVideoTrackTexture);
-            track.Enabled = false;
+            track.Enabled = _mediaInputProvider.PublisherVideoTrackIsEnabled;
             return track;
         }
 
@@ -579,7 +615,7 @@ namespace StreamVideo.Core.LowLevelClient
             _publisherVideoTrackTexture = new RenderTexture(1920, 1080, 0, format);
 
             var track = _mediaInputProvider.VideoSceneInput.CaptureStreamTrack(1920, 1080);
-            track.Enabled = false;
+            track.Enabled = _mediaInputProvider.PublisherVideoTrackIsEnabled;
             return track;
         }
 
@@ -592,7 +628,8 @@ namespace StreamVideo.Core.LowLevelClient
             var track = new AudioStreamTrack(_mediaInputProvider.AudioInput);
 #endif
 
-            track.Enabled = false;
+            track.Enabled = _mediaInputProvider.PublisherAudioTrackIsEnabled;
+            _logs.WarningIfDebug("[Audio] Created new AudioStreamTrack, enabled: " + track.Enabled);
             return track;
         }
 

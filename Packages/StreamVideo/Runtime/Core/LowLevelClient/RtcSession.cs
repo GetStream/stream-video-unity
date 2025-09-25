@@ -77,6 +77,46 @@ namespace StreamVideo.Core.LowLevelClient
         public const bool UseNativeAudioBindings = false;
 #endif
 
+        public event Action<bool> PublisherAudioTrackIsEnabledChanged;
+        public event Action<bool> PublisherVideoTrackIsEnabledChanged;
+
+        public event Action PublisherAudioTrackChanged;
+        public event Action PublisherVideoTrackChanged;
+        
+        
+        public bool PublisherAudioTrackIsEnabled
+        {
+            get => _publisherAudioTrackIsEnabled;
+            private set
+            {
+                if (_publisherAudioTrackIsEnabled == value)
+                {
+                    return;
+                }
+
+                _publisherAudioTrackIsEnabled = value;
+                InternalExecuteSetPublisherAudioTrackEnabled(value);
+                
+                PublisherAudioTrackIsEnabledChanged?.Invoke(value);
+            }
+        }
+
+        public bool PublisherVideoTrackIsEnabled
+        {
+            get => _publisherVideoTrackIsEnabled;
+            private set
+            {
+                if (_publisherVideoTrackIsEnabled == value)
+                {
+                    return;
+                }
+
+                _publisherVideoTrackIsEnabled = value;
+                InternalExecuteSetPublisherVideoTrackEnabled(value);
+                PublisherVideoTrackIsEnabledChanged?.Invoke(value);
+            }
+        }
+
         public CallingState CallState
         {
             get => _callState;
@@ -359,55 +399,10 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateAudioRecording();
         }
 
-        private MicrophoneDeviceInfo _activeAudioRecordingDevice;
-
-        //StreamTodo: rename to TrySetPublisherAudioTrackEnabled?
-        public void TrySetAudioTrackEnabled(bool isEnabled)
-        {
-            _publisherAudioTrackIsEnabled = isEnabled;
-            _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled isEnabled: " + isEnabled);
-            if (Publisher?.PublisherAudioTrack == null)
-            {
-                return;
-            }
-
-            if (Publisher.PublisherAudioTrack.Enabled == isEnabled)
-            {
-                //StreamTODO: solve this better. By default, the track is enabled, but we still need to call StartLocalAudioCapture so we can't return
-                //return;
-            }
-
-            //StreamTodo: investigate what this flag does internally in the webrtc package
-            Publisher.PublisherAudioTrack.Enabled = isEnabled;
-
-            UpdateAudioRecording();
-        }
-
-        private void UpdateAudioRecording()
-        {
-            if (Publisher?.PublisherAudioTrack == null || !UseNativeAudioBindings)
-            {
-                return;
-            }
-
-#if STREAM_NATIVE_AUDIO
-            var shouldRecord = _activeAudioRecordingDevice.IsValid && _publisherAudioTrackIsEnabled;
-
-            if (shouldRecord)
-            {
-                //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
-                //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
-
-                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
-                Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate, AudioInputChannels);
-            }
-            else
-            {
-                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
-                Publisher.PublisherAudioTrack.StopLocalAudioCapture();
-            }
-#endif
-        }
+        /// <summary>
+        /// Set Publisher Audio track enabled/disabled, if track is available, or store the preference for when track becomes available
+        /// </summary>
+        public void TrySetPublisherAudioTrackEnabled(bool isEnabled) => PublisherAudioTrackIsEnabled = isEnabled;
 
         public void TryRestartAudioRecording() => UpdateAudioRecording();
 
@@ -423,16 +418,10 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
         }
 
-        public void TrySetVideoTrackEnabled(bool isEnabled)
-        {
-            _publisherVideoTrackIsEnabled = isEnabled;
-            if (Publisher?.PublisherVideoTrack == null)
-            {
-                return;
-            }
-
-            Publisher.PublisherVideoTrack.Enabled = isEnabled;
-        }
+        /// <summary>
+        /// Set Publisher Video track enabled/disabled, if track is available, or store the preference for when track becomes available
+        /// </summary>
+        public void TrySetPublisherVideoTrackEnabled(bool isEnabled) => PublisherVideoTrackIsEnabled = isEnabled;
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
 
@@ -467,6 +456,8 @@ namespace StreamVideo.Core.LowLevelClient
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
         private Camera _videoSceneInput;
+        
+        private MicrophoneDeviceInfo _activeAudioRecordingDevice;
 
         private void ClearSession()
         {
@@ -639,6 +630,32 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Exception(e);
             }
         }
+        
+        private void UpdateAudioRecording()
+        {
+            if (Publisher?.PublisherAudioTrack == null || !UseNativeAudioBindings)
+            {
+                return;
+            }
+
+#if STREAM_NATIVE_AUDIO
+            var shouldRecord = _activeAudioRecordingDevice.IsValid && _publisherAudioTrackIsEnabled;
+
+            if (shouldRecord)
+            {
+                //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
+                //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
+
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
+                Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate, AudioInputChannels);
+            }
+            else
+            {
+                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
+                Publisher.PublisherAudioTrack.StopLocalAudioCapture();
+            }
+#endif
+        }
 
         private void OnSfuJoinResponse(JoinResponse joinResponse)
         {
@@ -782,12 +799,65 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (participant.IsLocalParticipant)
             {
+                //StreamTODO: most probably expose RtcSession TrackStateChanged event so that AudioDeviceManager can subscribe
+
+                switch (trackType)
+                {
+                    case TrackType.Unspecified:
+                        break;
+                    case TrackType.Audio:
+                        TrySetPublisherAudioTrackEnabled(isEnabled);
+                        break;
+                    case TrackType.Video:
+                        TrySetPublisherVideoTrackEnabled(isEnabled);
+                        break;
+                    case TrackType.ScreenShare:
+                        break;
+                    case TrackType.ScreenShareAudio:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(trackType), trackType, null);
+                }
+                
                 return;
             }
 
+            //StreamTODO: investigate what this call is doing in C++ layer
             participant.SetTrackEnabled(trackType, isEnabled);
 
             ActiveCall.NotifyTrackStateChanged(participant, trackType, isEnabled);
+        }
+        
+        private void InternalExecuteSetPublisherAudioTrackEnabled(bool isEnabled)
+        {
+            if (Publisher?.PublisherAudioTrack == null)
+            {
+                _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " + isEnabled + " -> track not available yet");
+                return;
+            }
+            
+            _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " + isEnabled);
+
+            if (Publisher.PublisherAudioTrack.Enabled == isEnabled)
+            {
+                //StreamTODO: solve this better. By default, the track is enabled, but we still need to call StartLocalAudioCapture so we can't return
+                //return;
+            }
+
+            //StreamTodo: investigate what this flag does internally in the webrtc package
+            Publisher.PublisherAudioTrack.Enabled = isEnabled;
+
+            UpdateAudioRecording();
+        }
+        
+        private void InternalExecuteSetPublisherVideoTrackEnabled(bool isEnabled)
+        {
+            if (Publisher?.PublisherVideoTrack == null)
+            {
+                return;
+            }
+
+            Publisher.PublisherVideoTrack.Enabled = isEnabled;
         }
 
         private void OnSfuParticipantJoined(ParticipantJoined participantJoined)
@@ -1292,9 +1362,12 @@ namespace StreamVideo.Core.LowLevelClient
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
+            Publisher.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
 
-            TrySetAudioTrackEnabled(_publisherAudioTrackIsEnabled);
-            TrySetVideoTrackEnabled(_publisherVideoTrackIsEnabled);
+            Publisher.InitPublisherTracks();
+
+            TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
+            TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);
         }
 
         private void DisposePublisher()
@@ -1304,23 +1377,34 @@ namespace StreamVideo.Core.LowLevelClient
                 Publisher.IceTrickled -= OnIceTrickled;
                 Publisher.NegotiationNeeded -= OnPublisherNegotiationNeeded;
                 Publisher.PublisherAudioTrackChanged -= OnPublisherAudioTrackChanged;
+                Publisher.PublisherVideoTrackChanged -= OnPublisherVideoTrackChanged;
                 Publisher.Dispose();
                 Publisher = null;
             }
         }
 
-
         private void OnPublisherAudioTrackChanged(AudioStreamTrack audioTrack)
         {
+            PublisherAudioTrackChanged?.Invoke();
+            return;
+            
             if (audioTrack == null)
             {
                 //StreamTODO: check if we should stop native recording here
                 return;
             }
+            
+            _logs.WarningIfDebug($"[Audio] OnPublisherAudioTrackChanged, audio track enabled: {audioTrack.Enabled}, PublisherAudioTrackIsEnabled: {PublisherAudioTrackIsEnabled}");
 
-            //StreamTODO: change this later UpdateAudioRecording
+            //StreamTODO: This would probably not be needed at if instead of disabling the audio track by default we would use the PublisherAudioTrackIsEnabled in StreamPeerConnection.CreatePublisherAudioTrack
             // Needed when we re-join the call and the audio capturing was already enabled
-            TrySetAudioTrackEnabled(audioTrack.Enabled);
+            //TrySetPublisherAudioTrackEnabled(PublisherAudioTrackIsEnabled);
+        }
+        
+        void OnPublisherVideoTrackChanged(VideoStreamTrack videoTrack)
+        {
+            PublisherVideoTrackChanged?.Invoke();
+            //TrySetPublisherVideoTrackEnabled(PublisherVideoTrackIsEnabled);
         }
 
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)

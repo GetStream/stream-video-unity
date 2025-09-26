@@ -24,6 +24,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
             base.OnInit();
             
             Client.AudioDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
+            Client.AudioDeviceManager.IsEnabledChanged += OnIsEnabledChanged;
         }
 
         protected override void OnParentShow()
@@ -44,11 +45,14 @@ namespace StreamVideo.ExampleProject.UI.Devices
         protected override void OnDestroying()
         {
             Client.AudioDeviceManager.SelectedDeviceChanged -= OnSelectedDeviceChanged;
+            Client.AudioDeviceManager.IsEnabledChanged -= OnIsEnabledChanged;
             
             base.OnDestroying();
         }
 
         private void OnSelectedDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice) 
             => SelectDeviceWithoutNotify(currentDevice);
+        
+        private void OnIsEnabledChanged(bool isEnabled) => UpdateDeviceState(isEnabled); //StreamTODO: add to camera media device panel
     }
 }

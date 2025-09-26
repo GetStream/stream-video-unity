@@ -113,6 +113,13 @@ namespace StreamVideo.ExampleProject.UI.Devices
         {
             
         }
+        
+        protected void UpdateDeviceState(bool isEnabled)
+        {
+            // Update UI first to reflect the change immediately
+            _deviceButton.UpdateSprite(isEnabled);
+            IsDeviceEnabled = isEnabled;
+        }
 
         private readonly List<TDevice> _devices = new List<TDevice>();
         
@@ -148,9 +155,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
         {
             var newState = !IsDeviceEnabled;
 
-            // Update UI first to reflect the change immediately
-            _deviceButton.UpdateSprite(newState);
-            IsDeviceEnabled = newState;
+            UpdateDeviceState(newState);
         }
 
         // User can add/remove devices any time so we must constantly monitor the devices list

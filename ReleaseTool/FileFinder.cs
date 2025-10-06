@@ -18,14 +18,18 @@ internal class FileFinder
     private const string SdkVersionFilename = "SdkVersionWrapper.cs";
     private const string ChangelogFilename = "CHANGELOG.md";
     private const string PackageJsonFilename = "package.json";
-    
-    private string FindChangelogFilePath(string sdkRootDirectory) => FindFile(sdkRootDirectory, ChangelogFilename, SearchOption.TopDirectoryOnly);
+
+    private static string[] PackageJsonFilenameExcludes =
+        { "Packages/StreamVideo/Runtime/Libs/io.stream.unity.webrtc/package.json" };
+
+    private string FindChangelogFilePath(string sdkRootDirectory)
+        => FindFile(sdkRootDirectory, ChangelogFilename, SearchOption.TopDirectoryOnly);
 
     private string FindVersionFilePath(string sdkRootDirectory)
     {
         // Look in the "Packages" dir only so we don't search large folders like "Library"
         var packagesDir = GetPackagesDirectoryPath(sdkRootDirectory);
-        
+
         return FindFile(packagesDir.FullName, SdkVersionFilename, SearchOption.AllDirectories);
     }
 
@@ -33,10 +37,12 @@ internal class FileFinder
     {
         var packagesDir = GetPackagesDirectoryPath(sdkRootDirectory);
 
-        return FindFile(packagesDir.FullName, PackageJsonFilename, SearchOption.AllDirectories);
+        return FindFile(packagesDir.FullName, PackageJsonFilename, SearchOption.AllDirectories,
+            PackageJsonFilenameExcludes);
     }
 
-    private string FindAssetsSamplesDirPath(string sdkRootDirectory) => Path.Combine(sdkRootDirectory, AssetsDirName, "Samples");
+    private string FindAssetsSamplesDirPath(string sdkRootDirectory)
+        => Path.Combine(sdkRootDirectory, AssetsDirName, "Samples");
 
     /// <summary>
     /// Find SDK root directory - this is where the "Assets" directory is located
@@ -60,7 +66,7 @@ internal class FileFinder
 
         return currentDirectory;
     }
-    
+
     private static DirectoryInfo GetPackagesDirectoryPath(string sdkRootDirectory)
     {
         var packagesDir = new DirectoryInfo(Path.Combine(sdkRootDirectory, PackagesDirName));
@@ -71,20 +77,33 @@ internal class FileFinder
 
         return packagesDir;
     }
-    
-    private static string FindFile(string searchRootPath, string searchFilename, SearchOption searchOption)
+
+    private static string FindFile(string searchRootPath, string searchFilename, SearchOption searchOption,
+        IEnumerable<string> excludes = null)
     {
-        var files = Directory.EnumerateFiles(searchRootPath, $"*{searchFilename}", searchOption).ToArray();
-        if (!files.Any())
+        var files = Directory.EnumerateFiles(searchRootPath, $"*{searchFilename}", searchOption);
+        var normalizedFiles = files.Select(p => p.Replace('\\', '/')).ToArray();
+
+        if (excludes != null && excludes.Any())
+        {
+            var normalizedExcludes = excludes.Select(e => e.Replace('\\', '/')).ToArray();
+            normalizedFiles = normalizedFiles.Where(file
+                    => !normalizedExcludes.Any(exclude => file.EndsWith(exclude, StringComparison.OrdinalIgnoreCase)))
+                .ToArray();
+        }
+
+        if (!normalizedFiles.Any())
         {
             throw new FileNotFoundException($"Failed to find `{searchFilename}` file in `{searchRootPath}`");
         }
 
-        if (files.Length > 1)
+        if (normalizedFiles.Length > 1)
         {
-            throw new FileNotFoundException($"Found multiple `{searchFilename}` files in `{searchRootPath}`. Expected one. Results: " + string.Join(", ", files));
+            throw new FileNotFoundException(
+                $"Found multiple `{searchFilename}` files in `{searchRootPath}`. Expected one. Results: " +
+                string.Join(", ", normalizedFiles));
         }
 
-        return files.First();
+        return normalizedFiles.First();
     }
 }

@@ -1,3 +1,7 @@
+0.8.3
+## Android improvements:
+- Enabled built-in, hardware echo cancellation capabilities. This affects modern devices with the built-in AEC module.
+
 0.8.2
 ## Added:
 - Enabled generating developer tokens. This allows generating authentication tokens inside the Unity app without needing a backend server. This is only suitable for the development phase and should not be used in production. The newly available static methods are: `StreamVideoClient.CreateDeveloperAuthToken(userId)` and `StreamVideoClient.SanitizeUserId(userName)` (for removing disallowed chars from a userId). This feature requires having the `Disable Auth Checks` flag enabled in Stream Dashboard.

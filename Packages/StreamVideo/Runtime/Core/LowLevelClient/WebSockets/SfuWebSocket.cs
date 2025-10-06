@@ -6,7 +6,6 @@ using Google.Protobuf;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.Core.Auth;
-using StreamVideo.Core.Utils;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Logs;
@@ -83,6 +82,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
         {
             //StreamTodo: validate session data
+
+            if (string.IsNullOrEmpty(_sfuToken))
+            {
+                throw new ArgumentException($"{nameof(_sfuToken)} is null or empty");
+            }
 
             _connectUserTaskSource = new TaskCompletionSource<bool>(cancellationToken);
 

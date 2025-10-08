@@ -859,13 +859,6 @@ namespace StreamVideo.Core.LowLevelClient
             
             _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " + isEnabled);
 
-            if (Publisher.PublisherAudioTrack.Enabled == isEnabled)
-            {
-                //StreamTODO: solve this better. By default, the track is enabled, but we still need to call StartLocalAudioCapture so we can't return
-                //return;
-            }
-
-            //StreamTodo: investigate what this flag does internally in the webrtc package
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
 
             UpdateMuteStateAsync(TrackType.Audio, isEnabled).LogIfFailed();

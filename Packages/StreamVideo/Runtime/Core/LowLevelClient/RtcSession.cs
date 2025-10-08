@@ -827,6 +827,27 @@ namespace StreamVideo.Core.LowLevelClient
 
             ActiveCall.NotifyTrackStateChanged(participant, trackType, isEnabled);
         }
+
+        private async Task UpdateMuteStateAsync(TrackType trackType, bool isEnabled)
+        {
+            if (ActiveCall == null)
+            {
+                return;
+            }
+          
+            await RpcCallAsync(new UpdateMuteStatesRequest
+            {
+                SessionId = SessionId,
+                MuteStates =
+                {
+                    new TrackMuteState
+                    {
+                        TrackType = trackType.ToInternalEnum(),
+                        Muted = !isEnabled
+                    }
+                }
+            }, GeneratedAPI.UpdateMuteStates, nameof(GeneratedAPI.UpdateSubscriptions));
+        }
         
         private void InternalExecuteSetPublisherAudioTrackEnabled(bool isEnabled)
         {
@@ -847,6 +868,8 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: investigate what this flag does internally in the webrtc package
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
 
+            UpdateMuteStateAsync(TrackType.Audio, isEnabled).LogIfFailed();
+
             UpdateAudioRecording();
         }
         
@@ -858,6 +881,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             Publisher.PublisherVideoTrack.Enabled = isEnabled;
+            
+            UpdateMuteStateAsync(TrackType.Video, isEnabled).LogIfFailed();
         }
 
         private void OnSfuParticipantJoined(ParticipantJoined participantJoined)

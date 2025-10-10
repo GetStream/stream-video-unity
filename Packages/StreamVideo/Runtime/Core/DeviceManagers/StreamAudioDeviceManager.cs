@@ -16,7 +16,7 @@ namespace StreamVideo.Core.DeviceManagers
     {
         //StreamTodo: user can add/remove devices, we should detect this and expose DeviceAdded, DeviceRemoved events
         
-        public override event DeviceEnabledChangeHandler IsEnabledChanged; //StreamTodo: trigger this in reaction to RtcSession events
+        public override event DeviceEnabledChangeHandler IsEnabledChanged;
 
         public override bool IsEnabled
         {

@@ -20,7 +20,7 @@ namespace StreamVideo.Core.DeviceManagers
 */
     internal class StreamVideoDeviceManager : DeviceManagerBase<CameraDeviceInfo>, IStreamVideoDeviceManager
     {
-        public override event DeviceEnabledChangeHandler IsEnabledChanged; //StreamTodo: trigger this in reaction to RtcSession events
+        public override event DeviceEnabledChangeHandler IsEnabledChanged;
 
         public override bool IsEnabled
         {
@@ -90,7 +90,7 @@ namespace StreamVideo.Core.DeviceManagers
         internal StreamVideoDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
             : base(rtcSession, client, logs)
         {
-            RtcSession.PublisherVideoTrackIsEnabledChanged += RtcSessionOnPublisherVideoTrackIsEnabledChanged;
+            RtcSession.PublisherVideoTrackIsEnabledChanged += OnPublisherVideoTrackIsEnabledChanged;
             RtcSession.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
         }
 
@@ -171,7 +171,7 @@ namespace StreamVideo.Core.DeviceManagers
 
         protected override void OnDisposing()
         {
-            RtcSession.PublisherVideoTrackIsEnabledChanged -= RtcSessionOnPublisherVideoTrackIsEnabledChanged;
+            RtcSession.PublisherVideoTrackIsEnabledChanged -= OnPublisherVideoTrackIsEnabledChanged;
             RtcSession.PublisherVideoTrackChanged -= OnPublisherVideoTrackChanged;
 
             
@@ -247,7 +247,7 @@ namespace StreamVideo.Core.DeviceManagers
             return true;
         }
         
-        private void RtcSessionOnPublisherVideoTrackIsEnabledChanged(bool isEnabled)
+        private void OnPublisherVideoTrackIsEnabledChanged(bool isEnabled)
         {
             UpdateVideoHandling();
             IsEnabledChanged?.Invoke(isEnabled);

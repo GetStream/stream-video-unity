@@ -21,6 +21,7 @@ namespace StreamVideo.ExampleProject
         public event Action CallEnded;
 
         public IStreamVideoClient Client { get; private set; }
+        public IStreamCall ActiveCall => _activeCall;
 
         public void Init()
         {
@@ -132,6 +133,26 @@ namespace StreamVideo.ExampleProject
             Client.CallEnded -= OnCallEnded;
             Client.Dispose();
             Client = null;
+        }
+        
+        protected void Update()
+        {
+            if (_activeCall == null)
+            {
+                return;
+            }
+
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                Debug.LogWarning("Call muteSelf");
+                _activeCall.MuteSelf(audio: true, video: false, screenShare: false);
+            }
+
+            if (Input.GetKeyDown(KeyCode.U))
+            {
+                Debug.LogWarning("Call MuteOthers");
+                _activeCall.MuteOthers(audio: true, video: false, screenShare: false);
+            }
         }
 
         /// <summary>

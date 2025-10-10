@@ -53,6 +53,6 @@ namespace StreamVideo.ExampleProject.UI.Devices
         private void OnSelectedDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice) 
             => SelectDeviceWithoutNotify(currentDevice);
         
-        private void OnIsEnabledChanged(bool isEnabled) => UpdateDeviceState(isEnabled); //StreamTODO: add to camera media device panel
+        private void OnIsEnabledChanged(bool isEnabled) => UpdateDeviceState(isEnabled);
     }
 }

@@ -20,6 +20,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
             UIManager = uiManager ? uiManager : throw new ArgumentNullException(nameof(uiManager));
 
             UpdateDevicesDropdown(GetDevices());
+
+            InitSelf();
             
             OnInit();
         }
@@ -59,12 +61,6 @@ namespace StreamVideo.ExampleProject.UI.Devices
         // Called by Unity
         protected void Awake()
         {
-            _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
-
-            _deviceButton.Init(_buttonOnSprite, _buttonOffSprite);
-            _deviceButton.Clicked += OnDeviceButtonClicked;
-            
-            _refreshDeviceInterval = new WaitForSeconds(0.5f);
             _refreshCoroutine = StartCoroutine(RefreshDevicesList());
         }
 
@@ -137,6 +133,16 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private Coroutine _refreshCoroutine;
         private YieldInstruction _refreshDeviceInterval;
+        
+        private void InitSelf()
+        {
+            _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
+
+            _deviceButton.Init(_buttonOnSprite, _buttonOffSprite);
+            _deviceButton.Clicked += OnDeviceButtonClicked;
+            
+            _refreshDeviceInterval = new WaitForSeconds(0.5f);
+        }
 
         private void OnDropdownValueChanged(int optionIndex)
         {

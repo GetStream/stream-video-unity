@@ -210,13 +210,11 @@ namespace StreamVideo.Core.DeviceManagers
         
         private async Task SetAudioRoutingAsync(NativeAudioDeviceManager.AudioRouting audioRoute)
         {
-            //Logs.Error("Changing device rout is not supported yet.");
-            //return;
-            
             Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name);
             NativeAudioDeviceManager.SetPreferredAudioRoute(audioRoute);
 
             // StreamTODO: fix this. The audio route change takes some time. We need a callback or polling to know when to restart the native audio playback and recording
+            // This has currently no impact because the Android implementation only exposes a single routing so it won't be changed
             await Task.Delay(500);
             Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name +
                                 " RESTARTING OBOE");

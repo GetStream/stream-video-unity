@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Utils;
@@ -224,8 +223,6 @@ namespace StreamVideo.Core.DeviceManagers
         
         private void UpdateAudioHandling()
         {
-            //StreamTodo: we should probably return if native binding is used
-            
             var isEnabled = RtcSession.PublisherAudioTrackIsEnabled && RtcSession.Publisher != null && RtcSession.Publisher.PublisherAudioTrack != null;
             if (isEnabled && SelectedDevice.IsValid && !string.Equals(SelectedDevice.Name, _recordingDeviceName, StringComparison.Ordinal))
             {
@@ -238,8 +235,6 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 TryStopRecording();
             }
-
-            //RtcSession.TrySetPublisherAudioTrackEnabled(isEnabled);
         }
 
         private void StartRecording(MicrophoneDeviceInfo device)

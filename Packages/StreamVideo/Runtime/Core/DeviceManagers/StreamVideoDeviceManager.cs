@@ -229,8 +229,6 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 _activeCamera.Stop();
             }
-            
-            //RtcSession.TrySetPublisherVideoTrackEnabled(isEnabled);
         }
 
         private static bool IsFrameBlack(IReadOnlyList<Color> frame1)

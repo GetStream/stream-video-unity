@@ -822,7 +822,6 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            //StreamTODO: investigate what this call is doing in C++ layer
             participant.SetTrackEnabled(trackType, isEnabled);
 
             ActiveCall.NotifyTrackStateChanged(participant, trackType, isEnabled);
@@ -1405,25 +1404,11 @@ namespace StreamVideo.Core.LowLevelClient
         {
             UpdateAudioRecording();
             PublisherAudioTrackChanged?.Invoke();
-            return;
-            
-            if (audioTrack == null)
-            {
-                //StreamTODO: check if we should stop native recording here
-                return;
-            }
-            
-            _logs.WarningIfDebug($"[Audio] OnPublisherAudioTrackChanged, audio track enabled: {audioTrack.Enabled}, PublisherAudioTrackIsEnabled: {PublisherAudioTrackIsEnabled}");
-
-            //StreamTODO: This would probably not be needed at if instead of disabling the audio track by default we would use the PublisherAudioTrackIsEnabled in StreamPeerConnection.CreatePublisherAudioTrack
-            // Needed when we re-join the call and the audio capturing was already enabled
-            //TrySetPublisherAudioTrackEnabled(PublisherAudioTrackIsEnabled);
         }
         
         void OnPublisherVideoTrackChanged(VideoStreamTrack videoTrack)
         {
             PublisherVideoTrackChanged?.Invoke();
-            //TrySetPublisherVideoTrackEnabled(PublisherVideoTrackIsEnabled);
         }
 
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)

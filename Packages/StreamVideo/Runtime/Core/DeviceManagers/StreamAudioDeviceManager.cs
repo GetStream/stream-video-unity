@@ -210,8 +210,8 @@ namespace StreamVideo.Core.DeviceManagers
         
         private async Task SetAudioRoutingAsync(NativeAudioDeviceManager.AudioRouting audioRoute)
         {
-            Logs.Error("Changing device rout is not supported yet.");
-            return;
+            //Logs.Error("Changing device rout is not supported yet.");
+            //return;
             
             Logs.WarningIfDebug($"{nameof(SelectedDevice)}. Setting preferred audio route to: " + SelectedDevice.Name);
             NativeAudioDeviceManager.SetPreferredAudioRoute(audioRoute);

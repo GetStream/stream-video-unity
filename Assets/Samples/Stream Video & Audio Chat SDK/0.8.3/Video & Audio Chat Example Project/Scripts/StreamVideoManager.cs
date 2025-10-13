@@ -135,26 +135,6 @@ namespace StreamVideo.ExampleProject
             Client = null;
         }
         
-        protected void Update()
-        {
-            if (_activeCall == null)
-            {
-                return;
-            }
-
-            if (Input.GetKeyDown(KeyCode.K))
-            {
-                Debug.LogWarning("Call muteSelf");
-                _activeCall.MuteSelf(audio: true, video: false, screenShare: false);
-            }
-
-            if (Input.GetKeyDown(KeyCode.U))
-            {
-                Debug.LogWarning("Call MuteOthers");
-                _activeCall.MuteOthers(audio: true, video: false, screenShare: false);
-            }
-        }
-
         /// <summary>
         /// API success response template when using Stream's Demo Credentials
         /// </summary>

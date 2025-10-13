@@ -21,6 +21,7 @@ namespace StreamVideo.ExampleProject
         public event Action CallEnded;
 
         public IStreamVideoClient Client { get; private set; }
+        public IStreamCall ActiveCall => _activeCall;
 
         public void Init()
         {
@@ -133,7 +134,7 @@ namespace StreamVideo.ExampleProject
             Client.Dispose();
             Client = null;
         }
-
+        
         /// <summary>
         /// API success response template when using Stream's Demo Credentials
         /// </summary>

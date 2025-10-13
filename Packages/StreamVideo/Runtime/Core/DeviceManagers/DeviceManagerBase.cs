@@ -17,8 +17,6 @@ namespace StreamVideo.Core.DeviceManagers
 
         public event SelectedDeviceChangeHandler<TDeviceInfo> SelectedDeviceChanged;
 
-        //StreamTODO: remove _isEnabled. Make this abstract co that derived classes map directly to RtcSession._publisherAudioTrackIsEnabled & RtcSession._publisherVideoTrackIsEnabled
-        //The IsEnabledChanged event would be triggered in reaction to RtcSession events. This way anyone can directly interact with RtcSession and the DeviceManager would reflect the same state
         public abstract bool IsEnabled { get; protected set; }
 
         public TDeviceInfo SelectedDevice

@@ -1403,6 +1403,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnPublisherAudioTrackChanged(AudioStreamTrack audioTrack)
         {
+            UpdateAudioRecording();
             PublisherAudioTrackChanged?.Invoke();
             return;
             

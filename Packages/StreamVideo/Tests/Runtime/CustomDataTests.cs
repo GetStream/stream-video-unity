@@ -21,6 +21,9 @@ namespace StreamVideo.Tests.Runtime
             var streamCall = await client.JoinRandomCallAsync();
 
             await streamCall.CustomData.SetAsync("number", 34);
+            
+            // Wait for WS event
+            await WaitForConditionAsync(() => streamCall.CustomData.ContainsKey("number"));
 
             var retrievedNumber = streamCall.CustomData.Get<int>("number");
             Assert.AreEqual(34, retrievedNumber);
@@ -49,6 +52,9 @@ namespace StreamVideo.Tests.Runtime
             var dataToSet = new Dictionary<string, object> { { "number", 34 }, { "ability", testStruct } };
 
             await streamCall.CustomData.SetManyAsync(dataToSet.Select(pair => (pair.Key, pair.Value)));
+            
+            // Wait for WS event
+            await WaitForConditionAsync(() => streamCall.CustomData.ContainsKey("number"));
 
             var retrievedNumber = streamCall.CustomData.Get<int>("number");
             var retrievedAbility = streamCall.CustomData.Get<TestAbilityStruct>("ability");
@@ -80,6 +86,10 @@ namespace StreamVideo.Tests.Runtime
             Assert.NotNull(participant);
             
             await participant.CustomData.SetAsync("position", new Vector3(1, 2, 3));
+            
+            // Wait for WS event
+            await WaitForConditionAsync(() => participant.CustomData.ContainsKey("position"));
+            
             var position = participant.CustomData.Get<Vector3>("position");
             Assert.AreEqual(new Vector3(1, 2, 3), position);
         }

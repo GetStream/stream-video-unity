@@ -20,6 +20,14 @@ namespace StreamVideo.Core.DeviceManagers
 */
     internal class StreamVideoDeviceManager : DeviceManagerBase<CameraDeviceInfo>, IStreamVideoDeviceManager
     {
+        public override event DeviceEnabledChangeHandler IsEnabledChanged;
+
+        public override bool IsEnabled
+        {
+            get => RtcSession.PublisherVideoTrackIsEnabled;
+            protected set => RtcSession.TrySetPublisherVideoTrackEnabled(value);
+        }
+        
         //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<CameraDeviceInfo> EnumerateDevices()
         {
@@ -82,22 +90,8 @@ namespace StreamVideo.Core.DeviceManagers
         internal StreamVideoDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
             : base(rtcSession, client, logs)
         {
-        }
-
-        protected override void OnSetEnabled(bool isEnabled)
-        {
-            if (isEnabled && _activeCamera != null && !_activeCamera.isPlaying)
-            {
-                _activeCamera.Play();
-                Client.SetCameraInputSource(_activeCamera);
-            }
-
-            if (!isEnabled && _activeCamera != null)
-            {
-                _activeCamera.Stop();
-            }
-            
-            RtcSession.TrySetVideoTrackEnabled(isEnabled);
+            RtcSession.PublisherVideoTrackIsEnabledChanged += OnPublisherVideoTrackIsEnabledChanged;
+            RtcSession.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
         }
 
         protected override async Task<bool> OnTestDeviceAsync(CameraDeviceInfo device, int msTimeout)
@@ -177,6 +171,10 @@ namespace StreamVideo.Core.DeviceManagers
 
         protected override void OnDisposing()
         {
+            RtcSession.PublisherVideoTrackIsEnabledChanged -= OnPublisherVideoTrackIsEnabledChanged;
+            RtcSession.PublisherVideoTrackChanged -= OnPublisherVideoTrackChanged;
+
+            
             if (_activeCamera != null)
             {
                 if (_activeCamera.isPlaying)
@@ -217,6 +215,21 @@ namespace StreamVideo.Core.DeviceManagers
 
             return true;
         }
+        
+        private void UpdateVideoHandling()
+        {
+            var isEnabled = RtcSession.PublisherVideoTrackIsEnabled;
+            if (isEnabled && _activeCamera != null && !_activeCamera.isPlaying)
+            {
+                _activeCamera.Play();
+                Client.SetCameraInputSource(_activeCamera);
+            }
+
+            if (!isEnabled && _activeCamera != null)
+            {
+                _activeCamera.Stop();
+            }
+        }
 
         private static bool IsFrameBlack(IReadOnlyList<Color> frame1)
         {
@@ -231,5 +244,13 @@ namespace StreamVideo.Core.DeviceManagers
 
             return true;
         }
+        
+        private void OnPublisherVideoTrackIsEnabledChanged(bool isEnabled)
+        {
+            UpdateVideoHandling();
+            IsEnabledChanged?.Invoke(isEnabled);
+        }
+        
+        private void OnPublisherVideoTrackChanged() => UpdateVideoHandling();
     }
 }

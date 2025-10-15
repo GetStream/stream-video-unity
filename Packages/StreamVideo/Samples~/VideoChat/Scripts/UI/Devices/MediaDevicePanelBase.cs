@@ -20,6 +20,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
             UIManager = uiManager ? uiManager : throw new ArgumentNullException(nameof(uiManager));
 
             UpdateDevicesDropdown(GetDevices());
+
+            InitSelf();
             
             OnInit();
         }
@@ -59,12 +61,6 @@ namespace StreamVideo.ExampleProject.UI.Devices
         // Called by Unity
         protected void Awake()
         {
-            _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
-
-            _deviceButton.Init(_buttonOnSprite, _buttonOffSprite);
-            _deviceButton.Clicked += OnDeviceButtonClicked;
-            
-            _refreshDeviceInterval = new WaitForSeconds(0.5f);
             _refreshCoroutine = StartCoroutine(RefreshDevicesList());
         }
 
@@ -113,6 +109,13 @@ namespace StreamVideo.ExampleProject.UI.Devices
         {
             
         }
+        
+        protected void UpdateDeviceState(bool isEnabled)
+        {
+            // Update UI first to reflect the change immediately
+            _deviceButton.UpdateSprite(isEnabled);
+            IsDeviceEnabled = isEnabled;
+        }
 
         private readonly List<TDevice> _devices = new List<TDevice>();
         
@@ -130,6 +133,16 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private Coroutine _refreshCoroutine;
         private YieldInstruction _refreshDeviceInterval;
+        
+        private void InitSelf()
+        {
+            _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
+
+            _deviceButton.Init(_buttonOnSprite, _buttonOffSprite);
+            _deviceButton.Clicked += OnDeviceButtonClicked;
+            
+            _refreshDeviceInterval = new WaitForSeconds(0.5f);
+        }
 
         private void OnDropdownValueChanged(int optionIndex)
         {
@@ -148,9 +161,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
         {
             var newState = !IsDeviceEnabled;
 
-            // Update UI first to reflect the change immediately
-            _deviceButton.UpdateSprite(newState);
-            IsDeviceEnabled = newState;
+            UpdateDeviceState(newState);
         }
 
         // User can add/remove devices any time so we must constantly monitor the devices list

@@ -73,6 +73,12 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         [SerializeField]
         private Button _noiseLvlBtn;
+        
+        [SerializeField]
+        private Button _moreBtn;
+        
+        [SerializeField]
+        private MoreOptionsWindowView _moreOptionsWindow;
 
         private IStreamCall _activeCall;
         private ParticipantView _currentDominantSpeakerView;
@@ -85,6 +91,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             _cameraPanel.Init(VideoManager.Client, UIManager);
             _microphonePanel.Init(VideoManager.Client, UIManager);
+            
+            _moreOptionsWindow.Init(VideoManager);
+            _moreBtn.onClick.AddListener(_moreOptionsWindow.Show);
 
 #if AUDIO_PROCESSING_ENABLED
             _apmToggleBtn.onClick.AddListener(OnApmToggleClicked);

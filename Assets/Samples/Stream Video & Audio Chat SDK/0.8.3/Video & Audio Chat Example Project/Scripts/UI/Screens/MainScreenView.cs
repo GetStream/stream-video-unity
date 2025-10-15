@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using StreamVideo.Core.Sfu;
 using StreamVideo.ExampleProject.UI.Devices;
 using TMPro;
 using UnityEngine;

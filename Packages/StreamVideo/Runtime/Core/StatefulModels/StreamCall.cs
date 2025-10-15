@@ -192,6 +192,11 @@ namespace StreamVideo.Core.StatefulModels
 
         public Task MuteUsersAsync(IEnumerable<string> userIds, bool audio, bool video, bool screenShare)
         {
+            if (userIds == null || !userIds.Any())
+            {
+                throw new ArgumentException($"{nameof(userIds)} argument is null or empty.");
+            }
+
             var body = new MuteUsersRequestInternalDTO
             {
                 Audio = audio,
@@ -209,6 +214,27 @@ namespace StreamVideo.Core.StatefulModels
         public Task MuteUsersAsync(IEnumerable<IStreamVideoCallParticipant> participants, bool audio, bool video,
             bool screenShare)
             => MuteUsersAsync(participants.Select(u => u.UserId), audio, video, screenShare);
+
+        public void MuteSelf(bool audio, bool video, bool screenShare)
+        {
+            var localParticipant = Participants.Single(p => p.IsLocalParticipant);
+            MuteUsersAsync(new[] { localParticipant.UserId }, audio, video, screenShare);
+        }
+
+        public void MuteOthers(bool audio, bool video, bool screenShare)
+        {
+            var localParticipant = Participants.Single(p => p.IsLocalParticipant);
+            var otherParticipants
+                = Participants.Select(p => p.UserId).Where(id => id != localParticipant.UserId).ToArray();
+
+            if (!otherParticipants.Any())
+            {
+                Logs.Warning($"`{nameof(MuteOthers)}` request ignored - no other users in a call.");
+                return;
+            }
+
+            MuteUsersAsync(otherParticipants, audio, video, screenShare);
+        }
 
         public Task BlockUserAsync(string userId) => Client.BlockUserAsync(this, userId);
 
@@ -429,7 +455,7 @@ namespace StreamVideo.Core.StatefulModels
             Transcribing = dto.Transcribing;
             Type = new StreamCallType(dto.Type);
             UpdatedAt = dto.UpdatedAt;
-            
+
             // Depends on Session.Participants so load as last
             LoadCustomData(dto.Custom);
         }
@@ -795,7 +821,7 @@ namespace StreamVideo.Core.StatefulModels
             {
                 return;
             }
-            
+
             foreach (StreamVideoCallParticipant p in Participants)
             {
                 GetOrCreateParticipantsCustomDataSection(p, out var participantCustomData);
@@ -806,18 +832,20 @@ namespace StreamVideo.Core.StatefulModels
         /// <summary>
         /// <see cref="StreamVideoCallParticipant"/> model currently doesn't support custom data, but we're creating a custom section in <see cref="StreamCall"/> custom data to use for participants.
         /// </summary>
-        private void GetOrCreateParticipantsCustomDataSection(IStreamVideoCallParticipant participant, out Dictionary<string, object> participantCustomData)
+        private void GetOrCreateParticipantsCustomDataSection(IStreamVideoCallParticipant participant,
+            out Dictionary<string, object> participantCustomData)
         {
-            if (!InternalCustomData.TryGet<Dictionary<string, Dictionary<string, object>>>(ParticipantsCustomDataPrefix, out var allParticipantsCustomData))
+            if (!InternalCustomData.TryGet<Dictionary<string, Dictionary<string, object>>>(ParticipantsCustomDataPrefix,
+                    out var allParticipantsCustomData))
             {
                 allParticipantsCustomData = new Dictionary<string, Dictionary<string, object>>();
 
                 InternalCustomData.InternalDictionary[ParticipantsCustomDataPrefix] = allParticipantsCustomData;
             }
-            
+
             // TryGet uses json conversion and hence always returns a new instance of Dictionary<string, object>
             InternalCustomData.InternalDictionary[ParticipantsCustomDataPrefix] = allParticipantsCustomData;
-            
+
             if (!allParticipantsCustomData.ContainsKey(participant.SessionId))
             {
                 allParticipantsCustomData[participant.SessionId] = new Dictionary<string, object>();

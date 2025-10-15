@@ -51,7 +51,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
 #if STREAM_DEBUG_ENABLED
                 // Ignoring some messages for causing too much noise in logs
-                var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
+                var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged", "call.session_participant_count_updated" };
                 if(!ignoredMessages.Any(decodedMessage.Contains))
                 {
                     Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);

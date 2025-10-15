@@ -373,7 +373,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             
             // Ignoring some messages for causing too much noise in logs
             var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
-            if(ignoredMessages.Any(decodedMessage.Contains))
+            if(ignoredMessages.Any(m => decodedMessage.IndexOf(m, StringComparison.OrdinalIgnoreCase) != -1))
             {
                 return;
             }

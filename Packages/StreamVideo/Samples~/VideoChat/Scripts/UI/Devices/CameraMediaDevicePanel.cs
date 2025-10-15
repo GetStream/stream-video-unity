@@ -26,8 +26,9 @@ namespace StreamVideo.ExampleProject.UI.Devices
             base.OnInit();
 
             Client.VideoDeviceManager.SelectedDeviceChanged += OnSelectedDeviceChanged;
+            Client.VideoDeviceManager.IsEnabledChanged += OnIsEnabledChanged;
         }
-        
+
         protected override void OnParentShow()
         {
             base.OnParentShow();
@@ -52,5 +53,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
         private void OnSelectedDeviceChanged(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice)
             => SelectDeviceWithoutNotify(currentDevice);
+        
+        private void OnIsEnabledChanged(bool isEnabled) => UpdateDeviceState(isEnabled);
     }
 }

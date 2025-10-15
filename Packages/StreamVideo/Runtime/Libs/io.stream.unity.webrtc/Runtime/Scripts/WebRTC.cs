@@ -898,8 +898,8 @@ namespace Unity.WebRTC
                 NativeMethods.RegisterDebugLog(null, false, nativeLoggingSeverity);
             }
         }
-        
 #if UNITY_ANDROID && !UNITY_EDITOR
+
         /// <summary>
         /// Sets the graphics sync timeout.
         /// Graphics sync timeout determines how long the graphics device will wait on the frame copy for encoding before timing out.
@@ -1112,6 +1112,7 @@ namespace Unity.WebRTC
             return GraphicsFormatUtility.GetTextureFormat(graphicsFormat);
         }
 #if UNITY_ANDROID && !UNITY_EDITOR
+
         public static void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel)
         {
             WebRTC.Context.SetAudioProcessingModule(enabled, echoCancellationEnabled, autoGainEnabled, noiseSuppressionEnabled, noiseSuppressionLevel);
@@ -1133,7 +1134,6 @@ namespace Unity.WebRTC
         }
 
 #endif
-
         class CallbackObject
         {
             public readonly IntPtr ptr;
@@ -1818,11 +1818,10 @@ namespace Unity.WebRTC
         public static extern void SetGraphicsSyncTimeout(uint nSecTimeout);
 
         [DllImport(WebRTC.Lib)]
-        public static extern void StartAudioCapture(IntPtr context, IntPtr track, int deviceId, int sampleRate, int numChannels);
+        public static extern void StartAudioCapture(IntPtr context, IntPtr track, int deviceId, int sampleRate);
 
-        //StreamTODO: add C++ method with const char* deviceId for other platforms that do not use int device ID
         [DllImport(WebRTC.Lib)]
-        public static extern void StartAudioCapture(IntPtr context, IntPtr track, [MarshalAs(UnmanagedType.LPStr)] string deviceId, int sampleRate, int numChannels);
+        public static extern void StartAudioCapture(IntPtr context, IntPtr track, [MarshalAs(UnmanagedType.LPStr)] string deviceId, int sampleRate);
 
         [DllImport(WebRTC.Lib)]
         public static extern void StopAudioCapture(IntPtr context, IntPtr track);
@@ -1839,6 +1838,7 @@ namespace Unity.WebRTC
         [DllImport(WebRTC.Lib)]
         public static extern void GetAudioProcessingModuleConfig(IntPtr context, out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel);
 #endif
+
     }
 
     internal static class VideoUpdateMethods

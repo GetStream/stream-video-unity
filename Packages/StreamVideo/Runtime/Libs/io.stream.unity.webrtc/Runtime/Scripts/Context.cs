@@ -387,14 +387,14 @@ namespace Unity.WebRTC
             NativeMethods.SetAudioProcessingModule(self, enabled, echoCancellationEnabled, autoGainEnabled, noiseSuppressionEnabled, noiseSuppressionLevel);
         }
 
-        public void StartAudioCapture(IntPtr track, int deviceId, int sampleRate, int numChannels)
+        public void StartAudioCapture(IntPtr track, int deviceId, int sampleRate)
         {
-            NativeMethods.StartAudioCapture(self, track, deviceId, sampleRate, numChannels);
+            NativeMethods.StartAudioCapture(self, track, deviceId, sampleRate);
         }
 
-        public void StartAudioCapture(IntPtr track, string deviceId, int sampleRate, int numChannels)
+        public void StartAudioCapture(IntPtr track, string deviceId, int sampleRate)
         {
-            NativeMethods.StartAudioCapture(self, track, deviceId, sampleRate, numChannels);
+            NativeMethods.StartAudioCapture(self, track, deviceId, sampleRate);
         }
 
         public void StopAudioCapture(IntPtr track)

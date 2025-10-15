@@ -64,9 +64,6 @@ namespace StreamVideo.Core.LowLevelClient
         // Some sources claim the 48kHz is the most optimal sample rate for WebRTC, other cause internal resampling
         public const int AudioInputSampleRate = 48_000;
 
-        // Recording should use single channel only. E.g. on One Plus 9 Pro, recording with 2 channels breaks the audio.
-        public const int AudioInputChannels = 1;
-
         // Some sources claim the 48kHz is the most optimal sample rate for WebRTC, other cause internal resampling
         public const int AudioOutputSampleRate = 48_000;
         public const int AudioOutputChannels = 2;
@@ -647,7 +644,7 @@ namespace StreamVideo.Core.LowLevelClient
                 //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
 
                 _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
-                Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate, AudioInputChannels);
+                Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate);
             }
             else
             {

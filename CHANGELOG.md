@@ -1,3 +1,11 @@
+0.8.4:
+
+## Android improvements:
+- Fix user muting -> previously, a muted audio track would break permanently
+- Add `call.MuteSelf(audio: true, video: false, screenShare: false))` and `call.MuteOthers(audio: true, video: false, screenShare: false)` helpers methods for easier muting of self or others' audio/video tracks
+- Optimize + reduce build size
+- Enabled built-in, hardware echo cancellation capabilities. This affects modern devices with the built-in AEC module.
+
 0.8.3
 ## Android improvements:
 - Enabled built-in, hardware echo cancellation capabilities. This affects modern devices with the built-in AEC module.

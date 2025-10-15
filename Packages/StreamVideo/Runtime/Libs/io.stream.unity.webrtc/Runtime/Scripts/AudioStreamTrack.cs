@@ -469,14 +469,15 @@ namespace Unity.WebRTC
             }
         }
 #if UNITY_ANDROID && !UNITY_EDITOR
-        public void StartLocalAudioCapture(int deviceId, int sampleRate, int numChannels)
+
+        public void StartLocalAudioCapture(int deviceId, int sampleRate)
         {
-            WebRTC.Context.StartAudioCapture(_trackSource.self, deviceId, sampleRate, numChannels);
+            WebRTC.Context.StartAudioCapture(_trackSource.self, deviceId, sampleRate);
         }
 
-        public void StartLocalAudioCapture(string deviceId, int sampleRate, int numChannels)
+        public void StartLocalAudioCapture(string deviceId, int sampleRate)
         {
-            WebRTC.Context.StartAudioCapture(_trackSource.self, deviceId, sampleRate, numChannels);
+            WebRTC.Context.StartAudioCapture(_trackSource.self, deviceId, sampleRate);
         }
 
         public void StopLocalAudioCapture()
@@ -512,7 +513,6 @@ namespace Unity.WebRTC
 
             if (self != IntPtr.Zero && !WebRTC.Context.IsNull)
             {
-                //WebRTC.Context.StopAudioCapture(self);
                 WebRTC.Table.Remove(self);
             }
             base.Dispose();

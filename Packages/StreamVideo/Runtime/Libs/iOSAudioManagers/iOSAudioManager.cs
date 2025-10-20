@@ -1,9 +1,9 @@
-using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
-public class iOSAudioManager
+namespace Libs.iOSAudioManagers
 {
+    public class IOSAudioManager
+    {
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
     private static extern IntPtr GetAudioSessionInfo();
@@ -27,18 +27,18 @@ public class iOSAudioManager
     private static extern void ConfigureAudioSessionForWebRTC();
 #endif
 
-    public enum AudioMode
-    {
-        Default,      // No voice processing
-        VoiceChat,    // AEC/AGC/NS enabled - optimized for voice
-        VideoChat     // AEC/AGC/NS enabled - optimized for video calls
-    }
+        public enum AudioMode
+        {
+            Default,      // No voice processing
+            VoiceChat,    // AEC/AGC/NS enabled - optimized for voice
+            VideoChat     // AEC/AGC/NS enabled - optimized for video calls
+        }
     
-    /// <summary>
-    /// Get current audio session configuration info
-    /// </summary>
-    public static string GetCurrentSettings()
-    {
+        /// <summary>
+        /// Get current audio session configuration info
+        /// </summary>
+        public static string GetCurrentSettings()
+        {
 #if UNITY_IOS && !UNITY_EDITOR
         try
         {
@@ -52,15 +52,15 @@ public class iOSAudioManager
             return $"Error getting audio info: {e.Message}";
         }
 #else
-        return "iOS Audio Session Info (Only available on iOS device)";
+            return "iOS Audio Session Info (Only available on iOS device)";
 #endif
-    }
+        }
     
-    /// <summary>
-    /// Get current audio routing (which speaker/mic is being used)
-    /// </summary>
-    public static string GetAudioRoute()
-    {
+        /// <summary>
+        /// Get current audio routing (which speaker/mic is being used)
+        /// </summary>
+        public static string GetAudioRoute()
+        {
 #if UNITY_IOS && !UNITY_EDITOR
         try
         {
@@ -74,28 +74,28 @@ public class iOSAudioManager
             return $"Error getting audio route: {e.Message}";
         }
 #else
-        return "Audio Route Info (Only available on iOS device)";
+            return "Audio Route Info (Only available on iOS device)";
 #endif
-    }
+        }
     
-    /// <summary>
-    /// Force audio output to loudspeaker (call this if audio goes to earpiece)
-    /// </summary>
-    public static void ForceLoudspeaker()
-    {
+        /// <summary>
+        /// Force audio output to loudspeaker (call this if audio goes to earpiece)
+        /// </summary>
+        public static void ForceLoudspeaker()
+        {
 #if UNITY_IOS && !UNITY_EDITOR
         ForceOutputToSpeaker();
         Debug.Log("🔊 Forcing audio to LOUDSPEAKER");
 #else
-        Debug.Log("Force loudspeaker (simulation, not on iOS)");
+            Debug.Log("Force loudspeaker (simulation, not on iOS)");
 #endif
-    }
+        }
     
-    /// <summary>
-    /// Set audio mode (automatically forces loudspeaker)
-    /// </summary>
-    public static void SetMode(AudioMode mode)
-    {
+        /// <summary>
+        /// Set audio mode (automatically forces loudspeaker)
+        /// </summary>
+        public static void SetMode(AudioMode mode)
+        {
 #if UNITY_IOS && !UNITY_EDITOR
         switch (mode)
         {
@@ -115,24 +115,25 @@ public class iOSAudioManager
                 break;
         }
 #else
-        Debug.Log($"iOS Audio Mode set to: {mode} (simulation, not on iOS)");
+            Debug.Log($"iOS Audio Mode set to: {mode} (simulation, not on iOS)");
 #endif
-    }
+        }
     
-    /// <summary>
-    /// Quick setup for WebRTC (uses VideoChat mode + loudspeaker)
-    /// </summary>
-    public static void ConfigureForWebRTC()
-    {
-        SetMode(AudioMode.VideoChat);
-    }
+        /// <summary>
+        /// Quick setup for WebRTC (uses VideoChat mode + loudspeaker)
+        /// </summary>
+        public static void ConfigureForWebRTC()
+        {
+            SetMode(AudioMode.VideoChat);
+        }
     
-    /// <summary>
-    /// Log current settings to console
-    /// </summary>
-    public static void LogCurrentSettings()
-    {
-        string info = GetCurrentSettings();
-        Debug.Log(info);
+        /// <summary>
+        /// Log current settings to console
+        /// </summary>
+        public static void LogCurrentSettings()
+        {
+            string info = GetCurrentSettings();
+            Debug.Log(info);
+        }
     }
 }

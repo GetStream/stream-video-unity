@@ -1,21 +1,60 @@
 #import <AVFoundation/AVFoundation.h>
 
 extern "C" {
-    // Get current audio session info
+    // Force audio to loudspeaker (bottom speaker, not earpiece)
+    void ForceOutputToSpeaker() {
+        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+        NSError *error = nil;
+        
+        // Override output to speaker
+        [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
+        
+        if (error) {
+            NSLog(@"Error forcing speaker output: %@", error);
+        } else {
+            NSLog(@"✓ Audio output forced to LOUDSPEAKER");
+        }
+    }
+    
+    // Get current audio route info
+    const char* GetAudioRouteInfo() {
+        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+        AVAudioSessionRouteDescription *route = audioSession.currentRoute;
+        
+        NSMutableString *info = [NSMutableString string];
+        [info appendString:@"=== Audio Route Info ===\n"];
+        
+        // Output info
+        [info appendString:@"OUTPUTS:\n"];
+        for (AVAudioSessionPortDescription *output in route.outputs) {
+            [info appendFormat:@"  - %@ (%@)\n", output.portName, output.portType];
+        }
+        
+        // Input info
+        [info appendString:@"INPUTS:\n"];
+        for (AVAudioSessionPortDescription *input in route.inputs) {
+            [info appendFormat:@"  - %@ (%@)\n", input.portName, input.portType];
+        }
+        
+        [info appendString:@"========================"];
+        
+        return strdup([info UTF8String]);
+    }
+    
+    // Get current audio session info (updated with route info)
     const char* GetAudioSessionInfo() {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+        AVAudioSessionRouteDescription *route = audioSession.currentRoute;
         
         NSString *category = audioSession.category;
         NSString *mode = audioSession.mode;
         AVAudioSessionCategoryOptions options = audioSession.categoryOptions;
-        BOOL isActive = audioSession.isOtherAudioPlaying; // Basic check
         
         // Build info string
         NSMutableString *info = [NSMutableString string];
         [info appendFormat:@"=== iOS Audio Session Info ===\n"];
         [info appendFormat:@"Category: %@\n", category];
         [info appendFormat:@"Mode: %@\n", mode];
-        [info appendFormat:@"Active: %@\n", audioSession.isOtherAudioPlaying ? @"YES" : @"NO"];
         
         // Parse options
         [info appendString:@"Options:\n"];
@@ -26,7 +65,7 @@ extern "C" {
         if (options & AVAudioSessionCategoryOptionAllowBluetooth)
             [info appendString:@"  - AllowBluetooth\n"];
         if (options & AVAudioSessionCategoryOptionDefaultToSpeaker)
-            [info appendString:@"  - DefaultToSpeaker\n"];
+            [info appendString:@"  - DefaultToSpeaker ✓\n"];
         if (options & AVAudioSessionCategoryOptionInterruptSpokenAudioAndMixWithOthers)
             [info appendString:@"  - InterruptSpokenAudioAndMixWithOthers\n"];
         if (options & AVAudioSessionCategoryOptionAllowBluetoothA2DP)
@@ -34,7 +73,7 @@ extern "C" {
         if (options & AVAudioSessionCategoryOptionAllowAirPlay)
             [info appendString:@"  - AllowAirPlay\n"];
         
-        // Voice processing info (AEC is enabled when using VoiceChat/VideoChat modes)
+        // Voice processing info
         BOOL voiceProcessingEnabled = NO;
         if ([mode isEqualToString:AVAudioSessionModeVoiceChat] || 
             [mode isEqualToString:AVAudioSessionModeVideoChat]) {
@@ -44,13 +83,38 @@ extern "C" {
         [info appendFormat:@"\nVoice Processing (AEC/AGC/NS): %@\n", 
             voiceProcessingEnabled ? @"ENABLED ✓" : @"DISABLED ✗"];
         
+        // Current audio route
+        [info appendString:@"\n--- Current Audio Route ---\n"];
+        [info appendString:@"OUTPUT: "];
+        if (route.outputs.count > 0) {
+            AVAudioSessionPortDescription *output = route.outputs[0];
+            [info appendFormat:@"%@ (%@)", output.portName, output.portType];
+            
+            // Highlight if using loudspeaker
+            if ([output.portType isEqualToString:AVAudioSessionPortBuiltInSpeaker]) {
+                [info appendString:@" 🔊 LOUDSPEAKER"];
+            } else if ([output.portType isEqualToString:AVAudioSessionPortBuiltInReceiver]) {
+                [info appendString:@" ⚠️ EARPIECE (not loudspeaker!)"];
+            }
+            [info appendString:@"\n"];
+        } else {
+            [info appendString:@"None\n"];
+        }
+        
+        [info appendString:@"INPUT: "];
+        if (route.inputs.count > 0) {
+            AVAudioSessionPortDescription *input = route.inputs[0];
+            [info appendFormat:@"%@ (%@)\n", input.portName, input.portType];
+        } else {
+            [info appendString:@"None\n"];
+        }
+        
         [info appendString:@"=============================="];
         
-        // Convert to C string (Unity will handle memory)
         return strdup([info UTF8String]);
     }
     
-    // Set to Default mode (minimal processing)
+    // Set to Default mode (minimal processing) + FORCE SPEAKER
     void SetAudioModeDefault() {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
@@ -69,12 +133,16 @@ extern "C" {
         [audioSession setActive:YES error:&error];
         if (error) {
             NSLog(@"Error activating audio session: %@", error);
-        } else {
-            NSLog(@"✓ Audio mode set to: Default (NO voice processing)");
+            return;
         }
+        
+        // Force speaker output
+        ForceOutputToSpeaker();
+        
+        NSLog(@"✓ Audio mode set to: Default (NO voice processing) + LOUDSPEAKER");
     }
     
-    // Set to VoiceChat mode (enables AEC/AGC/NS)
+    // Set to VoiceChat mode (enables AEC/AGC/NS) + FORCE SPEAKER
     void SetAudioModeVoiceChat() {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
@@ -93,12 +161,16 @@ extern "C" {
         [audioSession setActive:YES error:&error];
         if (error) {
             NSLog(@"Error activating audio session: %@", error);
-        } else {
-            NSLog(@"✓ Audio mode set to: VoiceChat (AEC/AGC/NS ENABLED)");
+            return;
         }
+        
+        // Force speaker output
+        ForceOutputToSpeaker();
+        
+        NSLog(@"✓ Audio mode set to: VoiceChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER");
     }
     
-    // Set to VideoChat mode (enables AEC/AGC/NS, optimized for video)
+    // Set to VideoChat mode (enables AEC/AGC/NS, optimized for video) + FORCE SPEAKER
     void SetAudioModeVideoChat() {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
@@ -117,12 +189,16 @@ extern "C" {
         [audioSession setActive:YES error:&error];
         if (error) {
             NSLog(@"Error activating audio session: %@", error);
-        } else {
-            NSLog(@"✓ Audio mode set to: VideoChat (AEC/AGC/NS ENABLED)");
+            return;
         }
+        
+        // Force speaker output
+        ForceOutputToSpeaker();
+        
+        NSLog(@"✓ Audio mode set to: VideoChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER");
     }
     
-    // Legacy function (now just calls VideoChat)
+    // Legacy function
     void ConfigureAudioSessionForWebRTC() {
         SetAudioModeVideoChat();
     }

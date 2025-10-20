@@ -66,6 +66,11 @@ namespace StreamVideo.ExampleProject
 
             Debug.Log($"Join call, create: {create}, callId: {callId}");
             await Client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
+
+            if (_playOnCallStart)
+            {
+                ToggleMusic();
+            }
         }
 
         public void EndActiveCall()
@@ -76,6 +81,7 @@ namespace StreamVideo.ExampleProject
             }
 
             _activeCall.EndAsync().LogIfFailed();
+            ToggleMusic(forceStop: true);
         }
 
         public void LeaveActiveCall()
@@ -86,6 +92,31 @@ namespace StreamVideo.ExampleProject
             }
 
             _activeCall.LeaveAsync().LogIfFailed();
+            ToggleMusic(forceStop: true);
+        }
+
+        public void ToggleMusic(bool loop = true, bool forceStop = false)
+        {
+            if (_musicClip == null)
+            {
+                throw new ArgumentNullException($"{nameof(_musicClip)} is not assigned.");
+            }
+            
+            var audioSource = gameObject.GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            if (audioSource.isPlaying || forceStop)
+            {
+                audioSource.Stop();
+                return;
+            }
+            
+            audioSource.clip = _musicClip;
+            audioSource.loop = loop;
+            audioSource.Play();
         }
 
         /// <summary>
@@ -171,6 +202,13 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private string _userToken = "";
+        
+        [Header("Background Music in a call")]
+        [SerializeField]
+        private AudioClip _musicClip = null;
+        
+        [SerializeField]
+        private bool _playOnCallStart = false;
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;

@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Libs.iOSAudioManagers;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Exceptions;
@@ -118,6 +119,23 @@ namespace StreamVideo.ExampleProject
             audioSource.loop = loop;
             audioSource.Play();
         }
+        
+        public void ToggleAudioMode()
+        {
+            _lastAudioMode = (_lastAudioMode + 1) % MaxAudioModes;
+            switch (_lastAudioMode)
+            {
+                case 0:
+                    IOSAudioManager.SetMode(IOSAudioManager.AudioMode.Default);
+                    break;
+                case 1:
+                    IOSAudioManager.SetMode(IOSAudioManager.AudioMode.VoiceChat);
+                    break;
+                case 2:
+                    IOSAudioManager.SetMode(IOSAudioManager.AudioMode.VideoChat);
+                    break;
+            }
+        }
 
         /// <summary>
         /// Read <see cref="IStreamAudioConfig.EnableDtx"/>
@@ -212,6 +230,9 @@ namespace StreamVideo.ExampleProject
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
+        
+        private int _lastAudioMode;
+        private const int MaxAudioModes = 3;
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {

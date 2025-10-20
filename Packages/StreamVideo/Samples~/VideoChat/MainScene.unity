@@ -634,6 +634,8 @@ MonoBehaviour:
   _apiKey: 
   _userId: 
   _userToken: 
+  _musicClip: {fileID: 8300000, guid: 61b7b6bf50d94a443a170d2d21ecff2e, type: 3}
+  _playOnCallStart: 0
 --- !u!4 &1354881825
 Transform:
   m_ObjectHideFlags: 0

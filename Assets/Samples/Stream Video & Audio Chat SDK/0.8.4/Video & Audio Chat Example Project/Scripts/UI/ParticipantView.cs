@@ -82,6 +82,8 @@ namespace StreamVideo.ExampleProject.UI
         /// </summary>
         private void FixVideoOrientation()
         {
+            //StreamTODO: REVERT THIS, DON"T COMMIT
+            return;
             // For remote users we have their video track -> fix rotation based on the video track rotation angle
             if (Participant != null && Participant.VideoTrack != null && Participant.VideoTrack is StreamVideoTrack streamVideoTrack)
             {

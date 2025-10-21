@@ -283,7 +283,17 @@ namespace StreamVideo.Core.DeviceManagers
 #if UNITY_IOS && !UNITY_EDITOR
             var log2 = IOSAudioManager.GetCurrentSettings();
             Debug.LogError("[Audio] iOS Audio Session Info AFTER starting microphone: " + log2);
+            ForceSpeakerAsync().LogIfFailed();
+
 #endif
+            
+        }
+
+        private async Task ForceSpeakerAsync()
+        {
+            await Task.Delay(500);
+            IOSAudioManager.ForceLoudspeaker();
+            Debug.LogError("Force speaker output");
         }
         
         private void TryStopRecording()

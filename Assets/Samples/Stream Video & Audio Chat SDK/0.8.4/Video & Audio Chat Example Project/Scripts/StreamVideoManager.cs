@@ -136,6 +136,11 @@ namespace StreamVideo.ExampleProject
                     break;
             }
         }
+        
+        public void PrintAudioConfig()
+        {
+            IOSAudioManager.LogCurrentSettings();
+        }
 
         /// <summary>
         /// Read <see cref="IStreamAudioConfig.EnableDtx"/>

@@ -18,6 +18,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _muteOthersVideoBtn.onClick.AddListener(() => _streamVideoManager.ActiveCall?.MuteOthers(audio: false, video: true, screenShare: false));
             _toggleMusicBtn.onClick.AddListener(() => _streamVideoManager.ToggleMusic());
             _toggleAudioModeBtn.onClick.AddListener(() => _streamVideoManager.ToggleAudioMode());
+            _toggleAudioModeBtn.onClick.AddListener(() => _streamVideoManager.PrintAudioConfig());
         }
         
         public void Show()
@@ -57,6 +58,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
         
         [SerializeField]
         private Button _toggleAudioModeBtn;
+        
+        [SerializeField]
+        private Button _printAudioConfigBtn;
 
         [SerializeField]
         private Button _hideBtn;

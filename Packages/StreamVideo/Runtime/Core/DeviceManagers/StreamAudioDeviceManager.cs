@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Libs.iOSAudioManagers;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.DeviceManagers;
@@ -257,6 +258,13 @@ namespace StreamVideo.Core.DeviceManagers
                 return;
             }
 
+
+            #if UNITY_IOS && !UNITY_EDITOR
+            var log = IOSAudioManager.GetCurrentSettings();
+            Debug.LogError("[Audio] iOS Audio Session Info before starting microphone: " + log);
+            IOSAudioManager.ConfigureForWebRTC();
+            #endif
+
             // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
 
             // Sample rate must probably match the one used in AudioCustomFilter (this is what's being sent to webRTC). It's currently using AudioSettings.outputSampleRate
@@ -274,6 +282,21 @@ namespace StreamVideo.Core.DeviceManagers
             }
             targetAudioSource.Play();
             Logs.WarningIfDebug("[Audio] Started recording from microphone: " + device);
+            
+#if UNITY_IOS && !UNITY_EDITOR
+            var log2 = IOSAudioManager.GetCurrentSettings();
+            Debug.LogError("[Audio] iOS Audio Session Info AFTER starting microphone: " + log2);
+            ForceSpeakerAsync().LogIfFailed();
+
+#endif
+            
+        }
+
+        private async Task ForceSpeakerAsync()
+        {
+            await Task.Delay(500);
+            IOSAudioManager.ForceLoudspeaker();
+            Debug.LogError("Force speaker output");
         }
         
         private void TryStopRecording()

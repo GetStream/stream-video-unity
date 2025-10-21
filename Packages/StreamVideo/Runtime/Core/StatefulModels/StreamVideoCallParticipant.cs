@@ -297,6 +297,9 @@ namespace StreamVideo.Core.StatefulModels
                 return;
             }
 
+            // STreamTODO: REVERT -> DONT COMMIT THIS CHANGE
+            return;
+
             var angle = Client.InternalLowLevelClient.RtcSession.VideoInput.videoRotationAngle;
             var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);
 

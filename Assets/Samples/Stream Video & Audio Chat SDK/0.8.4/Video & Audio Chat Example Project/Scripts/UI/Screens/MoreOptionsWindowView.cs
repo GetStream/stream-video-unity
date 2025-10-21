@@ -18,7 +18,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _muteOthersVideoBtn.onClick.AddListener(() => _streamVideoManager.ActiveCall?.MuteOthers(audio: false, video: true, screenShare: false));
             _toggleMusicBtn.onClick.AddListener(() => _streamVideoManager.ToggleMusic());
             _toggleAudioModeBtn.onClick.AddListener(() => _streamVideoManager.ToggleAudioMode());
-            _toggleAudioModeBtn.onClick.AddListener(() => _streamVideoManager.PrintAudioConfig());
+            _printAudioConfigBtn.onClick.AddListener(() => _streamVideoManager.PrintAudioConfig());
         }
         
         public void Show()

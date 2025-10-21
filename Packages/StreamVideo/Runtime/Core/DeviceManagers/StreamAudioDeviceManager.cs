@@ -30,7 +30,7 @@ namespace StreamVideo.Core.DeviceManagers
             foreach (var d in devices)
             {
             }
-
+#if !UNITY_IOS //StreamTODO: resolve better. Perhaps just add IOS implementation to NativeAudioDeviceManager
             if (RtcSession.UseNativeAudioBindings)
             {
                 NativeAudioDeviceManager.GetAudioInputDevices(ref _inputDevicesBuffer);
@@ -45,6 +45,7 @@ namespace StreamVideo.Core.DeviceManagers
                 }
             }
             else
+#endif
             {
                 foreach (var deviceName in Microphone.devices)
                 {
@@ -129,10 +130,12 @@ namespace StreamVideo.Core.DeviceManagers
 
             IsEnabled = enable;
 
+#if !UNITY_IOS //StreamTODO: resolve better
             if (RtcSession.UseNativeAudioBindings)
             {
                 SetAudioRoutingAsync((NativeAudioDeviceManager.AudioRouting)SelectedDevice.IntId.Value).LogIfFailed();
             }
+#endif
         }
 
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio

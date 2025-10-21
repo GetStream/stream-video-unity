@@ -35,6 +35,19 @@ namespace StreamVideo.Libs.DeviceManagers
             AudioDeviceManagerHelper.ClearBuffer(ref internalBuffer);
             AudioDeviceManagerHelper.ClearBuffer(ref result);
         
+            #if UNITY_IOS
+            var deviceIndex = 0;
+            foreach (var device in Microphone.devices)
+            {
+                var name = Microphone.devices[deviceIndex];
+                result[deviceIndex] = new NativeAudioDeviceManager.AudioDeviceInfo(deviceIndex, name);
+            }
+
+
+            return;
+            #endif
+            
+            
             var javaArray = CallStatic<AndroidJavaObject>("getAvailableAudioInputDevices");
         
             AndroidJavaArrayToStringArray(javaArray, ref internalBuffer);

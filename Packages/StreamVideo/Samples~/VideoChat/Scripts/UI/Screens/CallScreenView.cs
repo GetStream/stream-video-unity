@@ -1,4 +1,4 @@
-﻿#if UNITY_ANDROID && !UNITY_EDITOR
+﻿#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 #define AUDIO_PROCESSING_ENABLED
 #endif
 using System;

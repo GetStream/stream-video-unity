@@ -898,7 +898,7 @@ namespace Unity.WebRTC
                 NativeMethods.RegisterDebugLog(null, false, nativeLoggingSeverity);
             }
         }
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 
         /// <summary>
         /// Sets the graphics sync timeout.
@@ -1111,7 +1111,7 @@ namespace Unity.WebRTC
             var graphicsFormat = GetSupportedGraphicsFormat(type);
             return GraphicsFormatUtility.GetTextureFormat(graphicsFormat);
         }
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 
         public static void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel)
         {
@@ -1813,7 +1813,7 @@ namespace Unity.WebRTC
         [DllImport(WebRTC.Lib)]
         public static extern void FrameTransformerSendFrameToSink(IntPtr transform, IntPtr frame);
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
         [DllImport(WebRTC.Lib)]
         public static extern void SetGraphicsSyncTimeout(uint nSecTimeout);
 

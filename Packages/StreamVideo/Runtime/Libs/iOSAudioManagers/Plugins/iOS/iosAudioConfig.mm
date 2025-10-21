@@ -216,15 +216,17 @@ void ForceOutputToSpeaker() {
         NSLog(@"✓ Audio mode: Default (NO voice processing) + LOUDSPEAKER + MAX VOLUME");
     }
     
-    // Set to VoiceChat mode (enables AEC/AGC/NS) + MAXIMUM OUTPUT
+    // Set to VoiceChat mode (enables AEC/AGC/NS) + MAXIMUM OUTPUT + VOLUME BOOST
     void SetAudioModeVoiceChat() {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
         
+        // Use VoiceChat mode with MixWithOthers for better volume control during WebRTC calls
         [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
                              mode:AVAudioSessionModeVoiceChat
                           options:AVAudioSessionCategoryOptionAllowBluetooth |
-                                  AVAudioSessionCategoryOptionDefaultToSpeaker
+                                  AVAudioSessionCategoryOptionDefaultToSpeaker |
+                                  AVAudioSessionCategoryOptionMixWithOthers
                             error:&error];
         
         if (error) {
@@ -241,21 +243,35 @@ void ForceOutputToSpeaker() {
         // Force speaker output
         ForceOutputToSpeaker();
         
-        // Maximize volume
+        // Maximize volume and gain
         MaximizeAudioOutput();
         
-        NSLog(@"✓ Audio mode: VoiceChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME");
+        // Additional volume boost for WebRTC calls
+        // Try to set higher input gain if available
+        if (audioSession.isInputGainSettable) {
+            [audioSession setInputGain:1.0 error:&error];
+            if (error) {
+                NSLog(@"⚠️ Could not set input gain to max: %@", error);
+                error = nil;
+            } else {
+                NSLog(@"✓ Input gain set to maximum (1.0) for WebRTC");
+            }
+        }
+        
+        NSLog(@"✓ Audio mode: VoiceChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME + MixWithOthers");
     }
     
-    // Set to VideoChat mode (enables AEC/AGC/NS, optimized for video) + MAXIMUM OUTPUT
+    // Set to VideoChat mode (enables AEC/AGC/NS, optimized for video) + MAXIMUM OUTPUT + VOLUME BOOST
     void SetAudioModeVideoChat() {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
         
+        // Use VideoChat mode with MixWithOthers for better volume control during WebRTC calls
         [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
                              mode:AVAudioSessionModeVideoChat
                           options:AVAudioSessionCategoryOptionAllowBluetooth |
-                                  AVAudioSessionCategoryOptionDefaultToSpeaker
+                                  AVAudioSessionCategoryOptionDefaultToSpeaker |
+                                  AVAudioSessionCategoryOptionMixWithOthers
                             error:&error];
         
         if (error) {
@@ -272,10 +288,22 @@ void ForceOutputToSpeaker() {
         // Force speaker output
         ForceOutputToSpeaker();
         
-        // Maximize volume
+        // Maximize volume and gain
         MaximizeAudioOutput();
         
-        NSLog(@"✓ Audio mode: VideoChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME");
+        // Additional volume boost for WebRTC calls
+        // Try to set higher input gain if available
+        if (audioSession.isInputGainSettable) {
+            [audioSession setInputGain:1.0 error:&error];
+            if (error) {
+                NSLog(@"⚠️ Could not set input gain to max: %@", error);
+                error = nil;
+            } else {
+                NSLog(@"✓ Input gain set to maximum (1.0) for WebRTC");
+            }
+        }
+        
+        NSLog(@"✓ Audio mode: VideoChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME + MixWithOthers");
     }
     
     // Legacy function - defaults to VideoChat with max volume

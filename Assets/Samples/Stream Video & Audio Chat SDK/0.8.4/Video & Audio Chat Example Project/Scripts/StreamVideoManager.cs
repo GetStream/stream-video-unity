@@ -107,6 +107,7 @@ namespace StreamVideo.ExampleProject
             if (audioSource == null)
             {
                 audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.volume = 0.2f;
             }
 
             if (audioSource.isPlaying || forceStop)

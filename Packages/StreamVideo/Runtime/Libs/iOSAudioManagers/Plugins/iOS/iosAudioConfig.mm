@@ -176,7 +176,9 @@ void ForceOutputToSpeaker() {
             error = nil;
         }
         
-        [audioSession setPreferredIOBufferDuration:0.005 error:&error]; // 5ms
+        // Set buffer duration to 10ms for better AEC performance
+        // iOS AEC works better with slightly larger buffers (5ms was too aggressive)
+        [audioSession setPreferredIOBufferDuration:0.010 error:&error]; // 10ms
         if (error) {
             NSLog(@"⚠️ Could not set buffer duration: %@", error);
             error = nil;
@@ -221,12 +223,13 @@ void ForceOutputToSpeaker() {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
         
-        // Use VoiceChat mode with MixWithOthers for better volume control during WebRTC calls
+        // IMPORTANT: Don't use MixWithOthers - it can interfere with iOS built-in AEC
+        // The Voice Processing I/O unit needs exclusive control for echo cancellation to work
+        // Use AllowBluetoothA2DP (iOS 10.0+) instead of deprecated AllowBluetooth
         [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
                              mode:AVAudioSessionModeVoiceChat
-                          options:AVAudioSessionCategoryOptionAllowBluetooth |
-                                  AVAudioSessionCategoryOptionDefaultToSpeaker |
-                                  AVAudioSessionCategoryOptionMixWithOthers
+                          options:AVAudioSessionCategoryOptionAllowBluetoothA2DP |
+                                  AVAudioSessionCategoryOptionDefaultToSpeaker
                             error:&error];
         
         if (error) {
@@ -258,7 +261,7 @@ void ForceOutputToSpeaker() {
             }
         }
         
-        NSLog(@"✓ Audio mode: VoiceChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME + MixWithOthers");
+        NSLog(@"✓ Audio mode: VoiceChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME");
     }
     
     // Set to VideoChat mode (enables AEC/AGC/NS, optimized for video) + MAXIMUM OUTPUT + VOLUME BOOST
@@ -266,12 +269,13 @@ void ForceOutputToSpeaker() {
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
         
-        // Use VideoChat mode with MixWithOthers for better volume control during WebRTC calls
+        // IMPORTANT: Don't use MixWithOthers - it can interfere with iOS built-in AEC
+        // The Voice Processing I/O unit needs exclusive control for echo cancellation to work
+        // Use AllowBluetoothA2DP (iOS 10.0+) instead of deprecated AllowBluetooth
         [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
                              mode:AVAudioSessionModeVideoChat
-                          options:AVAudioSessionCategoryOptionAllowBluetooth |
-                                  AVAudioSessionCategoryOptionDefaultToSpeaker |
-                                  AVAudioSessionCategoryOptionMixWithOthers
+                          options:AVAudioSessionCategoryOptionAllowBluetoothA2DP |
+                                  AVAudioSessionCategoryOptionDefaultToSpeaker
                             error:&error];
         
         if (error) {
@@ -303,7 +307,7 @@ void ForceOutputToSpeaker() {
             }
         }
         
-        NSLog(@"✓ Audio mode: VideoChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME + MixWithOthers");
+        NSLog(@"✓ Audio mode: VideoChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME");
     }
     
     // Legacy function - defaults to VideoChat with max volume

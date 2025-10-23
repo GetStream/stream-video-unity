@@ -159,7 +159,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
             try
             {
                 var response = _serializer.Deserialize<TResponse>(responseContent);
-                LogRestCall(uri, endpoint, httpMethod, responseContent, success: true, logContent);
+                //LogRestCall(uri, endpoint, httpMethod, responseContent, success: true, logContent);
                 return response;
             }
             catch (Exception e)

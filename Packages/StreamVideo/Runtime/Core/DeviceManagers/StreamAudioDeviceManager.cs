@@ -252,13 +252,7 @@ namespace StreamVideo.Core.DeviceManagers
 
             //StreamTODO: We currently need this because in StreamPeerConnection ctor we check for audio source to create audio track. Refactor this dependency because we're progressively moving towards native audio handling
             var targetAudioSource = GetOrCreateTargetAudioSource();
-
             
-#if UNITY_IOS && !UNITY_EDITOR
-            var log = IOSAudioManager.GetCurrentSettings();
-            Debug.LogError("[Audio] iOS Audio Session Info before starting microphone: " + log);
-            IOSAudioManager.ConfigureForWebRTC();
-#endif
             
             if (RtcSession.UseNativeAudioBindings)
             {

@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Libs.iOSAudioManagers;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
@@ -340,6 +341,16 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 await SubscribeToTracksAsync();
+                
+#if UNITY_IOS && !UNITY_EDITOR
+            var log = IOSAudioManager.GetCurrentSettings();
+            Debug.LogError("[Audio] iOS Audio Session Info when starting call session: " + log);
+            IOSAudioManager.ConfigureForWebRTC();
+            await Task.Delay(500);
+            
+            var log2 = IOSAudioManager.GetCurrentSettings();
+            Debug.LogError("[Audio] iOS Audio Session Info when starting call session 22222: " + log2);
+#endif
 
                 if (UseNativeAudioBindings)
                 {

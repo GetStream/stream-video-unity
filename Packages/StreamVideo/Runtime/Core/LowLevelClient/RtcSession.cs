@@ -342,15 +342,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 await SubscribeToTracksAsync();
                 
-#if UNITY_IOS && !UNITY_EDITOR
-            var log = IOSAudioManager.GetCurrentSettings();
-            Debug.LogError("[Audio] iOS Audio Session Info when starting call session: " + log);
-            IOSAudioManager.ConfigureForWebRTC();
-            await Task.Delay(500);
-            
-            var log2 = IOSAudioManager.GetCurrentSettings();
-            Debug.LogError("[Audio] iOS Audio Session Info when starting call session 22222: " + log2);
-#endif
+
 
                 if (UseNativeAudioBindings)
                 {
@@ -656,6 +648,12 @@ namespace StreamVideo.Core.LowLevelClient
 
                 _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate);
+
+#if UNITY_IOS && !UNITY_EDITOR
+            var log = IOSAudioManager.GetCurrentSettings();
+            Debug.LogError("[Audio] iOS Audio Session Info when starting call session: " + log);
+            IOSAudioManager.ConfigureForWebRTC();
+#endif
             }
             else
             {

@@ -1,35 +1,65 @@
 #import <AVFoundation/AVFoundation.h>
 
+// ==================================================================================
+// iOS Audio Configuration Plugin for Unity WebRTC
+// 
+// IMPORTANT: This plugin works ALONGSIDE native player/recorder, which handles:
+//   - Audio session category & mode (VoiceChat mode for AEC)
+//   - VoiceProcessingIO audio unit setup
+//   - Sample rate and buffer duration preferences
+//
+// This plugin ONLY handles:
+//   - Speaker routing override (forces loudspeaker over earpiece)
+//   - Input gain optimization (maximizes microphone sensitivity)
+//
+// Call ConfigureAudioSessionForWebRTC() AFTER miniaudio initializes to apply
+// speaker routing and input gain optimizations WITHOUT overriding miniaudio's
+// VoiceChat mode and audio unit configuration.
+// ==================================================================================
+
 extern "C" {
     // Force audio to loudspeaker (bottom speaker, not earpiece)
+    // This does NOT change category/mode - only routing
 void ForceOutputToSpeaker() {
+    NSLog(@"🔊 [iOS Audio Plugin] ForceOutputToSpeaker() called");
+    
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
     
+    // Log current audio session state
+    NSLog(@"🔊 [iOS Audio Plugin] Current category: %@, mode: %@", audioSession.category, audioSession.mode);
+    
     // Log BEFORE
     AVAudioSessionRouteDescription *beforeRoute = audioSession.currentRoute;
-    NSLog(@"Route BEFORE override: %@", beforeRoute);
+    NSLog(@"🔊 [iOS Audio Plugin] Route BEFORE override: %@", beforeRoute);
+    if (beforeRoute.outputs.count > 0) {
+        NSLog(@"🔊 [iOS Audio Plugin]   Output port: %@", beforeRoute.outputs[0].portType);
+    }
     
-    // Override output to speaker
+    // Override output to speaker (does NOT change category or mode)
     BOOL success = [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
     
     if (error || !success) {
-        NSLog(@"❌ Error forcing speaker: success=%d, error=%@", success, error);
+        NSLog(@"❌ [iOS Audio Plugin] Error forcing speaker: success=%d, error=%@", success, error);
     } else {
-        NSLog(@"✓ overrideOutputAudioPort called");
+        NSLog(@"✅ [iOS Audio Plugin] overrideOutputAudioPort:Speaker SUCCESS");
     }
     
     // Verify AFTER with delay
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         AVAudioSessionRouteDescription *afterRoute = audioSession.currentRoute;
-        NSLog(@"Route AFTER override: %@", afterRoute);
+        NSLog(@"🔊 [iOS Audio Plugin] Route AFTER override: %@", afterRoute);
         
         if (afterRoute.outputs.count > 0) {
             AVAudioSessionPortDescription *output = afterRoute.outputs[0];
+            NSLog(@"🔊 [iOS Audio Plugin]   Output port: %@", output.portType);
+            
             if ([output.portType isEqualToString:AVAudioSessionPortBuiltInReceiver]) {
-                NSLog(@"⚠️⚠️⚠️ STILL ON EARPIECE! Speaker override FAILED!");
+                NSLog(@"⚠️⚠️⚠️ [iOS Audio Plugin] STILL ON EARPIECE! Speaker override FAILED!");
+            } else if ([output.portType isEqualToString:AVAudioSessionPortBuiltInSpeaker]) {
+                NSLog(@"✅✅✅ [iOS Audio Plugin] SUCCESS! Audio routed to LOUDSPEAKER");
             } else {
-                NSLog(@"✓ Confirmed on: %@", output.portType);
+                NSLog(@"ℹ️ [iOS Audio Plugin] Audio routed to: %@", output.portType);
             }
         }
     });
@@ -151,167 +181,160 @@ void ForceOutputToSpeaker() {
         return strdup([info UTF8String]);
     }
     
-    // Maximize output volume and gain
+    // Maximize input gain ONLY (does NOT change sample rate or buffer duration)
+    // Sample rate and buffer duration are managed by miniaudio
     void MaximizeAudioOutput() {
+        NSLog(@"🎤 [iOS Audio Plugin] MaximizeAudioOutput() called");
+        
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
         
-        // Boost input gain to maximum if possible
+        // Log current settings BEFORE changes
+        NSLog(@"🎤 [iOS Audio Plugin] Current sample rate: %.0f Hz", audioSession.sampleRate);
+        NSLog(@"🎤 [iOS Audio Plugin] Current buffer duration: %.1f ms", audioSession.IOBufferDuration * 1000.0);
+        NSLog(@"🎤 [iOS Audio Plugin] Current input gain: %.2f (%.0f%%)", 
+              audioSession.inputGain, audioSession.inputGain * 100.0);
+        
+        // ONLY set input gain - miniaudio handles sample rate and buffer duration
         if (audioSession.isInputGainSettable) {
+            float oldGain = audioSession.inputGain;
             [audioSession setInputGain:1.0 error:&error];
             if (error) {
-                NSLog(@"⚠️ Could not set input gain: %@", error);
+                NSLog(@"❌ [iOS Audio Plugin] Could not set input gain: %@", error);
                 error = nil;
             } else {
-                NSLog(@"✓ Input gain maximized to 1.0");
+                NSLog(@"✅ [iOS Audio Plugin] Input gain changed: %.2f → 1.0 (100%%)", oldGain);
             }
         } else {
-            NSLog(@"ℹ️ Input gain not settable on this device");
+            NSLog(@"ℹ️ [iOS Audio Plugin] Input gain not settable on this device");
         }
         
-        // Optimize for performance and quality
-        [audioSession setPreferredSampleRate:48000.0 error:&error];
-        if (error) {
-            NSLog(@"⚠️ Could not set sample rate: %@", error);
-            error = nil;
-        }
-        
-        // Set buffer duration to 10ms for better AEC performance
-        // iOS AEC works better with slightly larger buffers (5ms was too aggressive)
-        [audioSession setPreferredIOBufferDuration:0.010 error:&error]; // 10ms
-        if (error) {
-            NSLog(@"⚠️ Could not set buffer duration: %@", error);
-            error = nil;
-        }
-        
-        NSLog(@"✓ Audio output maximized");
+        // DO NOT change sample rate or buffer duration - miniaudio manages these
+        NSLog(@"ℹ️ [iOS Audio Plugin] Sample rate and buffer duration managed by miniaudio");
+        NSLog(@"✅ [iOS Audio Plugin] MaximizeAudioOutput() complete");
     }
     
-    // Set to Default mode (minimal processing) + MAXIMUM OUTPUT
+    // DEPRECATED: Use ConfigureAudioSessionForWebRTC() instead
+    // This function is kept for backward compatibility but does NOT change category/mode
+    // Category and mode are managed by miniaudio
     void SetAudioModeDefault() {
+        NSLog(@"⚠️ [iOS Audio Plugin] SetAudioModeDefault() called - DEPRECATED");
+        NSLog(@"⚠️ [iOS Audio Plugin] Category/mode managed by miniaudio - only setting speaker + gain");
+        
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-        NSError *error = nil;
         
-        [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
-                             mode:AVAudioSessionModeDefault
-                          options:AVAudioSessionCategoryOptionAllowBluetooth |
-                                  AVAudioSessionCategoryOptionDefaultToSpeaker
-                            error:&error];
+        // Log current state (DO NOT CHANGE category/mode)
+        NSLog(@"ℹ️ [iOS Audio Plugin] Current category: %@", audioSession.category);
+        NSLog(@"ℹ️ [iOS Audio Plugin] Current mode: %@", audioSession.mode);
+        NSLog(@"ℹ️ [iOS Audio Plugin] miniaudio has already configured category & mode");
         
-        if (error) {
-            NSLog(@"❌ Error setting Default mode: %@", error);
-            return;
-        }
-        
-        [audioSession setActive:YES error:&error];
-        if (error) {
-            NSLog(@"❌ Error activating audio session: %@", error);
-            return;
-        }
-        
-        // Force speaker output
+        // ONLY apply speaker routing and input gain
         ForceOutputToSpeaker();
-        
-        // Maximize volume
         MaximizeAudioOutput();
         
-        NSLog(@"✓ Audio mode: Default (NO voice processing) + LOUDSPEAKER + MAX VOLUME");
+        NSLog(@"✅ [iOS Audio Plugin] SetAudioModeDefault() complete (no category/mode changes)");
     }
     
-    // Set to VoiceChat mode (enables AEC/AGC/NS) + MAXIMUM OUTPUT + VOLUME BOOST
+    // DEPRECATED: Use ConfigureAudioSessionForWebRTC() instead
+    // This function is kept for backward compatibility but does NOT change category/mode
+    // Category and mode are managed by miniaudio
     void SetAudioModeVoiceChat() {
+        NSLog(@"⚠️ [iOS Audio Plugin] SetAudioModeVoiceChat() called - DEPRECATED");
+        NSLog(@"⚠️ [iOS Audio Plugin] Category/mode managed by miniaudio - only setting speaker + gain");
+        
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-        NSError *error = nil;
         
-        // IMPORTANT: Don't use MixWithOthers - it can interfere with iOS built-in AEC
-        // The Voice Processing I/O unit needs exclusive control for echo cancellation to work
-        // Use AllowBluetoothA2DP (iOS 10.0+) instead of deprecated AllowBluetooth
-        [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
-                             mode:AVAudioSessionModeVoiceChat
-                          options:AVAudioSessionCategoryOptionAllowBluetoothA2DP |
-                                  AVAudioSessionCategoryOptionDefaultToSpeaker
-                            error:&error];
+        // Log current state (DO NOT CHANGE category/mode)
+        NSLog(@"ℹ️ [iOS Audio Plugin] Current category: %@", audioSession.category);
+        NSLog(@"ℹ️ [iOS Audio Plugin] Current mode: %@", audioSession.mode);
         
-        if (error) {
-            NSLog(@"❌ Error setting VoiceChat mode: %@", error);
-            return;
+        // Verify VoiceChat mode is set (should be set by miniaudio)
+        if ([audioSession.mode isEqualToString:AVAudioSessionModeVoiceChat]) {
+            NSLog(@"✅ [iOS Audio Plugin] VoiceChat mode confirmed (set by miniaudio)");
+        } else {
+            NSLog(@"⚠️ [iOS Audio Plugin] WARNING: Mode is %@, expected VoiceChat", audioSession.mode);
+            NSLog(@"⚠️ [iOS Audio Plugin] Ensure miniaudio initialized before calling this");
         }
         
-        [audioSession setActive:YES error:&error];
-        if (error) {
-            NSLog(@"❌ Error activating audio session: %@", error);
-            return;
-        }
-        
-        // Force speaker output
+        // ONLY apply speaker routing and input gain
         ForceOutputToSpeaker();
-        
-        // Maximize volume and gain
         MaximizeAudioOutput();
         
-        // Additional volume boost for WebRTC calls
-        // Try to set higher input gain if available
+        // Set input gain again if needed
+        NSError *error = nil;
         if (audioSession.isInputGainSettable) {
             [audioSession setInputGain:1.0 error:&error];
             if (error) {
-                NSLog(@"⚠️ Could not set input gain to max: %@", error);
-                error = nil;
-            } else {
-                NSLog(@"✓ Input gain set to maximum (1.0) for WebRTC");
+                NSLog(@"⚠️ [iOS Audio Plugin] Could not set input gain: %@", error);
             }
         }
         
-        NSLog(@"✓ Audio mode: VoiceChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME");
+        NSLog(@"✅ [iOS Audio Plugin] SetAudioModeVoiceChat() complete (no category/mode changes)");
     }
     
-    // Set to VideoChat mode (enables AEC/AGC/NS, optimized for video) + MAXIMUM OUTPUT + VOLUME BOOST
+    // DEPRECATED: Use ConfigureAudioSessionForWebRTC() instead
+    // This function is kept for backward compatibility but does NOT change category/mode
+    // Category and mode are managed by miniaudio
     void SetAudioModeVideoChat() {
+        NSLog(@"⚠️ [iOS Audio Plugin] SetAudioModeVideoChat() called - DEPRECATED");
+        NSLog(@"⚠️ [iOS Audio Plugin] Category/mode managed by miniaudio - only setting gain");
+        
         AVAudioSession *audioSession = [AVAudioSession sharedInstance];
         NSError *error = nil;
         
-        // IMPORTANT: Don't use MixWithOthers - it can interfere with iOS built-in AEC
-        // The Voice Processing I/O unit needs exclusive control for echo cancellation to work
-        // Use AllowBluetoothA2DP (iOS 10.0+) instead of deprecated AllowBluetooth
-        [audioSession setCategory:AVAudioSessionCategoryPlayAndRecord
-                             mode:AVAudioSessionModeVideoChat
-                          options:AVAudioSessionCategoryOptionAllowBluetoothA2DP |
-                                  AVAudioSessionCategoryOptionDefaultToSpeaker
-                            error:&error];
+        // Log current state (DO NOT CHANGE category/mode)
+        NSLog(@"ℹ️ [iOS Audio Plugin] Current category: %@", audioSession.category);
+        NSLog(@"ℹ️ [iOS Audio Plugin] Current mode: %@", audioSession.mode);
         
-        if (error) {
-            NSLog(@"❌ Error setting VideoChat mode: %@", error);
-            return;
-        }
-        
-        [audioSession setActive:YES error:&error];
-        if (error) {
-            NSLog(@"❌ Error activating audio session: %@", error);
-            return;
-        }
-        
-        // Force speaker output
-        ForceOutputToSpeaker();
-        
-        // Maximize volume and gain
-        MaximizeAudioOutput();
-        
-        // Additional volume boost for WebRTC calls
-        // Try to set higher input gain if available
+        // ONLY set input gain (no speaker override for video chat)
         if (audioSession.isInputGainSettable) {
+            float oldGain = audioSession.inputGain;
             [audioSession setInputGain:1.0 error:&error];
             if (error) {
-                NSLog(@"⚠️ Could not set input gain to max: %@", error);
-                error = nil;
+                NSLog(@"❌ [iOS Audio Plugin] Could not set input gain: %@", error);
             } else {
-                NSLog(@"✓ Input gain set to maximum (1.0) for WebRTC");
+                NSLog(@"✅ [iOS Audio Plugin] Input gain: %.2f → 1.0", oldGain);
             }
         }
         
-        NSLog(@"✓ Audio mode: VideoChat (AEC/AGC/NS ENABLED) + LOUDSPEAKER + MAX VOLUME");
+        NSLog(@"✅ [iOS Audio Plugin] SetAudioModeVideoChat() complete (no category/mode changes)");
     }
     
-    // Legacy function - defaults to VideoChat with max volume
+    // Main configuration function - Call AFTER miniaudio initializes
+    // This does NOT override miniaudio's category/mode settings
+    // It ONLY adds speaker routing and input gain optimization
     void ConfigureAudioSessionForWebRTC() {
-        SetAudioModeVideoChat();
+        NSLog(@"🎯 [iOS Audio Plugin] ========================================");
+        NSLog(@"🎯 [iOS Audio Plugin] ConfigureAudioSessionForWebRTC() CALLED");
+        NSLog(@"🎯 [iOS Audio Plugin] ========================================");
+        
+        AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+        
+        // Log what miniaudio has configured
+        NSLog(@"🎯 [iOS Audio Plugin] Current Audio Session State:");
+        NSLog(@"🎯 [iOS Audio Plugin]   Category: %@", audioSession.category);
+        NSLog(@"🎯 [iOS Audio Plugin]   Mode: %@", audioSession.mode);
+        NSLog(@"🎯 [iOS Audio Plugin]   Sample Rate: %.0f Hz", audioSession.sampleRate);
+        NSLog(@"🎯 [iOS Audio Plugin]   Buffer Duration: %.1f ms", audioSession.IOBufferDuration * 1000.0);
+        
+        // Check if VoiceChat mode is active (should be set by miniaudio)
+        BOOL voiceChatEnabled = [audioSession.mode isEqualToString:AVAudioSessionModeVoiceChat];
+        if (voiceChatEnabled) {
+            NSLog(@"✅ [iOS Audio Plugin] VoiceChat mode ACTIVE - Hardware AEC enabled by miniaudio");
+        } else {
+            NSLog(@"⚠️⚠️⚠️ [iOS Audio Plugin] WARNING: VoiceChat mode NOT active!");
+            NSLog(@"⚠️ [iOS Audio Plugin] Current mode: %@", audioSession.mode);
+            NSLog(@"⚠️ [iOS Audio Plugin] Hardware AEC may not work!");
+        }
+        
+        NSLog(@"🎯 [iOS Audio Plugin] Applying WebRTC optimizations...");
+        
+        // Apply our optimizations (speaker + gain only)
+        ForceOutputToSpeaker();
+        MaximizeAudioOutput();
+        
+        NSLog(@"🎯 [iOS Audio Plugin] ========================================");
+        NSLog(@"🎯 [iOS Audio Plugin] ConfigureAudioSessionForWebRTC() COMPLETE");
+        NSLog(@"🎯 [iOS Audio Plugin] ========================================");
     }
 }

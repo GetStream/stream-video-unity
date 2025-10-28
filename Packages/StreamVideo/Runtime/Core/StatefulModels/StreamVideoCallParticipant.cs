@@ -287,7 +287,8 @@ namespace StreamVideo.Core.StatefulModels
         private void UploadLocalParticipantPublishedVideoRotationAngle()
         {
             if (Client.InternalLowLevelClient.RtcSession == null ||
-                Client.InternalLowLevelClient.RtcSession.VideoInput == null)
+                Client.InternalLowLevelClient.RtcSession.VideoInput == null ||
+                !Client.InternalLowLevelClient.RtcSession.VideoInput.isPlaying)
             {
                 return;
             }
@@ -296,9 +297,6 @@ namespace StreamVideo.Core.StatefulModels
             {
                 return;
             }
-
-            // STreamTODO: REVERT -> DONT COMMIT THIS CHANGE
-            return;
 
             var angle = Client.InternalLowLevelClient.RtcSession.VideoInput.videoRotationAngle;
             var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);

@@ -411,6 +411,11 @@ namespace Unity.WebRTC
         {
             NativeMethods.StopAudioPlayback(self);
         }
+
+        public void ProcessUnityListenerAudioOutput(float[] audioData, int samples, int channels)
+        {
+            NativeMethods.ProcessUnityListenerAudioOutput(self, audioData, samples, channels);
+        }
 #endif
 
         internal void BatchUpdate(IntPtr batchData)

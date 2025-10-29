@@ -1133,6 +1133,10 @@ namespace Unity.WebRTC
             Context.StopAudioPlayback();
         }
 
+        public static void ProcessUnityListenerAudioOutput(float[] audioData, int samples, int channels)
+        {
+            Context.ProcessUnityListenerAudioOutput(audioData, samples, channels);
+        }
 #endif
         class CallbackObject
         {
@@ -1837,6 +1841,9 @@ namespace Unity.WebRTC
 
         [DllImport(WebRTC.Lib)]
         public static extern void GetAudioProcessingModuleConfig(IntPtr context, out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel);
+
+        [DllImport(WebRTC.Lib)]
+        public static extern void ProcessUnityListenerAudioOutput(IntPtr context, float[] audioData, int samples, int channels);
 #endif
 
     }

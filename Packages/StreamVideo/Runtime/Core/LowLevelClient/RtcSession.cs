@@ -572,15 +572,36 @@ namespace StreamVideo.Core.LowLevelClient
 
                 foreach (var trackType in trackTypes)
                 {
+                    //StreamTODO: UserId is sometimes null here
+                    //This was before changing the IUpdateableFrom<CallParticipantResponseInternalDTO, StreamVideoCallParticipant>.UpdateFromDto
+                    //to extract UserId from User obj
+                    
                     yield return new TrackSubscriptionDetails
                     {
-                        UserId = participant.UserId,
+                        UserId = GetUserId(participant),
                         SessionId = participant.SessionId,
                         TrackType = trackType,
                         Dimension = requestedVideoResolution.ToVideoDimension()
                     };
                 }
             }
+        }
+
+        //StreamTodo: remove this, this is a workaround to Null UserId error
+        private string GetUserId(IStreamVideoCallParticipant participant)
+        {
+            if (!string.IsNullOrEmpty(participant.UserId))
+            {
+                return participant.UserId;
+            }
+
+            if (participant.User == null || string.IsNullOrEmpty(participant.User.Id))
+            {
+                throw new Exception(
+                    $"Both {nameof(IStreamVideoCallParticipant.UserId)} and {nameof(IStreamVideoCallParticipant.User)} ID are null or empty. No way to get the user ID");
+            }
+
+            return participant.User.Id;
         }
 
         private VideoResolution GetRequestedVideoResolution(IStreamVideoCallParticipant participant)

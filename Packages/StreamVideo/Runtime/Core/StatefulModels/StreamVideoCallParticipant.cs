@@ -142,6 +142,18 @@ namespace StreamVideo.Core.StatefulModels
             Role = dto.Role;
             User = cache.TryCreateOrUpdate(dto.User);
             UserSessionId = dto.UserSessionId;
+
+            if (string.IsNullOrEmpty(UserId) && User != null)
+            {
+                UserId = User.Id;
+            }
+            
+            //StreamTodo: investigate why we either update UserId or User object
+            //Depending on the update source we'll end up with one being empty
+            //We can take UserId from user obj, but we can't easily get User obj give UserId in dto
+            //Ideally, we'd only expose the User object -> check if this is possible
+            
+            //StreamTodo: verify if we're using every piece of data received from API/SFU responses to update this object
         }
 
         internal void LoadCustomDataFromOwningCallCustomData(Dictionary<string, object> participantCustomData)

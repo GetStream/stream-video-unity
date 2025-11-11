@@ -1,3 +1,7 @@
+0.8.5:
+
+- Fix `ArgumentNullException: Value cannot be null. Parameter name: value in UserId` exception when building `TrackSubscriptionDetails`
+
 0.8.4:
 
 ## Android improvements:

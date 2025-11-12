@@ -34,13 +34,30 @@ using Cache = StreamVideo.Core.State.Caches.Cache;
 
 namespace StreamVideo.Core
 {
+    public enum DisconnectReason
+    {
+        /// <summary>
+        /// SFU server disconnected
+        /// </summary>
+        SfuWsDisconnected,
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        CoordinatorWsDisconnected,
+    }
+    
     public delegate void CallHandler(IStreamCall call);
 
     public delegate void ConnectHandler(IStreamVideoUser localUser);
+    
+    public delegate void DisconnectedHandler(DisconnectReason reason);
 
     public class StreamVideoClient : IStreamVideoClient, IInternalStreamVideoClient
     {
         public event ConnectHandler Connected;
+
+        public event DisconnectedHandler Disconnected;
 
         public event CallHandler CallStarted;
 
@@ -82,7 +99,7 @@ namespace StreamVideo.Core
 
             return client;
         }
-        
+
         /// <inheritdoc cref="StreamVideoLowLevelClient.CreateDeveloperAuthToken"/>
         public static string CreateDeveloperAuthToken(string userId)
             => StreamVideoLowLevelClient.CreateDeveloperAuthToken(userId);
@@ -192,6 +209,11 @@ namespace StreamVideo.Core
         public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials)
         {
             await InternalLowLevelClient.ConnectUserAsync(credentials);
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning("StreamVideoClient - CONNECTION - Trigger Connected event.");
+#endif
+
             Connected?.Invoke(LocalUser);
             return LocalUser;
         }
@@ -463,7 +485,8 @@ namespace StreamVideo.Core
 #if UNITY_IOS || UNITY_ANDROID
             _logsCollector.Enable();
 #endif
-            _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer).CreateTrelloReporter();
+            _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer)
+                .CreateTrelloReporter();
 #endif
         }
 
@@ -496,6 +519,9 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCustomVideoEvent += OnInternalCustomVideoEvent;
 
             lowLevelClient.Connected += InternalLowLevelClientOnConnected;
+            
+            lowLevelClient.Disconnected += OnLowLevelClientDisconnected;
+            lowLevelClient.SfuDisconnected += OnLowLevelClientSfuDisconnected;
         }
 
         private void UnsubscribeFrom(StreamVideoLowLevelClient lowLevelClient)
@@ -527,6 +553,9 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCustomVideoEvent -= OnInternalCustomVideoEvent;
 
             lowLevelClient.Connected -= InternalLowLevelClientOnConnected;
+            
+            lowLevelClient.Disconnected -= OnLowLevelClientDisconnected;
+            lowLevelClient.SfuDisconnected -= OnLowLevelClientSfuDisconnected;
         }
 
         private void InternalLowLevelClientOnConnected()
@@ -742,6 +771,10 @@ namespace StreamVideo.Core
 
             activeCall.NotifyCallEventReceived(callEvent);
         }
+        
+        private void OnLowLevelClientSfuDisconnected() => Disconnected?.Invoke(DisconnectReason.SfuWsDisconnected);
+
+        private void OnLowLevelClientDisconnected() => Disconnected?.Invoke(DisconnectReason.CoordinatorWsDisconnected);
 
         private bool AssertCidMatch(string cidA, string cidB)
         {

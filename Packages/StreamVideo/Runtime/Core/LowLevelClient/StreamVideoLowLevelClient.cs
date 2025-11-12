@@ -44,6 +44,7 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: investigate if this is needed. Check BasePersistentWebSocket and TaskScheduler
         //public event Action Reconnecting;
         public event Action Disconnected;
+        public event Action SfuDisconnected;
         public event ConnectionStateChangeHandler ConnectionStateChanged;
 
         //StreamTodo: review exposed state, we should probably take into account that coordinator is only 1 of the things we connect to
@@ -148,15 +149,16 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: move to factory
             _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, authProvider: this,
                 _requestUriFactory, _serializer, _timeService, _logs);
-            var sfuWebSocketWrapper = new SfuWebSocket(sfuWebSocket, sfuReconnect, authProvider: this,
+            _sfuWebSocketWrapper = new SfuWebSocket(sfuWebSocket, sfuReconnect, authProvider: this,
                 _requestUriFactory, _serializer, _timeService, _logs, _applicationInfo, SDKVersion);
 
             _coordinatorWS.ConnectionStateChanged += OnCoordinatorConnectionStateChanged;
+            _sfuWebSocketWrapper.ConnectionStateChanged += OnSfuWebSocketConnectionStateChanged;
 
             InternalVideoClientApi = new InternalVideoClientApi(httpClient, serializer, logs, _requestUriFactory,
                 lowLevelClient: this);
 
-            RtcSession = new RtcSession(sfuWebSocketWrapper, CreateSessionHttpClient, _logs, _serializer, _timeService,
+            RtcSession = new RtcSession(_sfuWebSocketWrapper, CreateSessionHttpClient, _logs, _serializer, _timeService,
                 _config);
 
             RegisterCoordinatorEventHandlers();
@@ -242,6 +244,12 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.ConnectionStateChanged -= OnCoordinatorConnectionStateChanged;
             _coordinatorWS.Dispose();
 
+            if (_sfuWebSocketWrapper != null)
+            {
+                _sfuWebSocketWrapper.ConnectionStateChanged -= OnSfuWebSocketConnectionStateChanged;
+                _sfuWebSocketWrapper = null;
+            }
+
             _updateMonitorCts.Cancel();
 
             if (RtcSession != null)
@@ -322,9 +330,13 @@ namespace StreamVideo.Core.LowLevelClient
         private ITokenProvider _tokenProvider;
 
         private string _locationHint;
+        private SfuWebSocket _sfuWebSocketWrapper;
 
         private void OnCoordinatorConnectionStateChanged(ConnectionState previous, ConnectionState current)
         {
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"Coordinator WS - CONNECTION CHANGED - FROM: {previous} TO: {current}.");
+#endif
             if (current == ConnectionState.Connected)
             {
                 _connectionId = _coordinatorWS.ConnectionId;
@@ -335,6 +347,17 @@ namespace StreamVideo.Core.LowLevelClient
             if (current == ConnectionState.Disconnected)
             {
                 Disconnected?.Invoke();
+            }
+        }
+        
+        private void OnSfuWebSocketConnectionStateChanged(ConnectionState previous, ConnectionState current)
+        {
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"SFU WS - CONNECTION CHANGED - FROM: {previous} TO: {current}.");
+#endif
+            if (current == ConnectionState.Disconnected)
+            {
+                SfuDisconnected?.Invoke();
             }
         }
 

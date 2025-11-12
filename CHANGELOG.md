@@ -1,3 +1,11 @@
+0.8.6:
+
+## Improvements:
+- Optimized video track
+- Fixed clearing participants tracks allocations
+- Improve participant leaving the call detection -> other users will be immediately notified if the leaving user left gracefuly
+- Fix Android crash in the C++ layer when the AudioTrackSinkAdapter destructor is called
+
 0.8.5:
 
 - Fix `ArgumentNullException: Value cannot be null. Parameter name: value in UserId` exception when building `TrackSubscriptionDetails`

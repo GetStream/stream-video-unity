@@ -63,6 +63,31 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 #endif
         }
 
+        public void SendLeaveCallRequest(string reason = "")
+        {
+            if (string.IsNullOrEmpty(_sessionId))
+            {
+                throw new ArgumentException($"{nameof(_sessionId)} is null or empty.");
+            }
+
+            if (reason == null)
+            {
+                throw new ArgumentException($"{nameof(reason)} is null.");
+            }
+            
+            var sfuRequest = new SfuRequest
+            {
+                LeaveCallRequest = new LeaveCallRequest
+                {
+                    SessionId = _sessionId,
+                    Reason = reason
+                }
+            };
+
+            var sfuRequestByteArray = sfuRequest.ToByteArray();
+            WebsocketClient.Send(sfuRequestByteArray);
+        }
+
         protected override string LogsPrefix { get; set; } = "[SFU WS]";
 
         protected override int HealthCheckMaxWaitingTime => 30;

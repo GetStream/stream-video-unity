@@ -369,6 +369,11 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
             }
 
+            if (ActiveCall != null)
+            {
+                _sfuWebSocket.SendLeaveCallRequest();
+            }
+
             ClearSession();
             //StreamTodo: check with js definition of "offline" 
             CallState = CallingState.Offline;

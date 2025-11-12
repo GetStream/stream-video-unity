@@ -166,7 +166,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             if (!EventHandlers.TryGetValue(type, out var handler))
             {
 #if STREAM_DEBUG_ENABLED
-                Logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
+                var ignoreTypes = new[] { "call.session_participant_count_updated" };
+                if (!ignoreTypes.Any(type.Contains))
+                {
+                    Logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
+                }
 #endif
                 return;
             }

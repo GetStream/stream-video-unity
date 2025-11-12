@@ -75,6 +75,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 throw new ArgumentException($"{nameof(reason)} is null.");
             }
             
+#if STREAM_DEBUG_ENABLED
+            Logs.Info($"[SFU WS] Send {nameof(LeaveCallRequest)}: sessionId: {_sessionId}, reason: {reason}");
+#endif
+            
             var sfuRequest = new SfuRequest
             {
                 LeaveCallRequest = new LeaveCallRequest

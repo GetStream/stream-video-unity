@@ -218,14 +218,19 @@ namespace StreamVideo.Core.DeviceManagers
         
         private void UpdateVideoHandling()
         {
+            if (_activeCamera == null)
+            {
+                return;
+            }
+            
             var isEnabled = RtcSession.PublisherVideoTrackIsEnabled;
-            if (isEnabled && _activeCamera != null && !_activeCamera.isPlaying)
+            if (isEnabled && !_activeCamera.isPlaying)
             {
                 _activeCamera.Play();
                 Client.SetCameraInputSource(_activeCamera);
             }
 
-            if (!isEnabled && _activeCamera != null)
+            if (!isEnabled)
             {
                 _activeCamera.Stop();
             }

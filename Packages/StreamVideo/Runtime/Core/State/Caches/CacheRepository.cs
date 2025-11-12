@@ -97,6 +97,11 @@ namespace StreamVideo.Core.State.Caches
 
             //StreamTodo: we could notify object that its being removed, perhaps IDIsposable?
             //This way object can release some memory before object is GCed
+            
+            if(trackedObject is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
 
             _statefulModels.Remove(trackedObject);
             _statefulModelById.Remove(trackedObject.UniqueId);

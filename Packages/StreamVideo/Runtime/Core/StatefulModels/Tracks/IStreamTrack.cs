@@ -1,6 +1,8 @@
-﻿namespace StreamVideo.Core.StatefulModels.Tracks
+﻿using System;
+
+namespace StreamVideo.Core.StatefulModels.Tracks
 {
-    public interface IStreamTrack
+    public interface IStreamTrack : IDisposable
     {
         /// <summary>
         /// Event triggered when the enabled state changes

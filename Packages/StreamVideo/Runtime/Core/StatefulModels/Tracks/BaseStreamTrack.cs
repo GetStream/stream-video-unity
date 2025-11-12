@@ -11,6 +11,8 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         
         public bool IsEnabled => InternalTrack.Enabled;
 
+        public void Dispose() => OnDisposing();
+
         internal BaseStreamTrack(MediaStreamTrack track)
         {
             InternalTrack = track ?? throw new ArgumentNullException(nameof(track));
@@ -27,6 +29,11 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         }
 
         protected MediaStreamTrack InternalTrack { get; set; }
+
+        protected virtual void OnDisposing()
+        {
+            
+        }
     }
 
     public abstract class BaseStreamTrack<TTrack> : BaseStreamTrack

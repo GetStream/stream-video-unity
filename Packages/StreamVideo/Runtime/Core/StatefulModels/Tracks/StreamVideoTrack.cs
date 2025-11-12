@@ -28,6 +28,17 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         public StreamVideoTrack(MediaStreamTrack track)
             : base(track)
         {
+            Track.OnVideoReceived += OnVideoReceived;
+        }
+
+        private void OnVideoReceived(Texture renderer)
+        {
+            if (_targetImage == null)
+            {
+                return;
+            }
+            
+            _targetImage.texture = renderer;
         }
 
         //StreamTodo: can we remove Unity dependency? 
@@ -40,61 +51,24 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 
             _targetImage = targetImage;
         }
-        
-        internal RenderTexture TargetTexture => _targetTexture;
 
-        internal override void Update()
+        protected override void OnDisposing()
         {
-            base.Update();
-
-            CopyTextureFromTrackSourceToTargetTexture();
-        }
-
-        private RenderTexture _targetTexture;
-        private RawImage _targetImage;
-        private int _videoRotationAngle;
-
-        private void CopyTextureFromTrackSourceToTargetTexture()
-        {
-            if (_targetImage == null || Track == null || Track.Texture == null)
+#if STREAM_DEBUG_ENABLED
+            UnityEngine.Debug.LogWarning("[Participant] Video track disposed.");
+#endif
+            if (Track != null)
             {
-                return;
+                Track.OnVideoReceived -= OnVideoReceived;
             }
             
-            var source = Track.Texture;
-
-            if (_targetTexture == null)
-            {
-                _targetTexture = new RenderTexture(source.width, source.height, 0, RenderTextureFormat.Default);
-                _targetImage.texture = _targetTexture;
-            }
-
-            var sizeRatio = (float)source.width / source.height;
-
-            var sizeChanged = source.width != _targetTexture.width || source.height != _targetTexture.height;
-            if (sizeChanged)
-            {
-#if STREAM_DEBUG_ENABLED
-                Debug.LogWarning(
-                $"Size changed from {_targetTexture.width}:{_targetTexture.height} to {source.width}:{source.height}");
-#endif
-
-                _targetTexture.Release();
-                _targetTexture.width = source.width;
-                _targetTexture.height = source.height;
-                _targetTexture.Create();
-            }
-
-            //StreamTodo: debug this size, it can get to negative values
-            var rect = _targetImage.GetComponent<RectTransform>();
-            var current = rect.sizeDelta;
-            rect.sizeDelta = new Vector2(current.x, current.x * (1 / sizeRatio));
-
-            //StreamTodo: PERFORMANCE investigate if copying texture is really necessary. Perhaps we can just use the texture from the VideoStreamTrack. Test cross-platform
-
-            //StreamTodo: use CopyTexture if available on this GPU
-            Graphics.Blit(source, _targetTexture);
-            _targetTexture.IncrementUpdateCount();
+            base.OnDisposing();
         }
+        
+        //StreamTodo: remove
+        internal RenderTexture TargetTexture => throw new NotSupportedException("This property is deprecated");
+
+        private RawImage _targetImage;
+        private int _videoRotationAngle;
     }
 }

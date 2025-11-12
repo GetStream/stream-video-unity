@@ -55,7 +55,8 @@ namespace StreamVideo.Core.StatefulModels
             get => _userSessionId;
             private set
             {
-                Logs.WarningIfDebug($"UserSessionId set to: {value} for participant: {UserId} and Session ID: {SessionId}");
+                Logs.WarningIfDebug(
+                    $"UserSessionId set to: {value} for participant: {UserId} and Session ID: {SessionId}");
                 _userSessionId = value;
 
                 if (string.IsNullOrEmpty(SessionId))
@@ -119,6 +120,18 @@ namespace StreamVideo.Core.StatefulModels
         public override string ToString()
             => $"{nameof(StreamVideoCallParticipant)} with User ID: {UserId} & Session ID: {SessionId}";
 
+        void IDisposable.Dispose()
+        {
+#if STREAM_DEBUG_ENABLED
+            Logs.Warning("[Participant] Disposing participant with Session ID: " + SessionId);
+#endif
+
+            _audioTrack?.Dispose();
+            _videoTrack?.Dispose();
+            _screenShareTrack?.Dispose();
+            _screenShareAudioTrack?.Dispose();
+        }
+
         //StreamTodo: perhaps distinguish to UpdateFromSfu interface
         void IUpdateableFrom<Participant, StreamVideoCallParticipant>.UpdateFromDto(Participant dto, ICache cache)
         {
@@ -147,12 +160,12 @@ namespace StreamVideo.Core.StatefulModels
             {
                 UserId = User.Id;
             }
-            
+
             //StreamTodo: investigate why we either update UserId or User object
             //Depending on the update source we'll end up with one being empty
             //We can take UserId from user obj, but we can't easily get User obj give UserId in dto
             //Ideally, we'd only expose the User object -> check if this is possible
-            
+
             //StreamTodo: verify if we're using every piece of data received from API/SFU responses to update this object
         }
 
@@ -244,7 +257,7 @@ namespace StreamVideo.Core.StatefulModels
             Logs.Warning(
                 $"[Participant] Local: {IsLocalParticipant}, Session ID: {SessionId} set track enabled of type {type} to {enabled}");
 #endif
-            
+
             streamTrack.SetEnabled(enabled);
 
             //StreamTodo: we should trigger some event that track status changed

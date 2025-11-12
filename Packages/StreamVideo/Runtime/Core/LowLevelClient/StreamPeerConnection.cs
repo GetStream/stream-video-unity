@@ -221,11 +221,6 @@ namespace StreamVideo.Core.LowLevelClient
             }
 #endif
 
-            PublisherAudioTrack?.Stop();
-            PublisherVideoTrack?.Stop();
-            PublisherAudioTrack = null;
-            PublisherVideoTrack = null;
-
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
@@ -239,6 +234,11 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnNegotiationNeeded -= OnNegotiationNeeded;
             _peerConnection.OnConnectionStateChange -= OnConnectionStateChange;
             _peerConnection.OnTrack -= OnTrack;
+            
+            PublisherAudioTrack?.Stop();
+            PublisherVideoTrack?.Stop();
+            PublisherAudioTrack = null;
+            PublisherVideoTrack = null;
 
             _peerConnection.Close();
 

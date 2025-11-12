@@ -19,6 +19,11 @@ namespace StreamVideo.Core
         /// Called when client is connected. Returns local user object of type <see cref="IStreamVideoUser"/>
         /// </summary>
         event ConnectHandler Connected;
+        
+        /// <summary>
+        /// Called when client is disconnected. Contains the <see cref="DisconnectReason"/> for the disconnection.
+        /// </summary>
+        event DisconnectedHandler Disconnected;
 
         /// <summary>
         /// Event fired when a call started.

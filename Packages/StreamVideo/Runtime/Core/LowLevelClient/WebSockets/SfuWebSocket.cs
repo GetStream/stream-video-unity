@@ -40,6 +40,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action<ParticipantUpdated> ParticipantUpdated;
         public event Action ParticipantMigrationComplete;
         public event Action<ChangePublishOptions> ChangePublishOptions;
+        
+        public int QueuedMessagesCount => WebsocketClient.QueuedMessagesCount;
 
         public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,
@@ -61,6 +63,35 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 #if STREAM_DEBUG_ENABLED
             Logs.Info($"[SFU WS] SetSessionData: sessionId: {_sessionId}, sdpOffer: {_sdpOffer}, sfuUrl: {_sfuUrl}, sfuToken: {_sfuToken}");
 #endif
+        }
+
+        public void SendLeaveCallRequest(string reason = "")
+        {
+            if (string.IsNullOrEmpty(_sessionId))
+            {
+                throw new ArgumentException($"{nameof(_sessionId)} is null or empty.");
+            }
+
+            if (reason == null)
+            {
+                throw new ArgumentException($"{nameof(reason)} is null.");
+            }
+            
+#if STREAM_DEBUG_ENABLED
+            Logs.Info($"[SFU WS] Send {nameof(LeaveCallRequest)}: sessionId: {_sessionId}, reason: {reason}");
+#endif
+            
+            var sfuRequest = new SfuRequest
+            {
+                LeaveCallRequest = new LeaveCallRequest
+                {
+                    SessionId = _sessionId,
+                    Reason = reason
+                }
+            };
+
+            var sfuRequestByteArray = sfuRequest.ToByteArray();
+            WebsocketClient.Send(sfuRequestByteArray);
         }
 
         protected override string LogsPrefix { get; set; } = "[SFU WS]";
@@ -162,7 +193,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
 
 #if STREAM_DEBUG_ENABLED
-                DebugLogEvent(sfuEvent, msg);
+                DebugLogEvent(sfuEvent);
 #endif
 
                 switch (sfuEvent.EventPayloadCase)
@@ -356,7 +387,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        private void DebugLogEvent(SfuEvent sfuEvent, byte[] rawMessage)
+        private void DebugLogEvent(SfuEvent sfuEvent)
         {
             if (sfuEvent.EventPayloadCase == SfuEvent.EventPayloadOneofCase.HealthCheckResponse)
             {
@@ -369,7 +400,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
             
-            var decodedMessage = System.Text.Encoding.UTF8.GetString(rawMessage);
+            var decodedMessage = sfuEvent.ToString();
             
             // Ignoring some messages for causing too much noise in logs
             var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
@@ -378,7 +409,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
-            Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
+            Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
         }
 #endif
     }

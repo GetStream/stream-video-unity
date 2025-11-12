@@ -79,8 +79,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action PublisherAudioTrackChanged;
         public event Action PublisherVideoTrackChanged;
-        
-        
+
+
         public bool PublisherAudioTrackIsEnabled
         {
             get => _publisherAudioTrackIsEnabled;
@@ -93,7 +93,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 _publisherAudioTrackIsEnabled = value;
                 InternalExecuteSetPublisherAudioTrackEnabled(value);
-                
+
                 PublisherAudioTrackIsEnabledChanged?.Invoke(value);
             }
         }
@@ -247,6 +247,19 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
         public void Update()
         {
+            if (_terminateCall)
+            {
+                _terminateCall = false;
+                
+                if (ActiveCall != null)
+                {
+#if STREAM_DEBUG_ENABLED
+                    _logs.Error("Sfu Websocket Disconnected IN UPDATE-> Stopping the call. Thread ID: " + System.Threading.Thread.CurrentThread.ManagedThreadId);
+#endif
+                    ActiveCall.LeaveAsync().LogIfFailed();
+                }
+            }
+
             _sfuWebSocket.Update();
             Publisher?.Update();
             _statsSender.Update();
@@ -360,12 +373,33 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public async Task StopAsync()
+        public async Task StopAsync(string reason = "")
         {
             if (UseNativeAudioBindings)
             {
 #if STREAM_NATIVE_AUDIO
                 WebRTC.StopAudioPlayback();
+#endif
+            }
+
+            if (ActiveCall != null)
+            {
+                _sfuWebSocket.SendLeaveCallRequest(reason);
+
+                for (int i = 0; i < 60; i++)
+                {
+                    if (_sfuWebSocket.QueuedMessagesCount > 0)
+                    {
+                        await Task.Delay(5);
+                    }
+                }
+                
+#if STREAM_DEBUG_ENABLED
+                if (_sfuWebSocket.QueuedMessagesCount > 0)
+                {
+                    _logs.Error(
+                        $"Waited for 300+ ms for SFU messages to be sent. Remaining: {_sfuWebSocket.QueuedMessagesCount}");
+                }
 #endif
             }
 
@@ -453,14 +487,16 @@ namespace StreamVideo.Core.LowLevelClient
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
         private Camera _videoSceneInput;
-        
+
         private MicrophoneDeviceInfo _activeAudioRecordingDevice;
+
+        private bool _terminateCall;
 
         private void ClearSession()
         {
             _pendingIceTrickleRequests.Clear();
             _videoResolutionByParticipantSessionId.Clear();
-
+            
             Subscriber?.Dispose();
             Subscriber = null;
             Publisher?.Dispose();
@@ -575,7 +611,7 @@ namespace StreamVideo.Core.LowLevelClient
                     //StreamTODO: UserId is sometimes null here
                     //This was before changing the IUpdateableFrom<CallParticipantResponseInternalDTO, StreamVideoCallParticipant>.UpdateFromDto
                     //to extract UserId from User obj
-                    
+
                     yield return new TrackSubscriptionDetails
                     {
                         UserId = GetUserId(participant),
@@ -648,7 +684,7 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Exception(e);
             }
         }
-        
+
         private void UpdateAudioRecording()
         {
             if (Publisher?.PublisherAudioTrack == null || !UseNativeAudioBindings)
@@ -836,7 +872,7 @@ namespace StreamVideo.Core.LowLevelClient
                     default:
                         throw new ArgumentOutOfRangeException(nameof(trackType), trackType, null);
                 }
-                
+
                 return;
             }
 
@@ -851,7 +887,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 return;
             }
-          
+
             await RpcCallAsync(new UpdateMuteStatesRequest
             {
                 SessionId = SessionId,
@@ -865,16 +901,18 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }, GeneratedAPI.UpdateMuteStates, nameof(GeneratedAPI.UpdateSubscriptions));
         }
-        
+
         private void InternalExecuteSetPublisherAudioTrackEnabled(bool isEnabled)
         {
             if (Publisher?.PublisherAudioTrack == null)
             {
-                _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " + isEnabled + " -> track not available yet");
+                _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " +
+                                     isEnabled + " -> track not available yet");
                 return;
             }
-            
-            _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " + isEnabled);
+
+            _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " +
+                                 isEnabled);
 
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
 
@@ -882,7 +920,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             UpdateAudioRecording();
         }
-        
+
         private void InternalExecuteSetPublisherVideoTrackEnabled(bool isEnabled)
         {
             if (Publisher?.PublisherVideoTrack == null)
@@ -891,7 +929,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             Publisher.PublisherVideoTrack.Enabled = isEnabled;
-            
+
             UpdateMuteStateAsync(TrackType.Video, isEnabled).LogIfFailed();
         }
 
@@ -1423,10 +1461,20 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateAudioRecording();
             PublisherAudioTrackChanged?.Invoke();
         }
-        
-        void OnPublisherVideoTrackChanged(VideoStreamTrack videoTrack)
+
+        private void OnPublisherVideoTrackChanged(VideoStreamTrack videoTrack)
         {
             PublisherVideoTrackChanged?.Invoke();
+        }
+        
+        private void OnSfuWebSocketDisconnected()
+        {
+            //StreamTODO: check how other SDKs are handling this. Ideally we should have call recovery logic here
+            _terminateCall = true;
+            
+#if STREAM_DEBUG_ENABLED
+            _logs.Error("Sfu Websocket Disconnected -> Schedule stopping the cal. Thread ID: " + System.Threading.Thread.CurrentThread.ManagedThreadId);
+#endif
         }
 
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)
@@ -1465,6 +1513,8 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.ParticipantUpdated += OnSfuWebSocketOnParticipantUpdated;
             _sfuWebSocket.ParticipantMigrationComplete += OnSfuWebSocketOnParticipantMigrationComplete;
             _sfuWebSocket.ChangePublishOptions += OnSfuWebSocketOnChangePublishOptions;
+            
+            _sfuWebSocket.Disconnected += OnSfuWebSocketDisconnected;
         }
 
         private void UnsubscribeFromSfuEvents()
@@ -1490,6 +1540,8 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.ParticipantUpdated -= OnSfuWebSocketOnParticipantUpdated;
             _sfuWebSocket.ParticipantMigrationComplete -= OnSfuWebSocketOnParticipantMigrationComplete;
             _sfuWebSocket.ChangePublishOptions -= OnSfuWebSocketOnChangePublishOptions;
+            
+            _sfuWebSocket.Disconnected -= OnSfuWebSocketDisconnected;
         }
     }
 }

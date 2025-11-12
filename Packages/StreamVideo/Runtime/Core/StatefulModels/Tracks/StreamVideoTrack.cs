@@ -28,7 +28,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         public StreamVideoTrack(MediaStreamTrack track)
             : base(track)
         {
-            Track.OnVideoReceived += OnVideoReceived;
+            //Track.OnVideoReceived += OnVideoReceived;
         }
 
         private void OnVideoReceived(Texture renderer)
@@ -52,15 +52,27 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             _targetImage = targetImage;
         }
 
+        internal override void Update()
+        {
+            base.Update();
+            
+            if (_targetImage == null)
+            {
+                return;
+            }
+            
+            _targetImage.texture = Track.Texture;
+        }
+
         protected override void OnDisposing()
         {
 #if STREAM_DEBUG_ENABLED
             UnityEngine.Debug.LogWarning("[Participant] Video track disposed.");
 #endif
-            if (Track != null)
-            {
-                Track.OnVideoReceived -= OnVideoReceived;
-            }
+            // if (Track != null)
+            // {
+            //     Track.OnVideoReceived -= OnVideoReceived;
+            // }
             
             base.OnDisposing();
         }

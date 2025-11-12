@@ -93,7 +93,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 _publisherAudioTrackIsEnabled = value;
                 InternalExecuteSetPublisherAudioTrackEnabled(value);
-                
+
                 PublisherAudioTrackIsEnabledChanged?.Invoke(value);
             }
         }
@@ -372,6 +372,19 @@ namespace StreamVideo.Core.LowLevelClient
             if (ActiveCall != null)
             {
                 _sfuWebSocket.SendLeaveCallRequest();
+
+                for (int i = 0; i < 60; i++)
+                {
+                    if (_sfuWebSocket.QueuedMessagesCount > 0)
+                    {
+                        await Task.Delay(5);
+                    }
+                }
+                
+#if STREAM_DEBUG_ENABLED
+                _logs.Error(
+                    $"Waited for 300+ ms for SFU messages to be sent. Remaining: {_sfuWebSocket.QueuedMessagesCount}");
+#endif
             }
 
             ClearSession();
@@ -458,7 +471,7 @@ namespace StreamVideo.Core.LowLevelClient
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
         private Camera _videoSceneInput;
-        
+
         private MicrophoneDeviceInfo _activeAudioRecordingDevice;
 
         private void ClearSession()
@@ -580,7 +593,7 @@ namespace StreamVideo.Core.LowLevelClient
                     //StreamTODO: UserId is sometimes null here
                     //This was before changing the IUpdateableFrom<CallParticipantResponseInternalDTO, StreamVideoCallParticipant>.UpdateFromDto
                     //to extract UserId from User obj
-                    
+
                     yield return new TrackSubscriptionDetails
                     {
                         UserId = GetUserId(participant),
@@ -653,7 +666,7 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Exception(e);
             }
         }
-        
+
         private void UpdateAudioRecording()
         {
             if (Publisher?.PublisherAudioTrack == null || !UseNativeAudioBindings)
@@ -841,7 +854,7 @@ namespace StreamVideo.Core.LowLevelClient
                     default:
                         throw new ArgumentOutOfRangeException(nameof(trackType), trackType, null);
                 }
-                
+
                 return;
             }
 
@@ -856,7 +869,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 return;
             }
-          
+
             await RpcCallAsync(new UpdateMuteStatesRequest
             {
                 SessionId = SessionId,
@@ -870,16 +883,18 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }, GeneratedAPI.UpdateMuteStates, nameof(GeneratedAPI.UpdateSubscriptions));
         }
-        
+
         private void InternalExecuteSetPublisherAudioTrackEnabled(bool isEnabled)
         {
             if (Publisher?.PublisherAudioTrack == null)
             {
-                _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " + isEnabled + " -> track not available yet");
+                _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " +
+                                     isEnabled + " -> track not available yet");
                 return;
             }
-            
-            _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " + isEnabled);
+
+            _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " +
+                                 isEnabled);
 
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
 
@@ -887,7 +902,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             UpdateAudioRecording();
         }
-        
+
         private void InternalExecuteSetPublisherVideoTrackEnabled(bool isEnabled)
         {
             if (Publisher?.PublisherVideoTrack == null)
@@ -896,7 +911,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             Publisher.PublisherVideoTrack.Enabled = isEnabled;
-            
+
             UpdateMuteStateAsync(TrackType.Video, isEnabled).LogIfFailed();
         }
 
@@ -1428,7 +1443,7 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateAudioRecording();
             PublisherAudioTrackChanged?.Invoke();
         }
-        
+
         void OnPublisherVideoTrackChanged(VideoStreamTrack videoTrack)
         {
             PublisherVideoTrackChanged?.Invoke();

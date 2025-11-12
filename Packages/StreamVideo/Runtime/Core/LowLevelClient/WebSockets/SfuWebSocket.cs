@@ -40,6 +40,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action<ParticipantUpdated> ParticipantUpdated;
         public event Action ParticipantMigrationComplete;
         public event Action<ChangePublishOptions> ChangePublishOptions;
+        
+        public int QueuedMessagesCount => WebsocketClient.QueuedMessagesCount;
 
         public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,

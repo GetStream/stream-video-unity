@@ -79,8 +79,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action PublisherAudioTrackChanged;
         public event Action PublisherVideoTrackChanged;
-        
-        
+
+
         public bool PublisherAudioTrackIsEnabled
         {
             get => _publisherAudioTrackIsEnabled;
@@ -382,8 +382,11 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 
 #if STREAM_DEBUG_ENABLED
-                _logs.Error(
-                    $"Waited for 300+ ms for SFU messages to be sent. Remaining: {_sfuWebSocket.QueuedMessagesCount}");
+                if (_sfuWebSocket.QueuedMessagesCount > 0)
+                {
+                    _logs.Error(
+                        $"Waited for 300+ ms for SFU messages to be sent. Remaining: {_sfuWebSocket.QueuedMessagesCount}");
+                }
 #endif
             }
 

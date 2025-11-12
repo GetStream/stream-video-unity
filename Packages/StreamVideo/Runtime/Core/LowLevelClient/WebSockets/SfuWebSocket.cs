@@ -193,7 +193,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuEvent = SfuEvent.Parser.ParseFrom(msg);
 
 #if STREAM_DEBUG_ENABLED
-                DebugLogEvent(sfuEvent, msg);
+                DebugLogEvent(sfuEvent);
 #endif
 
                 switch (sfuEvent.EventPayloadCase)
@@ -387,7 +387,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        private void DebugLogEvent(SfuEvent sfuEvent, byte[] rawMessage)
+        private void DebugLogEvent(SfuEvent sfuEvent)
         {
             if (sfuEvent.EventPayloadCase == SfuEvent.EventPayloadOneofCase.HealthCheckResponse)
             {
@@ -400,7 +400,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
             
-            var decodedMessage = System.Text.Encoding.UTF8.GetString(rawMessage);
+            var decodedMessage = sfuEvent.ToString();
             
             // Ignoring some messages for causing too much noise in logs
             var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
@@ -409,7 +409,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
-            Logs.Info($"{LogsPrefix} WS message: " + sfuEvent);
+            Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
         }
 #endif
     }

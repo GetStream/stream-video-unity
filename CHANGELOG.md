@@ -1,3 +1,8 @@
+0.8.7:
+
+- Upgraded internal com.unity.webrtc package to the latest version
+- The most important change here is "Support 16kb pagesizes for Android"
+
 0.8.6:
 
 ## Improvements:

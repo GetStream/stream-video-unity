@@ -34,7 +34,7 @@ namespace StreamVideo.v1.Sfu.Models {
             "cGlucxgEIAMoCzIcLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlBpbiI0ChBQ",
             "YXJ0aWNpcGFudENvdW50Eg0KBXRvdGFsGAEgASgNEhEKCWFub255bW91cxgC",
             "IAEoDSIqCgNQaW4SDwoHdXNlcl9pZBgBIAEoCRISCgpzZXNzaW9uX2lkGAIg",
-            "ASgJIqADCgtQYXJ0aWNpcGFudBIPCgd1c2VyX2lkGAEgASgJEhIKCnNlc3Np",
+            "ASgJItwDCgtQYXJ0aWNpcGFudBIPCgd1c2VyX2lkGAEgASgJEhIKCnNlc3Np",
             "b25faWQYAiABKAkSPAoQcHVibGlzaGVkX3RyYWNrcxgDIAMoDjIiLnN0cmVh",
             "bS52aWRlby5zZnUubW9kZWxzLlRyYWNrVHlwZRItCglqb2luZWRfYXQYBCAB",
             "KAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhsKE3RyYWNrX2xvb2t1",
@@ -43,141 +43,184 @@ namespace StreamVideo.v1.Sfu.Models {
             "aXNfc3BlYWtpbmcYByABKAgSGwoTaXNfZG9taW5hbnRfc3BlYWtlchgIIAEo",
             "CBITCgthdWRpb19sZXZlbBgJIAEoAhIMCgRuYW1lGAogASgJEg0KBWltYWdl",
             "GAsgASgJEicKBmN1c3RvbRgMIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1",
-            "Y3QSDQoFcm9sZXMYDSADKAkiXgoNU3RyZWFtUXVhbGl0eRI8Cg12aWRlb19x",
-            "dWFsaXR5GAEgASgOMiUuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuVmlkZW9R",
-            "dWFsaXR5Eg8KB3VzZXJfaWQYAiABKAkiLwoOVmlkZW9EaW1lbnNpb24SDQoF",
-            "d2lkdGgYASABKA0SDgoGaGVpZ2h0GAIgASgNIrEBCgpWaWRlb0xheWVyEgsK",
-            "A3JpZBgBIAEoCRJACg92aWRlb19kaW1lbnNpb24YAiABKAsyJy5zdHJlYW0u",
-            "dmlkZW8uc2Z1Lm1vZGVscy5WaWRlb0RpbWVuc2lvbhIPCgdiaXRyYXRlGAQg",
-            "ASgNEgsKA2ZwcxgFIAEoDRI2CgdxdWFsaXR5GAYgASgOMiUuc3RyZWFtLnZp",
-            "ZGVvLnNmdS5tb2RlbHMuVmlkZW9RdWFsaXR5InkKD1N1YnNjcmliZU9wdGlv",
-            "bhI2Cgp0cmFja190eXBlGAEgASgOMiIuc3RyZWFtLnZpZGVvLnNmdS5tb2Rl",
-            "bHMuVHJhY2tUeXBlEi4KBmNvZGVjcxgCIAMoCzIeLnN0cmVhbS52aWRlby5z",
-            "ZnUubW9kZWxzLkNvZGVjIpsCCg1QdWJsaXNoT3B0aW9uEjYKCnRyYWNrX3R5",
-            "cGUYASABKA4yIi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5UcmFja1R5cGUS",
-            "LQoFY29kZWMYAiABKAsyHi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5Db2Rl",
-            "YxIPCgdiaXRyYXRlGAMgASgFEgsKA2ZwcxgEIAEoBRIaChJtYXhfc3BhdGlh",
-            "bF9sYXllcnMYBSABKAUSGwoTbWF4X3RlbXBvcmFsX2xheWVycxgGIAEoBRJA",
-            "Cg92aWRlb19kaW1lbnNpb24YByABKAsyJy5zdHJlYW0udmlkZW8uc2Z1Lm1v",
-            "ZGVscy5WaWRlb0RpbWVuc2lvbhIKCgJpZBgIIAEoBSJqCgVDb2RlYxIUCgxw",
-            "YXlsb2FkX3R5cGUYECABKA0SDAoEbmFtZRgKIAEoCRISCgpjbG9ja19yYXRl",
-            "GA4gASgNEhsKE2VuY29kaW5nX3BhcmFtZXRlcnMYDyABKAkSDAoEZm10cBgM",
-            "IAEoCSJtCgpJQ0VUcmlja2xlEjQKCXBlZXJfdHlwZRgBIAEoDjIhLnN0cmVh",
-            "bS52aWRlby5zZnUubW9kZWxzLlBlZXJUeXBlEhUKDWljZV9jYW5kaWRhdGUY",
-            "AiABKAkSEgoKc2Vzc2lvbl9pZBgDIAEoCSKaAgoJVHJhY2tJbmZvEhAKCHRy",
-            "YWNrX2lkGAEgASgJEjYKCnRyYWNrX3R5cGUYAiABKA4yIi5zdHJlYW0udmlk",
-            "ZW8uc2Z1Lm1vZGVscy5UcmFja1R5cGUSMwoGbGF5ZXJzGAUgAygLMiMuc3Ry",
-            "ZWFtLnZpZGVvLnNmdS5tb2RlbHMuVmlkZW9MYXllchILCgNtaWQYBiABKAkS",
-            "CwoDZHR4GAcgASgIEg4KBnN0ZXJlbxgIIAEoCBILCgNyZWQYCSABKAgSDQoF",
-            "bXV0ZWQYCiABKAgSLQoFY29kZWMYCyABKAsyHi5zdHJlYW0udmlkZW8uc2Z1",
-            "Lm1vZGVscy5Db2RlYxIZChFwdWJsaXNoX29wdGlvbl9pZBgMIAEoBSJgCgVF",
-            "cnJvchIwCgRjb2RlGAEgASgOMiIuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMu",
-            "RXJyb3JDb2RlEg8KB21lc3NhZ2UYAiABKAkSFAoMc2hvdWxkX3JldHJ5GAMg",
-            "ASgIIscBCg1DbGllbnREZXRhaWxzEikKA3NkaxgBIAEoCzIcLnN0cmVhbS52",
-            "aWRlby5zZnUubW9kZWxzLlNkaxInCgJvcxgCIAEoCzIbLnN0cmVhbS52aWRl",
-            "by5zZnUubW9kZWxzLk9TEjEKB2Jyb3dzZXIYAyABKAsyIC5zdHJlYW0udmlk",
-            "ZW8uc2Z1Lm1vZGVscy5Ccm93c2VyEi8KBmRldmljZRgEIAEoCzIfLnN0cmVh",
-            "bS52aWRlby5zZnUubW9kZWxzLkRldmljZSJiCgNTZGsSLgoEdHlwZRgBIAEo",
-            "DjIgLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLlNka1R5cGUSDQoFbWFqb3IY",
-            "AiABKAkSDQoFbWlub3IYAyABKAkSDQoFcGF0Y2gYBCABKAkiOQoCT1MSDAoE",
-            "bmFtZRgBIAEoCRIPCgd2ZXJzaW9uGAIgASgJEhQKDGFyY2hpdGVjdHVyZRgD",
-            "IAEoCSIoCgdCcm93c2VyEgwKBG5hbWUYASABKAkSDwoHdmVyc2lvbhgCIAEo",
-            "CSKJAQoLUlRNUEluZ3Jlc3MSDQoFd2lkdGgYASABKA0SDgoGaGVpZ2h0GAIg",
-            "ASgNEhIKCmZyYW1lX3JhdGUYAyABKAESEAoIc29mdHdhcmUYBCABKAkSDwoH",
-            "dmVyc2lvbhgFIAEoCRIPCgdlbmNvZGVyGAYgASgJEhMKC3JlbW90ZV9hZGRy",
-            "GAcgASgJIicKBkRldmljZRIMCgRuYW1lGAEgASgJEg8KB3ZlcnNpb24YAiAB",
-            "KAki2wEKBENhbGwSDAoEdHlwZRgBIAEoCRIKCgJpZBgCIAEoCRIaChJjcmVh",
-            "dGVkX2J5X3VzZXJfaWQYAyABKAkSFAoMaG9zdF91c2VyX2lkGAQgASgJEicK",
-            "BmN1c3RvbRgFIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3QSLgoKY3Jl",
-            "YXRlZF9hdBgGIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASLgoK",
-            "dXBkYXRlZF9hdBgHIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAi",
-            "WwoKQ2FsbEdyYW50cxIZChFjYW5fcHVibGlzaF9hdWRpbxgBIAEoCBIZChFj",
-            "YW5fcHVibGlzaF92aWRlbxgCIAEoCBIXCg9jYW5fc2NyZWVuc2hhcmUYAyAB",
-            "KAgiVwoMSW5wdXREZXZpY2VzEhkKEWF2YWlsYWJsZV9kZXZpY2VzGAEgAygJ",
-            "EhYKDmN1cnJlbnRfZGV2aWNlGAIgASgJEhQKDGlzX3Blcm1pdHRlZBgDIAEo",
-            "CCJwCgxBbmRyb2lkU3RhdGUSQwoNdGhlcm1hbF9zdGF0ZRgBIAEoDjIsLnN0",
-            "cmVhbS52aWRlby5zZnUubW9kZWxzLkFuZHJvaWRUaGVybWFsU3RhdGUSGwoT",
-            "aXNfcG93ZXJfc2F2ZXJfbW9kZRgCIAEoCCJyCgpBcHBsZVN0YXRlEkEKDXRo",
-            "ZXJtYWxfc3RhdGUYASABKA4yKi5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5B",
-            "cHBsZVRoZXJtYWxTdGF0ZRIhChlpc19sb3dfcG93ZXJfbW9kZV9lbmFibGVk",
-            "GAIgASgIKkkKCFBlZXJUeXBlEiMKH1BFRVJfVFlQRV9QVUJMSVNIRVJfVU5T",
-            "UEVDSUZJRUQQABIYChRQRUVSX1RZUEVfU1VCU0NSSUJFUhABKpMBChFDb25u",
-            "ZWN0aW9uUXVhbGl0eRIiCh5DT05ORUNUSU9OX1FVQUxJVFlfVU5TUEVDSUZJ",
-            "RUQQABIbChdDT05ORUNUSU9OX1FVQUxJVFlfUE9PUhABEhsKF0NPTk5FQ1RJ",
-            "T05fUVVBTElUWV9HT09EEAISIAocQ09OTkVDVElPTl9RVUFMSVRZX0VYQ0VM",
-            "TEVOVBADKncKDFZpZGVvUXVhbGl0eRIhCh1WSURFT19RVUFMSVRZX0xPV19V",
-            "TlNQRUNJRklFRBAAEhUKEVZJREVPX1FVQUxJVFlfTUlEEAESFgoSVklERU9f",
-            "UVVBTElUWV9ISUdIEAISFQoRVklERU9fUVVBTElUWV9PRkYQAyqTAQoJVHJh",
-            "Y2tUeXBlEhoKFlRSQUNLX1RZUEVfVU5TUEVDSUZJRUQQABIUChBUUkFDS19U",
-            "WVBFX0FVRElPEAESFAoQVFJBQ0tfVFlQRV9WSURFTxACEhsKF1RSQUNLX1RZ",
-            "UEVfU0NSRUVOX1NIQVJFEAMSIQodVFJBQ0tfVFlQRV9TQ1JFRU5fU0hBUkVf",
-            "QVVESU8QBCqRBgoJRXJyb3JDb2RlEhoKFkVSUk9SX0NPREVfVU5TUEVDSUZJ",
-            "RUQQABImCiJFUlJPUl9DT0RFX1BVQkxJU0hfVFJBQ0tfTk9UX0ZPVU5EEGQS",
-            "JgoiRVJST1JfQ09ERV9QVUJMSVNIX1RSQUNLU19NSVNNQVRDSBBlEikKJUVS",
-            "Uk9SX0NPREVfUFVCTElTSF9UUkFDS19PVVRfT0ZfT1JERVIQZhIyCi5FUlJP",
-            "Ul9DT0RFX1BVQkxJU0hfVFJBQ0tfVklERU9fTEFZRVJfTk9UX0ZPVU5EEGcS",
-            "GQoVRVJST1JfQ09ERV9MSVZFX0VOREVEEGgSJQogRVJST1JfQ09ERV9QQVJU",
-            "SUNJUEFOVF9OT1RfRk9VTkQQyAESKQokRVJST1JfQ09ERV9QQVJUSUNJUEFO",
-            "VF9NSUdSQVRJTkdfT1VUEMkBEiwKJ0VSUk9SX0NPREVfUEFSVElDSVBBTlRf",
-            "TUlHUkFUSU9OX0ZBSUxFRBDKARIlCiBFUlJPUl9DT0RFX1BBUlRJQ0lQQU5U",
-            "X01JR1JBVElORxDLARIsCidFUlJPUl9DT0RFX1BBUlRJQ0lQQU5UX1JFQ09O",
-            "TkVDVF9GQUlMRUQQzAESMwouRVJST1JfQ09ERV9QQVJUSUNJUEFOVF9NRURJ",
-            "QV9UUkFOU1BPUlRfRkFJTFVSRRDNARIeChlFUlJPUl9DT0RFX0NBTExfTk9U",
-            "X0ZPVU5EEKwCEikKJEVSUk9SX0NPREVfUkVRVUVTVF9WQUxJREFUSU9OX0ZB",
-            "SUxFRBCQAxIfChpFUlJPUl9DT0RFX1VOQVVUSEVOVElDQVRFRBCRAxIhChxF",
-            "UlJPUl9DT0RFX1BFUk1JU1NJT05fREVOSUVEEJMDEiEKHEVSUk9SX0NPREVf",
-            "VE9PX01BTllfUkVRVUVTVFMQrQMSJQogRVJST1JfQ09ERV9JTlRFUk5BTF9T",
-            "RVJWRVJfRVJST1IQ9AMSIQocRVJST1JfQ09ERV9TRlVfU0hVVFRJTkdfRE9X",
-            "ThDYBBIYChNFUlJPUl9DT0RFX1NGVV9GVUxMELwFKuoBCgdTZGtUeXBlEhgK",
-            "FFNES19UWVBFX1VOU1BFQ0lGSUVEEAASEgoOU0RLX1RZUEVfUkVBQ1QQARIU",
-            "ChBTREtfVFlQRV9BTkdVTEFSEAISFAoQU0RLX1RZUEVfQU5EUk9JRBADEhAK",
-            "DFNES19UWVBFX0lPUxAEEhQKEFNES19UWVBFX0ZMVVRURVIQBRIZChVTREtf",
-            "VFlQRV9SRUFDVF9OQVRJVkUQBhISCg5TREtfVFlQRV9VTklUWRAHEg8KC1NE",
-            "S19UWVBFX0dPEAgSHQoZU0RLX1RZUEVfUExBSU5fSkFWQVNDUklQVBAJKrsB",
-            "ChRUcmFja1VucHVibGlzaFJlYXNvbhImCiJUUkFDS19VTlBVQkxJU0hfUkVB",
-            "U09OX1VOU1BFQ0lGSUVEEAASJQohVFJBQ0tfVU5QVUJMSVNIX1JFQVNPTl9V",
-            "U0VSX01VVEVEEAESLQopVFJBQ0tfVU5QVUJMSVNIX1JFQVNPTl9QRVJNSVNT",
-            "SU9OX1JFVk9LRUQQAhIlCiFUUkFDS19VTlBVQkxJU0hfUkVBU09OX01PREVS",
-            "QVRJT04QAypuCgxHb0F3YXlSZWFzb24SHgoaR09fQVdBWV9SRUFTT05fVU5T",
-            "UEVDSUZJRUQQABIgChxHT19BV0FZX1JFQVNPTl9TSFVUVElOR19ET1dOEAES",
-            "HAoYR09fQVdBWV9SRUFTT05fUkVCQUxBTkNFEAIqtgEKD0NhbGxFbmRlZFJl",
-            "YXNvbhIhCh1DQUxMX0VOREVEX1JFQVNPTl9VTlNQRUNJRklFRBAAEhsKF0NB",
-            "TExfRU5ERURfUkVBU09OX0VOREVEEAESIAocQ0FMTF9FTkRFRF9SRUFTT05f",
-            "TElWRV9FTkRFRBACEhwKGENBTExfRU5ERURfUkVBU09OX0tJQ0tFRBADEiMK",
-            "H0NBTExfRU5ERURfUkVBU09OX1NFU1NJT05fRU5ERUQQBCrxAQoaV2Vic29j",
-            "a2V0UmVjb25uZWN0U3RyYXRlZ3kSLAooV0VCU09DS0VUX1JFQ09OTkVDVF9T",
-            "VFJBVEVHWV9VTlNQRUNJRklFRBAAEisKJ1dFQlNPQ0tFVF9SRUNPTk5FQ1Rf",
-            "U1RSQVRFR1lfRElTQ09OTkVDVBABEiUKIVdFQlNPQ0tFVF9SRUNPTk5FQ1Rf",
-            "U1RSQVRFR1lfRkFTVBACEicKI1dFQlNPQ0tFVF9SRUNPTk5FQ1RfU1RSQVRF",
-            "R1lfUkVKT0lOEAMSKAokV0VCU09DS0VUX1JFQ09OTkVDVF9TVFJBVEVHWV9N",
-            "SUdSQVRFEAQqsAIKE0FuZHJvaWRUaGVybWFsU3RhdGUSJQohQU5EUk9JRF9U",
-            "SEVSTUFMX1NUQVRFX1VOU1BFQ0lGSUVEEAASHgoaQU5EUk9JRF9USEVSTUFM",
-            "X1NUQVRFX05PTkUQARIfChtBTkRST0lEX1RIRVJNQUxfU1RBVEVfTElHSFQQ",
-            "AhIiCh5BTkRST0lEX1RIRVJNQUxfU1RBVEVfTU9ERVJBVEUQAxIgChxBTkRS",
-            "T0lEX1RIRVJNQUxfU1RBVEVfU0VWRVJFEAQSIgoeQU5EUk9JRF9USEVSTUFM",
-            "X1NUQVRFX0NSSVRJQ0FMEAUSIwofQU5EUk9JRF9USEVSTUFMX1NUQVRFX0VN",
-            "RVJHRU5DWRAGEiIKHkFORFJPSURfVEhFUk1BTF9TVEFURV9TSFVURE9XThAH",
-            "KroBChFBcHBsZVRoZXJtYWxTdGF0ZRIjCh9BUFBMRV9USEVSTUFMX1NUQVRF",
-            "X1VOU1BFQ0lGSUVEEAASHwobQVBQTEVfVEhFUk1BTF9TVEFURV9OT01JTkFM",
-            "EAESHAoYQVBQTEVfVEhFUk1BTF9TVEFURV9GQUlSEAISHwobQVBQTEVfVEhF",
-            "Uk1BTF9TVEFURV9TRVJJT1VTEAMSIAocQVBQTEVfVEhFUk1BTF9TVEFURV9D",
-            "UklUSUNBTBAEQmVCC1NmdU1vZGVsc1YxUAFaN2dpdGh1Yi5jb20vR2V0U3Ry",
-            "ZWFtL3Byb3RvY29sL3Byb3RvYnVmL3ZpZGVvL3NmdS9tb2RlbHOqAhpTdHJl",
-            "YW0uVmlkZW8udjEuU2Z1Lk1vZGVsc2IGcHJvdG8z"));
+            "Y3QSDQoFcm9sZXMYDSADKAkSOgoGc291cmNlGA4gASgOMiouc3RyZWFtLnZp",
+            "ZGVvLnNmdS5tb2RlbHMuUGFydGljaXBhbnRTb3VyY2UiXgoNU3RyZWFtUXVh",
+            "bGl0eRI8Cg12aWRlb19xdWFsaXR5GAEgASgOMiUuc3RyZWFtLnZpZGVvLnNm",
+            "dS5tb2RlbHMuVmlkZW9RdWFsaXR5Eg8KB3VzZXJfaWQYAiABKAkiLwoOVmlk",
+            "ZW9EaW1lbnNpb24SDQoFd2lkdGgYASABKA0SDgoGaGVpZ2h0GAIgASgNIrEB",
+            "CgpWaWRlb0xheWVyEgsKA3JpZBgBIAEoCRJACg92aWRlb19kaW1lbnNpb24Y",
+            "AiABKAsyJy5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5WaWRlb0RpbWVuc2lv",
+            "bhIPCgdiaXRyYXRlGAQgASgNEgsKA2ZwcxgFIAEoDRI2CgdxdWFsaXR5GAYg",
+            "ASgOMiUuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuVmlkZW9RdWFsaXR5InkK",
+            "D1N1YnNjcmliZU9wdGlvbhI2Cgp0cmFja190eXBlGAEgASgOMiIuc3RyZWFt",
+            "LnZpZGVvLnNmdS5tb2RlbHMuVHJhY2tUeXBlEi4KBmNvZGVjcxgCIAMoCzIe",
+            "LnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkNvZGVjIvwCCg1QdWJsaXNoT3B0",
+            "aW9uEjYKCnRyYWNrX3R5cGUYASABKA4yIi5zdHJlYW0udmlkZW8uc2Z1Lm1v",
+            "ZGVscy5UcmFja1R5cGUSLQoFY29kZWMYAiABKAsyHi5zdHJlYW0udmlkZW8u",
+            "c2Z1Lm1vZGVscy5Db2RlYxIPCgdiaXRyYXRlGAMgASgFEgsKA2ZwcxgEIAEo",
+            "BRIaChJtYXhfc3BhdGlhbF9sYXllcnMYBSABKAUSGwoTbWF4X3RlbXBvcmFs",
+            "X2xheWVycxgGIAEoBRJACg92aWRlb19kaW1lbnNpb24YByABKAsyJy5zdHJl",
+            "YW0udmlkZW8uc2Z1Lm1vZGVscy5WaWRlb0RpbWVuc2lvbhIKCgJpZBgIIAEo",
+            "BRIYChB1c2Vfc2luZ2xlX2xheWVyGAkgASgIEkUKFmF1ZGlvX2JpdHJhdGVf",
+            "cHJvZmlsZXMYCiADKAsyJS5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5BdWRp",
+            "b0JpdHJhdGUiagoFQ29kZWMSFAoMcGF5bG9hZF90eXBlGBAgASgNEgwKBG5h",
+            "bWUYCiABKAkSEgoKY2xvY2tfcmF0ZRgOIAEoDRIbChNlbmNvZGluZ19wYXJh",
+            "bWV0ZXJzGA8gASgJEgwKBGZtdHAYDCABKAkibQoKSUNFVHJpY2tsZRI0Cglw",
+            "ZWVyX3R5cGUYASABKA4yIS5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5QZWVy",
+            "VHlwZRIVCg1pY2VfY2FuZGlkYXRlGAIgASgJEhIKCnNlc3Npb25faWQYAyAB",
+            "KAkiXgoMQXVkaW9CaXRyYXRlEj0KB3Byb2ZpbGUYASABKA4yLC5zdHJlYW0u",
+            "dmlkZW8uc2Z1Lm1vZGVscy5BdWRpb0JpdHJhdGVQcm9maWxlEg8KB2JpdHJh",
+            "dGUYAiABKAUimgIKCVRyYWNrSW5mbxIQCgh0cmFja19pZBgBIAEoCRI2Cgp0",
+            "cmFja190eXBlGAIgASgOMiIuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuVHJh",
+            "Y2tUeXBlEjMKBmxheWVycxgFIAMoCzIjLnN0cmVhbS52aWRlby5zZnUubW9k",
+            "ZWxzLlZpZGVvTGF5ZXISCwoDbWlkGAYgASgJEgsKA2R0eBgHIAEoCBIOCgZz",
+            "dGVyZW8YCCABKAgSCwoDcmVkGAkgASgIEg0KBW11dGVkGAogASgIEi0KBWNv",
+            "ZGVjGAsgASgLMh4uc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuQ29kZWMSGQoR",
+            "cHVibGlzaF9vcHRpb25faWQYDCABKAUiYAoFRXJyb3ISMAoEY29kZRgBIAEo",
+            "DjIiLnN0cmVhbS52aWRlby5zZnUubW9kZWxzLkVycm9yQ29kZRIPCgdtZXNz",
+            "YWdlGAIgASgJEhQKDHNob3VsZF9yZXRyeRgDIAEoCCLHAQoNQ2xpZW50RGV0",
+            "YWlscxIpCgNzZGsYASABKAsyHC5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5T",
+            "ZGsSJwoCb3MYAiABKAsyGy5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5PUxIx",
+            "Cgdicm93c2VyGAMgASgLMiAuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuQnJv",
+            "d3NlchIvCgZkZXZpY2UYBCABKAsyHy5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVs",
+            "cy5EZXZpY2UiYgoDU2RrEi4KBHR5cGUYASABKA4yIC5zdHJlYW0udmlkZW8u",
+            "c2Z1Lm1vZGVscy5TZGtUeXBlEg0KBW1ham9yGAIgASgJEg0KBW1pbm9yGAMg",
+            "ASgJEg0KBXBhdGNoGAQgASgJIjkKAk9TEgwKBG5hbWUYASABKAkSDwoHdmVy",
+            "c2lvbhgCIAEoCRIUCgxhcmNoaXRlY3R1cmUYAyABKAkiKAoHQnJvd3NlchIM",
+            "CgRuYW1lGAEgASgJEg8KB3ZlcnNpb24YAiABKAkiiQEKC1JUTVBJbmdyZXNz",
+            "Eg0KBXdpZHRoGAEgASgNEg4KBmhlaWdodBgCIAEoDRISCgpmcmFtZV9yYXRl",
+            "GAMgASgBEhAKCHNvZnR3YXJlGAQgASgJEg8KB3ZlcnNpb24YBSABKAkSDwoH",
+            "ZW5jb2RlchgGIAEoCRITCgtyZW1vdGVfYWRkchgHIAEoCSInCgZEZXZpY2US",
+            "DAoEbmFtZRgBIAEoCRIPCgd2ZXJzaW9uGAIgASgJItsBCgRDYWxsEgwKBHR5",
+            "cGUYASABKAkSCgoCaWQYAiABKAkSGgoSY3JlYXRlZF9ieV91c2VyX2lkGAMg",
+            "ASgJEhQKDGhvc3RfdXNlcl9pZBgEIAEoCRInCgZjdXN0b20YBSABKAsyFy5n",
+            "b29nbGUucHJvdG9idWYuU3RydWN0Ei4KCmNyZWF0ZWRfYXQYBiABKAsyGi5n",
+            "b29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCnVwZGF0ZWRfYXQYByABKAsy",
+            "Gi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIlsKCkNhbGxHcmFudHMSGQoR",
+            "Y2FuX3B1Ymxpc2hfYXVkaW8YASABKAgSGQoRY2FuX3B1Ymxpc2hfdmlkZW8Y",
+            "AiABKAgSFwoPY2FuX3NjcmVlbnNoYXJlGAMgASgIIlcKDElucHV0RGV2aWNl",
+            "cxIZChFhdmFpbGFibGVfZGV2aWNlcxgBIAMoCRIWCg5jdXJyZW50X2Rldmlj",
+            "ZRgCIAEoCRIUCgxpc19wZXJtaXR0ZWQYAyABKAgicAoMQW5kcm9pZFN0YXRl",
+            "EkMKDXRoZXJtYWxfc3RhdGUYASABKA4yLC5zdHJlYW0udmlkZW8uc2Z1Lm1v",
+            "ZGVscy5BbmRyb2lkVGhlcm1hbFN0YXRlEhsKE2lzX3Bvd2VyX3NhdmVyX21v",
+            "ZGUYAiABKAgicgoKQXBwbGVTdGF0ZRJBCg10aGVybWFsX3N0YXRlGAEgASgO",
+            "Miouc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuQXBwbGVUaGVybWFsU3RhdGUS",
+            "IQoZaXNfbG93X3Bvd2VyX21vZGVfZW5hYmxlZBgCIAEoCCL/AQoQUGVyZm9y",
+            "bWFuY2VTdGF0cxI2Cgp0cmFja190eXBlGAEgASgOMiIuc3RyZWFtLnZpZGVv",
+            "LnNmdS5tb2RlbHMuVHJhY2tUeXBlEi0KBWNvZGVjGAIgASgLMh4uc3RyZWFt",
+            "LnZpZGVvLnNmdS5tb2RlbHMuQ29kZWMSGQoRYXZnX2ZyYW1lX3RpbWVfbXMY",
+            "AyABKAISDwoHYXZnX2ZwcxgEIAEoAhJACg92aWRlb19kaW1lbnNpb24YBSAB",
+            "KAsyJy5zdHJlYW0udmlkZW8uc2Z1Lm1vZGVscy5WaWRlb0RpbWVuc2lvbhIW",
+            "Cg50YXJnZXRfYml0cmF0ZRgGIAEoBSI7CgdSdHBCYXNlEgwKBHNzcmMYASAB",
+            "KA0SDAoEa2luZBgCIAEoCRIUCgx0aW1lc3RhbXBfbXMYAyABKAEiwwIKCklu",
+            "Ym91bmRSdHASLgoEYmFzZRgBIAEoCzIgLnN0cmVhbS52aWRlby5zZnUubW9k",
+            "ZWxzLlJ0cEJhc2USFgoOaml0dGVyX3NlY29uZHMYAiABKAESGAoQcGFja2V0",
+            "c19yZWNlaXZlZBgDIAEoBBIUCgxwYWNrZXRzX2xvc3QYBCABKAQSGwoTcGFj",
+            "a2V0X2xvc3NfcGVyY2VudBgFIAEoARIaChJjb25jZWFsbWVudF9ldmVudHMY",
+            "CiABKA0SGwoTY29uY2VhbG1lbnRfcGVyY2VudBgLIAEoARILCgNmcHMYFCAB",
+            "KAESHwoXZnJlZXplX2R1cmF0aW9uX3NlY29uZHMYFSABKAESHwoXYXZnX2Rl",
+            "Y29kZV90aW1lX3NlY29uZHMYFiABKAESGAoQbWluX2RpbWVuc2lvbl9weBgX",
+            "IAEoDSKaAQoLT3V0Ym91bmRSdHASLgoEYmFzZRgBIAEoCzIgLnN0cmVhbS52",
+            "aWRlby5zZnUubW9kZWxzLlJ0cEJhc2USCwoDZnBzGAogASgBEh8KF2F2Z19l",
+            "bmNvZGVfdGltZV9zZWNvbmRzGAsgASgBEhMKC2JpdHJhdGVfYnBzGAwgASgB",
+            "EhgKEG1pbl9kaW1lbnNpb25fcHgYDSABKA0idQoQUmVtb3RlSW5ib3VuZFJ0",
+            "cBIuCgRiYXNlGAEgASgLMiAuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUnRw",
+            "QmFzZRIWCg5qaXR0ZXJfc2Vjb25kcxgCIAEoARIZChFyb3VuZF90cmlwX3Rp",
+            "bWVfcxgDIAEoASJ2ChFSZW1vdGVPdXRib3VuZFJ0cBIuCgRiYXNlGAEgASgL",
+            "MiAuc3RyZWFtLnZpZGVvLnNmdS5tb2RlbHMuUnRwQmFzZRIWCg5qaXR0ZXJf",
+            "c2Vjb25kcxgCIAEoARIZChFyb3VuZF90cmlwX3RpbWVfcxgDIAEoASpJCghQ",
+            "ZWVyVHlwZRIjCh9QRUVSX1RZUEVfUFVCTElTSEVSX1VOU1BFQ0lGSUVEEAAS",
+            "GAoUUEVFUl9UWVBFX1NVQlNDUklCRVIQASqTAQoRQ29ubmVjdGlvblF1YWxp",
+            "dHkSIgoeQ09OTkVDVElPTl9RVUFMSVRZX1VOU1BFQ0lGSUVEEAASGwoXQ09O",
+            "TkVDVElPTl9RVUFMSVRZX1BPT1IQARIbChdDT05ORUNUSU9OX1FVQUxJVFlf",
+            "R09PRBACEiAKHENPTk5FQ1RJT05fUVVBTElUWV9FWENFTExFTlQQAyp3CgxW",
+            "aWRlb1F1YWxpdHkSIQodVklERU9fUVVBTElUWV9MT1dfVU5TUEVDSUZJRUQQ",
+            "ABIVChFWSURFT19RVUFMSVRZX01JRBABEhYKElZJREVPX1FVQUxJVFlfSElH",
+            "SBACEhUKEVZJREVPX1FVQUxJVFlfT0ZGEAMqkwEKCVRyYWNrVHlwZRIaChZU",
+            "UkFDS19UWVBFX1VOU1BFQ0lGSUVEEAASFAoQVFJBQ0tfVFlQRV9BVURJTxAB",
+            "EhQKEFRSQUNLX1RZUEVfVklERU8QAhIbChdUUkFDS19UWVBFX1NDUkVFTl9T",
+            "SEFSRRADEiEKHVRSQUNLX1RZUEVfU0NSRUVOX1NIQVJFX0FVRElPEAQqzQEK",
+            "EVBhcnRpY2lwYW50U291cmNlEikKJVBBUlRJQ0lQQU5UX1NPVVJDRV9XRUJS",
+            "VENfVU5TUEVDSUZJRUQQABIbChdQQVJUSUNJUEFOVF9TT1VSQ0VfUlRNUBAB",
+            "EhsKF1BBUlRJQ0lQQU5UX1NPVVJDRV9XSElQEAISGgoWUEFSVElDSVBBTlRf",
+            "U09VUkNFX1NJUBADEhsKF1BBUlRJQ0lQQU5UX1NPVVJDRV9SVFNQEAQSGgoW",
+            "UEFSVElDSVBBTlRfU09VUkNFX1NSVBAFKqcBChNBdWRpb0JpdHJhdGVQcm9m",
+            "aWxlEjQKMEFVRElPX0JJVFJBVEVfUFJPRklMRV9WT0lDRV9TVEFOREFSRF9V",
+            "TlNQRUNJRklFRBAAEiwKKEFVRElPX0JJVFJBVEVfUFJPRklMRV9WT0lDRV9I",
+            "SUdIX1FVQUxJVFkQARIsCihBVURJT19CSVRSQVRFX1BST0ZJTEVfTVVTSUNf",
+            "SElHSF9RVUFMSVRZEAIq6gYKCUVycm9yQ29kZRIaChZFUlJPUl9DT0RFX1VO",
+            "U1BFQ0lGSUVEEAASJgoiRVJST1JfQ09ERV9QVUJMSVNIX1RSQUNLX05PVF9G",
+            "T1VORBBkEiYKIkVSUk9SX0NPREVfUFVCTElTSF9UUkFDS1NfTUlTTUFUQ0gQ",
+            "ZRIpCiVFUlJPUl9DT0RFX1BVQkxJU0hfVFJBQ0tfT1VUX09GX09SREVSEGYS",
+            "MgouRVJST1JfQ09ERV9QVUJMSVNIX1RSQUNLX1ZJREVPX0xBWUVSX05PVF9G",
+            "T1VORBBnEhkKFUVSUk9SX0NPREVfTElWRV9FTkRFRBBoEiUKIEVSUk9SX0NP",
+            "REVfUEFSVElDSVBBTlRfTk9UX0ZPVU5EEMgBEikKJEVSUk9SX0NPREVfUEFS",
+            "VElDSVBBTlRfTUlHUkFUSU5HX09VVBDJARIsCidFUlJPUl9DT0RFX1BBUlRJ",
+            "Q0lQQU5UX01JR1JBVElPTl9GQUlMRUQQygESJQogRVJST1JfQ09ERV9QQVJU",
+            "SUNJUEFOVF9NSUdSQVRJTkcQywESLAonRVJST1JfQ09ERV9QQVJUSUNJUEFO",
+            "VF9SRUNPTk5FQ1RfRkFJTEVEEMwBEjMKLkVSUk9SX0NPREVfUEFSVElDSVBB",
+            "TlRfTUVESUFfVFJBTlNQT1JUX0ZBSUxVUkUQzQESJwoiRVJST1JfQ09ERV9Q",
+            "QVJUSUNJUEFOVF9TSUdOQUxfTE9TVBDOARIeChlFUlJPUl9DT0RFX0NBTExf",
+            "Tk9UX0ZPVU5EEKwCEi4KKUVSUk9SX0NPREVfQ0FMTF9QQVJUSUNJUEFOVF9M",
+            "SU1JVF9SRUFDSEVEEK0CEikKJEVSUk9SX0NPREVfUkVRVUVTVF9WQUxJREFU",
+            "SU9OX0ZBSUxFRBCQAxIfChpFUlJPUl9DT0RFX1VOQVVUSEVOVElDQVRFRBCR",
+            "AxIhChxFUlJPUl9DT0RFX1BFUk1JU1NJT05fREVOSUVEEJMDEiEKHEVSUk9S",
+            "X0NPREVfVE9PX01BTllfUkVRVUVTVFMQrQMSJQogRVJST1JfQ09ERV9JTlRF",
+            "Uk5BTF9TRVJWRVJfRVJST1IQ9AMSIQocRVJST1JfQ09ERV9TRlVfU0hVVFRJ",
+            "TkdfRE9XThDYBBIYChNFUlJPUl9DT0RFX1NGVV9GVUxMELwFKuoBCgdTZGtU",
+            "eXBlEhgKFFNES19UWVBFX1VOU1BFQ0lGSUVEEAASEgoOU0RLX1RZUEVfUkVB",
+            "Q1QQARIUChBTREtfVFlQRV9BTkdVTEFSEAISFAoQU0RLX1RZUEVfQU5EUk9J",
+            "RBADEhAKDFNES19UWVBFX0lPUxAEEhQKEFNES19UWVBFX0ZMVVRURVIQBRIZ",
+            "ChVTREtfVFlQRV9SRUFDVF9OQVRJVkUQBhISCg5TREtfVFlQRV9VTklUWRAH",
+            "Eg8KC1NES19UWVBFX0dPEAgSHQoZU0RLX1RZUEVfUExBSU5fSkFWQVNDUklQ",
+            "VBAJKrsBChRUcmFja1VucHVibGlzaFJlYXNvbhImCiJUUkFDS19VTlBVQkxJ",
+            "U0hfUkVBU09OX1VOU1BFQ0lGSUVEEAASJQohVFJBQ0tfVU5QVUJMSVNIX1JF",
+            "QVNPTl9VU0VSX01VVEVEEAESLQopVFJBQ0tfVU5QVUJMSVNIX1JFQVNPTl9Q",
+            "RVJNSVNTSU9OX1JFVk9LRUQQAhIlCiFUUkFDS19VTlBVQkxJU0hfUkVBU09O",
+            "X01PREVSQVRJT04QAypuCgxHb0F3YXlSZWFzb24SHgoaR09fQVdBWV9SRUFT",
+            "T05fVU5TUEVDSUZJRUQQABIgChxHT19BV0FZX1JFQVNPTl9TSFVUVElOR19E",
+            "T1dOEAESHAoYR09fQVdBWV9SRUFTT05fUkVCQUxBTkNFEAIqtgEKD0NhbGxF",
+            "bmRlZFJlYXNvbhIhCh1DQUxMX0VOREVEX1JFQVNPTl9VTlNQRUNJRklFRBAA",
+            "EhsKF0NBTExfRU5ERURfUkVBU09OX0VOREVEEAESIAocQ0FMTF9FTkRFRF9S",
+            "RUFTT05fTElWRV9FTkRFRBACEhwKGENBTExfRU5ERURfUkVBU09OX0tJQ0tF",
+            "RBADEiMKH0NBTExfRU5ERURfUkVBU09OX1NFU1NJT05fRU5ERUQQBCrxAQoa",
+            "V2Vic29ja2V0UmVjb25uZWN0U3RyYXRlZ3kSLAooV0VCU09DS0VUX1JFQ09O",
+            "TkVDVF9TVFJBVEVHWV9VTlNQRUNJRklFRBAAEisKJ1dFQlNPQ0tFVF9SRUNP",
+            "Tk5FQ1RfU1RSQVRFR1lfRElTQ09OTkVDVBABEiUKIVdFQlNPQ0tFVF9SRUNP",
+            "Tk5FQ1RfU1RSQVRFR1lfRkFTVBACEicKI1dFQlNPQ0tFVF9SRUNPTk5FQ1Rf",
+            "U1RSQVRFR1lfUkVKT0lOEAMSKAokV0VCU09DS0VUX1JFQ09OTkVDVF9TVFJB",
+            "VEVHWV9NSUdSQVRFEAQqsAIKE0FuZHJvaWRUaGVybWFsU3RhdGUSJQohQU5E",
+            "Uk9JRF9USEVSTUFMX1NUQVRFX1VOU1BFQ0lGSUVEEAASHgoaQU5EUk9JRF9U",
+            "SEVSTUFMX1NUQVRFX05PTkUQARIfChtBTkRST0lEX1RIRVJNQUxfU1RBVEVf",
+            "TElHSFQQAhIiCh5BTkRST0lEX1RIRVJNQUxfU1RBVEVfTU9ERVJBVEUQAxIg",
+            "ChxBTkRST0lEX1RIRVJNQUxfU1RBVEVfU0VWRVJFEAQSIgoeQU5EUk9JRF9U",
+            "SEVSTUFMX1NUQVRFX0NSSVRJQ0FMEAUSIwofQU5EUk9JRF9USEVSTUFMX1NU",
+            "QVRFX0VNRVJHRU5DWRAGEiIKHkFORFJPSURfVEhFUk1BTF9TVEFURV9TSFVU",
+            "RE9XThAHKroBChFBcHBsZVRoZXJtYWxTdGF0ZRIjCh9BUFBMRV9USEVSTUFM",
+            "X1NUQVRFX1VOU1BFQ0lGSUVEEAASHwobQVBQTEVfVEhFUk1BTF9TVEFURV9O",
+            "T01JTkFMEAESHAoYQVBQTEVfVEhFUk1BTF9TVEFURV9GQUlSEAISHwobQVBQ",
+            "TEVfVEhFUk1BTF9TVEFURV9TRVJJT1VTEAMSIAocQVBQTEVfVEhFUk1BTF9T",
+            "VEFURV9DUklUSUNBTBAEKowBChBDbGllbnRDYXBhYmlsaXR5EiEKHUNMSUVO",
+            "VF9DQVBBQklMSVRZX1VOU1BFQ0lGSUVEEAASLAooQ0xJRU5UX0NBUEFCSUxJ",
+            "VFlfU1VCU0NSSUJFUl9WSURFT19QQVVTRRABEicKI0NMSUVOVF9DQVBBQklM",
+            "SVRZX0NPT1JESU5BVE9SX1NUQVRTEAJCZUILU2Z1TW9kZWxzVjFQAVo3Z2l0",
+            "aHViLmNvbS9HZXRTdHJlYW0vcHJvdG9jb2wvcHJvdG9idWYvdmlkZW8vc2Z1",
+            "L21vZGVsc6oCGlN0cmVhbS5WaWRlby52MS5TZnUuTW9kZWxzYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.StructReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.TimestampReflection.Descriptor, },
-          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::StreamVideo.v1.Sfu.Models.PeerType), typeof(global::StreamVideo.v1.Sfu.Models.ConnectionQuality), typeof(global::StreamVideo.v1.Sfu.Models.VideoQuality), typeof(global::StreamVideo.v1.Sfu.Models.TrackType), typeof(global::StreamVideo.v1.Sfu.Models.ErrorCode), typeof(global::StreamVideo.v1.Sfu.Models.SdkType), typeof(global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason), typeof(global::StreamVideo.v1.Sfu.Models.GoAwayReason), typeof(global::StreamVideo.v1.Sfu.Models.CallEndedReason), typeof(global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy), typeof(global::StreamVideo.v1.Sfu.Models.AndroidThermalState), typeof(global::StreamVideo.v1.Sfu.Models.AppleThermalState), }, null, new pbr::GeneratedClrTypeInfo[] {
+          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::StreamVideo.v1.Sfu.Models.PeerType), typeof(global::StreamVideo.v1.Sfu.Models.ConnectionQuality), typeof(global::StreamVideo.v1.Sfu.Models.VideoQuality), typeof(global::StreamVideo.v1.Sfu.Models.TrackType), typeof(global::StreamVideo.v1.Sfu.Models.ParticipantSource), typeof(global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile), typeof(global::StreamVideo.v1.Sfu.Models.ErrorCode), typeof(global::StreamVideo.v1.Sfu.Models.SdkType), typeof(global::StreamVideo.v1.Sfu.Models.TrackUnpublishReason), typeof(global::StreamVideo.v1.Sfu.Models.GoAwayReason), typeof(global::StreamVideo.v1.Sfu.Models.CallEndedReason), typeof(global::StreamVideo.v1.Sfu.Models.WebsocketReconnectStrategy), typeof(global::StreamVideo.v1.Sfu.Models.AndroidThermalState), typeof(global::StreamVideo.v1.Sfu.Models.AppleThermalState), typeof(global::StreamVideo.v1.Sfu.Models.ClientCapability), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.CallState), global::StreamVideo.v1.Sfu.Models.CallState.Parser, new[]{ "Participants", "StartedAt", "ParticipantCount", "Pins" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.ParticipantCount), global::StreamVideo.v1.Sfu.Models.ParticipantCount.Parser, new[]{ "Total", "Anonymous" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.Pin), global::StreamVideo.v1.Sfu.Models.Pin.Parser, new[]{ "UserId", "SessionId" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.Participant), global::StreamVideo.v1.Sfu.Models.Participant.Parser, new[]{ "UserId", "SessionId", "PublishedTracks", "JoinedAt", "TrackLookupPrefix", "ConnectionQuality", "IsSpeaking", "IsDominantSpeaker", "AudioLevel", "Name", "Image", "Custom", "Roles" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.Participant), global::StreamVideo.v1.Sfu.Models.Participant.Parser, new[]{ "UserId", "SessionId", "PublishedTracks", "JoinedAt", "TrackLookupPrefix", "ConnectionQuality", "IsSpeaking", "IsDominantSpeaker", "AudioLevel", "Name", "Image", "Custom", "Roles", "Source" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.StreamQuality), global::StreamVideo.v1.Sfu.Models.StreamQuality.Parser, new[]{ "VideoQuality", "UserId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.VideoDimension), global::StreamVideo.v1.Sfu.Models.VideoDimension.Parser, new[]{ "Width", "Height" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.VideoLayer), global::StreamVideo.v1.Sfu.Models.VideoLayer.Parser, new[]{ "Rid", "VideoDimension", "Bitrate", "Fps", "Quality" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.SubscribeOption), global::StreamVideo.v1.Sfu.Models.SubscribeOption.Parser, new[]{ "TrackType", "Codecs" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.PublishOption), global::StreamVideo.v1.Sfu.Models.PublishOption.Parser, new[]{ "TrackType", "Codec", "Bitrate", "Fps", "MaxSpatialLayers", "MaxTemporalLayers", "VideoDimension", "Id" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.PublishOption), global::StreamVideo.v1.Sfu.Models.PublishOption.Parser, new[]{ "TrackType", "Codec", "Bitrate", "Fps", "MaxSpatialLayers", "MaxTemporalLayers", "VideoDimension", "Id", "UseSingleLayer", "AudioBitrateProfiles" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.Codec), global::StreamVideo.v1.Sfu.Models.Codec.Parser, new[]{ "PayloadType", "Name", "ClockRate", "EncodingParameters", "Fmtp" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.ICETrickle), global::StreamVideo.v1.Sfu.Models.ICETrickle.Parser, new[]{ "PeerType", "IceCandidate", "SessionId" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.AudioBitrate), global::StreamVideo.v1.Sfu.Models.AudioBitrate.Parser, new[]{ "Profile", "Bitrate" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.TrackInfo), global::StreamVideo.v1.Sfu.Models.TrackInfo.Parser, new[]{ "TrackId", "TrackType", "Layers", "Mid", "Dtx", "Stereo", "Red", "Muted", "Codec", "PublishOptionId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.Error), global::StreamVideo.v1.Sfu.Models.Error.Parser, new[]{ "Code", "Message", "ShouldRetry" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.ClientDetails), global::StreamVideo.v1.Sfu.Models.ClientDetails.Parser, new[]{ "Sdk", "Os", "Browser", "Device" }, null, null, null, null),
@@ -190,7 +233,13 @@ namespace StreamVideo.v1.Sfu.Models {
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.CallGrants), global::StreamVideo.v1.Sfu.Models.CallGrants.Parser, new[]{ "CanPublishAudio", "CanPublishVideo", "CanScreenshare" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.InputDevices), global::StreamVideo.v1.Sfu.Models.InputDevices.Parser, new[]{ "AvailableDevices", "CurrentDevice", "IsPermitted" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.AndroidState), global::StreamVideo.v1.Sfu.Models.AndroidState.Parser, new[]{ "ThermalState", "IsPowerSaverMode" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.AppleState), global::StreamVideo.v1.Sfu.Models.AppleState.Parser, new[]{ "ThermalState", "IsLowPowerModeEnabled" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.AppleState), global::StreamVideo.v1.Sfu.Models.AppleState.Parser, new[]{ "ThermalState", "IsLowPowerModeEnabled" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.PerformanceStats), global::StreamVideo.v1.Sfu.Models.PerformanceStats.Parser, new[]{ "TrackType", "Codec", "AvgFrameTimeMs", "AvgFps", "VideoDimension", "TargetBitrate" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.RtpBase), global::StreamVideo.v1.Sfu.Models.RtpBase.Parser, new[]{ "Ssrc", "Kind", "TimestampMs" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.InboundRtp), global::StreamVideo.v1.Sfu.Models.InboundRtp.Parser, new[]{ "Base", "JitterSeconds", "PacketsReceived", "PacketsLost", "PacketLossPercent", "ConcealmentEvents", "ConcealmentPercent", "Fps", "FreezeDurationSeconds", "AvgDecodeTimeSeconds", "MinDimensionPx" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.OutboundRtp), global::StreamVideo.v1.Sfu.Models.OutboundRtp.Parser, new[]{ "Base", "Fps", "AvgEncodeTimeSeconds", "BitrateBps", "MinDimensionPx" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.RemoteInboundRtp), global::StreamVideo.v1.Sfu.Models.RemoteInboundRtp.Parser, new[]{ "Base", "JitterSeconds", "RoundTripTimeS" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::StreamVideo.v1.Sfu.Models.RemoteOutboundRtp), global::StreamVideo.v1.Sfu.Models.RemoteOutboundRtp.Parser, new[]{ "Base", "JitterSeconds", "RoundTripTimeS" }, null, null, null, null)
           }));
     }
     #endregion
@@ -227,6 +276,24 @@ namespace StreamVideo.v1.Sfu.Models {
     [pbr::OriginalName("TRACK_TYPE_SCREEN_SHARE_AUDIO")] ScreenShareAudio = 4,
   }
 
+  /// <summary>
+  /// must be aligned with kit
+  /// </summary>
+  internal enum ParticipantSource {
+    [pbr::OriginalName("PARTICIPANT_SOURCE_WEBRTC_UNSPECIFIED")] WebrtcUnspecified = 0,
+    [pbr::OriginalName("PARTICIPANT_SOURCE_RTMP")] Rtmp = 1,
+    [pbr::OriginalName("PARTICIPANT_SOURCE_WHIP")] Whip = 2,
+    [pbr::OriginalName("PARTICIPANT_SOURCE_SIP")] Sip = 3,
+    [pbr::OriginalName("PARTICIPANT_SOURCE_RTSP")] Rtsp = 4,
+    [pbr::OriginalName("PARTICIPANT_SOURCE_SRT")] Srt = 5,
+  }
+
+  internal enum AudioBitrateProfile {
+    [pbr::OriginalName("AUDIO_BITRATE_PROFILE_VOICE_STANDARD_UNSPECIFIED")] VoiceStandardUnspecified = 0,
+    [pbr::OriginalName("AUDIO_BITRATE_PROFILE_VOICE_HIGH_QUALITY")] VoiceHighQuality = 1,
+    [pbr::OriginalName("AUDIO_BITRATE_PROFILE_MUSIC_HIGH_QUALITY")] MusicHighQuality = 2,
+  }
+
   internal enum ErrorCode {
     [pbr::OriginalName("ERROR_CODE_UNSPECIFIED")] Unspecified = 0,
     [pbr::OriginalName("ERROR_CODE_PUBLISH_TRACK_NOT_FOUND")] PublishTrackNotFound = 100,
@@ -240,7 +307,9 @@ namespace StreamVideo.v1.Sfu.Models {
     [pbr::OriginalName("ERROR_CODE_PARTICIPANT_MIGRATING")] ParticipantMigrating = 203,
     [pbr::OriginalName("ERROR_CODE_PARTICIPANT_RECONNECT_FAILED")] ParticipantReconnectFailed = 204,
     [pbr::OriginalName("ERROR_CODE_PARTICIPANT_MEDIA_TRANSPORT_FAILURE")] ParticipantMediaTransportFailure = 205,
+    [pbr::OriginalName("ERROR_CODE_PARTICIPANT_SIGNAL_LOST")] ParticipantSignalLost = 206,
     [pbr::OriginalName("ERROR_CODE_CALL_NOT_FOUND")] CallNotFound = 300,
+    [pbr::OriginalName("ERROR_CODE_CALL_PARTICIPANT_LIMIT_REACHED")] CallParticipantLimitReached = 301,
     [pbr::OriginalName("ERROR_CODE_REQUEST_VALIDATION_FAILED")] RequestValidationFailed = 400,
     [pbr::OriginalName("ERROR_CODE_UNAUTHENTICATED")] Unauthenticated = 401,
     [pbr::OriginalName("ERROR_CODE_PERMISSION_DENIED")] PermissionDenied = 403,
@@ -359,6 +428,21 @@ namespace StreamVideo.v1.Sfu.Models {
     [pbr::OriginalName("APPLE_THERMAL_STATE_FAIR")] Fair = 2,
     [pbr::OriginalName("APPLE_THERMAL_STATE_SERIOUS")] Serious = 3,
     [pbr::OriginalName("APPLE_THERMAL_STATE_CRITICAL")] Critical = 4,
+  }
+
+  /// <summary>
+  /// ClientCapability defines a feature that client supports
+  /// </summary>
+  internal enum ClientCapability {
+    [pbr::OriginalName("CLIENT_CAPABILITY_UNSPECIFIED")] Unspecified = 0,
+    /// <summary>
+    /// Enables SFU pausing inbound video
+    /// </summary>
+    [pbr::OriginalName("CLIENT_CAPABILITY_SUBSCRIBER_VIDEO_PAUSE")] SubscriberVideoPause = 1,
+    /// <summary>
+    /// Instructs SFU that stats will be sent to the coordinator
+    /// </summary>
+    [pbr::OriginalName("CLIENT_CAPABILITY_COORDINATOR_STATS")] CoordinatorStats = 2,
   }
 
   #endregion
@@ -1200,6 +1284,7 @@ namespace StreamVideo.v1.Sfu.Models {
       image_ = other.image_;
       custom_ = other.custom_ != null ? other.custom_.Clone() : null;
       roles_ = other.roles_.Clone();
+      source_ = other.source_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1366,6 +1451,18 @@ namespace StreamVideo.v1.Sfu.Models {
       get { return roles_; }
     }
 
+    /// <summary>Field number for the "source" field.</summary>
+    public const int SourceFieldNumber = 14;
+    private global::StreamVideo.v1.Sfu.Models.ParticipantSource source_ = global::StreamVideo.v1.Sfu.Models.ParticipantSource.WebrtcUnspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.ParticipantSource Source {
+      get { return source_; }
+      set {
+        source_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -1394,6 +1491,7 @@ namespace StreamVideo.v1.Sfu.Models {
       if (Image != other.Image) return false;
       if (!object.Equals(Custom, other.Custom)) return false;
       if(!roles_.Equals(other.roles_)) return false;
+      if (Source != other.Source) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1414,6 +1512,7 @@ namespace StreamVideo.v1.Sfu.Models {
       if (Image.Length != 0) hash ^= Image.GetHashCode();
       if (custom_ != null) hash ^= Custom.GetHashCode();
       hash ^= roles_.GetHashCode();
+      if (Source != global::StreamVideo.v1.Sfu.Models.ParticipantSource.WebrtcUnspecified) hash ^= Source.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1478,6 +1577,10 @@ namespace StreamVideo.v1.Sfu.Models {
         output.WriteMessage(Custom);
       }
       roles_.WriteTo(output, _repeated_roles_codec);
+      if (Source != global::StreamVideo.v1.Sfu.Models.ParticipantSource.WebrtcUnspecified) {
+        output.WriteRawTag(112);
+        output.WriteEnum((int) Source);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1534,6 +1637,10 @@ namespace StreamVideo.v1.Sfu.Models {
         output.WriteMessage(Custom);
       }
       roles_.WriteTo(ref output, _repeated_roles_codec);
+      if (Source != global::StreamVideo.v1.Sfu.Models.ParticipantSource.WebrtcUnspecified) {
+        output.WriteRawTag(112);
+        output.WriteEnum((int) Source);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -1579,6 +1686,9 @@ namespace StreamVideo.v1.Sfu.Models {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(Custom);
       }
       size += roles_.CalculateSize(_repeated_roles_codec);
+      if (Source != global::StreamVideo.v1.Sfu.Models.ParticipantSource.WebrtcUnspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Source);
+      }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -1632,6 +1742,9 @@ namespace StreamVideo.v1.Sfu.Models {
         Custom.MergeFrom(other.Custom);
       }
       roles_.Add(other.roles_);
+      if (other.Source != global::StreamVideo.v1.Sfu.Models.ParticipantSource.WebrtcUnspecified) {
+        Source = other.Source;
+      }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -1706,6 +1819,10 @@ namespace StreamVideo.v1.Sfu.Models {
             roles_.AddEntriesFrom(input, _repeated_roles_codec);
             break;
           }
+          case 112: {
+            Source = (global::StreamVideo.v1.Sfu.Models.ParticipantSource) input.ReadEnum();
+            break;
+          }
         }
       }
     #endif
@@ -1778,6 +1895,10 @@ namespace StreamVideo.v1.Sfu.Models {
           }
           case 106: {
             roles_.AddEntriesFrom(ref input, _repeated_roles_codec);
+            break;
+          }
+          case 112: {
+            Source = (global::StreamVideo.v1.Sfu.Models.ParticipantSource) input.ReadEnum();
             break;
           }
         }
@@ -2865,6 +2986,8 @@ namespace StreamVideo.v1.Sfu.Models {
       maxTemporalLayers_ = other.maxTemporalLayers_;
       videoDimension_ = other.videoDimension_ != null ? other.videoDimension_.Clone() : null;
       id_ = other.id_;
+      useSingleLayer_ = other.useSingleLayer_;
+      audioBitrateProfiles_ = other.audioBitrateProfiles_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -3017,6 +3140,37 @@ namespace StreamVideo.v1.Sfu.Models {
       }
     }
 
+    /// <summary>Field number for the "use_single_layer" field.</summary>
+    public const int UseSingleLayerFieldNumber = 9;
+    private bool useSingleLayer_;
+    /// <summary>
+    /// If true, instructs the publisher to send only the highest available simulcast layer,
+    /// disabling all lower layers. This applies to simulcast encodings.
+    /// For SVC codecs, prefer using the L1T3 (single spatial, 3 temporal layers) mode instead.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool UseSingleLayer {
+      get { return useSingleLayer_; }
+      set {
+        useSingleLayer_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "audio_bitrate_profiles" field.</summary>
+    public const int AudioBitrateProfilesFieldNumber = 10;
+    private static readonly pb::FieldCodec<global::StreamVideo.v1.Sfu.Models.AudioBitrate> _repeated_audioBitrateProfiles_codec
+        = pb::FieldCodec.ForMessage(82, global::StreamVideo.v1.Sfu.Models.AudioBitrate.Parser);
+    private readonly pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.AudioBitrate> audioBitrateProfiles_ = new pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.AudioBitrate>();
+    /// <summary>
+    /// Audio bitrate profiles for different audio quality profiles.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public pbc::RepeatedField<global::StreamVideo.v1.Sfu.Models.AudioBitrate> AudioBitrateProfiles {
+      get { return audioBitrateProfiles_; }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -3040,6 +3194,8 @@ namespace StreamVideo.v1.Sfu.Models {
       if (MaxTemporalLayers != other.MaxTemporalLayers) return false;
       if (!object.Equals(VideoDimension, other.VideoDimension)) return false;
       if (Id != other.Id) return false;
+      if (UseSingleLayer != other.UseSingleLayer) return false;
+      if(!audioBitrateProfiles_.Equals(other.audioBitrateProfiles_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -3055,6 +3211,8 @@ namespace StreamVideo.v1.Sfu.Models {
       if (MaxTemporalLayers != 0) hash ^= MaxTemporalLayers.GetHashCode();
       if (videoDimension_ != null) hash ^= VideoDimension.GetHashCode();
       if (Id != 0) hash ^= Id.GetHashCode();
+      if (UseSingleLayer != false) hash ^= UseSingleLayer.GetHashCode();
+      hash ^= audioBitrateProfiles_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -3105,6 +3263,11 @@ namespace StreamVideo.v1.Sfu.Models {
         output.WriteRawTag(64);
         output.WriteInt32(Id);
       }
+      if (UseSingleLayer != false) {
+        output.WriteRawTag(72);
+        output.WriteBool(UseSingleLayer);
+      }
+      audioBitrateProfiles_.WriteTo(output, _repeated_audioBitrateProfiles_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -3147,6 +3310,11 @@ namespace StreamVideo.v1.Sfu.Models {
         output.WriteRawTag(64);
         output.WriteInt32(Id);
       }
+      if (UseSingleLayer != false) {
+        output.WriteRawTag(72);
+        output.WriteBool(UseSingleLayer);
+      }
+      audioBitrateProfiles_.WriteTo(ref output, _repeated_audioBitrateProfiles_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -3181,6 +3349,10 @@ namespace StreamVideo.v1.Sfu.Models {
       if (Id != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(Id);
       }
+      if (UseSingleLayer != false) {
+        size += 1 + 1;
+      }
+      size += audioBitrateProfiles_.CalculateSize(_repeated_audioBitrateProfiles_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -3223,6 +3395,10 @@ namespace StreamVideo.v1.Sfu.Models {
       if (other.Id != 0) {
         Id = other.Id;
       }
+      if (other.UseSingleLayer != false) {
+        UseSingleLayer = other.UseSingleLayer;
+      }
+      audioBitrateProfiles_.Add(other.audioBitrateProfiles_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -3276,6 +3452,14 @@ namespace StreamVideo.v1.Sfu.Models {
             Id = input.ReadInt32();
             break;
           }
+          case 72: {
+            UseSingleLayer = input.ReadBool();
+            break;
+          }
+          case 82: {
+            audioBitrateProfiles_.AddEntriesFrom(input, _repeated_audioBitrateProfiles_codec);
+            break;
+          }
         }
       }
     #endif
@@ -3327,6 +3511,14 @@ namespace StreamVideo.v1.Sfu.Models {
           }
           case 64: {
             Id = input.ReadInt32();
+            break;
+          }
+          case 72: {
+            UseSingleLayer = input.ReadBool();
+            break;
+          }
+          case 82: {
+            audioBitrateProfiles_.AddEntriesFrom(ref input, _repeated_audioBitrateProfiles_codec);
             break;
           }
         }
@@ -3939,6 +4131,233 @@ namespace StreamVideo.v1.Sfu.Models {
   }
 
   [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class AudioBitrate : pb::IMessage<AudioBitrate>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<AudioBitrate> _parser = new pb::MessageParser<AudioBitrate>(() => new AudioBitrate());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<AudioBitrate> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[11]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public AudioBitrate() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public AudioBitrate(AudioBitrate other) : this() {
+      profile_ = other.profile_;
+      bitrate_ = other.bitrate_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public AudioBitrate Clone() {
+      return new AudioBitrate(this);
+    }
+
+    /// <summary>Field number for the "profile" field.</summary>
+    public const int ProfileFieldNumber = 1;
+    private global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile profile_ = global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile.VoiceStandardUnspecified;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile Profile {
+      get { return profile_; }
+      set {
+        profile_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "bitrate" field.</summary>
+    public const int BitrateFieldNumber = 2;
+    private int bitrate_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int Bitrate {
+      get { return bitrate_; }
+      set {
+        bitrate_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as AudioBitrate);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(AudioBitrate other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Profile != other.Profile) return false;
+      if (Bitrate != other.Bitrate) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Profile != global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile.VoiceStandardUnspecified) hash ^= Profile.GetHashCode();
+      if (Bitrate != 0) hash ^= Bitrate.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Profile != global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile.VoiceStandardUnspecified) {
+        output.WriteRawTag(8);
+        output.WriteEnum((int) Profile);
+      }
+      if (Bitrate != 0) {
+        output.WriteRawTag(16);
+        output.WriteInt32(Bitrate);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Profile != global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile.VoiceStandardUnspecified) {
+        output.WriteRawTag(8);
+        output.WriteEnum((int) Profile);
+      }
+      if (Bitrate != 0) {
+        output.WriteRawTag(16);
+        output.WriteInt32(Bitrate);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (Profile != global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile.VoiceStandardUnspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Profile);
+      }
+      if (Bitrate != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Bitrate);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(AudioBitrate other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Profile != global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile.VoiceStandardUnspecified) {
+        Profile = other.Profile;
+      }
+      if (other.Bitrate != 0) {
+        Bitrate = other.Bitrate;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Profile = (global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile) input.ReadEnum();
+            break;
+          }
+          case 16: {
+            Bitrate = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Profile = (global::StreamVideo.v1.Sfu.Models.AudioBitrateProfile) input.ReadEnum();
+            break;
+          }
+          case 16: {
+            Bitrate = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
   internal sealed partial class TrackInfo : pb::IMessage<TrackInfo>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       , pb::IBufferMessage
@@ -3953,7 +4372,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[11]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[12]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4477,7 +4896,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[12]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[13]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4741,7 +5160,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[13]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[14]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5078,7 +5497,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[14]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[15]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5379,7 +5798,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[15]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[16]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5643,7 +6062,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[16]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[17]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5870,7 +6289,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[17]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[18]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6297,7 +6716,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[18]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[19]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6524,7 +6943,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[19]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[20]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -6979,7 +7398,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[20]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[21]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7243,7 +7662,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[21]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[22]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7496,7 +7915,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[22]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[23]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7723,7 +8142,7 @@ namespace StreamVideo.v1.Sfu.Models {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[23]; }
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[24]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -7929,6 +8348,2234 @@ namespace StreamVideo.v1.Sfu.Models {
           }
           case 16: {
             IsLowPowerModeEnabled = input.ReadBool();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// PerformanceStats represents the encoding/decoding statistics for a track.
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class PerformanceStats : pb::IMessage<PerformanceStats>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<PerformanceStats> _parser = new pb::MessageParser<PerformanceStats>(() => new PerformanceStats());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<PerformanceStats> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[25]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PerformanceStats() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PerformanceStats(PerformanceStats other) : this() {
+      trackType_ = other.trackType_;
+      codec_ = other.codec_ != null ? other.codec_.Clone() : null;
+      avgFrameTimeMs_ = other.avgFrameTimeMs_;
+      avgFps_ = other.avgFps_;
+      videoDimension_ = other.videoDimension_ != null ? other.videoDimension_.Clone() : null;
+      targetBitrate_ = other.targetBitrate_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public PerformanceStats Clone() {
+      return new PerformanceStats(this);
+    }
+
+    /// <summary>Field number for the "track_type" field.</summary>
+    public const int TrackTypeFieldNumber = 1;
+    private global::StreamVideo.v1.Sfu.Models.TrackType trackType_ = global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified;
+    /// <summary>
+    /// the type of the track (e.g., video, audio, screen share)
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.TrackType TrackType {
+      get { return trackType_; }
+      set {
+        trackType_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "codec" field.</summary>
+    public const int CodecFieldNumber = 2;
+    private global::StreamVideo.v1.Sfu.Models.Codec codec_;
+    /// <summary>
+    /// the codec used for the track
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.Codec Codec {
+      get { return codec_; }
+      set {
+        codec_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "avg_frame_time_ms" field.</summary>
+    public const int AvgFrameTimeMsFieldNumber = 3;
+    private float avgFrameTimeMs_;
+    /// <summary>
+    /// the average encode/decode time in ms
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public float AvgFrameTimeMs {
+      get { return avgFrameTimeMs_; }
+      set {
+        avgFrameTimeMs_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "avg_fps" field.</summary>
+    public const int AvgFpsFieldNumber = 4;
+    private float avgFps_;
+    /// <summary>
+    /// the average fps for the track
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public float AvgFps {
+      get { return avgFps_; }
+      set {
+        avgFps_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "video_dimension" field.</summary>
+    public const int VideoDimensionFieldNumber = 5;
+    private global::StreamVideo.v1.Sfu.Models.VideoDimension videoDimension_;
+    /// <summary>
+    /// the track dimensions
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.VideoDimension VideoDimension {
+      get { return videoDimension_; }
+      set {
+        videoDimension_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "target_bitrate" field.</summary>
+    public const int TargetBitrateFieldNumber = 6;
+    private int targetBitrate_;
+    /// <summary>
+    /// the target bitrate for the track, only for published tracks
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int TargetBitrate {
+      get { return targetBitrate_; }
+      set {
+        targetBitrate_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as PerformanceStats);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(PerformanceStats other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (TrackType != other.TrackType) return false;
+      if (!object.Equals(Codec, other.Codec)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(AvgFrameTimeMs, other.AvgFrameTimeMs)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.Equals(AvgFps, other.AvgFps)) return false;
+      if (!object.Equals(VideoDimension, other.VideoDimension)) return false;
+      if (TargetBitrate != other.TargetBitrate) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) hash ^= TrackType.GetHashCode();
+      if (codec_ != null) hash ^= Codec.GetHashCode();
+      if (AvgFrameTimeMs != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(AvgFrameTimeMs);
+      if (AvgFps != 0F) hash ^= pbc::ProtobufEqualityComparers.BitwiseSingleEqualityComparer.GetHashCode(AvgFps);
+      if (videoDimension_ != null) hash ^= VideoDimension.GetHashCode();
+      if (TargetBitrate != 0) hash ^= TargetBitrate.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        output.WriteRawTag(8);
+        output.WriteEnum((int) TrackType);
+      }
+      if (codec_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(Codec);
+      }
+      if (AvgFrameTimeMs != 0F) {
+        output.WriteRawTag(29);
+        output.WriteFloat(AvgFrameTimeMs);
+      }
+      if (AvgFps != 0F) {
+        output.WriteRawTag(37);
+        output.WriteFloat(AvgFps);
+      }
+      if (videoDimension_ != null) {
+        output.WriteRawTag(42);
+        output.WriteMessage(VideoDimension);
+      }
+      if (TargetBitrate != 0) {
+        output.WriteRawTag(48);
+        output.WriteInt32(TargetBitrate);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        output.WriteRawTag(8);
+        output.WriteEnum((int) TrackType);
+      }
+      if (codec_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(Codec);
+      }
+      if (AvgFrameTimeMs != 0F) {
+        output.WriteRawTag(29);
+        output.WriteFloat(AvgFrameTimeMs);
+      }
+      if (AvgFps != 0F) {
+        output.WriteRawTag(37);
+        output.WriteFloat(AvgFps);
+      }
+      if (videoDimension_ != null) {
+        output.WriteRawTag(42);
+        output.WriteMessage(VideoDimension);
+      }
+      if (TargetBitrate != 0) {
+        output.WriteRawTag(48);
+        output.WriteInt32(TargetBitrate);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) TrackType);
+      }
+      if (codec_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Codec);
+      }
+      if (AvgFrameTimeMs != 0F) {
+        size += 1 + 4;
+      }
+      if (AvgFps != 0F) {
+        size += 1 + 4;
+      }
+      if (videoDimension_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(VideoDimension);
+      }
+      if (TargetBitrate != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(TargetBitrate);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(PerformanceStats other) {
+      if (other == null) {
+        return;
+      }
+      if (other.TrackType != global::StreamVideo.v1.Sfu.Models.TrackType.Unspecified) {
+        TrackType = other.TrackType;
+      }
+      if (other.codec_ != null) {
+        if (codec_ == null) {
+          Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
+        }
+        Codec.MergeFrom(other.Codec);
+      }
+      if (other.AvgFrameTimeMs != 0F) {
+        AvgFrameTimeMs = other.AvgFrameTimeMs;
+      }
+      if (other.AvgFps != 0F) {
+        AvgFps = other.AvgFps;
+      }
+      if (other.videoDimension_ != null) {
+        if (videoDimension_ == null) {
+          VideoDimension = new global::StreamVideo.v1.Sfu.Models.VideoDimension();
+        }
+        VideoDimension.MergeFrom(other.VideoDimension);
+      }
+      if (other.TargetBitrate != 0) {
+        TargetBitrate = other.TargetBitrate;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
+            break;
+          }
+          case 18: {
+            if (codec_ == null) {
+              Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
+            }
+            input.ReadMessage(Codec);
+            break;
+          }
+          case 29: {
+            AvgFrameTimeMs = input.ReadFloat();
+            break;
+          }
+          case 37: {
+            AvgFps = input.ReadFloat();
+            break;
+          }
+          case 42: {
+            if (videoDimension_ == null) {
+              VideoDimension = new global::StreamVideo.v1.Sfu.Models.VideoDimension();
+            }
+            input.ReadMessage(VideoDimension);
+            break;
+          }
+          case 48: {
+            TargetBitrate = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            TrackType = (global::StreamVideo.v1.Sfu.Models.TrackType) input.ReadEnum();
+            break;
+          }
+          case 18: {
+            if (codec_ == null) {
+              Codec = new global::StreamVideo.v1.Sfu.Models.Codec();
+            }
+            input.ReadMessage(Codec);
+            break;
+          }
+          case 29: {
+            AvgFrameTimeMs = input.ReadFloat();
+            break;
+          }
+          case 37: {
+            AvgFps = input.ReadFloat();
+            break;
+          }
+          case 42: {
+            if (videoDimension_ == null) {
+              VideoDimension = new global::StreamVideo.v1.Sfu.Models.VideoDimension();
+            }
+            input.ReadMessage(VideoDimension);
+            break;
+          }
+          case 48: {
+            TargetBitrate = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// ===================================================================
+  /// BASE (shared by all RTP directions)
+  /// ===================================================================
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class RtpBase : pb::IMessage<RtpBase>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<RtpBase> _parser = new pb::MessageParser<RtpBase>(() => new RtpBase());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<RtpBase> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[26]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RtpBase() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RtpBase(RtpBase other) : this() {
+      ssrc_ = other.ssrc_;
+      kind_ = other.kind_;
+      timestampMs_ = other.timestampMs_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RtpBase Clone() {
+      return new RtpBase(this);
+    }
+
+    /// <summary>Field number for the "ssrc" field.</summary>
+    public const int SsrcFieldNumber = 1;
+    private uint ssrc_;
+    /// <summary>
+    /// raw stat["ssrc"]
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint Ssrc {
+      get { return ssrc_; }
+      set {
+        ssrc_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "kind" field.</summary>
+    public const int KindFieldNumber = 2;
+    private string kind_ = "";
+    /// <summary>
+    /// stat["kind"] ("audio","video")
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string Kind {
+      get { return kind_; }
+      set {
+        kind_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "timestamp_ms" field.</summary>
+    public const int TimestampMsFieldNumber = 3;
+    private double timestampMs_;
+    /// <summary>
+    /// stat["timestamp"] in milliseconds
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double TimestampMs {
+      get { return timestampMs_; }
+      set {
+        timestampMs_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as RtpBase);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(RtpBase other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Ssrc != other.Ssrc) return false;
+      if (Kind != other.Kind) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(TimestampMs, other.TimestampMs)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Ssrc != 0) hash ^= Ssrc.GetHashCode();
+      if (Kind.Length != 0) hash ^= Kind.GetHashCode();
+      if (TimestampMs != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(TimestampMs);
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (Ssrc != 0) {
+        output.WriteRawTag(8);
+        output.WriteUInt32(Ssrc);
+      }
+      if (Kind.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Kind);
+      }
+      if (TimestampMs != 0D) {
+        output.WriteRawTag(25);
+        output.WriteDouble(TimestampMs);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (Ssrc != 0) {
+        output.WriteRawTag(8);
+        output.WriteUInt32(Ssrc);
+      }
+      if (Kind.Length != 0) {
+        output.WriteRawTag(18);
+        output.WriteString(Kind);
+      }
+      if (TimestampMs != 0D) {
+        output.WriteRawTag(25);
+        output.WriteDouble(TimestampMs);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (Ssrc != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(Ssrc);
+      }
+      if (Kind.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(Kind);
+      }
+      if (TimestampMs != 0D) {
+        size += 1 + 8;
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(RtpBase other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Ssrc != 0) {
+        Ssrc = other.Ssrc;
+      }
+      if (other.Kind.Length != 0) {
+        Kind = other.Kind;
+      }
+      if (other.TimestampMs != 0D) {
+        TimestampMs = other.TimestampMs;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Ssrc = input.ReadUInt32();
+            break;
+          }
+          case 18: {
+            Kind = input.ReadString();
+            break;
+          }
+          case 25: {
+            TimestampMs = input.ReadDouble();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 8: {
+            Ssrc = input.ReadUInt32();
+            break;
+          }
+          case 18: {
+            Kind = input.ReadString();
+            break;
+          }
+          case 25: {
+            TimestampMs = input.ReadDouble();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// ===================================================================
+  /// INBOUND (SUBSCRIBER RECEIVING MEDIA)
+  /// ===================================================================
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class InboundRtp : pb::IMessage<InboundRtp>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<InboundRtp> _parser = new pb::MessageParser<InboundRtp>(() => new InboundRtp());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<InboundRtp> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[27]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public InboundRtp() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public InboundRtp(InboundRtp other) : this() {
+      base_ = other.base_ != null ? other.base_.Clone() : null;
+      jitterSeconds_ = other.jitterSeconds_;
+      packetsReceived_ = other.packetsReceived_;
+      packetsLost_ = other.packetsLost_;
+      packetLossPercent_ = other.packetLossPercent_;
+      concealmentEvents_ = other.concealmentEvents_;
+      concealmentPercent_ = other.concealmentPercent_;
+      fps_ = other.fps_;
+      freezeDurationSeconds_ = other.freezeDurationSeconds_;
+      avgDecodeTimeSeconds_ = other.avgDecodeTimeSeconds_;
+      minDimensionPx_ = other.minDimensionPx_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public InboundRtp Clone() {
+      return new InboundRtp(this);
+    }
+
+    /// <summary>Field number for the "base" field.</summary>
+    public const int BaseFieldNumber = 1;
+    private global::StreamVideo.v1.Sfu.Models.RtpBase base_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.RtpBase Base {
+      get { return base_; }
+      set {
+        base_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "jitter_seconds" field.</summary>
+    public const int JitterSecondsFieldNumber = 2;
+    private double jitterSeconds_;
+    /// <summary>
+    /// stat["jitter"]
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double JitterSeconds {
+      get { return jitterSeconds_; }
+      set {
+        jitterSeconds_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "packets_received" field.</summary>
+    public const int PacketsReceivedFieldNumber = 3;
+    private ulong packetsReceived_;
+    /// <summary>
+    /// stat["packetsReceived"]
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ulong PacketsReceived {
+      get { return packetsReceived_; }
+      set {
+        packetsReceived_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "packets_lost" field.</summary>
+    public const int PacketsLostFieldNumber = 4;
+    private ulong packetsLost_;
+    /// <summary>
+    /// stat["packetsLost"]
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public ulong PacketsLost {
+      get { return packetsLost_; }
+      set {
+        packetsLost_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "packet_loss_percent" field.</summary>
+    public const int PacketLossPercentFieldNumber = 5;
+    private double packetLossPercent_;
+    /// <summary>
+    /// (packets_lost / (packets_received + packets_lost)) * 100;skip if denominator &lt;= 0 or counters decreased
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double PacketLossPercent {
+      get { return packetLossPercent_; }
+      set {
+        packetLossPercent_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "concealment_events" field.</summary>
+    public const int ConcealmentEventsFieldNumber = 10;
+    private uint concealmentEvents_;
+    /// <summary>
+    /// -------- AUDIO METRICS --------
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint ConcealmentEvents {
+      get { return concealmentEvents_; }
+      set {
+        concealmentEvents_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "concealment_percent" field.</summary>
+    public const int ConcealmentPercentFieldNumber = 11;
+    private double concealmentPercent_;
+    /// <summary>
+    /// (concealedSamples / totalSamplesReceived) * 100 when totalSamplesReceived >= 96_000 (≈2 s @ 48 kHz)
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double ConcealmentPercent {
+      get { return concealmentPercent_; }
+      set {
+        concealmentPercent_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "fps" field.</summary>
+    public const int FpsFieldNumber = 20;
+    private double fps_;
+    /// <summary>
+    /// -------- VIDEO METRICS --------
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double Fps {
+      get { return fps_; }
+      set {
+        fps_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "freeze_duration_seconds" field.</summary>
+    public const int FreezeDurationSecondsFieldNumber = 21;
+    private double freezeDurationSeconds_;
+    /// <summary>
+    /// stat["totalFreezesDuration"]
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double FreezeDurationSeconds {
+      get { return freezeDurationSeconds_; }
+      set {
+        freezeDurationSeconds_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "avg_decode_time_seconds" field.</summary>
+    public const int AvgDecodeTimeSecondsFieldNumber = 22;
+    private double avgDecodeTimeSeconds_;
+    /// <summary>
+    /// stat["totalDecodeTime"] / max(1, stat["framesDecoded"])
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double AvgDecodeTimeSeconds {
+      get { return avgDecodeTimeSeconds_; }
+      set {
+        avgDecodeTimeSeconds_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "min_dimension_px" field.</summary>
+    public const int MinDimensionPxFieldNumber = 23;
+    private uint minDimensionPx_;
+    /// <summary>
+    /// min(stat["frameWidth"], stat["frameHeight"]) for video-like tracks
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint MinDimensionPx {
+      get { return minDimensionPx_; }
+      set {
+        minDimensionPx_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as InboundRtp);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(InboundRtp other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(Base, other.Base)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(JitterSeconds, other.JitterSeconds)) return false;
+      if (PacketsReceived != other.PacketsReceived) return false;
+      if (PacketsLost != other.PacketsLost) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(PacketLossPercent, other.PacketLossPercent)) return false;
+      if (ConcealmentEvents != other.ConcealmentEvents) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(ConcealmentPercent, other.ConcealmentPercent)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Fps, other.Fps)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(FreezeDurationSeconds, other.FreezeDurationSeconds)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(AvgDecodeTimeSeconds, other.AvgDecodeTimeSeconds)) return false;
+      if (MinDimensionPx != other.MinDimensionPx) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (base_ != null) hash ^= Base.GetHashCode();
+      if (JitterSeconds != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(JitterSeconds);
+      if (PacketsReceived != 0UL) hash ^= PacketsReceived.GetHashCode();
+      if (PacketsLost != 0UL) hash ^= PacketsLost.GetHashCode();
+      if (PacketLossPercent != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(PacketLossPercent);
+      if (ConcealmentEvents != 0) hash ^= ConcealmentEvents.GetHashCode();
+      if (ConcealmentPercent != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(ConcealmentPercent);
+      if (Fps != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Fps);
+      if (FreezeDurationSeconds != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(FreezeDurationSeconds);
+      if (AvgDecodeTimeSeconds != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(AvgDecodeTimeSeconds);
+      if (MinDimensionPx != 0) hash ^= MinDimensionPx.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (base_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Base);
+      }
+      if (JitterSeconds != 0D) {
+        output.WriteRawTag(17);
+        output.WriteDouble(JitterSeconds);
+      }
+      if (PacketsReceived != 0UL) {
+        output.WriteRawTag(24);
+        output.WriteUInt64(PacketsReceived);
+      }
+      if (PacketsLost != 0UL) {
+        output.WriteRawTag(32);
+        output.WriteUInt64(PacketsLost);
+      }
+      if (PacketLossPercent != 0D) {
+        output.WriteRawTag(41);
+        output.WriteDouble(PacketLossPercent);
+      }
+      if (ConcealmentEvents != 0) {
+        output.WriteRawTag(80);
+        output.WriteUInt32(ConcealmentEvents);
+      }
+      if (ConcealmentPercent != 0D) {
+        output.WriteRawTag(89);
+        output.WriteDouble(ConcealmentPercent);
+      }
+      if (Fps != 0D) {
+        output.WriteRawTag(161, 1);
+        output.WriteDouble(Fps);
+      }
+      if (FreezeDurationSeconds != 0D) {
+        output.WriteRawTag(169, 1);
+        output.WriteDouble(FreezeDurationSeconds);
+      }
+      if (AvgDecodeTimeSeconds != 0D) {
+        output.WriteRawTag(177, 1);
+        output.WriteDouble(AvgDecodeTimeSeconds);
+      }
+      if (MinDimensionPx != 0) {
+        output.WriteRawTag(184, 1);
+        output.WriteUInt32(MinDimensionPx);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (base_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Base);
+      }
+      if (JitterSeconds != 0D) {
+        output.WriteRawTag(17);
+        output.WriteDouble(JitterSeconds);
+      }
+      if (PacketsReceived != 0UL) {
+        output.WriteRawTag(24);
+        output.WriteUInt64(PacketsReceived);
+      }
+      if (PacketsLost != 0UL) {
+        output.WriteRawTag(32);
+        output.WriteUInt64(PacketsLost);
+      }
+      if (PacketLossPercent != 0D) {
+        output.WriteRawTag(41);
+        output.WriteDouble(PacketLossPercent);
+      }
+      if (ConcealmentEvents != 0) {
+        output.WriteRawTag(80);
+        output.WriteUInt32(ConcealmentEvents);
+      }
+      if (ConcealmentPercent != 0D) {
+        output.WriteRawTag(89);
+        output.WriteDouble(ConcealmentPercent);
+      }
+      if (Fps != 0D) {
+        output.WriteRawTag(161, 1);
+        output.WriteDouble(Fps);
+      }
+      if (FreezeDurationSeconds != 0D) {
+        output.WriteRawTag(169, 1);
+        output.WriteDouble(FreezeDurationSeconds);
+      }
+      if (AvgDecodeTimeSeconds != 0D) {
+        output.WriteRawTag(177, 1);
+        output.WriteDouble(AvgDecodeTimeSeconds);
+      }
+      if (MinDimensionPx != 0) {
+        output.WriteRawTag(184, 1);
+        output.WriteUInt32(MinDimensionPx);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (base_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Base);
+      }
+      if (JitterSeconds != 0D) {
+        size += 1 + 8;
+      }
+      if (PacketsReceived != 0UL) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt64Size(PacketsReceived);
+      }
+      if (PacketsLost != 0UL) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt64Size(PacketsLost);
+      }
+      if (PacketLossPercent != 0D) {
+        size += 1 + 8;
+      }
+      if (ConcealmentEvents != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(ConcealmentEvents);
+      }
+      if (ConcealmentPercent != 0D) {
+        size += 1 + 8;
+      }
+      if (Fps != 0D) {
+        size += 2 + 8;
+      }
+      if (FreezeDurationSeconds != 0D) {
+        size += 2 + 8;
+      }
+      if (AvgDecodeTimeSeconds != 0D) {
+        size += 2 + 8;
+      }
+      if (MinDimensionPx != 0) {
+        size += 2 + pb::CodedOutputStream.ComputeUInt32Size(MinDimensionPx);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(InboundRtp other) {
+      if (other == null) {
+        return;
+      }
+      if (other.base_ != null) {
+        if (base_ == null) {
+          Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+        }
+        Base.MergeFrom(other.Base);
+      }
+      if (other.JitterSeconds != 0D) {
+        JitterSeconds = other.JitterSeconds;
+      }
+      if (other.PacketsReceived != 0UL) {
+        PacketsReceived = other.PacketsReceived;
+      }
+      if (other.PacketsLost != 0UL) {
+        PacketsLost = other.PacketsLost;
+      }
+      if (other.PacketLossPercent != 0D) {
+        PacketLossPercent = other.PacketLossPercent;
+      }
+      if (other.ConcealmentEvents != 0) {
+        ConcealmentEvents = other.ConcealmentEvents;
+      }
+      if (other.ConcealmentPercent != 0D) {
+        ConcealmentPercent = other.ConcealmentPercent;
+      }
+      if (other.Fps != 0D) {
+        Fps = other.Fps;
+      }
+      if (other.FreezeDurationSeconds != 0D) {
+        FreezeDurationSeconds = other.FreezeDurationSeconds;
+      }
+      if (other.AvgDecodeTimeSeconds != 0D) {
+        AvgDecodeTimeSeconds = other.AvgDecodeTimeSeconds;
+      }
+      if (other.MinDimensionPx != 0) {
+        MinDimensionPx = other.MinDimensionPx;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            if (base_ == null) {
+              Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+            }
+            input.ReadMessage(Base);
+            break;
+          }
+          case 17: {
+            JitterSeconds = input.ReadDouble();
+            break;
+          }
+          case 24: {
+            PacketsReceived = input.ReadUInt64();
+            break;
+          }
+          case 32: {
+            PacketsLost = input.ReadUInt64();
+            break;
+          }
+          case 41: {
+            PacketLossPercent = input.ReadDouble();
+            break;
+          }
+          case 80: {
+            ConcealmentEvents = input.ReadUInt32();
+            break;
+          }
+          case 89: {
+            ConcealmentPercent = input.ReadDouble();
+            break;
+          }
+          case 161: {
+            Fps = input.ReadDouble();
+            break;
+          }
+          case 169: {
+            FreezeDurationSeconds = input.ReadDouble();
+            break;
+          }
+          case 177: {
+            AvgDecodeTimeSeconds = input.ReadDouble();
+            break;
+          }
+          case 184: {
+            MinDimensionPx = input.ReadUInt32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            if (base_ == null) {
+              Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+            }
+            input.ReadMessage(Base);
+            break;
+          }
+          case 17: {
+            JitterSeconds = input.ReadDouble();
+            break;
+          }
+          case 24: {
+            PacketsReceived = input.ReadUInt64();
+            break;
+          }
+          case 32: {
+            PacketsLost = input.ReadUInt64();
+            break;
+          }
+          case 41: {
+            PacketLossPercent = input.ReadDouble();
+            break;
+          }
+          case 80: {
+            ConcealmentEvents = input.ReadUInt32();
+            break;
+          }
+          case 89: {
+            ConcealmentPercent = input.ReadDouble();
+            break;
+          }
+          case 161: {
+            Fps = input.ReadDouble();
+            break;
+          }
+          case 169: {
+            FreezeDurationSeconds = input.ReadDouble();
+            break;
+          }
+          case 177: {
+            AvgDecodeTimeSeconds = input.ReadDouble();
+            break;
+          }
+          case 184: {
+            MinDimensionPx = input.ReadUInt32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// ===================================================================
+  /// OUTBOUND (PUBLISHER SENDING MEDIA)
+  /// ===================================================================
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class OutboundRtp : pb::IMessage<OutboundRtp>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<OutboundRtp> _parser = new pb::MessageParser<OutboundRtp>(() => new OutboundRtp());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<OutboundRtp> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[28]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public OutboundRtp() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public OutboundRtp(OutboundRtp other) : this() {
+      base_ = other.base_ != null ? other.base_.Clone() : null;
+      fps_ = other.fps_;
+      avgEncodeTimeSeconds_ = other.avgEncodeTimeSeconds_;
+      bitrateBps_ = other.bitrateBps_;
+      minDimensionPx_ = other.minDimensionPx_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public OutboundRtp Clone() {
+      return new OutboundRtp(this);
+    }
+
+    /// <summary>Field number for the "base" field.</summary>
+    public const int BaseFieldNumber = 1;
+    private global::StreamVideo.v1.Sfu.Models.RtpBase base_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.RtpBase Base {
+      get { return base_; }
+      set {
+        base_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "fps" field.</summary>
+    public const int FpsFieldNumber = 10;
+    private double fps_;
+    /// <summary>
+    /// delta(framesEncoded)/delta(time) if missing
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double Fps {
+      get { return fps_; }
+      set {
+        fps_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "avg_encode_time_seconds" field.</summary>
+    public const int AvgEncodeTimeSecondsFieldNumber = 11;
+    private double avgEncodeTimeSeconds_;
+    /// <summary>
+    /// stat["totalEncodeTime"] / max(1, stat["framesEncoded"])
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double AvgEncodeTimeSeconds {
+      get { return avgEncodeTimeSeconds_; }
+      set {
+        avgEncodeTimeSeconds_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "bitrate_bps" field.</summary>
+    public const int BitrateBpsFieldNumber = 12;
+    private double bitrateBps_;
+    /// <summary>
+    /// delta(bytesSent)*8 / delta(timeSeconds); requires prev bytes/timestamp; ignore if delta&lt;=0
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double BitrateBps {
+      get { return bitrateBps_; }
+      set {
+        bitrateBps_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "min_dimension_px" field.</summary>
+    public const int MinDimensionPxFieldNumber = 13;
+    private uint minDimensionPx_;
+    /// <summary>
+    /// min(stat["frameWidth"], stat["frameHeight"])
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public uint MinDimensionPx {
+      get { return minDimensionPx_; }
+      set {
+        minDimensionPx_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as OutboundRtp);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(OutboundRtp other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(Base, other.Base)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Fps, other.Fps)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(AvgEncodeTimeSeconds, other.AvgEncodeTimeSeconds)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(BitrateBps, other.BitrateBps)) return false;
+      if (MinDimensionPx != other.MinDimensionPx) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (base_ != null) hash ^= Base.GetHashCode();
+      if (Fps != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Fps);
+      if (AvgEncodeTimeSeconds != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(AvgEncodeTimeSeconds);
+      if (BitrateBps != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(BitrateBps);
+      if (MinDimensionPx != 0) hash ^= MinDimensionPx.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (base_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Base);
+      }
+      if (Fps != 0D) {
+        output.WriteRawTag(81);
+        output.WriteDouble(Fps);
+      }
+      if (AvgEncodeTimeSeconds != 0D) {
+        output.WriteRawTag(89);
+        output.WriteDouble(AvgEncodeTimeSeconds);
+      }
+      if (BitrateBps != 0D) {
+        output.WriteRawTag(97);
+        output.WriteDouble(BitrateBps);
+      }
+      if (MinDimensionPx != 0) {
+        output.WriteRawTag(104);
+        output.WriteUInt32(MinDimensionPx);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (base_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Base);
+      }
+      if (Fps != 0D) {
+        output.WriteRawTag(81);
+        output.WriteDouble(Fps);
+      }
+      if (AvgEncodeTimeSeconds != 0D) {
+        output.WriteRawTag(89);
+        output.WriteDouble(AvgEncodeTimeSeconds);
+      }
+      if (BitrateBps != 0D) {
+        output.WriteRawTag(97);
+        output.WriteDouble(BitrateBps);
+      }
+      if (MinDimensionPx != 0) {
+        output.WriteRawTag(104);
+        output.WriteUInt32(MinDimensionPx);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (base_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Base);
+      }
+      if (Fps != 0D) {
+        size += 1 + 8;
+      }
+      if (AvgEncodeTimeSeconds != 0D) {
+        size += 1 + 8;
+      }
+      if (BitrateBps != 0D) {
+        size += 1 + 8;
+      }
+      if (MinDimensionPx != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeUInt32Size(MinDimensionPx);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(OutboundRtp other) {
+      if (other == null) {
+        return;
+      }
+      if (other.base_ != null) {
+        if (base_ == null) {
+          Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+        }
+        Base.MergeFrom(other.Base);
+      }
+      if (other.Fps != 0D) {
+        Fps = other.Fps;
+      }
+      if (other.AvgEncodeTimeSeconds != 0D) {
+        AvgEncodeTimeSeconds = other.AvgEncodeTimeSeconds;
+      }
+      if (other.BitrateBps != 0D) {
+        BitrateBps = other.BitrateBps;
+      }
+      if (other.MinDimensionPx != 0) {
+        MinDimensionPx = other.MinDimensionPx;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            if (base_ == null) {
+              Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+            }
+            input.ReadMessage(Base);
+            break;
+          }
+          case 81: {
+            Fps = input.ReadDouble();
+            break;
+          }
+          case 89: {
+            AvgEncodeTimeSeconds = input.ReadDouble();
+            break;
+          }
+          case 97: {
+            BitrateBps = input.ReadDouble();
+            break;
+          }
+          case 104: {
+            MinDimensionPx = input.ReadUInt32();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            if (base_ == null) {
+              Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+            }
+            input.ReadMessage(Base);
+            break;
+          }
+          case 81: {
+            Fps = input.ReadDouble();
+            break;
+          }
+          case 89: {
+            AvgEncodeTimeSeconds = input.ReadDouble();
+            break;
+          }
+          case 97: {
+            BitrateBps = input.ReadDouble();
+            break;
+          }
+          case 104: {
+            MinDimensionPx = input.ReadUInt32();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// ===================================================================
+  /// SFU FEEDBACK: REMOTE-INBOUND (Publisher receives feedback)
+  /// ===================================================================
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class RemoteInboundRtp : pb::IMessage<RemoteInboundRtp>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<RemoteInboundRtp> _parser = new pb::MessageParser<RemoteInboundRtp>(() => new RemoteInboundRtp());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<RemoteInboundRtp> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[29]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RemoteInboundRtp() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RemoteInboundRtp(RemoteInboundRtp other) : this() {
+      base_ = other.base_ != null ? other.base_.Clone() : null;
+      jitterSeconds_ = other.jitterSeconds_;
+      roundTripTimeS_ = other.roundTripTimeS_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RemoteInboundRtp Clone() {
+      return new RemoteInboundRtp(this);
+    }
+
+    /// <summary>Field number for the "base" field.</summary>
+    public const int BaseFieldNumber = 1;
+    private global::StreamVideo.v1.Sfu.Models.RtpBase base_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.RtpBase Base {
+      get { return base_; }
+      set {
+        base_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "jitter_seconds" field.</summary>
+    public const int JitterSecondsFieldNumber = 2;
+    private double jitterSeconds_;
+    /// <summary>
+    /// stat["jitter"]
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double JitterSeconds {
+      get { return jitterSeconds_; }
+      set {
+        jitterSeconds_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "round_trip_time_s" field.</summary>
+    public const int RoundTripTimeSFieldNumber = 3;
+    private double roundTripTimeS_;
+    /// <summary>
+    /// stat["roundTripTime"]
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double RoundTripTimeS {
+      get { return roundTripTimeS_; }
+      set {
+        roundTripTimeS_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as RemoteInboundRtp);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(RemoteInboundRtp other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(Base, other.Base)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(JitterSeconds, other.JitterSeconds)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(RoundTripTimeS, other.RoundTripTimeS)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (base_ != null) hash ^= Base.GetHashCode();
+      if (JitterSeconds != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(JitterSeconds);
+      if (RoundTripTimeS != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(RoundTripTimeS);
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (base_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Base);
+      }
+      if (JitterSeconds != 0D) {
+        output.WriteRawTag(17);
+        output.WriteDouble(JitterSeconds);
+      }
+      if (RoundTripTimeS != 0D) {
+        output.WriteRawTag(25);
+        output.WriteDouble(RoundTripTimeS);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (base_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Base);
+      }
+      if (JitterSeconds != 0D) {
+        output.WriteRawTag(17);
+        output.WriteDouble(JitterSeconds);
+      }
+      if (RoundTripTimeS != 0D) {
+        output.WriteRawTag(25);
+        output.WriteDouble(RoundTripTimeS);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (base_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Base);
+      }
+      if (JitterSeconds != 0D) {
+        size += 1 + 8;
+      }
+      if (RoundTripTimeS != 0D) {
+        size += 1 + 8;
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(RemoteInboundRtp other) {
+      if (other == null) {
+        return;
+      }
+      if (other.base_ != null) {
+        if (base_ == null) {
+          Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+        }
+        Base.MergeFrom(other.Base);
+      }
+      if (other.JitterSeconds != 0D) {
+        JitterSeconds = other.JitterSeconds;
+      }
+      if (other.RoundTripTimeS != 0D) {
+        RoundTripTimeS = other.RoundTripTimeS;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            if (base_ == null) {
+              Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+            }
+            input.ReadMessage(Base);
+            break;
+          }
+          case 17: {
+            JitterSeconds = input.ReadDouble();
+            break;
+          }
+          case 25: {
+            RoundTripTimeS = input.ReadDouble();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            if (base_ == null) {
+              Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+            }
+            input.ReadMessage(Base);
+            break;
+          }
+          case 17: {
+            JitterSeconds = input.ReadDouble();
+            break;
+          }
+          case 25: {
+            RoundTripTimeS = input.ReadDouble();
+            break;
+          }
+        }
+      }
+    }
+    #endif
+
+  }
+
+  /// <summary>
+  /// ===================================================================
+  /// SFU FEEDBACK: REMOTE-OUTBOUND (Subscriber receives feedback)
+  /// ===================================================================
+  /// </summary>
+  [global::System.Diagnostics.DebuggerDisplayAttribute("{ToString(),nq}")]
+  internal sealed partial class RemoteOutboundRtp : pb::IMessage<RemoteOutboundRtp>
+  #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      , pb::IBufferMessage
+  #endif
+  {
+    private static readonly pb::MessageParser<RemoteOutboundRtp> _parser = new pb::MessageParser<RemoteOutboundRtp>(() => new RemoteOutboundRtp());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pb::MessageParser<RemoteOutboundRtp> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::StreamVideo.v1.Sfu.Models.ModelsReflection.Descriptor.MessageTypes[30]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RemoteOutboundRtp() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RemoteOutboundRtp(RemoteOutboundRtp other) : this() {
+      base_ = other.base_ != null ? other.base_.Clone() : null;
+      jitterSeconds_ = other.jitterSeconds_;
+      roundTripTimeS_ = other.roundTripTimeS_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public RemoteOutboundRtp Clone() {
+      return new RemoteOutboundRtp(this);
+    }
+
+    /// <summary>Field number for the "base" field.</summary>
+    public const int BaseFieldNumber = 1;
+    private global::StreamVideo.v1.Sfu.Models.RtpBase base_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public global::StreamVideo.v1.Sfu.Models.RtpBase Base {
+      get { return base_; }
+      set {
+        base_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "jitter_seconds" field.</summary>
+    public const int JitterSecondsFieldNumber = 2;
+    private double jitterSeconds_;
+    /// <summary>
+    /// stat["jitter"] if provided
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double JitterSeconds {
+      get { return jitterSeconds_; }
+      set {
+        jitterSeconds_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "round_trip_time_s" field.</summary>
+    public const int RoundTripTimeSFieldNumber = 3;
+    private double roundTripTimeS_;
+    /// <summary>
+    /// stat["roundTripTime"]
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public double RoundTripTimeS {
+      get { return roundTripTimeS_; }
+      set {
+        roundTripTimeS_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override bool Equals(object other) {
+      return Equals(other as RemoteOutboundRtp);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public bool Equals(RemoteOutboundRtp other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (!object.Equals(Base, other.Base)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(JitterSeconds, other.JitterSeconds)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(RoundTripTimeS, other.RoundTripTimeS)) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (base_ != null) hash ^= Base.GetHashCode();
+      if (JitterSeconds != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(JitterSeconds);
+      if (RoundTripTimeS != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(RoundTripTimeS);
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void WriteTo(pb::CodedOutputStream output) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      output.WriteRawMessage(this);
+    #else
+      if (base_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Base);
+      }
+      if (JitterSeconds != 0D) {
+        output.WriteRawTag(17);
+        output.WriteDouble(JitterSeconds);
+      }
+      if (RoundTripTimeS != 0D) {
+        output.WriteRawTag(25);
+        output.WriteDouble(RoundTripTimeS);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
+      if (base_ != null) {
+        output.WriteRawTag(10);
+        output.WriteMessage(Base);
+      }
+      if (JitterSeconds != 0D) {
+        output.WriteRawTag(17);
+        output.WriteDouble(JitterSeconds);
+      }
+      if (RoundTripTimeS != 0D) {
+        output.WriteRawTag(25);
+        output.WriteDouble(RoundTripTimeS);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(ref output);
+      }
+    }
+    #endif
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public int CalculateSize() {
+      int size = 0;
+      if (base_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Base);
+      }
+      if (JitterSeconds != 0D) {
+        size += 1 + 8;
+      }
+      if (RoundTripTimeS != 0D) {
+        size += 1 + 8;
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(RemoteOutboundRtp other) {
+      if (other == null) {
+        return;
+      }
+      if (other.base_ != null) {
+        if (base_ == null) {
+          Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+        }
+        Base.MergeFrom(other.Base);
+      }
+      if (other.JitterSeconds != 0D) {
+        JitterSeconds = other.JitterSeconds;
+      }
+      if (other.RoundTripTimeS != 0D) {
+        RoundTripTimeS = other.RoundTripTimeS;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public void MergeFrom(pb::CodedInputStream input) {
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+      input.ReadRawMessage(this);
+    #else
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 10: {
+            if (base_ == null) {
+              Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+            }
+            input.ReadMessage(Base);
+            break;
+          }
+          case 17: {
+            JitterSeconds = input.ReadDouble();
+            break;
+          }
+          case 25: {
+            RoundTripTimeS = input.ReadDouble();
+            break;
+          }
+        }
+      }
+    #endif
+    }
+
+    #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    void pb::IBufferMessage.InternalMergeFrom(ref pb::ParseContext input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
+            break;
+          case 10: {
+            if (base_ == null) {
+              Base = new global::StreamVideo.v1.Sfu.Models.RtpBase();
+            }
+            input.ReadMessage(Base);
+            break;
+          }
+          case 17: {
+            JitterSeconds = input.ReadDouble();
+            break;
+          }
+          case 25: {
+            RoundTripTimeS = input.ReadDouble();
             break;
           }
         }

@@ -57,11 +57,12 @@ namespace StreamVideo.Core.Stats
         {
             var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync();
             var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync();
+            var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync();
 
-            if (subscriberStatsJson == null || publisherStatsJson == null)
+            if (subscriberStatsJson == null || publisherStatsJson == null || rtcStatsJson == null)
             {
                 throw new InvalidOperationException(
-                    $"{nameof(subscriberStatsJson)}: {subscriberStatsJson}, {nameof(publisherStatsJson)}: {publisherStatsJson}");
+                    $"{nameof(subscriberStatsJson)}: {subscriberStatsJson}, {nameof(publisherStatsJson)}: {publisherStatsJson}, {nameof(rtcStatsJson)}: {rtcStatsJson}");
             }
 
             var request = new SendStatsRequest
@@ -69,6 +70,7 @@ namespace StreamVideo.Core.Stats
                 SessionId = _rtcSession.SessionId,
                 SubscriberStats = subscriberStatsJson,
                 PublisherStats = publisherStatsJson,
+                RtcStats = rtcStatsJson,
                 WebrtcVersion = WebRTCVersion,
                 Sdk = UnitySdkName,
                 SdkVersion = StreamVideoLowLevelClient.SDKVersion.ToString()
@@ -76,11 +78,13 @@ namespace StreamVideo.Core.Stats
 
 #pragma warning disable CS0162 // Disable unreachable code warning
 #if STREAM_DEBUG_ENABLED
-            if (RtcSession.LogWebRTCStats)
+            //if (RtcSession.LogWebRTCStats)
             {
-                _logs.Info("-----------WebRTC STATS DUMP -> 1. publisher, 2. subscriber------");
+                _logs.Info("-----------WebRTC STATS DUMP -> 1. publisher, 2. subscriber, 3. rtc_stats------");
                 _logs.Info(publisherStatsJson);
                 _logs.Info(subscriberStatsJson);
+                _logs.Info(rtcStatsJson);
+                _logs.Info(request.ToString());
                 _logs.Info("-----------END WebRTC STATS DUMP END------");
             }
 #endif

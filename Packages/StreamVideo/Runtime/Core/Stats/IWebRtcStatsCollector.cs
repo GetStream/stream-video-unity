@@ -7,5 +7,7 @@ namespace StreamVideo.Core.Stats
         Task<string> GetPublisherStatsJsonAsync();
 
         Task<string> GetSubscriberStatsJsonAsync();
+
+        Task<string> GetRtcStatsJsonAsync();
     }
 }

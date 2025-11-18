@@ -109,6 +109,11 @@ namespace StreamVideo.Core.StatefulModels
 
         public IStreamVideoUser CreatedBy { get; private set; }
 
+        /// <summary>
+        /// Current session ID for the RTC session. This ID is regenerated each time the connection
+        /// is reestablished (e.g., after a rejoin or migration). Use this to track the current
+        /// active RTC session.
+        /// </summary>
         public string CurrentSessionId { get; private set; }
 
         /// <summary>
@@ -505,10 +510,18 @@ namespace StreamVideo.Core.StatefulModels
 
         internal const string ParticipantsCustomDataPrefix = "pXwf2Z1mFOOEXV_participants_data";
 
+        /// <summary>
+        /// Unified session ID that persists for the entire duration of the call. Unlike <see cref="CurrentSessionId"/>,
+        /// this ID remains constant across reconnections, rejoins, and SFU migrations. Used internally
+        /// for tracking statistics and analytics for the entire call lifecycle from join to leave.
+        /// </summary>
+        internal string UnifiedSessionId { get; private set; }
+
         internal StreamCall(string uniqueId, ICacheRepository<StreamCall> repository,
             IStatefulModelContext context)
             : base(uniqueId, repository, context)
         {
+            UnifiedSessionId = Guid.NewGuid().ToString();
         }
 
         //StreamTodo: solve with a generic interface and best to be handled by cache layer

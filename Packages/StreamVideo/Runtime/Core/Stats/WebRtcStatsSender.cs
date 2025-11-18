@@ -72,6 +72,7 @@ namespace StreamVideo.Core.Stats
             var request = new SendStatsRequest
             {
                 SessionId = _rtcSession.SessionId,
+                UnifiedSessionId = _rtcSession.ActiveCall.UnifiedSessionId,
                 SubscriberStats = subscriberStatsJson,
                 PublisherStats = publisherStatsJson,
                 RtcStats = rtcStatsJson,

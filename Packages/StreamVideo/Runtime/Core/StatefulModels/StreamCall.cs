@@ -799,7 +799,6 @@ namespace StreamVideo.Core.StatefulModels
                 {
                     if (!capabilitiesByRole.ContainsKey(role))
                     {
-
                         tempRolesToRemove.Add(role);
                     }
                 }

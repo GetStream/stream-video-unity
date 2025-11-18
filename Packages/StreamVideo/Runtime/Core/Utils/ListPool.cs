@@ -10,7 +10,6 @@ namespace StreamVideo.Core.Utils
             if (Pool.Count > 0)
             {
                 var list = Pool.Pop();
-                list.Clear();
                 return list;
             }
 

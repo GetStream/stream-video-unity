@@ -32,6 +32,7 @@ using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
 using StreamVideo.Core.Sfu;
 using StreamVideo.Core.Stats;
+using StreamVideo.Core.Trace;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -50,6 +51,9 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
     internal sealed class RtcSession : IMediaInputProvider, IDisposable
     {
+        // Static session counter to track the number of sessions created
+        private static int _sessionCounter = 0;
+        
         //StreamTodo: move to some config + perhaps allow user to set this
         public const ulong MaxPublishAudioBitrate = 500_000;
         public const ulong MaxPublishVideoBitrate = 1_200_000;
@@ -224,7 +228,7 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: SFU WS should be created here so that RTC session owns it
             _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
 
-            var statsCollector = new UnityWebRtcStatsCollector(this, _serializer);
+            var statsCollector = new UnityWebRtcStatsCollector(this, _serializer, _tracerManager);
             _statsSender = new WebRtcStatsSender(this, statsCollector, _timeService, _logs);
 
             //StreamTodo: enable this only if a special mode e.g. compiler flag 
@@ -242,6 +246,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             DisposeSubscriber();
             DisposePublisher();
+            
+            _tracerManager?.Clear();
         }
 
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
@@ -324,6 +330,12 @@ namespace StreamVideo.Core.LowLevelClient
                 var sfuUrl = call.Credentials.Server.Url;
                 var sfuToken = call.Credentials.Token;
                 var iceServers = call.Credentials.IceServers;
+                
+                // Initialize SFU tracer with the correct ID format
+                var sfuUrlForId = sfuUrl.Replace("https://", "").Replace("/twirp", "");
+                var tracerId = $"{_sessionCounter + 1}-{sfuUrlForId}";
+                _sfuTracer = _tracerManager.GetTracer(tracerId);
+                _sessionCounter++;
 
                 CreateSubscriber(iceServers);
 
@@ -465,6 +477,9 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly WebRtcStatsSender _statsSender;
         private readonly VideoAudioSyncBenchmark _videoAudioSyncBenchmark;
         private readonly SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
+        private readonly TracerManager _tracerManager = new TracerManager(enabled: true);
+
+        private Tracer _sfuTracer;
 
         private readonly List<SfuICETrickle> _pendingIceTrickleRequests = new List<SfuICETrickle>();
         private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
@@ -713,6 +728,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuJoinResponse(JoinResponse joinResponse)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.JoinRequest, joinResponse);
             _logs.InfoIfDebug($"Handle Sfu {nameof(JoinResponse)}");
             ActiveCall.UpdateFromSfu(joinResponse);
             OnSfuJoinedCall();
@@ -730,6 +746,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuIceTrickle(SfuICETrickle iceTrickle)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.AddIceCandidate, iceTrickle);
+            
             //StreamTodo: better to wrap in separate structure and not depend on a specific WebRTC implementation
             var iceCandidateInit = _serializer.Deserialize<RTCIceCandidateInit>(iceTrickle.IceCandidate);
 
@@ -755,6 +773,8 @@ namespace StreamVideo.Core.LowLevelClient
      */
         private async void OnSfuSubscriberOffer(SubscriberOffer subscriberOffer)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, subscriberOffer);
+            
 #if STREAM_DEBUG_ENABLED
             _logs.Warning("OnSfuSubscriberOffer");
 #endif
@@ -801,6 +821,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuTrackUnpublished(TrackUnpublished trackUnpublished)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.OnTrack, trackUnpublished);
+            
             var userId = trackUnpublished.UserId;
             var sessionId = trackUnpublished.SessionId;
             var type = trackUnpublished.Type.ToPublicEnum();
@@ -821,6 +843,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuTrackPublished(TrackPublished trackPublished)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.OnTrack, trackPublished);
+            
             var userId = trackPublished.UserId;
             var sessionId = trackPublished.SessionId;
             var type = trackPublished.Type.ToPublicEnum();
@@ -935,6 +959,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuParticipantJoined(ParticipantJoined participantJoined)
         {
+            _sfuTracer?.Trace("participantJoined", participantJoined);
+            
             if (!AssertCallIdMatch(ActiveCall, participantJoined.CallCid, _logs))
             {
                 return;
@@ -951,6 +977,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuParticipantLeft(ParticipantLeft participantLeft)
         {
+            _sfuTracer?.Trace("participantLeft", participantLeft);
+            
             if (!AssertCallIdMatch(ActiveCall, participantLeft.CallCid, _logs))
             {
                 return;
@@ -969,77 +997,92 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuDominantSpeakerChanged(DominantSpeakerChanged dominantSpeakerChanged)
         {
+            _sfuTracer?.Trace("dominantSpeakerChanged", dominantSpeakerChanged);
             ActiveCall.UpdateFromSfu(dominantSpeakerChanged, _cache);
         }
 
         private void OnSfuWebSocketOnError(SfuError obj)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.SfuError, obj);
             _logs.Error(
                 $"Sfu Error - Code: {obj.Error_.Code}, Message: {obj.Error_.Message}, ShouldRetry: {obj.Error_.ShouldRetry}");
         }
 
         private void OnSfuPinsUpdated(PinsChanged pinsChanged)
         {
+            _sfuTracer?.Trace("pinsChanged", pinsChanged);
             ActiveCall.UpdateFromSfu(pinsChanged, _cache);
         }
 
         private void OnSfuIceRestart(ICERestart iceRestart)
         {
+            _sfuTracer?.Trace("iceRestart", iceRestart);
             // StreamTODO: Implement OnSfuIceRestart
         }
 
         private void OnSfuGoAway(GoAway goAway)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.GoAway, goAway);
             // StreamTODO: Implement OnSfuGoAway
         }
 
         private void OnSfuCallGrantsUpdated(CallGrantsUpdated callGrantsUpdated)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.CallEnded, callGrantsUpdated);
             // StreamTODO: Implement OnSfuCallGrantsUpdated
         }
 
         private void OnSfuChangePublishQuality(ChangePublishQuality changePublishQuality)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.ChangePublishQuality, changePublishQuality);
             // StreamTODO: Implement OnSfuChangePublishQuality
         }
 
         private void OnSfuConnectionQualityChanged(ConnectionQualityChanged connectionQualityChanged)
         {
+            _sfuTracer?.Trace("connectionQualityChanged", connectionQualityChanged);
             // StreamTODO: Implement OnSfuConnectionQualityChanged
         }
 
         private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)
         {
+            _sfuTracer?.Trace("audioLevelChanged", audioLevelChanged);
             // StreamTODO: Implement OnSfuAudioLevelChanged
         }
 
         private void OnSfuPublisherAnswer(PublisherAnswer publisherAnswer)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.CreateAnswer, publisherAnswer);
             // StreamTODO: Implement OnSfuPublisherAnswer
         }
 
         private void OnSfuWebSocketOnChangePublishOptions(ChangePublishOptions obj)
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.ChangePublishOptions, obj);
             // StreamTODO: Implement OnSfuWebSocketOnChangePublishOptions
         }
         
         private void OnSfuInboundStateNotification(InboundStateNotification obj)
         {
+            _sfuTracer?.Trace("inboundStateNotification", obj);
             //StreamTODO: implement
         }
 
         private void OnSfuWebSocketOnParticipantMigrationComplete()
         {
+            _sfuTracer?.Trace("participantMigrationComplete", null);
             // StreamTODO: Implement OnSfuWebSocketOnParticipantMigrationComplete
         }
 
         private void OnSfuWebSocketOnParticipantUpdated(ParticipantUpdated obj)
         {
+            _sfuTracer?.Trace("participantUpdated", obj);
             // StreamTODO: Implement OnSfuWebSocketOnParticipantUpdated
         }
 
         private void OnSfuWebSocketOnCallEnded()
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.CallEnded, null);
             // StreamTODO: Implement OnSfuWebSocketOnCallEnded
         }
 

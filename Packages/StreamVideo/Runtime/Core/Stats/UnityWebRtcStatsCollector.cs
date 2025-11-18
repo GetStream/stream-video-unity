@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Trace;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.v1.Sfu.Models;
 using Unity.WebRTC;
@@ -14,6 +15,7 @@ namespace StreamVideo.Core.Stats
     {
         private readonly RtcSession _rtcSession;
         private readonly ISerializer _serializer;
+        private readonly TracerManager _tracerManager;
         private Dictionary<string, StatSnapshot> _previousPublisherStats = new Dictionary<string, StatSnapshot>();
         private Dictionary<string, StatSnapshot> _previousSubscriberStats = new Dictionary<string, StatSnapshot>();
 
@@ -58,21 +60,33 @@ namespace StreamVideo.Core.Stats
             _previousPublisherStats = CreateStatsSnapshot(publisherReport.Stats);
             _previousSubscriberStats = CreateStatsSnapshot(subscriberReport.Stats);
 
-            // Create trace records in the format: ["tag", "id", data, timestamp]
-            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            var traces = new List<object[]>
+            // Collect ALL tracer data from the TracerManager
+            // This includes all SFU events traced in RtcSession plus the getstats traces we'll add
+            var allTraces = new List<object[]>();
+            
+            foreach (var tracer in _tracerManager.GetTracers())
             {
-                new object[] { "getstats", "pub", publisherDelta, timestamp },
-                new object[] { "getstats", "sub", subscriberDelta, timestamp }
-            };
+                var slice = tracer.Take();
+                foreach (var record in slice.Snapshot)
+                {
+                    // Serialize each trace record as [tag, id, data, timestamp]
+                    allTraces.Add(new object[] { record.Tag, record.Id, record.Data, record.Timestamp });
+                }
+            }
 
-            return _serializer.Serialize(traces, _serializationOptions);
+            // Add the getstats traces for publisher and subscriber
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            allTraces.Add(new object[] { "getstats", "pub", publisherDelta, timestamp });
+            allTraces.Add(new object[] { "getstats", "sub", subscriberDelta, timestamp });
+
+            return _serializer.Serialize(allTraces, _serializationOptions);
         }
 
-        internal UnityWebRtcStatsCollector(RtcSession rtcSession, ISerializer serializer)
+        internal UnityWebRtcStatsCollector(RtcSession rtcSession, ISerializer serializer, TracerManager tracerManager)
         {
             _rtcSession = rtcSession ?? throw new ArgumentNullException(nameof(rtcSession));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            _tracerManager = tracerManager ?? throw new ArgumentNullException(nameof(tracerManager));
 
             _serializationOptions = new SerializationOptions
             {

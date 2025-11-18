@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Google.Protobuf.Collections;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
+using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
 
 namespace StreamVideo.Core.Stats
@@ -58,6 +60,8 @@ namespace StreamVideo.Core.Stats
             var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync();
             var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync();
             var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync();
+            var encodeStats = await _webRtcStatsCollector.GetEncodeStatsAsync();
+            var decodeStats = await _webRtcStatsCollector.GetDecodeStatsAsync();
 
             if (subscriberStatsJson == null || publisherStatsJson == null || rtcStatsJson == null)
             {
@@ -73,8 +77,20 @@ namespace StreamVideo.Core.Stats
                 RtcStats = rtcStatsJson,
                 WebrtcVersion = WebRTCVersion,
                 Sdk = UnitySdkName,
-                SdkVersion = StreamVideoLowLevelClient.SDKVersion.ToString()
+                SdkVersion = StreamVideoLowLevelClient.SDKVersion.ToString(),
             };
+
+            // Add encode and decode stats using the collection's .Add() method
+            // (RepeatedField properties don't have setters)
+            foreach (var stat in encodeStats)
+            {
+                request.EncodeStats.Add(stat);
+            }
+            
+            foreach (var stat in decodeStats)
+            {
+                request.DecodeStats.Add(stat);
+            }
 
 #pragma warning disable CS0162 // Disable unreachable code warning
 #if STREAM_DEBUG_ENABLED
@@ -84,6 +100,7 @@ namespace StreamVideo.Core.Stats
                 _logs.Info(publisherStatsJson);
                 _logs.Info(subscriberStatsJson);
                 _logs.Info(rtcStatsJson);
+                _logs.Info($"Encode stats count: {encodeStats.Count}, Decode stats count: {decodeStats.Count}");
                 _logs.Info(request.ToString());
                 _logs.Info("-----------END WebRTC STATS DUMP END------");
             }

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Libs.Serialization;
+using StreamVideo.v1.Sfu.Models;
 using Unity.WebRTC;
 
 namespace StreamVideo.Core.Stats
@@ -15,6 +16,11 @@ namespace StreamVideo.Core.Stats
         private readonly ISerializer _serializer;
         private Dictionary<string, StatSnapshot> _previousPublisherStats = new Dictionary<string, StatSnapshot>();
         private Dictionary<string, StatSnapshot> _previousSubscriberStats = new Dictionary<string, StatSnapshot>();
+
+        // Track frame time and FPS history for performance stats
+        private readonly Dictionary<string, Queue<double>> _frameTimeHistory = new Dictionary<string, Queue<double>>();
+        private readonly Dictionary<string, Queue<double>> _fpsHistory = new Dictionary<string, Queue<double>>();
+        private const int HistorySize = 2; // Keep last 2 values like Android
 
         /// <summary>
         /// Snapshot of RTCStats data to avoid holding references to native objects that may be freed
@@ -148,7 +154,7 @@ namespace StreamVideo.Core.Stats
         }
 
         /// <summary>
-        /// Performs delta compression on WebRTC stats, matching Android implementation.
+        /// Performs delta compression on WebRTC stats, matching Android implementation (StatsTracer.kt).
         /// Only includes changed values and normalizes timestamps.
         /// </summary>
         private Dictionary<string, object> ComputeDeltaCompression(
@@ -217,6 +223,250 @@ namespace StreamVideo.Core.Stats
             result["timestamp"] = latestTimestamp / 1000; // Convert microseconds to milliseconds
 
             return result;
+        }
+
+        public async Task<IReadOnlyList<PerformanceStats>> GetEncodeStatsAsync()
+        {
+            var report = await _rtcSession.Publisher.GetStatsReportAsync();
+            return ComputeEncodeStats(report.Stats);
+        }
+
+        public async Task<IReadOnlyList<PerformanceStats>> GetDecodeStatsAsync()
+        {
+            var report = await _rtcSession.Subscriber.GetStatsReportAsync();
+            return ComputeDecodeStats(report.Stats);
+        }
+
+        /// <summary>
+        /// Computes encoder performance stats from publisher WebRTC stats, matching Android implementation.
+        /// </summary>
+        private List<PerformanceStats> ComputeEncodeStats(IDictionary<string, RTCStats> currentStats)
+        {
+            var result = new List<PerformanceStats>();
+
+            // Find all outbound-rtp video stats
+            foreach (var entry in currentStats)
+            {
+                var stat = entry.Value;
+                if (GetEnumStringValue(stat.Type) != "outbound-rtp") continue;
+                if (!GetStringValue(stat.Dict, "kind").Equals("video")) continue;
+
+                // Skip if we don't have previous stats for this stat
+                if (!_previousPublisherStats.ContainsKey(entry.Key)) continue;
+
+                var prevStat = _previousPublisherStats[entry.Key];
+
+                // Calculate frame time: dtEncode / dfSent
+                var totalEncodeTime = GetDoubleValue(stat.Dict, "totalEncodeTime");
+                var prevTotalEncodeTime = GetDoubleValue(prevStat.Dict, "totalEncodeTime");
+                var framesSent = GetLongValue(stat.Dict, "framesSent");
+                var prevFramesSent = GetLongValue(prevStat.Dict, "framesSent");
+
+                var dtEncode = totalEncodeTime - prevTotalEncodeTime;
+                var dfSent = framesSent - prevFramesSent;
+
+                var frameTime = dfSent > 0 ? (dtEncode / dfSent) * 1000 : 0.0; // ms/frame
+
+                // Update history
+                var statId = entry.Key;
+                if (!_frameTimeHistory.ContainsKey(statId))
+                {
+                    _frameTimeHistory[statId] = new Queue<double>();
+                    _fpsHistory[statId] = new Queue<double>();
+                }
+
+                _frameTimeHistory[statId].Enqueue(frameTime);
+                if (_frameTimeHistory[statId].Count > HistorySize)
+                    _frameTimeHistory[statId].Dequeue();
+
+                var fps = GetDoubleValue(stat.Dict, "framesPerSecond");
+                _fpsHistory[statId].Enqueue(fps);
+                if (_fpsHistory[statId].Count > HistorySize)
+                    _fpsHistory[statId].Dequeue();
+
+                // Calculate averages
+                var avgFrameTime = _frameTimeHistory[statId].Average();
+                var avgFps = _fpsHistory[statId].Average();
+
+                // Extract codec info
+                var codecId = GetStringValue(stat.Dict, "codecId");
+                var codec = ExtractCodec(currentStats, codecId);
+
+                var perfStat = new PerformanceStats
+                {
+                    TrackType = TrackType.Video, // Video track
+                    Codec = codec,
+                    AvgFrameTimeMs = (float)avgFrameTime,
+                    AvgFps = (float)avgFps,
+                    TargetBitrate = GetIntValue(stat.Dict, "targetBitrate"),
+                    VideoDimension = new VideoDimension
+                    {
+                        Width = (uint)GetIntValue(stat.Dict, "frameWidth"),
+                        Height = (uint)GetIntValue(stat.Dict, "frameHeight")
+                    }
+                };
+
+                result.Add(perfStat);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Computes decoder performance stats from subscriber WebRTC stats, matching Android implementation.
+        /// </summary>
+        private List<PerformanceStats> ComputeDecodeStats(IDictionary<string, RTCStats> currentStats)
+        {
+            var result = new List<PerformanceStats>();
+
+            // Find the largest inbound-rtp video stat (the active track)
+            RTCStats largestStat = null;
+            string largestStatId = null;
+            int largestArea = 0;
+
+            foreach (var entry in currentStats)
+            {
+                var stat = entry.Value;
+                if (GetEnumStringValue(stat.Type) != "inbound-rtp") continue;
+                if (!GetStringValue(stat.Dict, "kind").Equals("video")) continue;
+
+                var width = GetIntValue(stat.Dict, "frameWidth");
+                var height = GetIntValue(stat.Dict, "frameHeight");
+                var area = width * height;
+
+                if (area > largestArea)
+                {
+                    largestArea = area;
+                    largestStat = stat;
+                    largestStatId = entry.Key;
+                }
+            }
+
+            if (largestStat == null || !_previousSubscriberStats.ContainsKey(largestStatId))
+                return result;
+
+            var prevStat = _previousSubscriberStats[largestStatId];
+
+            // Calculate frame time: dtDecode / dfDecoded
+            var totalDecodeTime = GetDoubleValue(largestStat.Dict, "totalDecodeTime");
+            var prevTotalDecodeTime = GetDoubleValue(prevStat.Dict, "totalDecodeTime");
+            var framesDecoded = GetLongValue(largestStat.Dict, "framesDecoded");
+            var prevFramesDecoded = GetLongValue(prevStat.Dict, "framesDecoded");
+
+            var dtDecode = totalDecodeTime - prevTotalDecodeTime;
+            var dfDecoded = framesDecoded - prevFramesDecoded;
+
+            var frameTime = dfDecoded > 0 ? (dtDecode / dfDecoded) * 1000 : 0.0; // ms/frame
+
+            // Update history
+            var statId = largestStatId;
+            if (!_frameTimeHistory.ContainsKey(statId))
+            {
+                _frameTimeHistory[statId] = new Queue<double>();
+                _fpsHistory[statId] = new Queue<double>();
+            }
+
+            _frameTimeHistory[statId].Enqueue(frameTime);
+            if (_frameTimeHistory[statId].Count > HistorySize)
+                _frameTimeHistory[statId].Dequeue();
+
+            var fps = GetDoubleValue(largestStat.Dict, "framesPerSecond");
+            _fpsHistory[statId].Enqueue(fps);
+            if (_fpsHistory[statId].Count > HistorySize)
+                _fpsHistory[statId].Dequeue();
+
+            // Calculate averages
+            var avgFrameTime = _frameTimeHistory[statId].Average();
+            var avgFps = _fpsHistory[statId].Average();
+
+            // Extract codec info
+            var codecId = GetStringValue(largestStat.Dict, "codecId");
+            var codec = ExtractCodec(currentStats, codecId);
+
+            var perfStat = new PerformanceStats
+            {
+                TrackType = TrackType.Video, // Video track
+                Codec = codec,
+                AvgFrameTimeMs = (float)avgFrameTime,
+                AvgFps = (float)avgFps,
+                VideoDimension = new VideoDimension
+                {
+                    Width = (uint)GetIntValue(largestStat.Dict, "frameWidth"),
+                    Height = (uint)GetIntValue(largestStat.Dict, "frameHeight")
+                }
+            };
+
+            result.Add(perfStat);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Extracts codec information from stats
+        /// </summary>
+        private Codec ExtractCodec(IDictionary<string, RTCStats> stats, string codecId)
+        {
+            if (string.IsNullOrEmpty(codecId) || !stats.ContainsKey(codecId))
+                return null;
+
+            var codecStat = stats[codecId];
+            var mimeType = GetStringValue(codecStat.Dict, "mimeType");
+            var clockRate = (uint)GetIntValue(codecStat.Dict, "clockRate");
+            var payloadType = (uint)GetIntValue(codecStat.Dict, "payloadType");
+            var sdpFmtpLine = GetStringValue(codecStat.Dict, "sdpFmtpLine");
+
+            return new Codec
+            {
+                Name = mimeType,
+                ClockRate = clockRate,
+                PayloadType = payloadType,
+                Fmtp = sdpFmtpLine
+            };
+        }
+
+        // Helper methods to safely extract values from Dict
+        private static string GetStringValue(IDictionary<string, object> dict, string key)
+        {
+            return dict.TryGetValue(key, out var value) && value != null ? value.ToString() : string.Empty;
+        }
+
+        private static double GetDoubleValue(IDictionary<string, object> dict, string key)
+        {
+            if (dict.TryGetValue(key, out var value) && value != null)
+            {
+                if (value is double d) return d;
+                if (value is float f) return f;
+                if (value is int i) return i;
+                if (value is long l) return l;
+                if (double.TryParse(value.ToString(), out var result)) return result;
+            }
+            return 0.0;
+        }
+
+        private static long GetLongValue(IDictionary<string, object> dict, string key)
+        {
+            if (dict.TryGetValue(key, out var value) && value != null)
+            {
+                if (value is long l) return l;
+                if (value is int i) return i;
+                if (value is uint ui) return ui;
+                if (value is ulong ul) return (long)ul;
+                if (long.TryParse(value.ToString(), out var result)) return result;
+            }
+            return 0L;
+        }
+
+        private static int GetIntValue(IDictionary<string, object> dict, string key)
+        {
+            if (dict.TryGetValue(key, out var value) && value != null)
+            {
+                if (value is int i) return i;
+                if (value is long l) return (int)l;
+                if (value is uint ui) return (int)ui;
+                if (value is double d) return (int)d;
+                if (int.TryParse(value.ToString(), out var result)) return result;
+            }
+            return 0;
         }
     }
 }

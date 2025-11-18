@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.Trace;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
 using Unity.WebRTC;
@@ -83,7 +84,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
             IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig,
-            PublisherVideoSettings publisherVideoSettings)
+            PublisherVideoSettings publisherVideoSettings, Tracer tracer)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _peerType = peerType;
@@ -91,6 +92,7 @@ namespace StreamVideo.Core.LowLevelClient
             _audioConfig = audioConfig ?? throw new ArgumentNullException(nameof(audioConfig));
             _publisherVideoSettings = publisherVideoSettings ??
                                       throw new ArgumentNullException(nameof(publisherVideoSettings));
+            _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
 
             if (_peerType == StreamPeerType.Publisher)
             {
@@ -153,11 +155,14 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] Set LocalDesc:\n" + offer.sdp);
 #endif
+            _tracer?.Trace(PeerConnectionTraceKey.SetLocalDescription, offer.sdp);
             return _peerConnection.SetLocalDescriptionAsync(ref offer);
         }
 
         public async Task SetRemoteDescriptionAsync(RTCSessionDescription offer)
         {
+            _tracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, offer.sdp);
+            
             await _peerConnection.SetRemoteDescriptionAsync(ref offer);
 
 #if STREAM_DEBUG_ENABLED
@@ -180,6 +185,8 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning(
                 $"[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
 #endif
+            _tracer?.Trace(PeerConnectionTraceKey.AddIceCandidate, iceCandidateInit.candidate);
+            
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
             {
@@ -190,9 +197,19 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.AddIceCandidate(iceCandidate);
         }
 
-        public Task<RTCSessionDescription> CreateOfferAsync() => _peerConnection.CreateOfferAsync();
+        public async Task<RTCSessionDescription> CreateOfferAsync()
+        {
+            var offer = await _peerConnection.CreateOfferAsync();
+            _tracer?.Trace(PeerConnectionTraceKey.CreateOffer, offer.sdp);
+            return offer;
+        }
 
-        public Task<RTCSessionDescription> CreateAnswerAsync() => _peerConnection.CreateAnswerAsync();
+        public async Task<RTCSessionDescription> CreateAnswerAsync()
+        {
+            var answer = await _peerConnection.CreateAnswerAsync();
+            _tracer?.Trace(PeerConnectionTraceKey.CreateAnswer, answer.sdp);
+            return answer;
+        }
 
         public IEnumerable<RTCRtpTransceiver> GetTransceivers() => _peerConnection.GetTransceivers();
 
@@ -240,6 +257,7 @@ namespace StreamVideo.Core.LowLevelClient
             PublisherAudioTrack = null;
             PublisherVideoTrack = null;
 
+            _tracer?.Trace(PeerConnectionTraceKey.Close, null);
             _peerConnection.Close();
 
 #if STREAM_DEBUG_ENABLED
@@ -258,6 +276,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IMediaInputProvider _mediaInputProvider;
         private readonly IStreamAudioConfig _audioConfig;
         private readonly PublisherVideoSettings _publisherVideoSettings;
+        private readonly Tracer _tracer;
 
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
 
@@ -268,13 +287,29 @@ namespace StreamVideo.Core.LowLevelClient
         private VideoStreamTrack _publisherVideoTrack;
         private AudioStreamTrack _publisherAudioTrack;
 
-        private void OnIceCandidate(RTCIceCandidate candidate) => IceTrickled?.Invoke(candidate, _peerType);
+        private void OnIceCandidate(RTCIceCandidate candidate)
+        {
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning($"[{_peerType}] OnIceCandidate: {(candidate == null ? "null (gathering complete)" : candidate.ToString())}");
+#endif
+
+            if (candidate == null)
+            {
+                // Null candidate signals that ICE gathering is complete
+                _tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, "null (ICE gathering complete)");
+                return;
+            }
+
+            _tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, candidate.ToString());
+            IceTrickled?.Invoke(candidate, _peerType);
+        }
 
         private void OnIceConnectionChange(RTCIceConnectionState state)
         {
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnIceConnectionChange to: " + state);
 #endif
+            _tracer?.Trace(PeerConnectionTraceKey.OnIceConnectionStateChange, state.ToString());
         }
 
         private void OnIceGatheringStateChange(RTCIceGatheringState state)
@@ -282,6 +317,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnIceGatheringStateChange to: " + state);
 #endif
+            _tracer?.Trace(PeerConnectionTraceKey.OnIceGatheringStateChange, state.ToString());
         }
 
         private void OnNegotiationNeeded()
@@ -289,6 +325,8 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnNegotiationNeeded");
 #endif
+
+            _tracer?.Trace(PeerConnectionTraceKey.OnNegotiationNeeded, null);
 
             //StreamTodo: take into account race conditions https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
             //We want to set the local description if signalingState is stable - we need to check it because state could change during async operations
@@ -301,6 +339,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnConnectionStateChange to: {state}");
 #endif
+            _tracer?.Trace(PeerConnectionTraceKey.OnConnectionStateChange, state.ToString());
         }
 
         private void OnTrack(RTCTrackEvent trackEvent)
@@ -308,6 +347,21 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] OnTrack {trackEvent.Track.GetType()}");
 #endif
+
+            var trackType = trackEvent.Track is AudioStreamTrack ? "audio" : "video";
+            var trackId = trackEvent.Track.Id;
+            var streamIds = trackEvent.Streams != null && trackEvent.Streams.Any()
+                ? string.Join(",", trackEvent.Streams.Select(s => s.Id))
+                : "";
+            
+            if (!string.IsNullOrEmpty(streamIds))
+            {
+                _tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId} {streamIds}");
+            }
+            else
+            {
+                _tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId}");
+            }
 
             foreach (var stream in trackEvent.Streams)
             {

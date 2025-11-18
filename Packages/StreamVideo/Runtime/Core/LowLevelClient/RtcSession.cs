@@ -331,10 +331,12 @@ namespace StreamVideo.Core.LowLevelClient
                 var sfuToken = call.Credentials.Token;
                 var iceServers = call.Credentials.IceServers;
                 
-                // Initialize SFU tracer with the correct ID format
+                // Initialize tracers with the correct ID format - separate tracers for SFU, Publisher, and Subscriber
                 var sfuUrlForId = sfuUrl.Replace("https://", "").Replace("/twirp", "");
-                var tracerId = $"{_sessionCounter + 1}-{sfuUrlForId}";
-                _sfuTracer = _tracerManager.GetTracer(tracerId);
+                var sessionNumber = _sessionCounter + 1;
+                _sfuTracer = _tracerManager.GetTracer($"{sessionNumber}-{sfuUrlForId}");
+                _publisherTracer = _tracerManager.GetTracer($"{sessionNumber}-pub");
+                _subscriberTracer = _tracerManager.GetTracer($"{sessionNumber}-sub");
                 _sessionCounter++;
 
                 CreateSubscriber(iceServers);
@@ -480,6 +482,8 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly TracerManager _tracerManager = new TracerManager(enabled: true);
 
         private Tracer _sfuTracer;
+        private Tracer _publisherTracer;
+        private Tracer _subscriberTracer;
 
         private readonly List<SfuICETrickle> _pendingIceTrickleRequests = new List<SfuICETrickle>();
         private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
@@ -524,6 +528,9 @@ namespace StreamVideo.Core.LowLevelClient
             _trackSubscriptionRequestInProgress = false;
 
             UnsubscribeFromSfuEvents();
+            
+            // Clear all tracer buffers to prevent leaking events from previous session
+            _tracerManager?.Clear();
         }
 
         //StreamTodo: request track subscriptions when SFU got changed. Android comment for setVideoSubscriptions:
@@ -1454,7 +1461,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
             Subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers,
-                this, _config.Audio, _publisherVideoSettings);
+                this, _config.Audio, _publisherVideoSettings, _subscriberTracer);
             Subscriber.IceTrickled += OnIceTrickled;
             Subscriber.StreamAdded += OnSubscriberStreamAdded;
         }
@@ -1479,7 +1486,7 @@ namespace StreamVideo.Core.LowLevelClient
             var callSettings = ActiveCall.Settings;
 
             Publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers,
-                this, _config.Audio, _publisherVideoSettings);
+                this, _config.Audio, _publisherVideoSettings, _publisherTracer);
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;

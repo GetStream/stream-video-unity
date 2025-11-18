@@ -137,7 +137,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                             Type = SdkType.Unity,
                             Major = _sdkVersion.Major.ToString(),
                             Minor = _sdkVersion.Minor.ToString(),
-                            Patch = _sdkVersion.Revision.ToString()
+                            Patch = _sdkVersion.Build.ToString()
                         },
                         Os = new OS
                         {

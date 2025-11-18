@@ -1022,6 +1022,11 @@ namespace StreamVideo.Core.LowLevelClient
         {
             // StreamTODO: Implement OnSfuWebSocketOnChangePublishOptions
         }
+        
+        private void OnSfuInboundStateNotification(InboundStateNotification obj)
+        {
+            //StreamTODO: implement
+        }
 
         private void OnSfuWebSocketOnParticipantMigrationComplete()
         {
@@ -1509,10 +1514,13 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.CallGrantsUpdated += OnSfuCallGrantsUpdated;
             _sfuWebSocket.GoAway += OnSfuGoAway;
             _sfuWebSocket.IceRestart += OnSfuIceRestart;
+            _sfuWebSocket.PinsUpdated += OnSfuPinsUpdated;
             _sfuWebSocket.CallEnded += OnSfuWebSocketOnCallEnded;
             _sfuWebSocket.ParticipantUpdated += OnSfuWebSocketOnParticipantUpdated;
             _sfuWebSocket.ParticipantMigrationComplete += OnSfuWebSocketOnParticipantMigrationComplete;
             _sfuWebSocket.ChangePublishOptions += OnSfuWebSocketOnChangePublishOptions;
+            _sfuWebSocket.InboundStateNotification += OnSfuInboundStateNotification;
+
             
             _sfuWebSocket.Disconnected += OnSfuWebSocketDisconnected;
         }
@@ -1540,6 +1548,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.ParticipantUpdated -= OnSfuWebSocketOnParticipantUpdated;
             _sfuWebSocket.ParticipantMigrationComplete -= OnSfuWebSocketOnParticipantMigrationComplete;
             _sfuWebSocket.ChangePublishOptions -= OnSfuWebSocketOnChangePublishOptions;
+            _sfuWebSocket.InboundStateNotification -= OnSfuInboundStateNotification;
             
             _sfuWebSocket.Disconnected -= OnSfuWebSocketDisconnected;
         }

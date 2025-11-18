@@ -40,6 +40,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action<ParticipantUpdated> ParticipantUpdated;
         public event Action ParticipantMigrationComplete;
         public event Action<ChangePublishOptions> ChangePublishOptions;
+        public event Action<InboundStateNotification> InboundStateNotification;
         
         public int QueuedMessagesCount => WebsocketClient.QueuedMessagesCount;
 
@@ -266,6 +267,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                         break;
                     case SfuEvent.EventPayloadOneofCase.ChangePublishOptions:
                         ChangePublishOptions?.Invoke(sfuEvent.ChangePublishOptions);
+                        break;
+                    case SfuEvent.EventPayloadOneofCase.InboundStateNotification:
+                        InboundStateNotification?.Invoke(sfuEvent.InboundStateNotification);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(sfuEvent.EventPayloadCase),

@@ -428,6 +428,16 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: call by call.reconnectOrSwitchSfu()
         public void Reconnect()
         {
+            //StreamTodo: Add fastReconnect trace here when implementing full reconnect logic like Android SDK
+            //Example: _publisherTracer?.Trace(PeerConnectionTraceKey.FastReconnect, reconnectDetails);
+            
+            //StreamTodo: When implementing IceRestart RPC call, add error tracing:
+            //try {
+            //    await RpcCallAsync(iceRestartRequest, GeneratedAPI.IceRestart, nameof(GeneratedAPI.IceRestart), response => response.Error);
+            //} catch (Exception e) {
+            //    _subscriberTracer?.Trace(PeerConnectionTraceKey.IceRestartError, e.Message ?? "unknown");
+            //}
+            
             Subscriber?.RestartIce();
             Publisher?.RestartIce();
         }
@@ -799,16 +809,32 @@ namespace StreamVideo.Core.LowLevelClient
                     sdp = subscriberOffer.Sdp
                 };
 
-                await Subscriber.SetRemoteDescriptionAsync(rtcSessionDescription);
-                Subscriber.ThrowDisposedDuringOperationIfNull();
+                try
+                {
+                    await Subscriber.SetRemoteDescriptionAsync(rtcSessionDescription);
+                    Subscriber.ThrowDisposedDuringOperationIfNull();
+                }
+                catch (Exception e)
+                {
+                    _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription, e.Message ?? "unknown");
+                    throw;
+                }
 
                 var answer = await Subscriber.CreateAnswerAsync();
                 Subscriber.ThrowDisposedDuringOperationIfNull();
 
                 //StreamTodo: mangle SDP
 
-                await Subscriber.SetLocalDescriptionAsync(ref answer);
-                Subscriber.ThrowDisposedDuringOperationIfNull();
+                try
+                {
+                    await Subscriber.SetLocalDescriptionAsync(ref answer);
+                    Subscriber.ThrowDisposedDuringOperationIfNull();
+                }
+                catch (Exception e)
+                {
+                    _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetLocalDescription, e.Message ?? "unknown");
+                    throw;
+                }
 
                 var sendAnswerRequest = new SendAnswerRequest
                 {
@@ -826,6 +852,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
             catch (Exception e)
             {
+                _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSubmit, e.Message ?? "unknown");
                 _logs.Exception(e);
             }
         }
@@ -1228,8 +1255,16 @@ namespace StreamVideo.Core.LowLevelClient
                         $"Modified SDP, enable red: {_config.Audio.EnableRed}, enable DTX: {_config.Audio.EnableDtx} ");
                 }
 
-                await Publisher.SetLocalDescriptionAsync(ref offer);
-                Publisher.ThrowDisposedDuringOperationIfNull();
+                try
+                {
+                    await Publisher.SetLocalDescriptionAsync(ref offer);
+                    Publisher.ThrowDisposedDuringOperationIfNull();
+                }
+                catch (Exception e)
+                {
+                    _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetLocalDescription, e.Message ?? "unknown");
+                    throw;
+                }
 
                 // //StreamTodo: timeout + break if we're disconnecting/reconnecting
                 // while (_sfuWebSocket.ConnectionState != ConnectionState.Connected)
@@ -1242,6 +1277,10 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
                 var tracks = GetPublisherTracks(offer.sdp);
+                
+                // Trace negotiation with tracks
+                var tracksInfo = string.Join(";", tracks.Select(t => $"{t.TrackType}:{t.TrackId}"));
+                _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateWithTracks, tracksInfo);
 
                 //StreamTodo: mangle SDP
                 var request = new SetPublisherRequest
@@ -1264,17 +1303,26 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
 #endif
 
-                await Publisher.SetRemoteDescriptionAsync(new RTCSessionDescription()
+                try
                 {
-                    type = RTCSdpType.Answer,
-                    sdp = result.Sdp
-                });
+                    await Publisher.SetRemoteDescriptionAsync(new RTCSessionDescription()
+                    {
+                        type = RTCSdpType.Answer,
+                        sdp = result.Sdp
+                    });
+                }
+                catch (Exception e)
+                {
+                    _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription, e.Message ?? "unknown");
+                    throw;
+                }
             }
             catch (DisposedDuringOperationException)
             {
             }
             catch (Exception e)
             {
+                _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSubmit, e.Message ?? "unknown");
                 _logs.Exception(e);
             }
         }

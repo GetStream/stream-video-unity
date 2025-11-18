@@ -26,6 +26,18 @@ namespace StreamVideo.Core.Trace
         public const string GoAway = "goAway";
         public const string SfuError = "error";
         public const string CallEnded = "callEnded";
+        
+        // Negotiation error traces
+        public const string NegotiateErrorSetLocalDescription = "negotiate-error-setlocaldescription";
+        public const string NegotiateErrorSetRemoteDescription = "negotiate-error-setremotedescription";
+        public const string NegotiateErrorSetPublisher = "negotiate-error-setpublisher";
+        public const string NegotiateErrorSendAnswer = "negotiate-error-sendanswer";
+        public const string NegotiateErrorSubmit = "negotiate-error-submit";
+        public const string NegotiateWithTracks = "negotiate-with-tracks";
+        
+        // ICE and reconnect traces
+        public const string IceRestartError = "iceRestart-error";
+        public const string FastReconnect = "fastReconnect";
     }
 }
 

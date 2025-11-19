@@ -18,6 +18,11 @@ namespace StreamVideo.Core.StatefulModels
         event ParticipantTrackChangedHandler TrackAdded;
         
         /// <summary>
+        /// A track <see cref="IStreamTrack.IsEnabled"/> state changed for this participant.
+        /// </summary>
+        event ParticipantTrackChangedHandler TrackIsEnabledChanged;
+        
+        /// <summary>
         /// Is this participant "pinned" in the call meaning it will have precedence in <see cref="IStreamCall.SortedParticipants"/> list
         /// </summary>
         bool IsPinned { get; }

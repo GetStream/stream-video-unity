@@ -21,6 +21,7 @@ namespace StreamVideo.Core.StatefulModels
         IStreamVideoCallParticipant
     {
         public event ParticipantTrackChangedHandler TrackAdded;
+        public event ParticipantTrackChangedHandler TrackIsEnabledChanged;
 
         public bool IsLocalParticipant => UserSessionId == Client.InternalLowLevelClient.RtcSession.SessionId;
 
@@ -244,7 +245,8 @@ namespace StreamVideo.Core.StatefulModels
             TrackAdded?.Invoke(this, streamTrack);
         }
 
-        internal void SetTrackEnabled(TrackType type, bool enabled)
+        // This is only called for remote participants
+        internal void NotifyTrackEnabled(TrackType type, bool enabled)
         {
             var streamTrack = GetStreamTrack(type);
             if (streamTrack == null)
@@ -258,9 +260,15 @@ namespace StreamVideo.Core.StatefulModels
                 $"[Participant] Local: {IsLocalParticipant}, Session ID: {SessionId} set track enabled of type {type} to {enabled}");
 #endif
 
-            streamTrack.SetEnabled(enabled);
+            //StreamTodo: this would break a track in the following scenario:
+            // Host tracks are auto-enabled when joining the call -> VideoDeviceManager.SetEnabled(true) right after JoinCallAsync)
+            // Join call by host and watcher
+            // Disable track on host -> this causes watcher to disable the track as well
+            // Leave the call as host and re-join -> the track is re-enabled on host side but watcher still has it disabled
+            //streamTrack.SetEnabled(enabled);
 
             //StreamTodo: we should trigger some event that track status changed
+            TrackIsEnabledChanged?.Invoke(this, streamTrack);
         }
 
         internal void SetIsPinned(bool isPinned) => IsPinned = isPinned;

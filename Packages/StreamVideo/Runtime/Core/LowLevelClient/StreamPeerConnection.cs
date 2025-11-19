@@ -230,14 +230,6 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning($"Disposing PeerConnection [{_peerType}]");
 #endif
 
-#if STREAM_NATIVE_AUDIO
-            if (PublisherAudioTrack != null)
-            {
-                //StreamTODO: call this when PublisherAudioTrack is set to null
-                PublisherAudioTrack.StopLocalAudioCapture();
-            }
-#endif
-
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged -= OnVideoSceneInputChanged;
             _mediaInputProvider.VideoInputChanged -= OnVideoInputChanged;
@@ -252,6 +244,20 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.OnConnectionStateChange -= OnConnectionStateChange;
             _peerConnection.OnTrack -= OnTrack;
             
+#if STREAM_NATIVE_AUDIO
+            if (PublisherAudioTrack != null)
+            {
+                //StreamTODO: call this when PublisherAudioTrack is set to null
+                PublisherAudioTrack.StopLocalAudioCapture();
+            }
+#endif
+
+            if (_publisherVideoTrackTexture != null)
+            {
+                _publisherVideoTrackTexture.Release();
+                _publisherVideoTrackTexture = null;
+            }
+            
             PublisherAudioTrack?.Stop();
             PublisherVideoTrack?.Stop();
             PublisherAudioTrack = null;
@@ -259,6 +265,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             _tracer?.Trace(PeerConnectionTraceKey.Close, null);
             _peerConnection.Close();
+            _peerConnection.Dispose();
 
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"Disposed PeerConnection [{_peerType}]");

@@ -601,6 +601,15 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         private async Task SubscribeToTracksAsync()
         {
+            if (ActiveCall.Participants == null || !ActiveCall.Participants.Any())
+            {
+#if STREAM_DEBUG_ENABLED
+                _logs.Info($"{nameof(SubscribeToTracksAsync)} Ignored - No participants in the call to subscribe tracks for");
+#endif
+
+                return;
+            }
+
             if (_trackSubscriptionRequestInProgress)
             {
                 QueueTracksSubscriptionRequest();
@@ -609,6 +618,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             _trackSubscriptionRequestInProgress = true;
 
+            // StreamTodo: validate that the very first call to SubscribeToTracksAsync is correct because ActiveCall.Participants may not have been updated yet
             var tracks = GetDesiredTracksDetails();
 
             var request = new UpdateSubscriptionsRequest
@@ -953,7 +963,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            participant.SetTrackEnabled(trackType, isEnabled);
+            participant.NotifyTrackEnabled(trackType, isEnabled);
 
             ActiveCall.NotifyTrackStateChanged(participant, trackType, isEnabled);
         }

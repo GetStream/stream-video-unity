@@ -26,6 +26,7 @@ namespace StreamVideo.Core.Trace
         public const string GoAway = "goAway";
         public const string SfuError = "error";
         public const string CallEnded = "callEnded";
+        public const string LeaveCall = "leaveCall";
         
         // Negotiation error traces
         public const string NegotiateErrorSetLocalDescription = "negotiate-error-setlocaldescription";

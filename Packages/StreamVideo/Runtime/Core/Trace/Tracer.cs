@@ -63,6 +63,7 @@ namespace StreamVideo.Core.Trace
         {
             lock (_buffer)
             {
+                //StreamTODO: optimize this to re-use the same buffers for stats generation
                 var snapshot = new List<TraceRecord>(_buffer);
                 _buffer.Clear();
 

@@ -30,6 +30,25 @@ namespace StreamVideo.Core.Stats
             }
         }
 
+        /// <summary>
+        /// Sends final stats immediately, flushing any remaining trace data.
+        /// Called when leaving a call to ensure all stats are captured.
+        /// </summary>
+        public async Task SendFinalStatsAsync()
+        {
+            if (_rtcSession.ActiveCall == null)
+            {
+                return;
+            }
+
+            if (_currentSendTask != null)
+            {
+                await _currentSendTask;
+            }
+
+            await CollectAndSend();
+        }
+
         internal WebRtcStatsSender(RtcSession rtcSession, IWebRtcStatsCollector webRtcStatsCollector,
             ITimeService timeService, ILogs logs)
         {

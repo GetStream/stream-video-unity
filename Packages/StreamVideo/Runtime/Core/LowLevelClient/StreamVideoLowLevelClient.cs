@@ -209,7 +209,7 @@ namespace StreamVideo.Core.LowLevelClient
         public async Task DisconnectAsync()
         {
             await _coordinatorWS.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "User called Disconnect");
-            await RtcSession.StopAsync();
+            await RtcSession.StopAsync("User called Disconnect");
         }
 
         public void Update()
@@ -296,7 +296,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         internal Task StartCallSessionAsync(StreamCall call) => RtcSession.StartAsync(call);
 
-        internal Task StopCallSessionAsync() => RtcSession.StopAsync();
+        //internal Task StopCallSessionAsync() => RtcSession.StopAsync(); //StreamTodo: remove
 
         private const string DefaultStreamAuthType = "jwt";
         private const string LocationHintHeaderKey = "x-amz-cf-pop";

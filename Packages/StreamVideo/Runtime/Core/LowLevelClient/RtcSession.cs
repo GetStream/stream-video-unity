@@ -240,7 +240,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void Dispose()
         {
-            StopAsync().LogIfFailed();
+            StopAsync("Video Client is being disposed").LogIfFailed();
 
             _sfuWebSocket.Dispose();
 
@@ -292,6 +292,10 @@ namespace StreamVideo.Core.LowLevelClient
             if (ActiveCall == null)
             {
                 //Ignore if call ended during this request
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning("Sending webRTC stats aborted: call ended during the request");
+#endif
+
                 return;
             }
 
@@ -399,6 +403,17 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (ActiveCall != null)
             {
+                try
+                {
+                    // Trace leave call before leaving the call. Otherwise, stats are not send because SFU WS disconnects
+                    _sfuTracer?.Trace(PeerConnectionTraceKey.LeaveCall, new { SessionId = SessionId, Reason = reason });
+                    await _statsSender.SendFinalStatsAsync();
+                }
+                catch (Exception e)
+                {
+                    _logs.Error($"Failed to send final stats on leave: {e.Message}");
+                }
+
                 _sfuWebSocket.SendLeaveCallRequest(reason);
 
                 for (int i = 0; i < 60; i++)
@@ -430,14 +445,14 @@ namespace StreamVideo.Core.LowLevelClient
         {
             //StreamTodo: Add fastReconnect trace here when implementing full reconnect logic like Android SDK
             //Example: _publisherTracer?.Trace(PeerConnectionTraceKey.FastReconnect, reconnectDetails);
-            
+
             //StreamTodo: When implementing IceRestart RPC call, add error tracing:
             //try {
             //    await RpcCallAsync(iceRestartRequest, GeneratedAPI.IceRestart, nameof(GeneratedAPI.IceRestart), response => response.Error);
             //} catch (Exception e) {
             //    _subscriberTracer?.Trace(PeerConnectionTraceKey.IceRestartError, e.Message ?? "unknown");
             //}
-            
+
             Subscriber?.RestartIce();
             Publisher?.RestartIce();
         }
@@ -525,7 +540,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void ClearSession()
         {
             UnsubscribeFromSfuEvents();
-            
+
             _pendingIceTrickleRequests.Clear();
             _videoResolutionByParticipantSessionId.Clear();
             _tracerManager?.Clear();
@@ -814,7 +829,8 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 catch (Exception e)
                 {
-                    _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription, e.Message ?? "unknown");
+                    _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription,
+                        e.Message ?? "unknown");
                     throw;
                 }
 
@@ -830,7 +846,8 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 catch (Exception e)
                 {
-                    _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetLocalDescription, e.Message ?? "unknown");
+                    _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetLocalDescription,
+                        e.Message ?? "unknown");
                     throw;
                 }
 
@@ -1260,7 +1277,8 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 catch (Exception e)
                 {
-                    _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetLocalDescription, e.Message ?? "unknown");
+                    _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetLocalDescription,
+                        e.Message ?? "unknown");
                     throw;
                 }
 
@@ -1275,7 +1293,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
                 var tracks = GetPublisherTracks(offer.sdp);
-                
+
                 // Trace negotiation with tracks
                 var tracksInfo = string.Join(";", tracks.Select(t => $"{t.TrackType}:{t.TrackId}"));
                 _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateWithTracks, tracksInfo);
@@ -1311,7 +1329,8 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 catch (Exception e)
                 {
-                    _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription, e.Message ?? "unknown");
+                    _publisherTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription,
+                        e.Message ?? "unknown");
                     throw;
                 }
             }

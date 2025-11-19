@@ -1,3 +1,9 @@
+0.8.8:
+
+- Add stats and debug info monitoring - this will be available to browse in our new dashboard for debugging purposes
+- Fix `InvalidOperationException: Collection was modified`  when the call object is updated
+- Fix the black screen appearing for a watcher user when the broadcaster disables the video track before leaving the call and enables it when entering the call
+
 0.8.7:
 
 - Upgraded internal com.unity.webrtc package to the latest version

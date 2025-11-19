@@ -524,8 +524,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void ClearSession()
         {
+            UnsubscribeFromSfuEvents();
+            
             _pendingIceTrickleRequests.Clear();
             _videoResolutionByParticipantSessionId.Clear();
+            _tracerManager?.Clear();
 
             Subscriber?.Dispose();
             Subscriber = null;
@@ -537,11 +540,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             _trackSubscriptionRequested = false;
             _trackSubscriptionRequestInProgress = false;
-
-            UnsubscribeFromSfuEvents();
-
-            // Clear all tracer buffers to prevent leaking events from previous session
-            _tracerManager?.Clear();
         }
 
         //StreamTodo: request track subscriptions when SFU got changed. Android comment for setVideoSubscriptions:

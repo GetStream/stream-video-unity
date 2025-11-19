@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using StreamVideo.v1.Sfu.Models;
 
 namespace StreamVideo.Core.Stats
 {
@@ -7,5 +9,11 @@ namespace StreamVideo.Core.Stats
         Task<string> GetPublisherStatsJsonAsync();
 
         Task<string> GetSubscriberStatsJsonAsync();
+
+        Task<string> GetRtcStatsJsonAsync();
+
+        Task<IReadOnlyList<PerformanceStats>> GetEncodeStatsAsync();
+
+        Task<IReadOnlyList<PerformanceStats>> GetDecodeStatsAsync();
     }
 }

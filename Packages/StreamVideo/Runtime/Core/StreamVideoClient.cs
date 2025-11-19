@@ -451,7 +451,7 @@ namespace StreamVideo.Core
         {
             try
             {
-                await InternalLowLevelClient.RtcSession.StopAsync();
+                await InternalLowLevelClient.RtcSession.StopAsync("User is leaving the call");
             }
             catch (Exception e)
             {

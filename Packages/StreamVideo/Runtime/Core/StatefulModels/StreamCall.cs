@@ -806,9 +806,17 @@ namespace StreamVideo.Core.StatefulModels
 
         private void UpdateCapabilitiesByRole(Dictionary<string, List<string>> capabilitiesByRole)
         {
-            foreach (var role in _capabilitiesByRole.Keys)
+            using (new ListPoolScope<string>(out var tempRolesToRemove))
             {
-                if (!capabilitiesByRole.ContainsKey(role))
+                foreach (var role in _capabilitiesByRole.Keys)
+                {
+                    if (!capabilitiesByRole.ContainsKey(role))
+                    {
+                        tempRolesToRemove.Add(role);
+                    }
+                }
+                
+                foreach (var role in tempRolesToRemove)
                 {
                     _capabilitiesByRole.Remove(role);
                 }

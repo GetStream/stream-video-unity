@@ -81,8 +81,6 @@ namespace StreamVideo.Core.Stats
                 SdkVersion = StreamVideoLowLevelClient.SDKVersion.ToString(),
             };
 
-            // Add encode and decode stats using the collection's .Add() method
-            // (RepeatedField properties don't have setters)
             foreach (var stat in encodeStats)
             {
                 request.EncodeStats.Add(stat);
@@ -95,7 +93,7 @@ namespace StreamVideo.Core.Stats
 
 #pragma warning disable CS0162 // Disable unreachable code warning
 #if STREAM_DEBUG_ENABLED
-            //if (RtcSession.LogWebRTCStats)
+            if (RtcSession.LogWebRTCStats)
             {
                 _logs.Info("-----------WebRTC STATS DUMP -> 1. publisher, 2. subscriber, 3. rtc_stats------");
                 _logs.Info(publisherStatsJson);

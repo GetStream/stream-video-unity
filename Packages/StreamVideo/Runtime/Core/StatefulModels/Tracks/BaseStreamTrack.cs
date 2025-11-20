@@ -10,7 +10,6 @@ namespace StreamVideo.Core.StatefulModels.Tracks
     /// </summary>
     public abstract class BaseStreamTrack : IStreamTrack
     {
-        private bool _isEnabled;
         public event StreamTrackStateChangeHandler EnabledChanged;
 
         public bool IsEnabled
@@ -59,6 +58,8 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         {
             
         }
+        
+        private bool _isEnabled;
     }
 
     public abstract class BaseStreamTrack<TTrack> : BaseStreamTrack

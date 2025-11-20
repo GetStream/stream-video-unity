@@ -604,7 +604,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (ActiveCall.Participants == null || !ActiveCall.Participants.Any())
             {
 #if STREAM_DEBUG_ENABLED
-                _logs.Info($"{nameof(SubscribeToTracksAsync)} Ignored - No participants in the call to subscribe tracks for");
+                _logs.Error($"{nameof(SubscribeToTracksAsync)} Ignored - No participants in the call to subscribe tracks for");
 #endif
 
                 return;

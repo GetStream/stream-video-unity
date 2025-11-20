@@ -136,12 +136,7 @@ namespace StreamVideo.Core.Models
                 _participantsCountByRole[role] = 1;
             }
             
-            // Recalculate participant count
-            var anonymousCount = 0; // We don't get this from the event, keep existing
-            if (ParticipantCount != null)
-            {
-                anonymousCount = (int)ParticipantCount.Anonymous;
-            }
+            var anonymousCount = ParticipantCount != null ? (int)ParticipantCount.Anonymous : 0;
             UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
         }
         

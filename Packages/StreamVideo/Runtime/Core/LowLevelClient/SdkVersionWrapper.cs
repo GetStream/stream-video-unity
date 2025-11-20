@@ -4,6 +4,6 @@ namespace StreamVideo.Core.LowLevelClient
 {
     internal sealed class SdkVersionWrapper
     {
-        public static readonly Version SDKVersion = new Version(0, 8, 8);
+        public static readonly Version SDKVersion = new Version(0, 8, 9);
     }
 }

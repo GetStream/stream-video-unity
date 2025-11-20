@@ -1,3 +1,9 @@
+0.8.9:
+
+- Fix `_videoTrack.EnabledChange` callback
+- Add `the IStreamCall.ParticipantCount` - presents participants count to any call size (`IStreamCall.Participants` shows first 250 participants)
+- Fix participant leaving the call not being immediately signaled to other users
+
 0.8.8:
 
 - Add stats and debug info monitoring - this will be available to browse in our new dashboard for debugging purposes

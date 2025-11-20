@@ -29,6 +29,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action<ParticipantLeft> ParticipantLeft;
         public event Action<DominantSpeakerChanged> DominantSpeakerChanged;
         public event Action<JoinResponse> JoinResponse;
+        public event Action<HealthCheckResponse> HealthCheck;
         public event Action<TrackPublished> TrackPublished;
         public event Action<TrackUnpublished> TrackUnpublished;
         public event Action<Error> Error;
@@ -232,7 +233,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                         OnHandleJoinResponse(sfuEvent.JoinResponse);
                         break;
                     case SfuEvent.EventPayloadOneofCase.HealthCheckResponse:
-                        //StreamTodo: healthCheck contains participantsCount, we should probably sync our state with this info
+                        HealthCheck?.Invoke(sfuEvent.HealthCheckResponse);
                         OnHealthCheckReceived();
                         break;
                     case SfuEvent.EventPayloadOneofCase.TrackPublished:

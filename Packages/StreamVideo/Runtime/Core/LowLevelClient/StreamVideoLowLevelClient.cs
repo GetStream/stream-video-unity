@@ -287,6 +287,9 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CallRingEventInternalDTO> InternalCallRingEvent;
         internal event Action<CallSessionEndedEventInternalDTO> InternalCallSessionEndedEvent;
         internal event Action<CallSessionStartedEventInternalDTO> InternalCallSessionStartedEvent;
+        internal event Action<CallSessionParticipantJoinedEventInternalDTO> InternalCallSessionParticipantJoinedEvent;
+        internal event Action<CallSessionParticipantLeftEventInternalDTO> InternalCallSessionParticipantLeftEvent;
+        internal event Action<CallSessionParticipantCountsUpdatedEventInternalDTO> InternalCallSessionParticipantCountsUpdatedEvent;
         internal event Action<BlockedUserEventInternalDTO> InternalCallUnblockedUserEvent;
         internal event Action<ConnectionErrorEventInternalDTO> InternalConnectionErrorEvent;
         internal event Action<CustomVideoEventInternalDTO> InternalCustomVideoEvent;
@@ -478,6 +481,18 @@ namespace StreamVideo.Core.LowLevelClient
             _coordinatorWS.RegisterEventType<CallSessionStartedEventInternalDTO>(
                 CoordinatorEventType.CallSessionStarted,
                 e => InternalCallSessionStartedEvent?.Invoke(e));
+
+            _coordinatorWS.RegisterEventType<CallSessionParticipantJoinedEventInternalDTO>(
+                CoordinatorEventType.CallSessionParticipantJoined,
+                e => InternalCallSessionParticipantJoinedEvent?.Invoke(e));
+
+            _coordinatorWS.RegisterEventType<CallSessionParticipantLeftEventInternalDTO>(
+                CoordinatorEventType.CallSessionParticipantLeft,
+                e => InternalCallSessionParticipantLeftEvent?.Invoke(e));
+
+            _coordinatorWS.RegisterEventType<CallSessionParticipantCountsUpdatedEventInternalDTO>(
+                CoordinatorEventType.CallSessionParticipantCountsUpdated,
+                e => InternalCallSessionParticipantCountsUpdatedEvent?.Invoke(e));
 
             _coordinatorWS.RegisterEventType<BlockedUserEventInternalDTO>(CoordinatorEventType.CallUnblockedUser,
                 e => InternalCallUnblockedUserEvent?.Invoke(e));

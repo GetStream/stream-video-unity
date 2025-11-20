@@ -87,6 +87,12 @@ namespace StreamVideo.Core.Models
 
             return participant;
         }
+
+        internal void UpdateFromSfu(HealthCheckResponse healthCheckResponse, ICache cache)
+        {
+            ((IStateLoadableFrom<SfuParticipantCount, ParticipantCount>)ParticipantCount).LoadFromDto(
+                healthCheckResponse.ParticipantCount, cache);
+        }
         
         internal (string sessionId, string userId) UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {

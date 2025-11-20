@@ -1077,6 +1077,12 @@ namespace StreamVideo.Core.LowLevelClient
             ActiveCall.UpdateFromSfu(pinsChanged, _cache);
         }
 
+        private void OnSfuHealthCheck(HealthCheckResponse healthCheckResponse)
+        {
+            _sfuTracer?.Trace("healthCheck", healthCheckResponse);
+            ActiveCall.UpdateFromSfu(healthCheckResponse, _cache);
+        }
+
         private void OnSfuIceRestart(ICERestart iceRestart)
         {
             _sfuTracer?.Trace("iceRestart", iceRestart);
@@ -1669,6 +1675,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
             _sfuWebSocket.DominantSpeakerChanged += OnSfuDominantSpeakerChanged;
             _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
+            _sfuWebSocket.HealthCheck += OnSfuHealthCheck;
             _sfuWebSocket.TrackPublished += OnSfuTrackPublished;
             _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
             _sfuWebSocket.Error += OnSfuWebSocketOnError;
@@ -1698,6 +1705,7 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
             _sfuWebSocket.DominantSpeakerChanged -= OnSfuDominantSpeakerChanged;
             _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
+            _sfuWebSocket.HealthCheck -= OnSfuHealthCheck;
             _sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
             _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
             _sfuWebSocket.Error -= OnSfuWebSocketOnError;

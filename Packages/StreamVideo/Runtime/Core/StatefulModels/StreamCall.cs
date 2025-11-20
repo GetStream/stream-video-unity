@@ -574,6 +574,11 @@ namespace StreamVideo.Core.StatefulModels
             UpdatePinnedParticipants(out _);
         }
 
+        internal void UpdateFromSfu(HealthCheckResponse healthCheckResponse, ICache cache)
+        {
+            Session?.UpdateFromSfu(healthCheckResponse, cache);
+        }
+
         //StreamTodo: missing TrackRemoved or perhaps we should not care whether a track was added/removed but only published/unpublished -> enabled/disabled
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
             => ParticipantTrackAdded?.Invoke(participant, track);

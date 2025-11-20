@@ -43,7 +43,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action<ChangePublishOptions> ChangePublishOptions;
         public event Action<InboundStateNotification> InboundStateNotification;
         
-        public int QueuedMessagesCount => WebsocketClient.QueuedMessagesCount;
+        public int SendQueueCount => WebsocketClient.SendQueueCount;
 
         public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,

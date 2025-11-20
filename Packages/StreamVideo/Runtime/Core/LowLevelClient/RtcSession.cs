@@ -418,17 +418,17 @@ namespace StreamVideo.Core.LowLevelClient
 
                 for (int i = 0; i < 60; i++)
                 {
-                    if (_sfuWebSocket.QueuedMessagesCount > 0)
+                    if (_sfuWebSocket.SendQueueCount > 0)
                     {
                         await Task.Delay(5);
                     }
                 }
 
 #if STREAM_DEBUG_ENABLED
-                if (_sfuWebSocket.QueuedMessagesCount > 0)
+                if (_sfuWebSocket.SendQueueCount > 0)
                 {
                     _logs.Error(
-                        $"Waited for 300+ ms for SFU messages to be sent. Remaining: {_sfuWebSocket.QueuedMessagesCount}");
+                        $"Waited for 300+ ms for SFU messages to be sent. Remaining: {_sfuWebSocket.SendQueueCount}");
                 }
 #endif
             }

@@ -25,7 +25,8 @@ namespace StreamVideo.Libs.Websockets
 
         public WebSocketState State => _internalClient?.State ?? WebSocketState.None;
 
-        public int QueuedMessagesCount => _receiveQueue.Count;
+        public int ReceiveQueueCount => _receiveQueue.Count;
+        public int SendQueueCount => _sendQueue.Count;
 
         /// <param name="isDebugMode">Additional logs will be printed</param>
         public WebsocketClient(ILogs logs, Encoding encoding = default, bool isDebugMode = false)

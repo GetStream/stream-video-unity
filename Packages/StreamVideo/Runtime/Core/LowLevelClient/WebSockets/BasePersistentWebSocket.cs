@@ -298,7 +298,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private void OnDisconnected()
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"{LogsPrefix} Websocket Disconnected. Messages left: {WebsocketClient.QueuedMessagesCount}");
+            Logs.Warning($"{LogsPrefix} Websocket Disconnected. Messages left: {WebsocketClient.ReceiveQueueCount}");
 #endif
             ConnectionState = ConnectionState.Disconnected;
         }

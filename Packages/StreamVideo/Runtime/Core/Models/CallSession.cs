@@ -140,35 +140,33 @@ namespace StreamVideo.Core.Models
             UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
         }
         
+        //StreamTODO: double-check this logic
         internal void UpdateFromCoordinator(
             InternalDTO.Events.CallSessionParticipantLeftEventInternalDTO participantLeft, ICache cache,
             LowLevelClient.CallingState callingState)
         {
-            // Remove participant from the list
             var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
             _participants.Remove(participant);
             
-            // Update the role count - decrement
             var role = participantLeft.Participant.Role;
             if (_participantsCountByRole.ContainsKey(role))
             {
-                _participantsCountByRole[role] = System.Math.Max(0, _participantsCountByRole[role] - 1);
+                _participantsCountByRole[role] = Math.Max(0, _participantsCountByRole[role] - 1);
                 
-                // Remove the role if count is 0
                 if (_participantsCountByRole[role] == 0)
                 {
                     _participantsCountByRole.Remove(role);
                 }
             }
             
-            // Recalculate participant count
-            var anonymousCount = 0; // We don't get this from the event, keep existing
-            if (ParticipantCount != null)
-            {
-                anonymousCount = (int)ParticipantCount.Anonymous;
-            }
+            var anonymousCount = ParticipantCount != null ? (int)ParticipantCount.Anonymous : 0;
             UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
         }
+        
+        private readonly Dictionary<string, DateTimeOffset> _acceptedBy = new Dictionary<string, DateTimeOffset>();
+        private readonly List<StreamVideoCallParticipant> _participants = new List<StreamVideoCallParticipant>();
+        private readonly Dictionary<string, int> _participantsCountByRole = new Dictionary<string, int>();
+        private readonly Dictionary<string, DateTimeOffset> _rejectedBy = new Dictionary<string, DateTimeOffset>();
         
         /// <summary>
         /// Updates the ParticipantCount based on session data (used when NOT connected to SFU)
@@ -192,30 +190,22 @@ namespace StreamVideo.Core.Models
         private void UpdateParticipantCountFromSessionInternal(int anonymousParticipantCount, 
             IReadOnlyDictionary<string, int> participantsCountByRole)
         {
-            // Calculate total from role counts
             var byRoleCount = 0;
             foreach (var count in participantsCountByRole.Values)
             {
                 byRoleCount += count;
             }
             
-            // Use the maximum of byRoleCount and actual participants list count
-            var total = System.Math.Max(byRoleCount, _participants.Count);
+            var total = Math.Max(byRoleCount, _participants.Count);
             
-            // Create a temporary DTO to update the ParticipantCount
             var dto = new SfuParticipantCount
             {
                 Total = (uint)total,
                 Anonymous = (uint)anonymousParticipantCount
             };
             
-            ((IStateLoadableFrom<v1.Sfu.Models.ParticipantCount, ParticipantCount>)ParticipantCount)
+            ((IStateLoadableFrom<SfuParticipantCount, ParticipantCount>)ParticipantCount)
                 .LoadFromDto(dto, null);
         }
-
-        private readonly Dictionary<string, DateTimeOffset> _acceptedBy = new Dictionary<string, DateTimeOffset>();
-        private readonly List<StreamVideoCallParticipant> _participants = new List<StreamVideoCallParticipant>();
-        private readonly Dictionary<string, int> _participantsCountByRole = new Dictionary<string, int>();
-        private readonly Dictionary<string, DateTimeOffset> _rejectedBy = new Dictionary<string, DateTimeOffset>();
     }
 }

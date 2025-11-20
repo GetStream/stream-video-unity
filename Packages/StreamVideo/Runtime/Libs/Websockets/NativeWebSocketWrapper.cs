@@ -20,7 +20,8 @@ namespace StreamVideo.Libs.Websockets
         public event Action Disconnected;
         public event Action ConnectionFailed;
         
-        public int QueuedMessagesCount => _messages.Count;
+        public int ReceiveQueueCount => _messages.Count;
+        public int SendQueueCount => throw new NotImplementedException();
 
         public NativeWebSocketWrapper(ILogs logs, bool isDebugMode)
         {

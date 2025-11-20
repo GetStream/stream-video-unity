@@ -265,7 +265,7 @@ namespace StreamVideo.Core.StatefulModels
             // Join call by host and watcher
             // Disable track on host -> this causes watcher to disable the track as well
             // Leave the call as host and re-join -> the track is re-enabled on host side but watcher still has it disabled
-            //streamTrack.SetEnabled(enabled);
+            streamTrack.SetEnabled(enabled);
 
             //StreamTodo: we should trigger some event that track status changed
             TrackIsEnabledChanged?.Invoke(this, streamTrack);

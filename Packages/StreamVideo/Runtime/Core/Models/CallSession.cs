@@ -117,7 +117,6 @@ namespace StreamVideo.Core.Models
             InternalDTO.Events.CallSessionParticipantJoinedEventInternalDTO participantJoined, ICache cache,
             LowLevelClient.CallingState callingState)
         {
-            // Add or update participant in the list
             var participant = cache.TryCreateOrUpdate(participantJoined.Participant);
             
             if (!_participants.Contains(participant))
@@ -125,7 +124,6 @@ namespace StreamVideo.Core.Models
                 _participants.Add(participant);
             }
             
-            // Update the role count - increment
             var role = participantJoined.Participant.Role;
             if (_participantsCountByRole.ContainsKey(role))
             {

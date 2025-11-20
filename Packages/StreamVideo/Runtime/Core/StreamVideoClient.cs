@@ -515,6 +515,9 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallRingEvent += OnInternalCallRingEvent;
             lowLevelClient.InternalCallSessionEndedEvent += OnInternalCallSessionEndedEvent;
             lowLevelClient.InternalCallSessionStartedEvent += OnInternalCallSessionStartedEvent;
+            lowLevelClient.InternalCallSessionParticipantJoinedEvent += OnInternalCallSessionParticipantJoinedEvent;
+            lowLevelClient.InternalCallSessionParticipantLeftEvent += OnInternalCallSessionParticipantLeftEvent;
+            lowLevelClient.InternalCallSessionParticipantCountsUpdatedEvent += OnInternalCallSessionParticipantCountsUpdatedEvent;
             lowLevelClient.InternalConnectionErrorEvent += OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent += OnInternalCustomVideoEvent;
 
@@ -549,6 +552,9 @@ namespace StreamVideo.Core
             lowLevelClient.InternalCallRingEvent -= OnInternalCallRingEvent;
             lowLevelClient.InternalCallSessionEndedEvent -= OnInternalCallSessionEndedEvent;
             lowLevelClient.InternalCallSessionStartedEvent -= OnInternalCallSessionStartedEvent;
+            lowLevelClient.InternalCallSessionParticipantJoinedEvent -= OnInternalCallSessionParticipantJoinedEvent;
+            lowLevelClient.InternalCallSessionParticipantLeftEvent -= OnInternalCallSessionParticipantLeftEvent;
+            lowLevelClient.InternalCallSessionParticipantCountsUpdatedEvent -= OnInternalCallSessionParticipantCountsUpdatedEvent;
             lowLevelClient.InternalConnectionErrorEvent -= OnInternalConnectionErrorEvent;
             lowLevelClient.InternalCustomVideoEvent -= OnInternalCustomVideoEvent;
 
@@ -747,6 +753,36 @@ namespace StreamVideo.Core
         private void OnInternalCallSessionStartedEvent(CallSessionStartedEventInternalDTO eventData)
         {
             var call = _cache.TryCreateOrUpdate(eventData.Call);
+        }
+
+        private void OnInternalCallSessionParticipantJoinedEvent(CallSessionParticipantJoinedEventInternalDTO eventData)
+        {
+            if(ActiveCall == null || ActiveCall.Cid != eventData.CallCid)
+            {
+                return;
+            }
+
+            InternalLowLevelClient.RtcSession.ActiveCall.UpdateFromCoordinator(eventData, _cache);
+        }
+
+        private void OnInternalCallSessionParticipantLeftEvent(CallSessionParticipantLeftEventInternalDTO eventData)
+        {
+            if(ActiveCall == null || ActiveCall.Cid != eventData.CallCid)
+            {
+                return;
+            }
+            
+            InternalLowLevelClient.RtcSession.ActiveCall.UpdateFromCoordinator(eventData, _cache);
+        }
+
+        private void OnInternalCallSessionParticipantCountsUpdatedEvent(CallSessionParticipantCountsUpdatedEventInternalDTO eventData)
+        {
+            if(ActiveCall == null || ActiveCall.Cid != eventData.CallCid)
+            {
+                return;
+            }
+            
+            InternalLowLevelClient.RtcSession.ActiveCall.UpdateFromCoordinator(eventData);
         }
 
         private void OnInternalConnectionErrorEvent(ConnectionErrorEventInternalDTO eventData)

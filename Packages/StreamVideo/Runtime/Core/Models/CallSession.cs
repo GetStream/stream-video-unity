@@ -59,6 +59,8 @@ namespace StreamVideo.Core.Models
             StartedAt = dto.StartedAt;
             LiveEndedAt = dto.LiveEndedAt;
             LiveStartedAt = dto.LiveStartedAt;
+            
+            UpdateParticipantCountFromSessionInternal(dto.AnonymousParticipantCount, dto.ParticipantsCountByRole);
         }
 
         void IStateLoadableFrom<SfuCallState, CallSession>.LoadFromDto(SfuCallState dto, ICache cache)
@@ -68,7 +70,7 @@ namespace StreamVideo.Core.Models
                 StartedAt = dto.StartedAt.ToDateTimeOffset();
             }
 
-            // dto.CallState.Participants may not contain all of the participants
+            // dto.CallState.Participants may not contain all participants
             UpdateExtensions<StreamVideoCallParticipant, SfuParticipant>.TryAddUniqueTrackedObjects(_participants,
                 dto.Participants, cache.CallParticipants);
 
@@ -100,6 +102,120 @@ namespace StreamVideo.Core.Models
             _participants.Remove(participant);
             
             return (participantLeft.Participant.SessionId, participantLeft.Participant.UserId);
+        }
+        
+        internal void UpdateFromCoordinator(
+            InternalDTO.Events.CallSessionParticipantCountsUpdatedEventInternalDTO participantCountsUpdated,
+            LowLevelClient.CallingState callingState)
+        {
+            _participantsCountByRole.TryReplaceValuesFromDto(participantCountsUpdated.ParticipantsCountByRole);
+            UpdateParticipantCountFromCoordinator(participantCountsUpdated.AnonymousParticipantCount, 
+                participantCountsUpdated.ParticipantsCountByRole, callingState);
+        }
+        
+        internal void UpdateFromCoordinator(
+            InternalDTO.Events.CallSessionParticipantJoinedEventInternalDTO participantJoined, ICache cache,
+            LowLevelClient.CallingState callingState)
+        {
+            // Add or update participant in the list
+            var participant = cache.TryCreateOrUpdate(participantJoined.Participant);
+            
+            if (!_participants.Contains(participant))
+            {
+                _participants.Add(participant);
+            }
+            
+            // Update the role count - increment
+            var role = participantJoined.Participant.Role;
+            if (_participantsCountByRole.ContainsKey(role))
+            {
+                _participantsCountByRole[role]++;
+            }
+            else
+            {
+                _participantsCountByRole[role] = 1;
+            }
+            
+            // Recalculate participant count
+            var anonymousCount = 0; // We don't get this from the event, keep existing
+            if (ParticipantCount != null)
+            {
+                anonymousCount = (int)ParticipantCount.Anonymous;
+            }
+            UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
+        }
+        
+        internal void UpdateFromCoordinator(
+            InternalDTO.Events.CallSessionParticipantLeftEventInternalDTO participantLeft, ICache cache,
+            LowLevelClient.CallingState callingState)
+        {
+            // Remove participant from the list
+            var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
+            _participants.Remove(participant);
+            
+            // Update the role count - decrement
+            var role = participantLeft.Participant.Role;
+            if (_participantsCountByRole.ContainsKey(role))
+            {
+                _participantsCountByRole[role] = System.Math.Max(0, _participantsCountByRole[role] - 1);
+                
+                // Remove the role if count is 0
+                if (_participantsCountByRole[role] == 0)
+                {
+                    _participantsCountByRole.Remove(role);
+                }
+            }
+            
+            // Recalculate participant count
+            var anonymousCount = 0; // We don't get this from the event, keep existing
+            if (ParticipantCount != null)
+            {
+                anonymousCount = (int)ParticipantCount.Anonymous;
+            }
+            UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
+        }
+        
+        /// <summary>
+        /// Updates the ParticipantCount based on session data (used when NOT connected to SFU)
+        /// </summary>
+        private void UpdateParticipantCountFromCoordinator(int anonymousParticipantCount, 
+            IReadOnlyDictionary<string, int> participantsCountByRole, LowLevelClient.CallingState callingState)
+        {
+            // When in JOINED state, we should use the participant count coming through
+            // the SFU healthcheck event, as it's more accurate.
+            if (callingState == LowLevelClient.CallingState.Joined)
+            {
+                return;
+            }
+            
+            UpdateParticipantCountFromSessionInternal(anonymousParticipantCount, participantsCountByRole);
+        }
+        
+        /// <summary>
+        /// Updates the ParticipantCount based on session data
+        /// </summary>
+        private void UpdateParticipantCountFromSessionInternal(int anonymousParticipantCount, 
+            IReadOnlyDictionary<string, int> participantsCountByRole)
+        {
+            // Calculate total from role counts
+            var byRoleCount = 0;
+            foreach (var count in participantsCountByRole.Values)
+            {
+                byRoleCount += count;
+            }
+            
+            // Use the maximum of byRoleCount and actual participants list count
+            var total = System.Math.Max(byRoleCount, _participants.Count);
+            
+            // Create a temporary DTO to update the ParticipantCount
+            var dto = new SfuParticipantCount
+            {
+                Total = (uint)total,
+                Anonymous = (uint)anonymousParticipantCount
+            };
+            
+            ((IStateLoadableFrom<v1.Sfu.Models.ParticipantCount, ParticipantCount>)ParticipantCount)
+                .LoadFromDto(dto, null);
         }
 
         private readonly Dictionary<string, DateTimeOffset> _acceptedBy = new Dictionary<string, DateTimeOffset>();

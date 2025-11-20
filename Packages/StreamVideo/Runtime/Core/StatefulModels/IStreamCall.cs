@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
@@ -93,6 +94,8 @@ namespace StreamVideo.Core.StatefulModels
         /// Any update to this collection will trigger the <see cref="SortedParticipantsUpdated"/> event.
         /// </summary>
         IEnumerable<IStreamVideoCallParticipant> SortedParticipants { get; }
+        
+        ParticipantCount ParticipantCount { get; }
 
         /// <summary>
         /// Participant that is currently the most actively speaking.

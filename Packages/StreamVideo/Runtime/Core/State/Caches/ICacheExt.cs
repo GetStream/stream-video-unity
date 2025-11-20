@@ -30,5 +30,8 @@ namespace StreamVideo.Core.State.Caches
         
         public static StreamVideoCallParticipant TryCreateOrUpdate(this ICache cache, Participant dto)
             => dto == null ? null : cache.CallParticipants.CreateOrUpdate<StreamVideoCallParticipant, Participant>(dto, out _);
+        
+        public static StreamVideoCallParticipant TryCreateOrUpdate(this ICache cache, CallParticipantResponseInternalDTO dto)
+            => dto == null ? null : cache.CallParticipants.CreateOrUpdate<StreamVideoCallParticipant, CallParticipantResponseInternalDTO>(dto, out _);
     }
 }

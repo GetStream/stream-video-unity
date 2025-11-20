@@ -22,6 +22,7 @@ namespace StreamVideo.Core
         public const string CallRejected = "call.rejected";
         public const string CallRing = "call.ring";
         public const string CallSessionEnded = "call.session_ended";
+        public const string CallSessionParticipantCountsUpdated = "call.session_participant_count_updated";
         public const string CallSessionParticipantJoined = "call.session_participant_joined";
         public const string CallSessionParticipantLeft = "call.session_participant_left";
         public const string CallSessionStarted = "call.session_started";

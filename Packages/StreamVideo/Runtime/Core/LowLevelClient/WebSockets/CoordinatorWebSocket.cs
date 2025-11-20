@@ -51,7 +51,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
 #if STREAM_DEBUG_ENABLED
                 // Ignoring some messages for causing too much noise in logs
-                var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged", "call.session_participant_count_updated" };
+                var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
                 if(!ignoredMessages.Any(decodedMessage.Contains))
                 {
                     Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
@@ -166,11 +166,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             if (!EventHandlers.TryGetValue(type, out var handler))
             {
 #if STREAM_DEBUG_ENABLED
-                var ignoreTypes = new[] { "call.session_participant_count_updated" };
-                if (!ignoreTypes.Any(type.Contains))
-                {
-                    Logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
-                }
+                Logs.Warning($"No message handler registered for `{type}`. Message not handled: " + msg);
 #endif
                 return;
             }

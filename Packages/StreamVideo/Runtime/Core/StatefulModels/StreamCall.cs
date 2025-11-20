@@ -16,8 +16,8 @@ using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
-using UnityEngine;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
+using ParticipantCount = StreamVideo.Core.Models.Sfu.ParticipantCount;
 
 namespace StreamVideo.Core.StatefulModels
 {
@@ -62,6 +62,8 @@ namespace StreamVideo.Core.StatefulModels
 
         //StreamTodo: Maybe add OtherParticipants -> All participants except for the local participant?
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session?.Participants;
+        
+        public ParticipantCount ParticipantCount => Session.ParticipantCount;
 
         public bool IsLocalUserOwner
         {
@@ -578,6 +580,25 @@ namespace StreamVideo.Core.StatefulModels
         {
             Session?.UpdateFromSfu(healthCheckResponse, cache);
         }
+        
+        internal void UpdateFromCoordinator(CallSessionParticipantCountsUpdatedEventInternalDTO eventData)
+        {
+            Session?.UpdateFromCoordinator(eventData, Client.InternalLowLevelClient.RtcSession.CallState);
+        }
+        
+        internal void UpdateFromCoordinator(CallSessionParticipantJoinedEventInternalDTO eventData, ICache cache)
+        {
+            Session?.UpdateFromCoordinator(eventData, cache, Client.InternalLowLevelClient.RtcSession.CallState);
+            
+            //StreamTodo: we should extract AddParticipant logic from SFU and whatever is received first (SFU or Coordinator) should handle it
+        }
+        
+        internal void UpdateFromCoordinator(CallSessionParticipantLeftEventInternalDTO eventData, ICache cache)
+        {
+            Session?.UpdateFromCoordinator(eventData, cache, Client.InternalLowLevelClient.RtcSession.CallState);
+            
+            //StreamTodo: we should extract RemoveParticipant logic from SFU and whatever is received first (SFU or Coordinator) should handle it
+        }
 
         //StreamTodo: missing TrackRemoved or perhaps we should not care whether a track was added/removed but only published/unpublished -> enabled/disabled
         internal void NotifyTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
@@ -652,12 +673,12 @@ namespace StreamVideo.Core.StatefulModels
 
             //StreamTodo: NullReferenceException here because _client is never set
             var participant
-                = _client.RtcSession.ActiveCall.Participants.FirstOrDefault(p => p.UserId == reaction.User.Id);
+                = Client.InternalLowLevelClient.RtcSession.ActiveCall.Participants.FirstOrDefault(p => p.UserId == reaction.User.Id);
             if (participant == null)
             {
                 Logs.ErrorIfDebug(
                     $"Failed to find participant for reaction. UserId: {reaction.User.Id}, Participants: " +
-                    string.Join(", ", _client.RtcSession.ActiveCall.Participants.Select(p => p.UserId)));
+                    string.Join(", ", Client.InternalLowLevelClient.RtcSession.ActiveCall.Participants.Select(p => p.UserId)));
                 return;
             }
 
@@ -731,7 +752,6 @@ namespace StreamVideo.Core.StatefulModels
 
         #endregion
 
-        private readonly StreamVideoLowLevelClient _client;
         private readonly StreamCallType _type;
 
         private string _id;

@@ -32,6 +32,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         internal BaseStreamTrack(MediaStreamTrack track)
         {
             InternalTrack = track ?? throw new ArgumentNullException(nameof(track));
+            _isEnabled = track.Enabled;
         }
         
         internal virtual void Update()

@@ -24,6 +24,60 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check disk space before cleanup
+        run: df -h
+
+      - name: Free up disk space
+        run: |
+          echo "Freeing up disk space..."
+          echo "Unity version: ${{ matrix.unity_version }}"
+          echo "Target platform: ${{ matrix.target_platform }}"
+          
+          # Always safe to remove - not used by Unity builds
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          
+          # Remove large packages that aren't needed
+          sudo apt-get remove -y '^llvm-.*' --fix-missing || echo "No llvm packages to remove"
+          sudo apt-get remove -y 'php.*' --fix-missing || echo "No php packages to remove"
+          sudo apt-get remove -y '^mongodb-.*' --fix-missing || echo "No mongodb packages to remove"
+          sudo apt-get remove -y '^mysql-.*' --fix-missing || echo "No mysql packages to remove"
+          sudo apt-get remove -y azure-cli google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri --fix-missing || echo "Continuing..."
+          sudo apt-get autoremove -y || echo "Autoremove completed"
+          sudo apt-get clean || echo "Clean completed"
+          
+          # Remove system .NET SDK for Unity 2021 and 2022 (they use bundled Mono)
+          # Skip for Unity 2023+ in case of CoreCLR dependencies
+          if [ "${{ matrix.unity_version }}" == "2021" ] || [ "${{ matrix.unity_version }}" == "2022" ] || [ "${{ matrix.unity_version }}" == "2020" ]; then
+            echo "Removing system .NET SDK (Unity ${{ matrix.unity_version }} uses bundled Mono runtime)"
+            sudo apt-get remove -y '^aspnetcore-.*' --fix-missing || echo "No aspnetcore packages to remove"
+            sudo apt-get remove -y '^dotnet-.*' --fix-missing || echo "No dotnet packages to remove"
+            sudo rm -rf /usr/share/dotnet
+          else
+            echo "Keeping system .NET SDK (Unity ${{ matrix.unity_version }} may use CoreCLR)"
+          fi
+          
+          # Remove Node modules (not needed for Unity)
+          sudo rm -rf /usr/local/lib/node_modules
+          
+          # Only remove Android SDK/NDK if NOT building for Android
+          if [ "${{ matrix.target_platform }}" != "android" ]; then
+            echo "Removing Android SDK/NDK (not needed for ${{ matrix.target_platform }} build)"
+            sudo rm -rf /usr/local/lib/android
+          else
+            echo "Keeping Android SDK/NDK (needed for Android build)"
+          fi
+          
+          # Clean up Docker
+          sudo docker image prune --all --force
+          
+          echo "Cleanup completed."
+
+      - name: Check disk space after cleanup
+        run: df -h
+
       - name: Calculate Sequential Index
         id: calculate-index
         run: |
@@ -201,19 +255,12 @@ jobs:
           name: Test_Results_${{ env.RUNNER_ID }}
           path: artifacts
 
-      - name: Free Disk space
-        uses: jlumbroso/free-disk-space@v1.2.0
-        if: matrix.target_platform == 'android' || matrix.target_platform == 'ios'
-        with:
-          dotnet: false
-
       - name: List changes
         run: |
           git diff
           
-      - name: Print Free Disk Space
-        run: |
-          df -m
+      - name: Check disk space before build
+        run: df -h
 
       - name: Build Sample Project
         uses: game-ci/unity-builder@v4

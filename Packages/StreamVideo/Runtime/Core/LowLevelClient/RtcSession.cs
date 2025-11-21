@@ -552,6 +552,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             ActiveCall = null;
             CallState = CallingState.Unknown;
+            _httpClient = null;
 
             _trackSubscriptionRequested = false;
             _trackSubscriptionRequestInProgress = false;
@@ -601,10 +602,11 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         private async Task SubscribeToTracksAsync()
         {
-            if (ActiveCall.Participants == null || !ActiveCall.Participants.Any())
+            if (ActiveCall?.Participants == null || !ActiveCall.Participants.Any())
             {
 #if STREAM_DEBUG_ENABLED
-                _logs.Error($"{nameof(SubscribeToTracksAsync)} Ignored - No participants in the call to subscribe tracks for");
+                _logs.Error(
+                    $"{nameof(SubscribeToTracksAsync)} Ignored - No participants in the call to subscribe tracks for");
 #endif
 
                 return;
@@ -640,7 +642,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            if (response.Error != null)
+            if (response?.Error != null)
             {
                 _logs.Error(response.Error.Message);
             }
@@ -655,6 +657,12 @@ namespace StreamVideo.Core.LowLevelClient
 
             foreach (var participant in ActiveCall.Participants)
             {
+                if (participant == null)
+                {
+                    _logs.Error("Cannot subscribe to tracks - participant is null");
+                    continue;
+                }
+
                 if (participant.IsLocalParticipant)
                 {
                     continue;
@@ -668,9 +676,16 @@ namespace StreamVideo.Core.LowLevelClient
                     //This was before changing the IUpdateableFrom<CallParticipantResponseInternalDTO, StreamVideoCallParticipant>.UpdateFromDto
                     //to extract UserId from User obj
 
+                    var userId = GetUserId(participant);
+                    if (string.IsNullOrEmpty(userId))
+                    {
+                        _logs.Error($"Cannot subscribe to {trackType} - participant UserId is null or empty. SessionID: {participant.SessionId}");
+                        continue;
+                    }
+
                     yield return new TrackSubscriptionDetails
                     {
-                        UserId = GetUserId(participant),
+                        UserId = userId,
                         SessionId = participant.SessionId,
                         TrackType = trackType,
                         Dimension = requestedVideoResolution.ToVideoDimension()
@@ -1067,8 +1082,15 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuWebSocketOnError(SfuError obj)
         {
             _sfuTracer?.Trace(PeerConnectionTraceKey.SfuError, obj);
+            if (CallState == CallingState.Offline)
+            {
+                return;
+            }
+
             _logs.Error(
                 $"Sfu Error - Code: {obj.Error_.Code}, Message: {obj.Error_.Message}, ShouldRetry: {obj.Error_.ShouldRetry}");
+
+            //StreamTODO: add event here
         }
 
         private void OnSfuPinsUpdated(PinsChanged pinsChanged)
@@ -1163,6 +1185,15 @@ namespace StreamVideo.Core.LowLevelClient
             bool postLog = true)
         {
             //StreamTodo: use rpcCallAsync.GetMethodInfo().Name; instead debugRequestName
+
+            if (_httpClient == null)
+            {
+                var errorMsg
+                    = $"[RPC Call: {debugRequestName}] Failed - Attempted to execute RPC call but HttpClient is not yet initialized. " +
+                      $"CallState: {CallState}, ActiveCall: {ActiveCall != null}, SessionId: {SessionId ?? "null"}";
+                _logs.Error(errorMsg);
+                throw new InvalidOperationException(errorMsg);
+            }
 
             var skipTracing = debugRequestName == nameof(GeneratedAPI.SendStats);
 

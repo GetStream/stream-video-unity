@@ -1,3 +1,7 @@
+0.8.10:
+
+- Fix `track.EnabledChanged` not firing for the first change
+
 0.8.9:
 
 - Fix `_videoTrack.EnabledChange` callback

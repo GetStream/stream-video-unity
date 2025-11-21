@@ -1,3 +1,8 @@
+0.8.11:
+
+- Fix `NullReferenceException` in `SubscribeToTracksAsync` 
+- Revert kicking the user out of the call when the SFU WebSocket disconnects
+
 0.8.10:
 
 - Fix `track.EnabledChanged` not firing for the first change

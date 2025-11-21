@@ -253,20 +253,6 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
         public void Update()
         {
-            if (_terminateCall)
-            {
-                _terminateCall = false;
-
-                if (ActiveCall != null)
-                {
-#if STREAM_DEBUG_ENABLED
-                    _logs.Error("Sfu Websocket Disconnected IN UPDATE-> Stopping the call. Thread ID: " +
-                                System.Threading.Thread.CurrentThread.ManagedThreadId);
-#endif
-                    ActiveCall.LeaveAsync().LogIfFailed();
-                }
-            }
-
             _sfuWebSocket.Update();
             Publisher?.Update();
             _statsSender.Update();
@@ -534,8 +520,6 @@ namespace StreamVideo.Core.LowLevelClient
         private Camera _videoSceneInput;
 
         private MicrophoneDeviceInfo _activeAudioRecordingDevice;
-
-        private bool _terminateCall;
 
         private void ClearSession()
         {
@@ -1641,12 +1625,6 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuWebSocketDisconnected()
         {
             //StreamTODO: check how other SDKs are handling this. Ideally we should have call recovery logic here
-            _terminateCall = true;
-
-#if STREAM_DEBUG_ENABLED
-            _logs.Error("Sfu Websocket Disconnected -> Schedule stopping the cal. Thread ID: " +
-                        System.Threading.Thread.CurrentThread.ManagedThreadId);
-#endif
         }
 
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)

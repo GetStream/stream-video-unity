@@ -75,7 +75,6 @@ namespace StreamVideo.ExampleProject
             if (_autoEnableCamera)
             {
                 Client.VideoDeviceManager.SetEnabled(true);
-
             }
 
             if (_playOnCallStart)

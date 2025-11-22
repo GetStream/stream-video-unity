@@ -69,6 +69,11 @@ namespace StreamVideo.ExampleProject.UI
                 _lastVideoRenderedSize = videoRenderedSize;
                 var videoResolution = new VideoResolution((int)videoRenderedSize.x, (int)videoRenderedSize.y);
                 
+                if(_forceRequestedResolution)
+                {
+                    videoResolution = new VideoResolution(_forceRequestedResolutionWidth, _forceRequestedResolutionHeight);
+                }
+                
                 // To optimize bandwidth we always request the video resolution that matches what we're actually rendering
                 Participant.UpdateRequestedVideoResolution(videoResolution);
                 Debug.Log($"Rendered resolution changed for participant `{Participant.UserId}`. Requested video resolution update to: {videoResolution}");
@@ -118,6 +123,15 @@ namespace StreamVideo.ExampleProject.UI
         
         [SerializeField]
         private Color32 _defaultSpeakerFrameColor;
+
+        [SerializeField]
+        private bool _forceRequestedResolution = false;
+        
+        [SerializeField]
+        private int _forceRequestedResolutionWidth = 300;
+        
+        [SerializeField]
+        private int _forceRequestedResolutionHeight = 300;
 
         private AudioSource _audioSource;
         private RectTransform _videoRectTransform;

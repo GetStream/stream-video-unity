@@ -80,6 +80,20 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        public VideoResolution PublisherTargetResolution
+        {
+            get
+            {
+                if (_mediaInputProvider.VideoInput != null)
+                {
+                    return new VideoResolution(_mediaInputProvider.VideoInput.width,
+                        _mediaInputProvider.VideoInput.height);
+                }
+
+                return _publisherVideoSettings.MaxResolution;
+            }
+        }
+
         public RTCRtpSender VideoSender { get; private set; }
 
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
@@ -282,7 +296,9 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly StreamPeerType _peerType;
         private readonly IMediaInputProvider _mediaInputProvider;
         private readonly IStreamAudioConfig _audioConfig;
-        private readonly PublisherVideoSettings _publisherVideoSettings;
+        
+        //StreamTOdo: Finish implementation. This currently is not exposed to the user + it doesn't take into account VideoInput resolution. We need publisher resolution to match with WebCamTexture size
+        private readonly PublisherVideoSettings _publisherVideoSettings; 
         private readonly Tracer _tracer;
 
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
@@ -360,6 +376,7 @@ namespace StreamVideo.Core.LowLevelClient
             var streamIds = trackEvent.Streams != null && trackEvent.Streams.Any()
                 ? string.Join(",", trackEvent.Streams.Select(s => s.Id))
                 : "";
+            var isEnabled = trackEvent.Track.Enabled;
             
             if (!string.IsNullOrEmpty(streamIds))
             {
@@ -631,17 +648,6 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private VideoResolution GetPublisherResolution()
-        {
-            if (_mediaInputProvider.VideoInput != null)
-            {
-                var maxResolution = _publisherVideoSettings.MaxResolution;
-                return new VideoResolution(maxResolution.Width, maxResolution.Height);
-            }
-
-            return VideoResolution.Res_1080p;
-        }
-
         private VideoStreamTrack CreatePublisherVideoTrack()
         {
             if (_mediaInputProvider.VideoInput == null)
@@ -653,7 +659,7 @@ namespace StreamVideo.Core.LowLevelClient
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
 
-            var res = GetPublisherResolution();
+            var res = PublisherTargetResolution;
             _publisherVideoTrackTexture = new RenderTexture((int)res.Width, (int)res.Height, 0, format);
 
 #if STREAM_DEBUG_ENABLED

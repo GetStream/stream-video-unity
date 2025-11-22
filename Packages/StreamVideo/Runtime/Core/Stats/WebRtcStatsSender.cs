@@ -76,6 +76,11 @@ namespace StreamVideo.Core.Stats
 
         private async Task CollectAndSend()
         {
+            if (_rtcSession.ActiveCall == null)
+            {
+                return;
+            }
+            
             var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync();
             var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync();
             var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync();

@@ -66,6 +66,16 @@ namespace StreamVideo.ExampleProject
 
             Debug.Log($"Join call, create: {create}, callId: {callId}");
             await Client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
+            
+            if (_autoEnableMicrophone)
+            {
+                Client.AudioDeviceManager.SetEnabled(true);
+            }
+
+            if (_autoEnableCamera)
+            {
+                Client.VideoDeviceManager.SetEnabled(true);
+            }
 
             if (_playOnCallStart)
             {
@@ -209,6 +219,13 @@ namespace StreamVideo.ExampleProject
         
         [SerializeField]
         private bool _playOnCallStart = false;
+        
+        [Header("Auto-enable devices on joining a call")]
+        [SerializeField]
+        private bool _autoEnableCamera = false;
+        
+        [SerializeField]
+        private bool _autoEnableMicrophone = false;
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;

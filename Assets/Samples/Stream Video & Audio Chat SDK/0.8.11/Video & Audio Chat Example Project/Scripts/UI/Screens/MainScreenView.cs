@@ -140,10 +140,11 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         private async Task<string> CreateRandomCallId()
         {
-            var length = 4;
+            var length = 3;
+            var smallSet = true;
             for (var i = 0; i < 10; i++)
             {
-                var callId = GenerateShortId(length);
+                var callId = GenerateShortId(length, smallSet);
                 var isAvailable = await VideoManager.IsCallIdAvailableToTake(callId);
                 if (isAvailable)
                 {
@@ -162,6 +163,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 if (i > 5)
                 {
                     length = 8;
+                    smallSet = false;
                 }
                 
             }
@@ -169,13 +171,16 @@ namespace StreamVideo.ExampleProject.UI.Screens
             throw new Exception("Failed to generate a unique call ID");
         }
 
-        public static string GenerateShortId(int length = 8)
+        public static string GenerateShortId(int length = 8, bool smallSet = false)
         {
             // Some symbols, very close visually, are removed like: (1, l, I) or (O, 0)
             const string chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789SBZGUV";
+            const string charsSmallSet = "abcdefghjkmnpqrstuvwxyz1234567890";
+
+            var symbols = smallSet ? charsSmallSet : chars;
             var random = new System.Random();
     
-            return new string(Enumerable.Repeat(chars, length)
+            return new string(Enumerable.Repeat(symbols, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }

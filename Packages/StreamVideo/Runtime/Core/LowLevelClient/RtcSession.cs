@@ -393,7 +393,10 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     // Trace leave call before leaving the call. Otherwise, stats are not send because SFU WS disconnects
                     _sfuTracer?.Trace(PeerConnectionTraceKey.LeaveCall, new { SessionId = SessionId, Reason = reason });
-                    await _statsSender.SendFinalStatsAsync();
+                    if (_statsSender != null) // This was null in tests
+                    {
+                        await _statsSender.SendFinalStatsAsync();
+                    }
                 }
                 catch (Exception e)
                 {

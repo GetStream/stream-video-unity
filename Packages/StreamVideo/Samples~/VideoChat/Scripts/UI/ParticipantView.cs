@@ -64,10 +64,13 @@ namespace StreamVideo.ExampleProject.UI
         {
             var rect = _videoRectTransform.rect;
             var videoRenderedSize = new Vector2(rect.width, rect.height);
-            if (videoRenderedSize != _lastVideoRenderedSize)
+            var forcedRequestedSize = new Vector2(_forceRequestedResolutionWidth, _forceRequestedResolutionHeight);
+            var finalRequestedSize = _forceRequestedResolution ? forcedRequestedSize : videoRenderedSize;
+            
+            if (_lastRequestedResolution != finalRequestedSize)
             {
-                _lastVideoRenderedSize = videoRenderedSize;
-                var videoResolution = new VideoResolution((int)videoRenderedSize.x, (int)videoRenderedSize.y);
+                _lastRequestedResolution = finalRequestedSize;
+                var videoResolution = new VideoResolution((int)finalRequestedSize.x, (int)finalRequestedSize.y);
                 
                 // To optimize bandwidth we always request the video resolution that matches what we're actually rendering
                 Participant.UpdateRequestedVideoResolution(videoResolution);
@@ -119,9 +122,18 @@ namespace StreamVideo.ExampleProject.UI
         [SerializeField]
         private Color32 _defaultSpeakerFrameColor;
 
+        [SerializeField]
+        private bool _forceRequestedResolution = false;
+        
+        [SerializeField]
+        private int _forceRequestedResolutionWidth = 300;
+        
+        [SerializeField]
+        private int _forceRequestedResolutionHeight = 300;
+
         private AudioSource _audioSource;
         private RectTransform _videoRectTransform;
-        private Vector2 _lastVideoRenderedSize;
+        private Vector2 _lastRequestedResolution;
         private Quaternion _baseVideoRotation;
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)

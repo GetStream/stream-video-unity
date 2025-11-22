@@ -80,21 +80,10 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public VideoResolution PublisherTargetResolution
-        {
-            get
-            {
-                if (_mediaInputProvider.VideoInput != null)
-                {
-                    return new VideoResolution(_mediaInputProvider.VideoInput.width,
-                        _mediaInputProvider.VideoInput.height);
-                }
-
-                return _publisherVideoSettings.MaxResolution;
-            }
-        }
-
         public RTCRtpSender VideoSender { get; private set; }
+
+        // Full: 704×576  -> half: 352×288 -> quarter: 176×144 <- We want the smallest resolution to be above 96x96
+        public static VideoResolution MinimumSafeTargetResolution => new VideoResolution(704, 576);
 
         public StreamPeerConnection(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
             IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig,
@@ -237,6 +226,18 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public Task<RTCStatsReport> GetStatsReportAsync() => _peerConnection.GetStatsAsync();
+        
+        public PublisherVideoSettings GetLatestVideoSettings()
+        {
+            if (_publisherVideoSettings == null)
+            {
+                throw new ArgumentNullException($"{nameof(_publisherVideoSettings)} is null in {nameof(GetLatestVideoSettings)}");
+            }
+
+            _publisherVideoSettings.MaxResolution = PublisherTargetResolution;
+            _publisherVideoSettings.FrameRate = PublisherTargetFrameRate;
+            return _publisherVideoSettings;
+        }
 
         public void Dispose()
         {
@@ -289,6 +290,43 @@ namespace StreamVideo.Core.LowLevelClient
         private const string VideoCodecKeyH264 = "h264";
         private const string VideoCodecKeyVP8 = "vp8";
         private const string AudioCodecKeyRed = "red";
+        
+        private VideoResolution PublisherTargetResolution
+        {
+            get
+            {
+                if (_mediaInputProvider.VideoInput != null)
+                {
+                    var preferred = new VideoResolution(_mediaInputProvider.VideoInput.width,
+                        _mediaInputProvider.VideoInput.height);
+                    
+                    // Requesting too small resolution can cause crashes in the Android video encoder
+                    // The target resolution is used to calculate 3 layers of video encoding (full, half, quarter)
+                    // For very small values of quarter resolution (not sure exact but ~100x100) the encoder crashes 
+
+                    if (preferred.Width < MinimumSafeTargetResolution.Width ||
+                        preferred.Height < MinimumSafeTargetResolution.Height)
+                    {
+                        return MinimumSafeTargetResolution;
+                    }
+                }
+
+                return _publisherVideoSettings.MaxResolution;
+            }
+        }
+
+        private uint PublisherTargetFrameRate
+        {
+            get
+            {
+                if (_mediaInputProvider.VideoInput != null)
+                {
+                    return (uint)_mediaInputProvider.VideoInput.requestedFPS;
+                }
+
+                return 30;
+            }
+        }
 
         private readonly RTCPeerConnection _peerConnection;
 
@@ -604,6 +642,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                     break;
                 case TrackKind.Video:
+                    
+                    //StreamTodo: construct fewer layer when the target resolution is small. Android video encoder crashes when requesting very small resolution
+                    // We're currently forcing the smallest safe resolution that the user can request so that the quarter layer doesn't reach too small resolution
+                    // But we should allow setting small resolution and just produce fewer layers in that case
 
                     var fullQuality = new RTCRtpEncodingParameters
                     {

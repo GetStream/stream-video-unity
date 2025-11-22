@@ -1485,7 +1485,7 @@ namespace StreamVideo.Core.LowLevelClient
             foreach (var encoding in encodings)
             {
                 var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
-                var resolution = Publisher.PublisherTargetResolution;
+                var resolution = Publisher.GetLatestVideoSettings().MaxResolution;
                 var width = (uint)(resolution.Width / scaleBy);
                 var height = (uint)(resolution.Height / scaleBy);
 

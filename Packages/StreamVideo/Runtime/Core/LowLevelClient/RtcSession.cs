@@ -1391,6 +1391,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private IEnumerable<TrackInfo> GetPublisherTracks(string sdp)
         {
+            if (Publisher == null)
+            {
+                throw new ArgumentNullException($"{nameof(Publisher)} is null in {nameof(GetPublisherTracks)}");
+            }
+
             var transceivers = Publisher.GetTransceivers().ToArray();
 
             //StreamTodo: investigate why this return no results
@@ -1436,8 +1441,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (t.Sender.Track.Kind == TrackKind.Video)
                 {
-                    var videoLayers = GetPublisherVideoLayers(Publisher.VideoSender.GetParameters().encodings,
-                        _publisherVideoSettings);
+                    var videoLayers = GetPublisherVideoLayers(Publisher.VideoSender.GetParameters().encodings);
                     trackInfo.Layers.AddRange(videoLayers);
 
 #if STREAM_DEBUG_ENABLED
@@ -1472,8 +1476,7 @@ namespace StreamVideo.Core.LowLevelClient
             return sdpOffer;
         }
 
-        private IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings,
-            PublisherVideoSettings videoSettings)
+        private IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings)
         {
 #if STREAM_DEBUG_ENABLED
             var sb = new System.Text.StringBuilder();
@@ -1482,7 +1485,7 @@ namespace StreamVideo.Core.LowLevelClient
             foreach (var encoding in encodings)
             {
                 var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
-                var resolution = videoSettings.MaxResolution;
+                var resolution = Publisher.GetLatestVideoSettings().MaxResolution;
                 var width = (uint)(resolution.Width / scaleBy);
                 var height = (uint)(resolution.Height / scaleBy);
 

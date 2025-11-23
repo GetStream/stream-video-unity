@@ -52,6 +52,7 @@ namespace StreamVideo.Core
                 case ConnectionState.Connecting:
                 case ConnectionState.Connected:
                 case ConnectionState.Closing:
+                case ConnectionState.Disconnecting:
                     return false;
                 case ConnectionState.Disconnected:
                 case ConnectionState.WaitToReconnect:

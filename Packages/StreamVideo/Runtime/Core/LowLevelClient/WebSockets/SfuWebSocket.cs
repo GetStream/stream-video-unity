@@ -77,7 +77,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             if (reason == null)
             {
-                throw new ArgumentException($"{nameof(reason)} is null.");
+                reason = "reason not provided";
             }
             
 #if STREAM_DEBUG_ENABLED
@@ -298,14 +298,21 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             
             using (new TimeLogScope("Sending leave call request", Logs.Info))
             {
-                SendLeaveCallRequest(closeMessage);
-
-                for (int i = 0; i < 60; i++)
+                try
                 {
-                    if (SendQueueCount > 0)
+                    SendLeaveCallRequest(closeMessage);
+                    
+                    for (int i = 0; i < 60; i++)
                     {
-                        await Task.Delay(5);
+                        if (SendQueueCount > 0)
+                        {
+                            await Task.Delay(5);
+                        }
                     }
+                }
+                catch (Exception e)
+                {
+                    Logs.Warning("Failed to send LeaveCallRequest during disconnect: " + e.Message);
                 }
             }
 

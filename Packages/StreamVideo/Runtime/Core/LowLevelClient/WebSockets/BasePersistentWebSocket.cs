@@ -96,24 +96,24 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        public Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
+        public async Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
         {
             if (ConnectionState == ConnectionState.Disconnected || ConnectionState == ConnectionState.Closing ||
                 ConnectionState == ConnectionState.Disconnecting)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             ConnectionState = ConnectionState.Disconnecting;
             
-            OnDisconnectingAsync(closeMessage);
+            await OnDisconnectingAsync(closeMessage);
 
             if (WebsocketClient == null)
             {
-                return Task.CompletedTask;
+                return;
             }
 
-            return WebsocketClient.DisconnectAsync(closeStatus, closeMessage);
+            await WebsocketClient.DisconnectAsync(closeStatus, closeMessage);
         }
 
         //StreamTodo: either move to coordinator or make generic and pass TMessageType and abstract deserializer

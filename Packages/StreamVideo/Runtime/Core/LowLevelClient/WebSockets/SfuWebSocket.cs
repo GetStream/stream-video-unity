@@ -72,7 +72,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             if (string.IsNullOrEmpty(_sessionId))
             {
-                throw new ArgumentException($"{nameof(_sessionId)} is null or empty.");
+                return;
             }
 
             if (reason == null)

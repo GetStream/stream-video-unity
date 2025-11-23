@@ -380,6 +380,14 @@ namespace StreamVideo.Core.LowLevelClient
 
         public async Task StopAsync(string reason = "")
         {
+            if (CallState == CallingState.Leaving || CallState == CallingState.Offline)
+            {
+                return;
+            }
+
+            CallState = CallingState.Leaving;
+
+
             if (UseNativeAudioBindings)
             {
 #if STREAM_NATIVE_AUDIO
@@ -393,23 +401,30 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     // Trace leave call before leaving the call. Otherwise, stats are not send because SFU WS disconnects
                     _sfuTracer?.Trace(PeerConnectionTraceKey.LeaveCall, new { SessionId = SessionId, Reason = reason });
+
                     if (_statsSender != null) // This was null in tests
                     {
-                        await _statsSender.SendFinalStatsAsync();
+                        using (new TimeLogScope("Sending final stats on leave", _logs.Info))
+                        {
+                            await _statsSender.SendFinalStatsAsync();
+                        }
                     }
                 }
                 catch (Exception e)
                 {
                     _logs.Error($"Failed to send final stats on leave: {e.Message}");
                 }
-
-                _sfuWebSocket.SendLeaveCallRequest(reason);
-
-                for (int i = 0; i < 60; i++)
+                
+                using (new TimeLogScope("Sending leave call request", _logs.Info))
                 {
-                    if (_sfuWebSocket.SendQueueCount > 0)
+                    _sfuWebSocket.SendLeaveCallRequest(reason);
+
+                    for (int i = 0; i < 60; i++)
                     {
-                        await Task.Delay(5);
+                        if (_sfuWebSocket.SendQueueCount > 0)
+                        {
+                            await Task.Delay(5);
+                        }
                     }
                 }
 
@@ -666,7 +681,8 @@ namespace StreamVideo.Core.LowLevelClient
                     var userId = GetUserId(participant);
                     if (string.IsNullOrEmpty(userId))
                     {
-                        _logs.Error($"Cannot subscribe to {trackType} - participant UserId is null or empty. SessionID: {participant.SessionId}");
+                        _logs.Error(
+                            $"Cannot subscribe to {trackType} - participant UserId is null or empty. SessionID: {participant.SessionId}");
                         continue;
                     }
 

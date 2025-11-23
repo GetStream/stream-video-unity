@@ -51,6 +51,11 @@
         /// <summary>
         /// The call is in offline mode.
         /// </summary>
-        Offline
+        Offline,
+        
+        /// <summary>
+        /// Leaving operation in progress.
+        /// </summary>
+        Leaving,
     }
 }

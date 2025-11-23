@@ -445,7 +445,17 @@ namespace StreamVideo.Core.StatefulModels
         {
             if (Participants.Count == 0)
             {
-                Logs.Error($"{nameof(GetLocalParticipant)} - no participants in the call.");
+                using (new StringBuilderPoolScope(out var tempSb))
+                {
+                    tempSb.AppendLine($"{nameof(GetLocalParticipant)} - no participants in the call.");
+                    tempSb.AppendLine("Last operations leading to this state:");
+                    foreach (var log in _tempLogs.GetLogs())
+                    {
+                        tempSb.AppendLine(log);
+                    }
+                    
+                    Logs.Error(tempSb.ToString());
+                }
                 throw new InvalidOperationException("No participants in the call.");
             }
             

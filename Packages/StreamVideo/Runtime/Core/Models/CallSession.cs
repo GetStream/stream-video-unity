@@ -71,8 +71,14 @@ namespace StreamVideo.Core.Models
             }
 
             // dto.CallState.Participants may not contain all participants
-            UpdateExtensions<StreamVideoCallParticipant, SfuParticipant>.TryAddUniqueTrackedObjects(_participants,
-                dto.Participants, cache.CallParticipants);
+            foreach (var dtoParticipant in dto.Participants)
+            {
+                var participant = cache.TryCreateOrUpdate(dtoParticipant);
+                if (!_participants.Contains(participant))
+                {
+                    _participants.Add(participant);
+                }
+            }
 
             ((IStateLoadableFrom<SfuParticipantCount, ParticipantCount>)ParticipantCount).LoadFromDto(
                 dto.ParticipantCount, cache);

@@ -441,6 +441,39 @@ namespace StreamVideo.Core.StatefulModels
             return UploadCustomDataAsync();
         }
 
+        public IStreamVideoCallParticipant GetLocalParticipant()
+        {
+            if (Participants.Count == 0)
+            {
+                Logs.Error($"{nameof(GetLocalParticipant)} - no participants in the call.");
+                throw new InvalidOperationException("No participants in the call.");
+            }
+            
+            var localParticipant = Participants.FirstOrDefault(p => p.IsLocalParticipant);
+            if (localParticipant == null)
+            {
+                using (new StringBuilderPoolScope(out var sb))
+                {
+                    var currentSessionId = LowLevelClient.RtcSession.SessionId;
+                    sb.AppendLine($"Local participant not found. Local Session ID: {currentSessionId}. Participants in the call:");
+                    foreach (var p in Participants)
+                    {
+                        sb.AppendLine($" - UserId: {p.UserId}, SessionId: {p.SessionId}, IsLocalParticipant: {p.IsLocalParticipant}");
+                    }
+
+                    sb.AppendLine("Last operations leading to this state:");
+                    foreach (var log in _tempLogs.GetLogs())
+                    {
+                        sb.AppendLine(log);
+                    }
+                    
+                    Logs.Error(sb.ToString());
+                }
+            }
+
+            return localParticipant;
+        }
+
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
         {
@@ -462,6 +495,29 @@ namespace StreamVideo.Core.StatefulModels
             Transcribing = dto.Transcribing;
             Type = new StreamCallType(dto.Type);
             UpdatedAt = dto.UpdatedAt;
+
+            try
+            {
+                // Ignore the IDE warning, this can be null
+                if (dto.Session != null)
+                {
+                    using (new StringBuilderPoolScope(out var tempSb))
+                    {
+                        tempSb.Append($"`UpdateFromDto(CallResponseInternalDTO dto` - dto participants: {dto.Session.Participants?.Count}, call participants: {Session.Participants.Count}. Dto participants: ");
+                        foreach (var p in dto.Session.Participants)
+                        {
+                            tempSb.Append($"[UserSessionId: {p.UserSessionId}, SessionId: {p.User?.Id}");
+                        }
+                    
+                        _tempLogs.Add(tempSb.ToString());
+                    }
+                }
+
+            }
+            catch (Exception e)
+            {
+                Logs.Exception(e);
+            }
 
             // Depends on Session.Participants so load as last
             LoadCustomData(dto.Custom);
@@ -531,6 +587,26 @@ namespace StreamVideo.Core.StatefulModels
         {
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
             UpdateServerPins(joinResponse.CallState.Pins);
+
+            try
+            {
+                using (new StringBuilderPoolScope(out var tempSb))
+                {
+                    tempSb.Append("`UpdateFromSfu(JoinResponse joinResponse)` - joinResponse participants: ");
+                    if(joinResponse.CallState !=null && joinResponse.CallState.Participants != null)
+                    {
+                        foreach (var p in joinResponse.CallState.Participants)
+                        {
+                            tempSb.Append($"[UserId: {p.UserId}, SessionId: {p.SessionId}, ");
+                        }
+                    }
+                    _tempLogs.Add(tempSb.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                Logs.Exception(e);
+            }
         }
 
         internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
@@ -749,6 +825,8 @@ namespace StreamVideo.Core.StatefulModels
         private readonly CallParticipantComparer _participantComparer = new CallParticipantComparer();
 
         private readonly Dictionary<string, List<string>> _capabilitiesByRole = new Dictionary<string, List<string>>();
+
+        private readonly DebugLogBuffer _tempLogs = new DebugLogBuffer();
 
         #endregion
 

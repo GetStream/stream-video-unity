@@ -337,5 +337,10 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         /// <returns>True if participant is pinned remotely</returns>
         bool IsPinned(IStreamVideoCallParticipant participant);
+
+        /// <summary>
+        /// Helper function to get the local participant object for the current user in this call
+        /// </summary>
+        IStreamVideoCallParticipant GetLocalParticipant();
     }
 }

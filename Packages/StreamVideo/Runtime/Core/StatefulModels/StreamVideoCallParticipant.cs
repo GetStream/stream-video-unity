@@ -23,7 +23,7 @@ namespace StreamVideo.Core.StatefulModels
         public event ParticipantTrackChangedHandler TrackAdded;
         public event ParticipantTrackChangedHandler TrackIsEnabledChanged;
 
-        public bool IsLocalParticipant => UserSessionId == Client.InternalLowLevelClient.RtcSession.SessionId;
+        public bool IsLocalParticipant => SessionId == Client.InternalLowLevelClient.RtcSession.SessionId;
 
         public bool IsPinned { get; private set; }
 
@@ -48,26 +48,6 @@ namespace StreamVideo.Core.StatefulModels
         public string Role { get; private set; }
 
         public IStreamVideoUser User { get; set; }
-
-        //StreamTODO: investigate why we have UserSessionID and SessionId. On a user that was joining the call I had null SessionId while UserSessionId had value
-        // They probably represent the same thing and one is set by coordinator and the other by SFU but let's verify
-        public string UserSessionId
-        {
-            get => _userSessionId;
-            private set
-            {
-                Logs.WarningIfDebug(
-                    $"UserSessionId set to: {value} for participant: {UserId} and Session ID: {SessionId}");
-                _userSessionId = value;
-
-                if (string.IsNullOrEmpty(SessionId))
-                {
-                    SessionId = value;
-                }
-            }
-        }
-
-        private string _userSessionId;
 
         #endregion
 
@@ -155,17 +135,12 @@ namespace StreamVideo.Core.StatefulModels
             JoinedAt = dto.JoinedAt;
             Role = dto.Role;
             User = cache.TryCreateOrUpdate(dto.User);
-            UserSessionId = dto.UserSessionId;
+            SessionId = dto.UserSessionId;
 
             if (string.IsNullOrEmpty(UserId) && User != null)
             {
                 UserId = User.Id;
             }
-
-            //StreamTodo: investigate why we either update UserId or User object
-            //Depending on the update source we'll end up with one being empty
-            //We can take UserId from user obj, but we can't easily get User obj give UserId in dto
-            //Ideally, we'd only expose the User object -> check if this is possible
 
             //StreamTodo: verify if we're using every piece of data received from API/SFU responses to update this object
         }
@@ -275,8 +250,8 @@ namespace StreamVideo.Core.StatefulModels
 
         protected override string InternalUniqueId
         {
-            get => UserSessionId;
-            set => UserSessionId = value;
+            get => SessionId;
+            set => SessionId = value;
         }
 
         protected override StreamVideoCallParticipant Self => this;

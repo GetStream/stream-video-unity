@@ -38,6 +38,7 @@ namespace StreamVideo.Core
         /// <summary>
         /// Currently ongoing call session. This will be NULL if there's no call active.
         /// You can subscribe to <see cref="CallStarted"/> and <see cref="CallEnded"/> events to get notified when a call is started/ended.
+        /// The client can only be in a single call at a time.
         /// </summary>
         IStreamCall ActiveCall { get; }
         
@@ -76,7 +77,7 @@ namespace StreamVideo.Core
             bool notify);
 
         /// <summary>
-        /// Will return null if the call doesn't exist
+        /// Gets call information without joining it. Will return null if the call doesn't exist
         /// </summary>
         Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId);
 

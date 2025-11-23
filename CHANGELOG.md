@@ -1,3 +1,7 @@
+0.8.13:
+
+- Fix `call.Participants` sometimes not containing the local participant.
+
 0.8.12:
 
 - Better handling of `LeaveCallAsync`. This should solve the "`LeaveCallAsync` takes a long time sometimes"

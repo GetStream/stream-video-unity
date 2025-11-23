@@ -53,8 +53,20 @@ namespace StreamVideo.Core.Models
             _acceptedBy.TryReplaceValuesFromDto(dto.AcceptedBy);
             EndedAt = dto.EndedAt;
             Id = dto.Id;
-            _participants.TryReplaceTrackedObjects(dto.Participants, cache.CallParticipants);
-            _participantsCountByRole.TryReplaceValuesFromDto(dto.ParticipantsCountByRole);
+            
+            // CallSessionResponseInternalDTO usually (or always?) contains no participants. Participants are updated from the SFU join response
+            // But SFU response can arrive before API response, so we can't override participants here because this clears the list
+            foreach (var dtoParticipant in dto.Participants)
+            {
+                var participant = cache.TryCreateOrUpdate(dtoParticipant);
+                if (!_participants.Contains(participant))
+                {
+                    _participants.Add(participant);
+                }
+            }
+            
+            // StreamTODO: figure out how to best handle this. Should we update it from coordinator or only the SFU
+            //_participantsCountByRole.TryReplaceValuesFromDto(dto.ParticipantsCountByRole);
             _rejectedBy.TryReplaceValuesFromDto(dto.RejectedBy);
             StartedAt = dto.StartedAt;
             LiveEndedAt = dto.LiveEndedAt;

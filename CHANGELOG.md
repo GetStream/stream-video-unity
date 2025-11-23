@@ -1,3 +1,10 @@
+0.8.12:
+
+- Better handling of `LeaveCallAsync`. This should solve the "`LeaveCallAsync` takes a long time sometimes"
+- Respect video resolution set via SelectDevice. Previously, the broadcast video resolution was fixed.
+- Potential crash fix in the native plugin
+- Improvement to the broadcasted video handling - this can potentially improve video performance for watching users
+
 0.8.11:
 
 - Fix `NullReferenceException` in `SubscribeToTracksAsync` 

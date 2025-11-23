@@ -103,11 +103,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             await _connectUserTaskSource.Task;
         }
 
-        protected override void OnDisconnecting()
+        protected override async Task OnDisconnectingAsync(string closeMessage)
         {
             _connectUserTaskSource?.TrySetCanceled();
             
-            base.OnDisconnecting();
+            await base.OnDisconnectingAsync(closeMessage);
         }
 
         protected override void OnDisposing()

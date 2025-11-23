@@ -451,6 +451,12 @@ namespace StreamVideo.Core
         {
             try
             {
+                var callState = InternalLowLevelClient.RtcSession.CallState;
+                if (callState == CallingState.Leaving || callState == CallingState.Offline)
+                {
+                    _logs.Warning($"{nameof(LeaveCallAsync)}: Call is already leaving or offline, skipping leave operation.");
+                    return;
+                }
                 await InternalLowLevelClient.RtcSession.StopAsync("User is leaving the call");
             }
             catch (Exception e)

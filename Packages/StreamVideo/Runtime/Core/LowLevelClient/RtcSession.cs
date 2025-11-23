@@ -369,7 +369,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                 //StreamTodo: validate when this state should set
                 CallState = CallingState.Joined;
+                
+#if STREAM_DEBUG_ENABLED
                 _videoAudioSyncBenchmark?.Init(call);
+#endif
             }
             catch
             {
@@ -414,19 +417,6 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     _logs.Error($"Failed to send final stats on leave: {e.Message}");
                 }
-                
-                using (new TimeLogScope("Sending leave call request", _logs.Info))
-                {
-                    _sfuWebSocket.SendLeaveCallRequest(reason);
-
-                    for (int i = 0; i < 60; i++)
-                    {
-                        if (_sfuWebSocket.SendQueueCount > 0)
-                        {
-                            await Task.Delay(5);
-                        }
-                    }
-                }
 
 #if STREAM_DEBUG_ENABLED
                 if (_sfuWebSocket.SendQueueCount > 0)
@@ -439,9 +429,17 @@ namespace StreamVideo.Core.LowLevelClient
 
             ClearSession();
             //StreamTodo: check with js definition of "offline" 
+
+            using (new TimeLogScope("Sending leave call request & disconnect", _logs.Info))
+            {
+                await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
+            }
+            
             CallState = CallingState.Offline;
-            await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Video session stopped");
+
+#if STREAM_DEBUG_ENABLED
             _videoAudioSyncBenchmark?.Finish();
+#endif
         }
 
         //StreamTodo: call by call.reconnectOrSwitchSfu()

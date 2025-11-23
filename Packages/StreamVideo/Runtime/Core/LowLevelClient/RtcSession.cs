@@ -415,7 +415,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 catch (Exception e)
                 {
-                    _logs.Error($"Failed to send final stats on leave: {e.Message}");
+                    _logs.Warning($"Failed to send final stats on leave: {e.Message}");
                 }
 
 #if STREAM_DEBUG_ENABLED

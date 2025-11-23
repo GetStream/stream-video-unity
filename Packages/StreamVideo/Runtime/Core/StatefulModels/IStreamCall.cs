@@ -126,6 +126,9 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         StreamCallType Type { get; }
 
+        /// <summary>
+        /// Does the user of this client own the call
+        /// </summary>
         bool IsLocalUserOwner { get; }
         
         /// <summary>

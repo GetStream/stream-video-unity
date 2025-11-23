@@ -13,6 +13,11 @@ namespace StreamVideo.Core
         /// If was Connected before and allowed by <see cref="IStreamVideoLowLevelClient.ReconnectStrategy"/> it will switch to WaitToReconnect and attempt to connect again after a timeout
         /// </summary>
         Disconnected,
+        
+        /// <summary>
+        /// Disconnecting current user in progress. Client can still reconnect after this.
+        /// </summary>
+        Disconnecting,
 
         /// <summary>
         /// Currently connecting to server, waiting for the connection handshake to complete
@@ -30,7 +35,7 @@ namespace StreamVideo.Core
         Connected,
 
         /// <summary>
-        /// Connection is permanently closing. There will be no reconnects made. StreamChatClient is probably being disposed
+        /// Connection is permanently closing. There will be no reconnects made. StreamVideoClient is probably being disposed
         /// </summary>
         Closing,
     }
@@ -47,6 +52,7 @@ namespace StreamVideo.Core
                 case ConnectionState.Connecting:
                 case ConnectionState.Connected:
                 case ConnectionState.Closing:
+                case ConnectionState.Disconnecting:
                     return false;
                 case ConnectionState.Disconnected:
                 case ConnectionState.WaitToReconnect:

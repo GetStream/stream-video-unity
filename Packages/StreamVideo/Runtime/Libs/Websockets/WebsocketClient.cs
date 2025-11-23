@@ -131,13 +131,20 @@ namespace StreamVideo.Libs.Websockets
         {
             LogInfoIfDebugMode("Disconnect");
             await TryDisposeResourcesAsync(closeStatus, closeMessage);
-            
+
             _receiveQueue.Clear();
             while (_sendQueue.TryTake(out _))
             {
             }
 
             Disconnected?.Invoke();
+        }
+
+        public void ClearSendQueue()
+        {
+            while (_sendQueue.TryTake(out _))
+            {
+            }
         }
 
         public void Dispose()

@@ -73,10 +73,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             {
                 return;
             }
-            
-            #if STREAM_DEBUG_ENABLED
+
+#if STREAM_DEBUG_ENABLED
             Logs.Info($"{GetType()} TryToReconnect");
-            #endif
+#endif
 
             ConnectAsync().LogIfFailed();
         }
@@ -96,17 +96,24 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        public Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
+        public async Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
         {
-            //StreamTodo: ignore if already disconnected or disconnecting
-            OnDisconnecting();
+            if (ConnectionState == ConnectionState.Disconnected || ConnectionState == ConnectionState.Closing ||
+                ConnectionState == ConnectionState.Disconnecting)
+            {
+                return;
+            }
+
+            ConnectionState = ConnectionState.Disconnecting;
+            
+            await OnDisconnectingAsync(closeMessage);
 
             if (WebsocketClient == null)
             {
-                return Task.CompletedTask;
+                return;
             }
 
-            return WebsocketClient.DisconnectAsync(closeStatus, closeMessage);
+            await WebsocketClient.DisconnectAsync(closeStatus, closeMessage);
         }
 
         //StreamTodo: either move to coordinator or make generic and pass TMessageType and abstract deserializer
@@ -179,7 +186,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         protected IRequestUriFactory UriFactory { get; }
         protected IAuthProvider AuthProvider { get; }
         protected IReadOnlyDictionary<string, Action<string>> EventHandlers => _eventKeyToHandler;
-        
+
         protected abstract int HealthCheckMaxWaitingTime { get; }
         protected abstract int HealthCheckSendInterval { get; }
 
@@ -198,7 +205,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             WebsocketClient.ConnectionFailed += OnConnectionFailed;
             WebsocketClient.Disconnected += OnDisconnected;
-            
+
             _reconnectScheduler.ReconnectionScheduled += OnReconnectionScheduled;
         }
 
@@ -208,7 +215,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected void OnHealthCheckReceived()
         {
-            
 #if STREAM_DEBUG_ENABLED
             var timeSinceLast = Mathf.Round(TimeService.Time - _lastHealthCheckReceivedTime);
             //Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds");
@@ -216,8 +222,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _lastHealthCheckReceivedTime = TimeService.Time;
         }
 
-        protected virtual void OnDisconnecting()
+        protected virtual Task OnDisconnectingAsync(string closeMessage)
         {
+            return Task.CompletedTask;
         }
 
         protected virtual void OnDisposing()
@@ -226,8 +233,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         private readonly object _websocketConnectionFailedFlagLock = new object();
         private readonly IReconnectScheduler _reconnectScheduler;
+
         private readonly Dictionary<string, Action<string>> _eventKeyToHandler =
             new Dictionary<string, Action<string>>();
+
         private readonly StringBuilder _logSb = new StringBuilder();
 
         private ConnectionState _connectionState;
@@ -275,7 +284,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             var timeSinceLastHealthCheck = TimeService.Time - _lastHealthCheckReceivedTime;
             if (timeSinceLastHealthCheck > HealthCheckMaxWaitingTime)
             {
-                Logs.Warning($"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
+                Logs.Warning(
+                    $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
                 WebsocketClient
                     .DisconnectAsync(WebSocketCloseStatus.InternalServerError,
                         $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}")

@@ -70,6 +70,11 @@ namespace StreamVideo.Libs.Websockets
 
         public Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage) => DisconnectAsync();
 
+        public void ClearSendQueue()
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task DisconnectAsync()
         {
             if (_webSocket == null)

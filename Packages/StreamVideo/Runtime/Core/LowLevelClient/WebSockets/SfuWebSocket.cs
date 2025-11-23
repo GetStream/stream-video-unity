@@ -11,6 +11,7 @@ using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
+using StreamVideo.Libs.Utils;
 using StreamVideo.Libs.Websockets;
 using Error = StreamVideo.v1.Sfu.Events.Error;
 using ICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
@@ -71,7 +72,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             if (string.IsNullOrEmpty(_sessionId))
             {
-                throw new ArgumentException($"{nameof(_sessionId)} is null or empty.");
+                return;
             }
 
             if (reason == null)
@@ -103,6 +104,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void SendHealthCheck()
         {
+            if (ConnectionState != ConnectionState.Connected)
+            {
+                return;
+            }
+            
             var sfuRequest = new SfuRequest
             {
                 HealthCheckRequest = new HealthCheckRequest(),
@@ -114,6 +120,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
         {
+            if (ConnectionState == ConnectionState.Disconnecting || ConnectionState == ConnectionState.Closing)
+            {
+                Logs.Error($"Tried to connect to the {nameof(SfuWebSocket)} while disconnecting or closing. Aborting.");
+                return;
+            }
             //StreamTodo: validate session data
 
             if (string.IsNullOrEmpty(_sfuToken))
@@ -279,11 +290,26 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        protected override void OnDisconnecting()
+        protected override async Task OnDisconnectingAsync(string closeMessage)
         {
             _connectUserTaskSource?.TrySetCanceled();
+            
+            WebsocketClient.ClearSendQueue();
+            
+            using (new TimeLogScope("Sending leave call request", Logs.Info))
+            {
+                SendLeaveCallRequest(closeMessage);
 
-            base.OnDisconnecting();
+                for (int i = 0; i < 60; i++)
+                {
+                    if (SendQueueCount > 0)
+                    {
+                        await Task.Delay(5);
+                    }
+                }
+            }
+
+            await base.OnDisconnectingAsync(closeMessage);
         }
 
         protected override void OnDisposing()

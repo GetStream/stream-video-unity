@@ -173,6 +173,8 @@ namespace StreamVideo.Core.LowLevelClient
                     break;
                 case ConnectionState.Closing:
                     break;
+                case ConnectionState.Disconnecting:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(current), current, null);
             }

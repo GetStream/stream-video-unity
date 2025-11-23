@@ -29,6 +29,7 @@ namespace StreamVideo.Libs.Utils
             _sb.Append(_name);
             _sb.Append(" - Executed in: ");
             _sb.Append(elapsed);
+            _sb.Append(" seconds");
 
             _logger(_sb.ToString());
         }

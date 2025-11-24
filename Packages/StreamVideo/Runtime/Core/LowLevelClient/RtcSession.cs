@@ -369,7 +369,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 //StreamTodo: validate when this state should set
                 CallState = CallingState.Joined;
-                
+
 #if STREAM_DEBUG_ENABLED
                 _videoAudioSyncBenchmark?.Init(call);
 #endif
@@ -434,7 +434,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
             }
-            
+
             CallState = CallingState.Offline;
 
 #if STREAM_DEBUG_ENABLED
@@ -488,6 +488,30 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_NATIVE_AUDIO
             WebRTC.StopAudioPlayback();
             WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+#endif
+        }
+
+        //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
+        public void PauseAndroidAudioPlayback()
+        {
+#if STREAM_NATIVE_AUDIO
+            WebRTC.StopAudioPlayback();
+            _logs.Warning("Audio Playback is paused. This stops all audio coming from StreamVideo SDK on Android platform.");
+#else
+            throw new NotSupportedException(
+                $"{nameof(PauseAndroidAudioPlayback)} is only supported on Android platform.");
+#endif
+        }
+
+        //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
+        public void ResumeAndroidAudioPlayback()
+        {
+#if STREAM_NATIVE_AUDIO
+            WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+            _logs.Warning("Audio Playback is resumed. This resumes audio coming from StreamVideo SDK on Android platform.");
+#else
+            throw new NotSupportedException(
+                $"{nameof(ResumeAndroidAudioPlayback)} is only supported on Android platform.");
 #endif
         }
 

@@ -311,6 +311,10 @@ namespace StreamVideo.Core
 #endif
         }
 
+        public void PauseAndroidAudioPlayback() => InternalLowLevelClient.RtcSession.PauseAndroidAudioPlayback();
+
+        public void ResumeAndroidAudioPlayback() => InternalLowLevelClient.RtcSession.ResumeAndroidAudioPlayback();
+
         #region IStreamVideoClientEventsListener
 
         event Action IStreamVideoClientEventsListener.Destroyed

@@ -106,5 +106,18 @@ namespace StreamVideo.Core
         void SetAudioProcessingModule(bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel);
         
         void GetAudioProcessingModuleConfig(out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel);
+
+
+        /// <summary>
+        /// Temporary method (can be removed in the future) to pause audio playback on Android.
+        /// This will completely suspend playback of any audio coming from the StreamVideo SDK on the Android platform.
+        /// </summary>
+        void PauseAndroidAudioPlayback();
+
+        /// <summary>
+        /// Temporary method (can be removed in the future) to resume audio playback on Android.
+        /// Call this resume audio playback if it was previously paused using <see cref="PauseAndroidAudioPlayback"/>.
+        /// </summary>
+        void ResumeAndroidAudioPlayback();
     }
 }

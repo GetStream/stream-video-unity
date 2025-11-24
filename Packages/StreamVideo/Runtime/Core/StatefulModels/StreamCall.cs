@@ -62,7 +62,7 @@ namespace StreamVideo.Core.StatefulModels
 
         //StreamTodo: Maybe add OtherParticipants -> All participants except for the local participant?
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session?.Participants;
-        
+
         public ParticipantCount ParticipantCount => Session.ParticipantCount;
 
         public bool IsLocalUserOwner
@@ -453,31 +453,41 @@ namespace StreamVideo.Core.StatefulModels
                     {
                         tempSb.AppendLine(log);
                     }
-                    
+
                     Logs.Error(tempSb.ToString());
                 }
-                throw new InvalidOperationException("No participants in the call.");
+
+                return null;
             }
-            
+
             var localParticipant = Participants.FirstOrDefault(p => p.IsLocalParticipant);
             if (localParticipant == null)
             {
-                using (new StringBuilderPoolScope(out var sb))
+                try
                 {
-                    var currentSessionId = LowLevelClient.RtcSession.SessionId;
-                    sb.AppendLine($"Local participant not found. Local Session ID: {currentSessionId}. Participants in the call:");
-                    foreach (var p in Participants)
+                    using (new StringBuilderPoolScope(out var sb))
                     {
-                        sb.AppendLine($" - UserId: {p.UserId}, SessionId: {p.SessionId}, IsLocalParticipant: {p.IsLocalParticipant}");
-                    }
+                        var currentSessionId = LowLevelClient.RtcSession.SessionId;
+                        sb.AppendLine(
+                            $"Local participant not found. Local Session ID: {currentSessionId}. Participants in the call:");
+                        foreach (var p in Participants)
+                        {
+                            sb.AppendLine(
+                                $" - UserId: {p.UserId}, SessionId: {p.SessionId}, IsLocalParticipant: {p.IsLocalParticipant}");
+                        }
 
-                    sb.AppendLine("Last operations leading to this state:");
-                    foreach (var log in _tempLogs.GetLogs())
-                    {
-                        sb.AppendLine(log);
+                        sb.AppendLine("Last operations leading to this state:");
+                        foreach (var log in _tempLogs.GetLogs())
+                        {
+                            sb.AppendLine(log);
+                        }
+
+                        Logs.Error(sb.ToString());
                     }
-                    
-                    Logs.Error(sb.ToString());
+                }
+                catch (Exception e)
+                {
+                    Logs.Warning($"Error while generating log for {nameof(GetLocalParticipant)}: " + e.Message);
                 }
             }
 
@@ -487,6 +497,8 @@ namespace StreamVideo.Core.StatefulModels
         void IUpdateableFrom<CallResponseInternalDTO, StreamCall>.UpdateFromDto(CallResponseInternalDTO dto,
             ICache cache)
         {
+            var wasBefore = IsLocalParticipantIncluded();
+
             Backstage = dto.Backstage;
             _blockedUserIds.TryReplaceValuesFromDto(dto.BlockedUserIds);
             Cid = dto.Cid;
@@ -506,27 +518,33 @@ namespace StreamVideo.Core.StatefulModels
             Type = new StreamCallType(dto.Type);
             UpdatedAt = dto.UpdatedAt;
 
+            var isAfter = IsLocalParticipantIncluded();
+
             try
             {
+                var localParticipantId = LowLevelClient.RtcSession.SessionId;
                 // Ignore the IDE warning, this can be null
                 if (dto.Session != null)
                 {
                     using (new StringBuilderPoolScope(out var tempSb))
                     {
-                        tempSb.Append($"`UpdateFromDto(CallResponseInternalDTO dto` - dto participants: {dto.Session.Participants?.Count}, call participants: {Session.Participants.Count}. Dto participants: ");
+                        tempSb.Append(
+                            $"`UpdateFromDto(CallResponseInternalDTO dto` - dto participants: {dto.Session.Participants?.Count}, call participants: {Session.Participants.Count}. ");
+                        tempSb.Append(
+                            $"IsLocalParticipantIncluded ({localParticipantId}) before: {wasBefore}, after: {isAfter}. ");
+                        tempSb.Append("Dto participants:");
                         foreach (var p in dto.Session.Participants)
                         {
-                            tempSb.Append($"[UserSessionId: {p.UserSessionId}, SessionId: {p.User?.Id}");
+                            tempSb.Append($"[UserSessionId: {p.UserSessionId}, SessionId: {p.User?.Id}, ");
                         }
-                    
+
                         _tempLogs.Add(tempSb.ToString());
                     }
                 }
-
             }
             catch (Exception e)
             {
-                Logs.Exception(e);
+                Logs.Warning("Failed to log participants in UpdateFromDto: " + e.Message);
             }
 
             // Depends on Session.Participants so load as last
@@ -595,21 +613,39 @@ namespace StreamVideo.Core.StatefulModels
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
+            var wasBefore = IsLocalParticipantIncluded();
+
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
             UpdateServerPins(joinResponse.CallState.Pins);
 
+            var isAfter = IsLocalParticipantIncluded();
+
             try
             {
+                var localParticipantId = LowLevelClient.RtcSession.SessionId;
                 using (new StringBuilderPoolScope(out var tempSb))
                 {
+                    tempSb.Append("`UpdateFromSfu(JoinResponse joinResponse)` - ");
+                    tempSb.Append(
+                        $"IsLocalParticipantIncluded ({localParticipantId}) before: {wasBefore}, after: {isAfter}. ");
                     tempSb.Append("`UpdateFromSfu(JoinResponse joinResponse)` - joinResponse participants: ");
-                    if(joinResponse.CallState !=null && joinResponse.CallState.Participants != null)
+                    if (joinResponse.CallState != null && joinResponse.CallState.Participants != null)
                     {
                         foreach (var p in joinResponse.CallState.Participants)
                         {
                             tempSb.Append($"[UserId: {p.UserId}, SessionId: {p.SessionId}, ");
                         }
                     }
+                    else
+                    {
+                        tempSb.Append("joinResponse.CallState not null:");
+                        tempSb.Append(joinResponse.CallState != null);
+                        tempSb.Append("joinResponse.CallState.Participants not null: ");
+                        tempSb.Append(joinResponse.CallState?.Participants != null);
+                        tempSb.Append("count: ");
+                        tempSb.Append(joinResponse.CallState?.Participants?.Count);
+                    }
+
                     _tempLogs.Add(tempSb.ToString());
                 }
             }
@@ -628,6 +664,20 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
+            try
+            {
+                var p = cache.TryCreateOrUpdate(participantLeft.Participant);
+                if (p.IsLocalParticipant)
+                {
+                    _tempLogs.Add(
+                        "`UpdateFromSfu(ParticipantLeft participantLeft)` -  ERROR - local participant is leaving the call.");
+                }
+            }
+            catch (Exception e)
+            {
+                Logs.Warning("Error when generating debug log: " + e.Message);
+            }
+
             var participant = Session.UpdateFromSfu(participantLeft, cache);
 
             _localPinsSessionIds.RemoveAll(participant.sessionId);
@@ -666,23 +716,23 @@ namespace StreamVideo.Core.StatefulModels
         {
             Session?.UpdateFromSfu(healthCheckResponse, cache);
         }
-        
+
         internal void UpdateFromCoordinator(CallSessionParticipantCountsUpdatedEventInternalDTO eventData)
         {
             Session?.UpdateFromCoordinator(eventData, Client.InternalLowLevelClient.RtcSession.CallState);
         }
-        
+
         internal void UpdateFromCoordinator(CallSessionParticipantJoinedEventInternalDTO eventData, ICache cache)
         {
             Session?.UpdateFromCoordinator(eventData, cache, Client.InternalLowLevelClient.RtcSession.CallState);
-            
+
             //StreamTodo: we should extract AddParticipant logic from SFU and whatever is received first (SFU or Coordinator) should handle it
         }
-        
+
         internal void UpdateFromCoordinator(CallSessionParticipantLeftEventInternalDTO eventData, ICache cache)
         {
             Session?.UpdateFromCoordinator(eventData, cache, Client.InternalLowLevelClient.RtcSession.CallState);
-            
+
             //StreamTodo: we should extract RemoveParticipant logic from SFU and whatever is received first (SFU or Coordinator) should handle it
         }
 
@@ -759,12 +809,14 @@ namespace StreamVideo.Core.StatefulModels
 
             //StreamTodo: NullReferenceException here because _client is never set
             var participant
-                = Client.InternalLowLevelClient.RtcSession.ActiveCall.Participants.FirstOrDefault(p => p.UserId == reaction.User.Id);
+                = Client.InternalLowLevelClient.RtcSession.ActiveCall.Participants.FirstOrDefault(p
+                    => p.UserId == reaction.User.Id);
             if (participant == null)
             {
                 Logs.ErrorIfDebug(
                     $"Failed to find participant for reaction. UserId: {reaction.User.Id}, Participants: " +
-                    string.Join(", ", Client.InternalLowLevelClient.RtcSession.ActiveCall.Participants.Select(p => p.UserId)));
+                    string.Join(", ",
+                        Client.InternalLowLevelClient.RtcSession.ActiveCall.Participants.Select(p => p.UserId)));
                 return;
             }
 
@@ -928,7 +980,7 @@ namespace StreamVideo.Core.StatefulModels
                         tempRolesToRemove.Add(role);
                     }
                 }
-                
+
                 foreach (var role in tempRolesToRemove)
                 {
                     _capabilitiesByRole.Remove(role);
@@ -986,6 +1038,16 @@ namespace StreamVideo.Core.StatefulModels
             }
 
             participantCustomData = allParticipantsCustomData[participant.SessionId];
+        }
+
+        private bool IsLocalParticipantIncluded()
+        {
+            if (Session == null || Session.Participants == null || Session.Participants.Count == 0)
+            {
+                return false;
+            }
+
+            return Session.Participants.FirstOrDefault(p => p.IsLocalParticipant) != null;
         }
     }
 }

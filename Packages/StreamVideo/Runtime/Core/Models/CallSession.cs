@@ -6,9 +6,7 @@ using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
-using StreamVideo.Core.Utils;
 using SfuCallState = StreamVideo.v1.Sfu.Models.CallState;
-using SfuParticipant = StreamVideo.v1.Sfu.Models.Participant;
 using SfuParticipantCount = StreamVideo.v1.Sfu.Models.ParticipantCount;
 
 namespace StreamVideo.Core.Models
@@ -56,14 +54,18 @@ namespace StreamVideo.Core.Models
             
             // CallSessionResponseInternalDTO usually (or always?) contains no participants. Participants are updated from the SFU join response
             // But SFU response can arrive before API response, so we can't override participants here because this clears the list
-            foreach (var dtoParticipant in dto.Participants)
-            {
-                var participant = cache.TryCreateOrUpdate(dtoParticipant);
-                if (!_participants.Contains(participant))
-                {
-                    _participants.Add(participant);
-                }
-            }
+            
+            //StreamTODO: temp remove this. This seems to be only messing up the participants list. We're testing updating the participants only based on SFU data.
+            // But we need to check how this will work with GetCall where there's not SFU connection
+            
+            // foreach (var dtoParticipant in dto.Participants)
+            // {
+            //     var participant = cache.TryCreateOrUpdate(dtoParticipant);
+            //     if (!_participants.Contains(participant))
+            //     {
+            //         _participants.Add(participant);
+            //     }
+            // }
             
             // StreamTODO: figure out how to best handle this. Should we update it from coordinator or only the SFU
             //_participantsCountByRole.TryReplaceValuesFromDto(dto.ParticipantsCountByRole);
@@ -82,6 +84,9 @@ namespace StreamVideo.Core.Models
                 StartedAt = dto.StartedAt.ToDateTimeOffset();
             }
 
+            // Treat SFU as the most updated source of truth for participants
+            _participants.Clear();
+            
             // dto.CallState.Participants may not contain all participants
             foreach (var dtoParticipant in dto.Participants)
             {
@@ -117,7 +122,11 @@ namespace StreamVideo.Core.Models
         internal (string sessionId, string userId) UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
             var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
-            _participants.Remove(participant);
+
+            if (!participant.IsLocalParticipant)
+            {
+                _participants.Remove(participant);
+            }
             
             return (participantLeft.Participant.SessionId, participantLeft.Participant.UserId);
         }

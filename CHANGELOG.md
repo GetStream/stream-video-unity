@@ -1,3 +1,9 @@
+0.8.14:
+
+- Change `call.GetLocalParticipant()` to return null if local participant is not found
+- potential fix for missing local participant in `call.Participants`
+- Added `client.PauseAndroidAudioPlayback()` and `client.ResumeAndroidAudioPlayback()` methods to stop/resume all audio played by the SDK on Android. This is for better handling when the app is minimized.
+
 0.8.13:
 
 - Fix `call.Participants` sometimes not containing the local participant.

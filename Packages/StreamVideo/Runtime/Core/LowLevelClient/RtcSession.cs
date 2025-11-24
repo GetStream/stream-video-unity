@@ -213,7 +213,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         #endregion
 
-        public string SessionId { get; private set; }
+        public string SessionId { get; private set; } = "(empty)";
 
         public RtcSession(SfuWebSocket sfuWebSocket, Func<IStreamCall, HttpClient> httpClientFactory, ILogs logs,
             ISerializer serializer, ITimeService timeService,

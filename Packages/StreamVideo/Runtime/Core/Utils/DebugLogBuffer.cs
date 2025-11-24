@@ -4,7 +4,7 @@ namespace StreamVideo.Core.Utils
 {
     internal class DebugLogBuffer
     {
-        private const int MaxSize = 10;
+        private const int MaxSize = 15;
         private readonly string[] _buffer = new string[MaxSize];
         private int _index;
         private int _count;

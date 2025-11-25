@@ -340,7 +340,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             ConnectionState = ConnectionState.Connected;
 
-            _connectUserTaskSource.SetResult(true);
+            _connectUserTaskSource.TrySetResult(true);
             _connectUserTaskSource = null;
 
             JoinResponse?.Invoke(joinResponse);

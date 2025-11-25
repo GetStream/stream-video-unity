@@ -1,3 +1,11 @@
+0.8.15:
+
+- Add support for cancellation tokens. GetCallAsync/JoinCallAsync/ConnectUserAsync operations can now be cancelled via CancellationToken
+- call.LeaveAsync will cancel any previous in-progress join operation
+- Fixed WS reconnection issue
+- Improved WebSocket disconnection handling
+- Added an additional callback when the video server had disconnected.
+
 0.8.14:
 
 - Change `call.GetLocalParticipant()` to return null if local participant is not found

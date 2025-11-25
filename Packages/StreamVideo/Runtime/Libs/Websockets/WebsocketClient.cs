@@ -78,7 +78,7 @@ namespace StreamVideo.Libs.Websockets
             }
             catch (Exception e)
             {
-                _logs.Exception(e);
+                LogExceptionIfDebugMode(e);
                 OnConnectionFailed();
                 throw;
             }

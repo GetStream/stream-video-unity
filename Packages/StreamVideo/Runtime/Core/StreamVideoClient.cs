@@ -47,6 +47,8 @@ namespace StreamVideo.Core
         /// 
         /// </summary>
         CoordinatorWsDisconnected,
+        
+        VideoServerDisconnected,
     }
 
     public delegate void CallHandler(IStreamCall call);
@@ -556,6 +558,12 @@ namespace StreamVideo.Core
 
             lowLevelClient.Disconnected += OnLowLevelClientDisconnected;
             lowLevelClient.SfuDisconnected += OnLowLevelClientSfuDisconnected;
+            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession += OnRtcPeerConnectionDisconnectedDuringSession;
+        }
+
+        private void OnRtcPeerConnectionDisconnectedDuringSession()
+        {
+            Disconnected?.Invoke(DisconnectReason.VideoServerDisconnected);
         }
 
         private void UnsubscribeFrom(StreamVideoLowLevelClient lowLevelClient)
@@ -594,6 +602,8 @@ namespace StreamVideo.Core
 
             lowLevelClient.Disconnected -= OnLowLevelClientDisconnected;
             lowLevelClient.SfuDisconnected -= OnLowLevelClientSfuDisconnected;
+            
+            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession -= OnRtcPeerConnectionDisconnectedDuringSession;
         }
 
         private void InternalLowLevelClientOnConnected()

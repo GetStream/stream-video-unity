@@ -85,6 +85,7 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action PublisherAudioTrackChanged;
         public event Action PublisherVideoTrackChanged;
 
+        public event Action PeerConnectionDisconnectedDuringSession;
 
         public bool PublisherAudioTrackIsEnabled
         {
@@ -1098,6 +1099,8 @@ namespace StreamVideo.Core.LowLevelClient
             var sessionId = trackUnpublished.SessionId;
             var type = trackUnpublished.Type.ToPublicEnum();
             var cause = trackUnpublished.Cause;
+            
+            // StreamTODO: test if this works well with other user muting this user
             var updateLocalParticipantState = cause != TrackUnpublishReason.Unspecified && cause != TrackUnpublishReason.UserMuted;
 
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
@@ -1850,6 +1853,7 @@ namespace StreamVideo.Core.LowLevelClient
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
             Publisher.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
+            Publisher.Disconnected += PublisherOnDisconnected;
 
             Publisher.InitPublisherTracks();
 
@@ -1865,6 +1869,7 @@ namespace StreamVideo.Core.LowLevelClient
                 Publisher.NegotiationNeeded -= OnPublisherNegotiationNeeded;
                 Publisher.PublisherAudioTrackChanged -= OnPublisherAudioTrackChanged;
                 Publisher.PublisherVideoTrackChanged -= OnPublisherVideoTrackChanged;
+                Publisher.Disconnected += PublisherOnDisconnected;
                 Publisher.Dispose();
                 Publisher = null;
             }
@@ -1879,6 +1884,14 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnPublisherVideoTrackChanged(VideoStreamTrack videoTrack)
         {
             PublisherVideoTrackChanged?.Invoke();
+        }
+        
+        void PublisherOnDisconnected()
+        {
+            if (CallState == CallingState.Joined || CallState == CallingState.Joining)
+            {
+                PeerConnectionDisconnectedDuringSession?.Invoke();
+            }
         }
 
         private void OnSfuWebSocketDisconnected()
@@ -1899,6 +1912,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             return true;
         }
+        
 
         private void SubscribeToSfuEvents()
         {

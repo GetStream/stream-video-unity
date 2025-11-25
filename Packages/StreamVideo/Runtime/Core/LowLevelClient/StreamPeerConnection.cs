@@ -31,6 +31,8 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action<VideoStreamTrack> PublisherVideoTrackChanged;
         public event Action<AudioStreamTrack> PublisherAudioTrackChanged;
 
+        public event Action Disconnected;
+
         public bool IsRemoteDescriptionAvailable
         {
             get
@@ -403,6 +405,11 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning($"[{_peerType}] OnConnectionStateChange to: {state}");
 #endif
             _tracer?.Trace(PeerConnectionTraceKey.OnConnectionStateChange, state.ToString());
+
+            if (state == RTCPeerConnectionState.Disconnected)
+            {
+                Disconnected?.Invoke();
+            }
         }
 
         private void OnTrack(RTCTrackEvent trackEvent)

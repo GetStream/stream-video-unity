@@ -349,6 +349,9 @@ namespace StreamVideo.Core.LowLevelClient
             try
             {
                 _logs.Info($"Start joining a call: type={call.Type}, id={call.Id}");
+                
+                //StreamTodo: perhaps not necessary here
+                ClearSession();
 
                 if (_joinCallCts != null)
                 {
@@ -367,9 +370,6 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 _joinCallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-                //StreamTodo: perhaps not necessary here
-                ClearSession();
 
                 SubscribeToSfuEvents();
 
@@ -454,7 +454,7 @@ namespace StreamVideo.Core.LowLevelClient
                 _videoAudioSyncBenchmark?.Init(call);
 #endif
             }
-            catch
+            catch(Exception e)
             {
                 ClearSession();
                 throw;
@@ -471,6 +471,13 @@ namespace StreamVideo.Core.LowLevelClient
 
         public async Task StopAsync(string reason = "")
         {
+            if (UseNativeAudioBindings)
+            {
+#if STREAM_NATIVE_AUDIO
+                WebRTC.StopAudioPlayback();
+#endif
+            }
+            
             if (CallState == CallingState.Leaving || CallState == CallingState.Offline)
             {
                 //StreamTODO: should this return a task of the ongoing stop?
@@ -493,13 +500,6 @@ namespace StreamVideo.Core.LowLevelClient
             if (_activeCallCts != null)
             {
                 _activeCallCts.Cancel();
-            }
-
-            if (UseNativeAudioBindings)
-            {
-#if STREAM_NATIVE_AUDIO
-                WebRTC.StopAudioPlayback();
-#endif
             }
 
             if (ActiveCall != null)

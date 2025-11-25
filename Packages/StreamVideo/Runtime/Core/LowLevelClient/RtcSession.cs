@@ -454,8 +454,14 @@ namespace StreamVideo.Core.LowLevelClient
                 _videoAudioSyncBenchmark?.Init(call);
 #endif
             }
+            catch(OperationCanceledException)
+            {
+                ClearSession();
+                throw;
+            }
             catch(Exception e)
             {
+                _logs.Exception(e);
                 ClearSession();
                 throw;
             }

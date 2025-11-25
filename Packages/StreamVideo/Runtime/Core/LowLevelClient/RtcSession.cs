@@ -537,6 +537,14 @@ namespace StreamVideo.Core.LowLevelClient
                         }
                     }
                 }
+                catch (HttpRequestException httpEx)
+                {
+                    _logs.Info($"Network unavailable during final stats send: {httpEx.Message}");
+                }
+                catch (OperationCanceledException)
+                {
+                    _logs.Info("Final stats send timed out.");
+                }
                 catch (Exception e)
                 {
                     _logs.Warning($"Failed to send final stats on leave: {e.Message}");

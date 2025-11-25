@@ -1098,11 +1098,12 @@ namespace StreamVideo.Core.LowLevelClient
             var sessionId = trackUnpublished.SessionId;
             var type = trackUnpublished.Type.ToPublicEnum();
             var cause = trackUnpublished.Cause;
+            var updateLocalParticipantState = cause != TrackUnpublishReason.Unspecified && cause != TrackUnpublishReason.UserMuted;
 
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
             var participantSfuDto = trackUnpublished.Participant;
 
-            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, out var participant);
+            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, updateLocalParticipantState, out var participant);
 
             if (participantSfuDto != null && participant != null)
             {
@@ -1123,7 +1124,7 @@ namespace StreamVideo.Core.LowLevelClient
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
             var participantSfuDto = trackPublished.Participant;
 
-            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, out var participant);
+            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, updateLocalParticipantState: true, out var participant);
 
             if (participantSfuDto != null && participant != null)
             {
@@ -1136,7 +1137,7 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private void UpdateParticipantTracksState(string userId, string sessionId, TrackType trackType, bool isEnabled,
-            out StreamVideoCallParticipant participant)
+            bool updateLocalParticipantState, out StreamVideoCallParticipant participant)
         {
             participant = (StreamVideoCallParticipant)ActiveCall.Participants.FirstOrDefault(p
                 => p.SessionId == sessionId);
@@ -1146,7 +1147,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            if (participant.IsLocalParticipant)
+            if (participant.IsLocalParticipant && updateLocalParticipantState)
             {
                 //StreamTODO: most probably expose RtcSession TrackStateChanged event so that AudioDeviceManager can subscribe
 

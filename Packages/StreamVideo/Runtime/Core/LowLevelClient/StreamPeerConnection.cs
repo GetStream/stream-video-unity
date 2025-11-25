@@ -223,6 +223,8 @@ namespace StreamVideo.Core.LowLevelClient
         public void Update()
         {
             //StreamTodo: investigate if this Blit is necessary
+            // One reason was to easy control target resolution -> we don't accept every target resolution because small res can crash Android video encoder
+            // We should check if WebCamTexture allows setting any resolution
             if (_publisherVideoTrackTexture != null && _mediaInputProvider.VideoInput != null)
             {
                 Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
@@ -273,6 +275,11 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (_publisherVideoTrackTexture != null)
             {
+                // Unity gives warning when releasing an active texture
+                if (RenderTexture.active == _publisherVideoTrackTexture)
+                {
+                    RenderTexture.active = null;
+                }
                 _publisherVideoTrackTexture.Release();
                 _publisherVideoTrackTexture = null;
             }

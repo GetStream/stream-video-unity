@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -20,17 +21,17 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         }
 
         public Task<GetCallResponseInternalDTO> GetCallAsync(StreamCallType callType, string callId,
-            GetOrCreateCallRequestInternalDTO getCallRequest)
-            => Get<GetOrCreateCallRequestInternalDTO, GetCallResponseInternalDTO>($"/call/{callType}/{callId}", getCallRequest);
+            GetOrCreateCallRequestInternalDTO getCallRequest, CancellationToken cancellationToken)
+            => Get<GetOrCreateCallRequestInternalDTO, GetCallResponseInternalDTO>($"/call/{callType}/{callId}", getCallRequest, cancellationToken);
 
         public Task<UpdateCallResponseInternalDTO> UpdateCallAsync(StreamCallType callType, string callId,
             UpdateCallRequestInternalDTO updateCallRequest)
             => Patch<UpdateCallRequestInternalDTO, UpdateCallResponseInternalDTO>($"/call/{callType}/{callId}", updateCallRequest);
 
         public Task<GetOrCreateCallResponseInternalDTO> GetOrCreateCallAsync(StreamCallType callType, string callId,
-            GetOrCreateCallRequestInternalDTO getOrCreateCallRequest)
+            GetOrCreateCallRequestInternalDTO getOrCreateCallRequest, CancellationToken cancellationToken)
             => Post<GetOrCreateCallRequestInternalDTO, GetOrCreateCallResponseInternalDTO>($"/call/{callType}/{callId}",
-                getOrCreateCallRequest);
+                getOrCreateCallRequest, cancellationToken);
 
         public Task<AcceptCallResponseInternalDTO> AcceptCallAsync(StreamCallType callType, string callId)
             => Post<AcceptCallResponseInternalDTO>($"/call/{callType}/{callId}/accept");

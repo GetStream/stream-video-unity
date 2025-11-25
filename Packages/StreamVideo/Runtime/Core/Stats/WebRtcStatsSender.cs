@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf.Collections;
 using StreamVideo.Core.LowLevelClient;
@@ -21,10 +22,14 @@ namespace StreamVideo.Core.Stats
 
             if (_timeService.Time > _lastTimeSent + SendInterval && _currentSendTask == null)
             {
-                _currentSendTask = CollectAndSend().ContinueWith(t =>
+                _currentSendTask = CollectAndSend(cancellationToken: default).ContinueWith(t =>
                 {
                     _currentSendTask = null;
-                    t.LogIfFailed();
+                    
+                    if (_rtcSession.ActiveCall != null)
+                    {
+                        t.LogIfFailed();
+                    }
                 });
                 _lastTimeSent = _timeService.Time;
             }
@@ -34,7 +39,7 @@ namespace StreamVideo.Core.Stats
         /// Sends final stats immediately, flushing any remaining trace data.
         /// Called when leaving a call to ensure all stats are captured.
         /// </summary>
-        public async Task SendFinalStatsAsync()
+        public async Task SendFinalStatsAsync(CancellationToken cancellationToken)
         {
             if (_rtcSession.ActiveCall == null)
             {
@@ -46,7 +51,7 @@ namespace StreamVideo.Core.Stats
                 await _currentSendTask;
             }
 
-            await CollectAndSend();
+            await CollectAndSend(cancellationToken);
         }
 
         internal WebRtcStatsSender(RtcSession rtcSession, IWebRtcStatsCollector webRtcStatsCollector,
@@ -74,7 +79,7 @@ namespace StreamVideo.Core.Stats
         private float _lastTimeSent;
         private Task _currentSendTask;
 
-        private async Task CollectAndSend()
+        private async Task CollectAndSend(CancellationToken cancellationToken)
         {
             if (_rtcSession.ActiveCall == null)
             {
@@ -130,7 +135,8 @@ namespace StreamVideo.Core.Stats
 #endif
 #pragma warning restore CS0162 // Re-enable unreachable code warning
 
-            await _rtcSession.SendWebRtcStats(request);
+            cancellationToken.ThrowIfCancellationRequested();
+            await _rtcSession.SendWebRtcStats(request, cancellationToken);
         }
     }
 }

@@ -77,7 +77,7 @@ namespace StreamVideo.Core
             bool notify);
 
         /// <summary>
-        /// Gets call information without joining it. Will return null if the call doesn't exist
+        /// Gets <see cref="IStreamCall"/> information without joining it. Will return null if the call doesn't exist
         /// </summary>
         Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId);
 

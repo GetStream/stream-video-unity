@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Models;
@@ -25,14 +26,18 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
             _lowLevelClient = lowLevelClient ?? throw new ArgumentNullException(nameof(lowLevelClient));
         }
 
-        protected Task<TResponse> Get<TPayload, TResponse>(string endpoint, TPayload payload)
-            => HttpRequest<TResponse>(HttpMethodType.Get, endpoint, payload);
+        //StreamTODO: add cancellation token support to all
+        
+        protected Task<TResponse> Get<TPayload, TResponse>(string endpoint, TPayload payload,
+            CancellationToken cancellationToken)
+            => HttpRequest<TResponse>(HttpMethodType.Get, endpoint, payload, cancellationToken: cancellationToken);
 
         protected Task<TResponse> Get<TResponse>(string endpoint, QueryParameters parameters = null)
             => HttpRequest<TResponse>(HttpMethodType.Get, endpoint, queryParameters: parameters);
 
-        protected Task<TResponse> Post<TRequest, TResponse>(string endpoint, TRequest request = default)
-            => HttpRequest<TResponse>(HttpMethodType.Post, endpoint, request);
+        protected Task<TResponse> Post<TRequest, TResponse>(string endpoint, TRequest request = default,
+            CancellationToken cancellationToken = default)
+            => HttpRequest<TResponse>(HttpMethodType.Post, endpoint, request, cancellationToken: cancellationToken);
 
         protected Task<TResponse> Post<TResponse>(string endpoint, object request = null)
             => HttpRequest<TResponse>(HttpMethodType.Post, endpoint, request);
@@ -74,7 +79,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
         }
 
         private async Task<TResponse> HttpRequest<TResponse>(HttpMethodType httpMethod, string endpoint,
-            object requestBody = default, QueryParameters queryParameters = null)
+            object requestBody = default, QueryParameters queryParameters = null, CancellationToken cancellationToken = default)
         {
             // //StreamTodo: perhaps remove this requirement, sometimes we send empty body without any properties
             // if (requestBody == null && IsRequestBodyRequiredByHttpMethod(httpMethod))
@@ -95,7 +100,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
 
             LogFutureRequestIfDebug(uri, endpoint, httpMethod, logContent);
 
-            var httpResponse = await _httpClient.SendHttpRequestAsync(httpMethod, uri, httpContent);
+            var httpResponse = await _httpClient.SendHttpRequestAsync(httpMethod, uri, httpContent, cancellationToken);
             var responseContent = httpResponse.Result;
 
             if (!httpResponse.IsSuccessStatusCode)
@@ -121,6 +126,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
                 {
                     _logs.Info($"Http request failed due to expired token, connection id: {_lowLevelClient.ConnectionId}");
                     await _lowLevelClient.DisconnectAsync();
+                    cancellationToken.ThrowIfCancellationRequested();
                 }
                 
                 //StreamTodo: Refactor Token refresh logic. This relies on the fact that connecting fetches fresh token. But we can probably replace the token without breaking the connection
@@ -135,7 +141,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
                 while (_lowLevelClient.ConnectionState != ConnectionState.Connected)
                 {
                     i++;
-                    await Task.Delay(1);
+                    await Task.Delay(1, cancellationToken);
 
                     if (i > maxMsToWait)
                     {
@@ -152,7 +158,7 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
                 // Recreate the uri to include new connection id 
                 uri = _requestUriFactory.CreateEndpointUri(endpoint, queryParameters);
 
-                httpResponse = await _httpClient.SendHttpRequestAsync(httpMethod, uri, httpContent);
+                httpResponse = await _httpClient.SendHttpRequestAsync(httpMethod, uri, httpContent, cancellationToken);
                 responseContent = httpResponse.Result;
             }
 

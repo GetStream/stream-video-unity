@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
@@ -270,10 +271,11 @@ namespace StreamVideo.Core.LowLevelClient
             TryExecuteSubscribeToTracks();
         }
 
-        public async Task SendWebRtcStats(SendStatsRequest request)
+        public async Task SendWebRtcStats(SendStatsRequest request, CancellationToken cancellationToken)
         {
             var response = await RpcCallAsync(request, GeneratedAPI.SendStats,
-                nameof(GeneratedAPI.SendStats), response => response.Error, postLog: LogWebRTCStats);
+                nameof(GeneratedAPI.SendStats), cancellationToken, response => response.Error,
+                postLog: LogWebRTCStats);
 
             if (ActiveCall == null)
             {
@@ -298,7 +300,40 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: solve this dependency better
         public void SetCache(ICache cache) => _cache = cache;
 
-        public async Task StartAsync(StreamCall call)
+        private void ValidateCallCredentialsOrThrow(IStreamCall call)
+        {
+            if (call.Credentials == null)
+            {
+                throw new ArgumentNullException(nameof(call.Credentials));
+            }
+
+            if (call.Credentials.Server == null)
+            {
+                throw new ArgumentNullException(nameof(call.Credentials.Server));
+            }
+
+            if (string.IsNullOrEmpty(call.Credentials.Server.Url))
+            {
+                throw new ArgumentNullException(nameof(call.Credentials.Server.Url));
+            }
+
+            if (string.IsNullOrEmpty(call.Credentials.Token))
+            {
+                throw new ArgumentNullException(nameof(call.Credentials.Token));
+            }
+
+            if (call.Credentials.IceServers == null)
+            {
+                throw new ArgumentNullException(nameof(call.Credentials.IceServers));
+            }
+
+            if (call.Credentials.IceServers.Count == 0)
+            {
+                throw new ArgumentException("At least one ICE server must be provided in call credentials.");
+            }
+        }
+
+        public async Task StartAsync(StreamCall call, CancellationToken cancellationToken = default)
         {
             if (ActiveCall != null)
             {
@@ -306,17 +341,36 @@ namespace StreamVideo.Core.LowLevelClient
                     $"Cannot start new session until previous call is active. Active call: {ActiveCall}");
             }
 
+            if (call == null)
+            {
+                throw new ArgumentNullException(nameof(call));
+            }
+
             try
             {
+                _logs.Info($"Start joining a call: type={call.Type}, id={call.Id}");
+
+                if (_joinCallCts != null)
+                {
+                    _logs.ErrorIfDebug("Previous join call operation was not cleaned up properly. Cancelling it now.");
+                    _joinCallCts.Cancel();
+                    _joinCallCts.Dispose();
+                    _joinCallCts = null;
+                }
+
+                _joinCallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
                 //StreamTodo: perhaps not necessary here
                 ClearSession();
 
                 SubscribeToSfuEvents();
 
-                ActiveCall = call ?? throw new ArgumentNullException(nameof(call));
+                ActiveCall = call;
                 _httpClient = _httpClientFactory(ActiveCall);
 
                 CallState = CallingState.Joining;
+
+                ValidateCallCredentialsOrThrow(ActiveCall);
 
                 var sfuUrl = call.Credentials.Server.Url;
                 var sfuToken = call.Credentials.Token;
@@ -341,14 +395,21 @@ namespace StreamVideo.Core.LowLevelClient
                 // We don't set initial offer as local. Later on we set generated answer as a local
                 var offer = await Subscriber.CreateOfferAsync();
 
+                if (string.IsNullOrEmpty(offer.sdp))
+                {
+                    throw new ArgumentException("Generated offer SDP is null or empty");
+                }
+
                 _sfuWebSocket.SetSessionData(SessionId, offer.sdp, sfuUrl, sfuToken);
-                await _sfuWebSocket.ConnectAsync();
+                await _sfuWebSocket.ConnectAsync(cancellationToken);
 
                 while (CallState != CallingState.Joined)
                 {
                     //StreamTodo: implement a timeout if something goes wrong
                     //StreamTodo: implement cancellation token
-                    await Task.Delay(1);
+                    await Task.Delay(1, cancellationToken);
+
+                    cancellationToken.ThrowIfCancellationRequested();
                 }
 
                 // Wait for SFU connected to receive track prefix
@@ -357,7 +418,7 @@ namespace StreamVideo.Core.LowLevelClient
                     CreatePublisher(iceServers);
                 }
 
-                await SubscribeToTracksAsync();
+                await SubscribeToTracksAsync(cancellationToken);
 
                 if (UseNativeAudioBindings)
                 {
@@ -369,6 +430,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 //StreamTodo: validate when this state should set
                 CallState = CallingState.Joined;
+                _logs.Info($"Joined call: type={call.Type}, id={call.Id}");
 
 #if STREAM_DEBUG_ENABLED
                 _videoAudioSyncBenchmark?.Init(call);
@@ -379,17 +441,38 @@ namespace StreamVideo.Core.LowLevelClient
                 ClearSession();
                 throw;
             }
+            finally
+            {
+                if (_joinCallCts != null)
+                {
+                    _joinCallCts.Dispose();
+                    _joinCallCts = null;
+                }
+            }
         }
 
         public async Task StopAsync(string reason = "")
         {
             if (CallState == CallingState.Leaving || CallState == CallingState.Offline)
             {
+                //StreamTODO: should this return a task of the ongoing stop?
                 return;
             }
 
+            if (CallState != CallingState.Joined && CallState != CallingState.Joining)
+            {
+                throw new InvalidOperationException(
+                    "Tried to leave call that is not joined or joining. Current state: " + CallState);
+            }
+            
             CallState = CallingState.Leaving;
-
+            
+            if (_joinCallCts != null)
+            {
+                _joinCallCts.Cancel();
+                _joinCallCts.Dispose();
+                _joinCallCts = null;
+            }
 
             if (UseNativeAudioBindings)
             {
@@ -400,6 +483,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (ActiveCall != null)
             {
+                _logs.Info("Leaving call...");
                 try
                 {
                     // Trace leave call before leaving the call. Otherwise, stats are not send because SFU WS disconnects
@@ -407,9 +491,11 @@ namespace StreamVideo.Core.LowLevelClient
 
                     if (_statsSender != null) // This was null in tests
                     {
+                        var sendStatsCancellationToken = new CancellationTokenSource();
+                        sendStatsCancellationToken.CancelAfter(400);
                         using (new TimeLogScope("Sending final stats on leave", _logs.Info))
                         {
-                            await _statsSender.SendFinalStatsAsync();
+                            await _statsSender.SendFinalStatsAsync(sendStatsCancellationToken.Token);
                         }
                     }
                 }
@@ -417,24 +503,16 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     _logs.Warning($"Failed to send final stats on leave: {e.Message}");
                 }
-
-#if STREAM_DEBUG_ENABLED
-                if (_sfuWebSocket.SendQueueCount > 0)
-                {
-                    _logs.Error(
-                        $"Waited for 300+ ms for SFU messages to be sent. Remaining: {_sfuWebSocket.SendQueueCount}");
-                }
-#endif
             }
 
             ClearSession();
-            //StreamTodo: check with js definition of "offline" 
 
             using (new TimeLogScope("Sending leave call request & disconnect", _logs.Info))
             {
                 await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
             }
 
+            //StreamTodo: check with js definition of "offline" 
             CallState = CallingState.Offline;
 
 #if STREAM_DEBUG_ENABLED
@@ -560,6 +638,8 @@ namespace StreamVideo.Core.LowLevelClient
         private Camera _videoSceneInput;
 
         private MicrophoneDeviceInfo _activeAudioRecordingDevice;
+        
+        private CancellationTokenSource _joinCallCts;
 
         private void ClearSession()
         {
@@ -615,7 +695,8 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            SubscribeToTracksAsync().LogIfFailed();
+            // StreamTODO: support cancellation token
+            SubscribeToTracksAsync(cancellationToken: default).LogIfFailed();
 
             _lastTrackSubscriptionRequestTime = _timeService.Time;
             _trackSubscriptionRequested = false;
@@ -624,7 +705,8 @@ namespace StreamVideo.Core.LowLevelClient
         /// <summary>
         /// Request this via <see cref="QueueTracksSubscriptionRequest"/>. We don't want to call it too often
         /// </summary>
-        private async Task SubscribeToTracksAsync()
+        /// <param name="cancellationToken"></param>
+        private async Task SubscribeToTracksAsync(CancellationToken cancellationToken)
         {
             if (ActiveCall?.Participants == null || !ActiveCall.Participants.Any())
             {
@@ -658,7 +740,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions,
-                nameof(GeneratedAPI.UpdateSubscriptions), response => response.Error);
+                nameof(GeneratedAPI.UpdateSubscriptions), cancellationToken, response => response.Error);
 
             if (ActiveCall == null)
             {
@@ -768,8 +850,9 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (_callState == CallingState.Joined)
                 {
+                    // StreamTODO: support cancellation token
                     await RpcCallAsync(iceTrickle, GeneratedAPI.IceTrickle, nameof(GeneratedAPI.IceTrickle),
-                        response => response.Error);
+                        cancellationToken: default, response => response.Error);
                 }
                 else
                 {
@@ -822,8 +905,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             foreach (var iceTrickle in _pendingIceTrickleRequests)
             {
+                // StreamTODO: support cancellation token
                 RpcCallAsync(iceTrickle, GeneratedAPI.IceTrickle, nameof(GeneratedAPI.IceTrickle),
-                    response => response.Error).LogIfFailed();
+                    cancellationToken: default, response => response.Error).LogIfFailed();
             }
         }
 
@@ -908,9 +992,9 @@ namespace StreamVideo.Core.LowLevelClient
                     SessionId = SessionId
                 };
 
+                // StreamTODO: support cancellation token
                 await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
-                    response => response.Error,
-                    preLog: true);
+                    cancellationToken: default, response => response.Error, preLog: true);
             }
             catch (DisposedDuringOperationException)
             {
@@ -1015,18 +1099,20 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
+            // StreamTODO: support cancellation token
             await RpcCallAsync(new UpdateMuteStatesRequest
-            {
-                SessionId = SessionId,
-                MuteStates =
                 {
-                    new TrackMuteState
+                    SessionId = SessionId,
+                    MuteStates =
                     {
-                        TrackType = trackType.ToInternalEnum(),
-                        Muted = !isEnabled
+                        new TrackMuteState
+                        {
+                            TrackType = trackType.ToInternalEnum(),
+                            Muted = !isEnabled
+                        }
                     }
-                }
-            }, GeneratedAPI.UpdateMuteStates, nameof(GeneratedAPI.UpdateSubscriptions), response => response.Error);
+                }, GeneratedAPI.UpdateMuteStates, nameof(GeneratedAPI.UpdateSubscriptions), cancellationToken: default,
+                response => response.Error);
         }
 
         private void InternalExecuteSetPublisherAudioTrackEnabled(bool isEnabled)
@@ -1205,8 +1291,9 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: implement retry strategy like in Android SDK
         //If possible, take into account if we the update is still valid e.g. 
         private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
-            Func<HttpClient, TRequest, Task<TResponse>> rpcCallAsync, string debugRequestName,
-            Func<TResponse, StreamVideo.v1.Sfu.Models.Error> getError, bool preLog = false,
+            Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,
+            CancellationToken cancellationToken, Func<TResponse, StreamVideo.v1.Sfu.Models.Error> getError,
+            bool preLog = false,
             bool postLog = true)
         {
             //StreamTodo: use rpcCallAsync.GetMethodInfo().Name; instead debugRequestName
@@ -1236,7 +1323,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 #endif
 
-            var response = await rpcCallAsync(_httpClient, request);
+            // StreamTODO: Add multiple retries
+            var response = await rpcCallAsync(_httpClient, request, cancellationToken);
 
             if (!skipTracing)
             {
@@ -1383,8 +1471,9 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Warning($"SetPublisherRequest:\n{serializedRequest}");
 #endif
 
+                //StreamTODO: support cancellation token
                 var result = await RpcCallAsync(request, GeneratedAPI.SetPublisher, nameof(GeneratedAPI.SetPublisher),
-                    response => response.Error);
+                    cancellationToken: default, response => response.Error);
                 Publisher.ThrowDisposedDuringOperationIfNull();
 
 #if STREAM_DEBUG_ENABLED

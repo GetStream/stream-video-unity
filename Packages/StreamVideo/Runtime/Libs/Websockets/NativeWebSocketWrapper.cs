@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NativeWebSocket;
 using StreamVideo.Libs.Utils;
@@ -37,7 +38,7 @@ namespace StreamVideo.Libs.Websockets
             return message != null;
         }
 
-        public async Task ConnectAsync(Uri serverUri)
+        public async Task ConnectAsync(Uri serverUri, CancellationToken cancellationToken)
         {
             if (_webSocket != null)
             {

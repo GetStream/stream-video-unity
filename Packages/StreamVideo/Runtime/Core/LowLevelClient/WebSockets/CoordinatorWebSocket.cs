@@ -73,7 +73,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             var uri = UriFactory.CreateCoordinatorConnectionUri();
 
             //StreamTodo: Add cancel token support to WS
-            await WebsocketClient.ConnectAsync(uri);
+            await WebsocketClient.ConnectAsync(uri, cancellationToken);
 
 #if STREAM_DEBUG_ENABLED
             Logs.Info("Coordinator connected! Let's send the connect message");

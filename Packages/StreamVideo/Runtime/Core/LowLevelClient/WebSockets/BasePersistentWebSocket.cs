@@ -22,6 +22,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action Connected;
         public event Action Disconnected;
 
+        public const int ConnectTimeoutMs = 1000;
+
         public ConnectionState ConnectionState
         {
             get => _connectionState;
@@ -78,7 +80,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             Logs.Info($"{GetType()} TryToReconnect");
 #endif
 
-            ConnectAsync().LogIfFailed();
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(ConnectTimeoutMs);
+            ConnectAsync(cts.Token).LogIfFailed();
         }
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)

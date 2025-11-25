@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace StreamVideo.Libs.Websockets
@@ -18,7 +19,7 @@ namespace StreamVideo.Libs.Websockets
 
         bool TryDequeueMessage(out byte[] message);
 
-        Task ConnectAsync(Uri serverUri);
+        Task ConnectAsync(Uri serverUri, CancellationToken cancellationToken);
 
         void Update();
 

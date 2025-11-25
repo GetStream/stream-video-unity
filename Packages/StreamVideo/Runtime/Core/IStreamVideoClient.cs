@@ -68,6 +68,8 @@ namespace StreamVideo.Core
         /// </summary>
         /// <param name="credentials">Credentials required to connect user: api_key, user_id, and user_token</param>
         Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials);
+        
+        Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials, CancellationToken cancellationToken);
 
         /// <summary>
         /// Disconnect user from Stream server.

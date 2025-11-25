@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace StreamVideo.Libs.Http
@@ -23,7 +24,7 @@ namespace StreamVideo.Libs.Http
             => _httpClient.DefaultRequestHeaders.Add(key, value);
 
         public async Task<HttpResponse> SendHttpRequestAsync(HttpMethodType methodType, Uri uri,
-            object optionalRequestContent)
+            object optionalRequestContent, CancellationToken cancellationToken = default)
         {
             var httpContent = TryGetHttpContent(optionalRequestContent);
 
@@ -31,13 +32,13 @@ namespace StreamVideo.Libs.Http
             {
                 switch (methodType)
                 {
-                    case HttpMethodType.Get: return _httpClient.GetAsync(uri);
-                    case HttpMethodType.Post: return _httpClient.PostAsync(uri, httpContent);
-                    case HttpMethodType.Put: return _httpClient.PutAsync(uri, httpContent);
+                    case HttpMethodType.Get: return _httpClient.GetAsync(uri, cancellationToken);
+                    case HttpMethodType.Post: return _httpClient.PostAsync(uri, httpContent, cancellationToken);
+                    case HttpMethodType.Put: return _httpClient.PutAsync(uri, httpContent, cancellationToken);
                     case HttpMethodType.Patch:
                         return _httpClient.SendAsync(new HttpRequestMessage(new HttpMethod("PATCH"), uri)
-                            { Content = httpContent });
-                    case HttpMethodType.Delete: return _httpClient.DeleteAsync(uri);
+                            { Content = httpContent }, cancellationToken);
+                    case HttpMethodType.Delete: return _httpClient.DeleteAsync(uri, cancellationToken);
                     default:
                         throw new ArgumentOutOfRangeException(nameof(methodType), methodType, null);
                 }
@@ -47,38 +48,38 @@ namespace StreamVideo.Libs.Http
             return await HttpResponse.CreateFromHttpResponseMessageAsync(httpResponseMessage);
         }
 
-        public async Task<HttpResponse> GetAsync(Uri uri)
+        public async Task<HttpResponse> GetAsync(Uri uri, CancellationToken cancellationToken = default)
         {
-            var response = await _httpClient.GetAsync(uri);
+            var response = await _httpClient.GetAsync(uri, cancellationToken);
             return await HttpResponse.CreateFromHttpResponseMessageAsync(response);
         }
 
-        public async Task<HttpResponse> PostAsync(Uri uri, object content)
+        public async Task<HttpResponse> PostAsync(Uri uri, object content, CancellationToken cancellationToken = default)
         {
             var httpContent = TryGetHttpContent(content);
             var response = await _httpClient.PostAsync(uri, httpContent);
             return await HttpResponse.CreateFromHttpResponseMessageAsync(response);
         }
 
-        public async Task<HttpResponse> PutAsync(Uri uri, object content)
+        public async Task<HttpResponse> PutAsync(Uri uri, object content, CancellationToken cancellationToken = default)
         {
             var httpContent = TryGetHttpContent(content);
             var response = await _httpClient.PutAsync(uri, httpContent);
             return await HttpResponse.CreateFromHttpResponseMessageAsync(response);
         }
 
-        public async Task<HttpResponse> PatchAsync(Uri uri, object content)
+        public async Task<HttpResponse> PatchAsync(Uri uri, object content, CancellationToken cancellationToken = default)
         {
             var httpContent = TryGetHttpContent(content);
             var response = await _httpClient.SendAsync(new HttpRequestMessage(new HttpMethod("PATCH"), uri)
-                { Content = httpContent });
+                { Content = httpContent }, cancellationToken);
             return await HttpResponse.CreateFromHttpResponseMessageAsync(response);
         }
 
         public async Task<HttpResponse> HeadAsync(Uri uri,
-            ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null)
+            ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null, CancellationToken cancellationToken = default)
         {
-            var response = await _httpClient.SendAsync(new HttpRequestMessage(new HttpMethod("HEAD"), uri));
+            var response = await _httpClient.SendAsync(new HttpRequestMessage(new HttpMethod("HEAD"), uri), cancellationToken);
             if (resultHeaders != null)
             {
                 foreach (var header in response.Headers)
@@ -90,9 +91,9 @@ namespace StreamVideo.Libs.Http
             return await HttpResponse.CreateFromHttpResponseMessageAsync(response);
         }
 
-        public async Task<HttpResponse> DeleteAsync(Uri uri)
+        public async Task<HttpResponse> DeleteAsync(Uri uri, CancellationToken cancellationToken = default)
         {
-            var response = await _httpClient.DeleteAsync(uri);
+            var response = await _httpClient.DeleteAsync(uri, cancellationToken);
             return await HttpResponse.CreateFromHttpResponseMessageAsync(response);
         }
 

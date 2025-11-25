@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine.Networking;
 
@@ -15,28 +16,31 @@ namespace StreamVideo.Libs.Http
 
         public void AddDefaultCustomHeader(string key, string value) => _headers[key] = value;
 
-        public Task<HttpResponse> GetAsync(Uri uri) => SendWebRequest(uri, UnityWebRequest.kHttpVerbGET);
+        public Task<HttpResponse> GetAsync(Uri uri, CancellationToken cancellationToken = default)
+            => SendWebRequest(uri, UnityWebRequest.kHttpVerbGET, cancellationToken: cancellationToken);
 
-        public Task<HttpResponse> PostAsync(Uri uri, object content)
-            => SendWebRequest(uri, UnityWebRequest.kHttpVerbPOST, content);
+        public Task<HttpResponse> PostAsync(Uri uri, object content, CancellationToken cancellationToken = default)
+            => SendWebRequest(uri, UnityWebRequest.kHttpVerbPOST, content, cancellationToken: cancellationToken);
 
-        public Task<HttpResponse> PutAsync(Uri uri, object content)
-            => SendWebRequest(uri, UnityWebRequest.kHttpVerbPUT, content);
+        public Task<HttpResponse> PutAsync(Uri uri, object content, CancellationToken cancellationToken = default)
+            => SendWebRequest(uri, UnityWebRequest.kHttpVerbPUT, content, cancellationToken: cancellationToken);
 
-        public Task<HttpResponse> PatchAsync(Uri uri, object content) => SendWebRequest(uri, HttpPatchMethod, content);
+        public Task<HttpResponse> PatchAsync(Uri uri, object content, CancellationToken cancellationToken = default)
+            => SendWebRequest(uri, HttpPatchMethod, content, cancellationToken: cancellationToken);
 
-        public Task<HttpResponse> DeleteAsync(Uri uri) => SendWebRequest(uri, UnityWebRequest.kHttpVerbDELETE);
+        public Task<HttpResponse> DeleteAsync(Uri uri, CancellationToken cancellationToken = default)
+            => SendWebRequest(uri, UnityWebRequest.kHttpVerbDELETE, cancellationToken: cancellationToken);
 
         public Task<HttpResponse> SendHttpRequestAsync(HttpMethodType methodType, Uri uri,
-            object optionalRequestContent)
+            object optionalRequestContent, CancellationToken cancellationToken = default)
         {
             var httpMethodKey = GetHttpMethodKey(methodType);
-            return SendWebRequest(uri, httpMethodKey, optionalRequestContent);
+            return SendWebRequest(uri, httpMethodKey, optionalRequestContent, cancellationToken: cancellationToken);
         }
 
         public Task<HttpResponse> HeadAsync(Uri uri,
-            ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders)
-            => SendWebRequest(uri, HttpHeadMethod, resultHeaders: resultHeaders);
+            ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders, CancellationToken cancellationToken)
+            => SendWebRequest(uri, HttpHeadMethod, resultHeaders: resultHeaders, cancellationToken: cancellationToken);
 
         private const string HttpHeadMethod = "HEAD";
         private const string HttpPatchMethod = "PATCH";
@@ -60,7 +64,8 @@ namespace StreamVideo.Libs.Http
         //StreamTodo: add cancellationToken support that will trigger https://docs.unity3d.com/ScriptReference/Networking.UnityWebRequest.Abort.html
         //StreamTodo: refactor to remove duplication
         private async Task<HttpResponse> SendWebRequest(Uri uri, string httpMethod,
-            object optionalContent = null, ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null)
+            object optionalContent = null, ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null,
+            CancellationToken cancellationToken = default)
         {
             if (optionalContent is FileWrapper fileWrapper)
             {
@@ -84,6 +89,7 @@ namespace StreamVideo.Libs.Http
 
                 while (!asyncOperation.isDone)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     await Task.Yield();
                 }
 
@@ -131,6 +137,7 @@ namespace StreamVideo.Libs.Http
 
                 while (!asyncOperation.isDone)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     await Task.Yield();
                 }
 

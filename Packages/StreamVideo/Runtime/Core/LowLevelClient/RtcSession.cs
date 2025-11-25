@@ -213,6 +213,16 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         #endregion
+        
+        public bool ShouldSfuAttemptToReconnect()
+        {
+            if (CallState != CallingState.Joined && CallState != CallingState.Joining)
+            {
+                return false;
+            }
+
+            return !GetCurrentCancellationTokenOrDefault().IsCancellationRequested;
+        }
 
         public string SessionId { get; private set; } = "(empty)";
 

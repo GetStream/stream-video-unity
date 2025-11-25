@@ -109,7 +109,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
 
             ConnectionState = ConnectionState.Disconnecting;
-            
+
             await OnDisconnectingAsync(closeMessage);
 
             if (WebsocketClient == null)
@@ -342,6 +342,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         private void OnReconnectionScheduled()
         {
+            if (!NextReconnectTime.HasValue)
+            {
+                throw new ArgumentNullException(nameof(NextReconnectTime));
+            }
+
             ConnectionState = ConnectionState.WaitToReconnect;
             var timeLeft = NextReconnectTime.Value - TimeService.Time;
 

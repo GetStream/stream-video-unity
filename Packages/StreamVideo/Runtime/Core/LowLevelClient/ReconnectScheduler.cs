@@ -151,6 +151,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             NextReconnectTime = GetNextReconnectTime();
+            _reconnectAttempts++;
         }
 
         private void OnConnectionStateChanged(ConnectionState previous, ConnectionState current)

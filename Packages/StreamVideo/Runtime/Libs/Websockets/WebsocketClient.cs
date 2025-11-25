@@ -38,7 +38,7 @@ namespace StreamVideo.Libs.Websockets
 
         public bool TryDequeueMessage(out byte[] message) => _receiveQueue.TryDequeue(out message);
 
-        public async Task ConnectAsync(Uri serverUri)
+        public async Task ConnectAsync(Uri serverUri, CancellationToken cancellationToken)
         {
             if (IsConnected || IsConnecting)
             {
@@ -52,7 +52,8 @@ namespace StreamVideo.Libs.Websockets
             {
                 await TryDisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
                     "Clean up resources before connecting");
-                _connectionCts = new CancellationTokenSource();
+                cancellationToken.ThrowIfCancellationRequested();
+                _connectionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
                 _internalClient = new ClientWebSocket();
                 _internalClient.Options.SetRequestHeader("User-Agent", "unity-video-sdk-ws-client");
@@ -78,7 +79,7 @@ namespace StreamVideo.Libs.Websockets
             }
             catch (Exception e)
             {
-                _logs.Exception(e);
+                LogExceptionIfDebugMode(e);
                 OnConnectionFailed();
                 throw;
             }

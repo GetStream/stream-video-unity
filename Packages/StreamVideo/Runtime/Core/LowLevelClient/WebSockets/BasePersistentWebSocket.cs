@@ -22,6 +22,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action Connected;
         public event Action Disconnected;
 
+        public const int ConnectTimeoutMs = 1000;
+
         public ConnectionState ConnectionState
         {
             get => _connectionState;
@@ -78,7 +80,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             Logs.Info($"{GetType()} TryToReconnect");
 #endif
 
-            ConnectAsync().LogIfFailed();
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(ConnectTimeoutMs);
+            ConnectAsync(cts.Token).LogIfFailed();
         }
 
         public Task ConnectAsync(CancellationToken cancellationToken = default)
@@ -105,7 +109,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
 
             ConnectionState = ConnectionState.Disconnecting;
-            
+
             await OnDisconnectingAsync(closeMessage);
 
             if (WebsocketClient == null)
@@ -224,6 +228,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected virtual Task OnDisconnectingAsync(string closeMessage)
         {
+            _reconnectScheduler.Reset();
             return Task.CompletedTask;
         }
 
@@ -338,6 +343,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         private void OnReconnectionScheduled()
         {
+            if (!NextReconnectTime.HasValue)
+            {
+                throw new ArgumentNullException(nameof(NextReconnectTime));
+            }
+
             ConnectionState = ConnectionState.WaitToReconnect;
             var timeLeft = NextReconnectTime.Value - TimeService.Time;
 

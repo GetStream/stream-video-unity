@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.QueryBuilders.Sort.Calls;
 using StreamVideo.Core.DeviceManagers;
@@ -67,6 +68,8 @@ namespace StreamVideo.Core
         /// </summary>
         /// <param name="credentials">Credentials required to connect user: api_key, user_id, and user_token</param>
         Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials);
+        
+        Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials, CancellationToken cancellationToken);
 
         /// <summary>
         /// Disconnect user from Stream server.
@@ -76,10 +79,19 @@ namespace StreamVideo.Core
         Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify);
 
+        Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
+            bool notify, CancellationToken cancellationToken);
+        
         /// <summary>
-        /// Gets call information without joining it. Will return null if the call doesn't exist
+        /// Gets <see cref="IStreamCall"/> information without joining it. Will return null if the call doesn't exist
         /// </summary>
         Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId);
+        
+        /// <summary>
+        /// Gets <see cref="IStreamCall"/> information without joining it. Will return null if the call doesn't exist
+        /// </summary>
+        Task<IStreamCall> GetCallAsync(StreamCallType callType, string callId,
+            CancellationToken cancellationToken);
 
         /// <summary>
         /// Get a call with a specified Type and ID. If such a call doesn't exist, it will be created.
@@ -88,6 +100,14 @@ namespace StreamVideo.Core
         /// <param name="callId">Call ID</param>
         /// <returns>Call object of type: <see cref="IStreamCall"/></returns>
         Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId);
+        
+        /// <summary>
+        /// Get a call with a specified Type and ID. If such a call doesn't exist, it will be created.
+        /// </summary>
+        /// <param name="callType">Call type - this defines the permissions and other settings for the call. Read more in the <a href="https://getstream.io/video/docs/unity/guides/call-types/">Call Types Docs</a></param>
+        /// <param name="callId">Call ID</param>
+        /// <returns>Call object of type: <see cref="IStreamCall"/></returns>
+        Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Query calls

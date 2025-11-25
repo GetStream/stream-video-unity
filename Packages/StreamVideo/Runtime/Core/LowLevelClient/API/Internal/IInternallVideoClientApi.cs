@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
@@ -8,13 +9,13 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
     internal interface IInternalVideoClientApi
     {
         Task<GetCallResponseInternalDTO> GetCallAsync(StreamCallType callType, string callId,
-            GetOrCreateCallRequestInternalDTO getCallRequest);
+            GetOrCreateCallRequestInternalDTO getCallRequest, CancellationToken cancellationToken);
 
         Task<UpdateCallResponseInternalDTO> UpdateCallAsync(StreamCallType callType, string callId,
             UpdateCallRequestInternalDTO updateCallRequest);
 
         Task<GetOrCreateCallResponseInternalDTO> GetOrCreateCallAsync(StreamCallType callType, string callId,
-            GetOrCreateCallRequestInternalDTO getOrCreateCallRequest);
+            GetOrCreateCallRequestInternalDTO getOrCreateCallRequest, CancellationToken cancellationToken);
 
         Task<AcceptCallResponseInternalDTO> AcceptCallAsync(StreamCallType callType, string callId);
 

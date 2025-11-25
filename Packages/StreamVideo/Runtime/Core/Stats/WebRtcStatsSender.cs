@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf.Collections;
 using StreamVideo.Core.LowLevelClient;
@@ -21,10 +22,15 @@ namespace StreamVideo.Core.Stats
 
             if (_timeService.Time > _lastTimeSent + SendInterval && _currentSendTask == null)
             {
-                _currentSendTask = CollectAndSend().ContinueWith(t =>
+                //StreamTODO: consider adding cancellation token support here -> leaving the call should cancel any ongoing operations
+                _currentSendTask = CollectAndSend(CancellationToken.None).ContinueWith(t =>
                 {
                     _currentSendTask = null;
-                    t.LogIfFailed();
+                    
+                    if (_rtcSession.CallState == CallingState.Joining)
+                    {
+                        t.LogIfFailed();
+                    }
                 });
                 _lastTimeSent = _timeService.Time;
             }
@@ -34,7 +40,7 @@ namespace StreamVideo.Core.Stats
         /// Sends final stats immediately, flushing any remaining trace data.
         /// Called when leaving a call to ensure all stats are captured.
         /// </summary>
-        public async Task SendFinalStatsAsync()
+        public async Task SendFinalStatsAsync(CancellationToken cancellationToken)
         {
             if (_rtcSession.ActiveCall == null)
             {
@@ -46,7 +52,7 @@ namespace StreamVideo.Core.Stats
                 await _currentSendTask;
             }
 
-            await CollectAndSend();
+            await CollectAndSend(cancellationToken);
         }
 
         internal WebRtcStatsSender(RtcSession rtcSession, IWebRtcStatsCollector webRtcStatsCollector,
@@ -74,18 +80,18 @@ namespace StreamVideo.Core.Stats
         private float _lastTimeSent;
         private Task _currentSendTask;
 
-        private async Task CollectAndSend()
+        private async Task CollectAndSend(CancellationToken cancellationToken)
         {
             if (_rtcSession.ActiveCall == null)
             {
                 return;
             }
             
-            var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync();
-            var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync();
-            var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync();
-            var encodeStats = await _webRtcStatsCollector.GetEncodeStatsAsync();
-            var decodeStats = await _webRtcStatsCollector.GetDecodeStatsAsync();
+            var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync(cancellationToken);
+            var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync(cancellationToken);
+            var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync(cancellationToken);
+            var encodeStats = await _webRtcStatsCollector.GetEncodeStatsAsync(cancellationToken);
+            var decodeStats = await _webRtcStatsCollector.GetDecodeStatsAsync(cancellationToken);
 
             if (subscriberStatsJson == null || publisherStatsJson == null || rtcStatsJson == null)
             {
@@ -130,7 +136,8 @@ namespace StreamVideo.Core.Stats
 #endif
 #pragma warning restore CS0162 // Re-enable unreachable code warning
 
-            await _rtcSession.SendWebRtcStats(request);
+            cancellationToken.ThrowIfCancellationRequested();
+            await _rtcSession.SendWebRtcStats(request, cancellationToken);
         }
     }
 }

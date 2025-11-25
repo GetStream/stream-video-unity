@@ -8,6 +8,8 @@ namespace StreamVideo.Core.LowLevelClient
     {
         double? NextReconnectTime { get; }
         event Action ReconnectionScheduled;
+
+        void Reset();
     }
     /// <summary>
     /// Schedules next reconnection time based on the past attempts and network availability
@@ -43,8 +45,9 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public ReconnectScheduler(ITimeService timeService, IStreamVideoLowLevelClient lowLevelClient,
-            INetworkMonitor networkMonitor)
+            INetworkMonitor networkMonitor, Func<bool> shouldReconnect)
         {
+            _shouldReconnect = shouldReconnect ?? throw new ArgumentNullException(nameof(shouldReconnect));
             _client = lowLevelClient ?? throw new ArgumentNullException(nameof(lowLevelClient));
             _timeService = timeService ?? throw new ArgumentNullException(nameof(timeService));
             _networkMonitor = networkMonitor ?? throw new ArgumentNullException(nameof(networkMonitor));
@@ -98,6 +101,12 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        public void Reset()
+        {
+            NextReconnectTime = default;
+            _reconnectAttempts = 0;
+        }
+
         public void Stop()
         {
             NextReconnectTime = float.MaxValue;
@@ -112,6 +121,7 @@ namespace StreamVideo.Core.LowLevelClient
         private int _reconnectAttempts;
         private bool _isStopped;
         private double? _nextReconnectTime;
+        private Func<bool> _shouldReconnect;
 
         private void TryScheduleNextReconnectTime()
         {
@@ -120,7 +130,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            if (_isStopped || ReconnectStrategy == ReconnectStrategy.Never)
+            if (_isStopped || ReconnectStrategy == ReconnectStrategy.Never || !_shouldReconnect())
             {
                 return;
             }
@@ -151,6 +161,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             NextReconnectTime = GetNextReconnectTime();
+            _reconnectAttempts++;
         }
 
         private void OnConnectionStateChanged(ConnectionState previous, ConnectionState current)

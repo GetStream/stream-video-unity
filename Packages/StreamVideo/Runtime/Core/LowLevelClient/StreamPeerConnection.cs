@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Models;
@@ -29,6 +30,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action<VideoStreamTrack> PublisherVideoTrackChanged;
         public event Action<AudioStreamTrack> PublisherAudioTrackChanged;
+
+        public event Action Disconnected;
 
         public bool IsRemoteDescriptionAvailable
         {
@@ -153,20 +156,21 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void RestartIce() => _peerConnection.RestartIce();
 
-        public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer)
+        public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer,
+            CancellationToken cancellationToken)
         {
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"[{_peerType}] Set LocalDesc:\n" + offer.sdp);
 #endif
             _tracer?.Trace(PeerConnectionTraceKey.SetLocalDescription, offer.sdp);
-            return _peerConnection.SetLocalDescriptionAsync(ref offer);
+            return _peerConnection.SetLocalDescriptionAsync(ref offer, cancellationToken);
         }
 
-        public async Task SetRemoteDescriptionAsync(RTCSessionDescription offer)
+        public async Task SetRemoteDescriptionAsync(RTCSessionDescription offer, CancellationToken cancellationToken)
         {
             _tracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, offer.sdp);
             
-            await _peerConnection.SetRemoteDescriptionAsync(ref offer);
+            await _peerConnection.SetRemoteDescriptionAsync(ref offer, cancellationToken);
 
 #if STREAM_DEBUG_ENABLED
             _logs.Warning(
@@ -200,16 +204,16 @@ namespace StreamVideo.Core.LowLevelClient
             _peerConnection.AddIceCandidate(iceCandidate);
         }
 
-        public async Task<RTCSessionDescription> CreateOfferAsync()
+        public async Task<RTCSessionDescription> CreateOfferAsync(CancellationToken cancellationToken)
         {
-            var offer = await _peerConnection.CreateOfferAsync();
+            var offer = await _peerConnection.CreateOfferAsync(cancellationToken);
             _tracer?.Trace(PeerConnectionTraceKey.CreateOffer, offer.sdp);
             return offer;
         }
 
-        public async Task<RTCSessionDescription> CreateAnswerAsync()
+        public async Task<RTCSessionDescription> CreateAnswerAsync(CancellationToken cancellationToken)
         {
-            var answer = await _peerConnection.CreateAnswerAsync();
+            var answer = await _peerConnection.CreateAnswerAsync(cancellationToken);
             _tracer?.Trace(PeerConnectionTraceKey.CreateAnswer, answer.sdp);
             return answer;
         }
@@ -225,7 +229,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public Task<RTCStatsReport> GetStatsReportAsync() => _peerConnection.GetStatsAsync();
+        public Task<RTCStatsReport> GetStatsReportAsync(CancellationToken cancellationToken) => _peerConnection.GetStatsAsync(cancellationToken);
         
         public PublisherVideoSettings GetLatestVideoSettings()
         {
@@ -401,6 +405,11 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning($"[{_peerType}] OnConnectionStateChange to: {state}");
 #endif
             _tracer?.Trace(PeerConnectionTraceKey.OnConnectionStateChange, state.ToString());
+
+            if (state == RTCPeerConnectionState.Disconnected)
+            {
+                Disconnected?.Invoke();
+            }
         }
 
         private void OnTrack(RTCTrackEvent trackEvent)

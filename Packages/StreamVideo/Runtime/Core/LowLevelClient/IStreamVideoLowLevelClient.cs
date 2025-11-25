@@ -57,6 +57,6 @@ namespace StreamVideo.Core.LowLevelClient
         Task ConnectUserAsync(string apiKey, string userId, ITokenProvider tokenProvider,
             CancellationToken cancellationToken = default);
 
-        Task<string> GetLocationHintAsync();
+        Task<string> GetLocationHintAsync(CancellationToken cancellationToken);
     }
 }

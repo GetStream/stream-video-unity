@@ -143,8 +143,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             //StreamTodo: move to factory
-            var coordinatorReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor);
-            var sfuReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor);
+            var coordinatorReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor, shouldReconnect: () => true);
+            var sfuReconnect = new ReconnectScheduler(_timeService, this, _networkMonitor, shouldReconnect: () => RtcSession.ShouldSfuAttemptToReconnect());
 
             //StreamTodo: move to factory
             _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, authProvider: this,
@@ -189,7 +189,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             await _coordinatorWS.ConnectAsync(cancellationToken);
-            await UpdateLocationHintAsync();
+            await UpdateLocationHintAsync(cancellationToken);
             Connected?.Invoke();
         }
 
@@ -222,12 +222,12 @@ namespace StreamVideo.Core.LowLevelClient
             RtcSession.Update();
         }
 
-        public async Task<string> GetLocationHintAsync()
+        public async Task<string> GetLocationHintAsync(CancellationToken cancellationToken = default)
         {
             if (_locationHint.IsNullOrEmpty())
             {
                 _logs.Warning("No location hint - retrying to fetch it");
-                await UpdateLocationHintAsync();
+                await UpdateLocationHintAsync(cancellationToken);
             }
             // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
             if (_locationHint.IsNullOrEmpty())
@@ -297,7 +297,7 @@ namespace StreamVideo.Core.LowLevelClient
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
         internal RtcSession RtcSession { get; }
 
-        internal Task StartCallSessionAsync(StreamCall call) => RtcSession.StartAsync(call);
+        internal Task StartCallSessionAsync(StreamCall call, CancellationToken cancellationToken) => RtcSession.StartAsync(call, cancellationToken);
 
         //internal Task StopCallSessionAsync() => RtcSession.StopAsync(); //StreamTodo: remove
 
@@ -366,10 +366,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         //StreamTodo: cancellation token
         //StreamTodo: make few attempts + can be awaited by the JoinCallAsync + support reconnections
-        private async Task UpdateLocationHintAsync()
+        private async Task UpdateLocationHintAsync(CancellationToken cancellationToken)
         {
             var headers = new List<KeyValuePair<string, IEnumerable<string>>>();
-            await _httpClient.HeadAsync(LocationHintWebUri, headers);
+            await _httpClient.HeadAsync(LocationHintWebUri, headers, cancellationToken);
 
             var locationHeader = headers.FirstOrDefault(_ => _.Key.ToLower() == LocationHintHeaderKey);
             if (locationHeader.Key.IsNullOrEmpty() || !locationHeader.Value.Any())

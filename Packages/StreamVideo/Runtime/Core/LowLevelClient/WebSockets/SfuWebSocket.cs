@@ -179,7 +179,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
                 var sfuUri = UriFactory.CreateSfuConnectionUri(_sfuUrl);
 
-                await WebsocketClient.ConnectAsync(sfuUri);
+                await WebsocketClient.ConnectAsync(sfuUri, cancellationToken);
 
                 //StreamTodo: review when is the actual "connected state" - perhaps not the WS connection itself but receiving an appropriate event should set the flag
                 //e.g. are we able to send any data as soon as the connection is established?
@@ -340,7 +340,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             ConnectionState = ConnectionState.Connected;
 
-            _connectUserTaskSource.SetResult(true);
+            _connectUserTaskSource.TrySetResult(true);
             _connectUserTaskSource = null;
 
             JoinResponse?.Invoke(joinResponse);

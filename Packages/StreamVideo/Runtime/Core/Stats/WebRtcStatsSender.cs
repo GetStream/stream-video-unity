@@ -22,11 +22,12 @@ namespace StreamVideo.Core.Stats
 
             if (_timeService.Time > _lastTimeSent + SendInterval && _currentSendTask == null)
             {
-                _currentSendTask = CollectAndSend(cancellationToken: default).ContinueWith(t =>
+                //StreamTODO: consider adding cancellation token support here -> leaving the call should cancel any ongoing operations
+                _currentSendTask = CollectAndSend(CancellationToken.None).ContinueWith(t =>
                 {
                     _currentSendTask = null;
                     
-                    if (_rtcSession.ActiveCall != null)
+                    if (_rtcSession.CallState == CallingState.Joining)
                     {
                         t.LogIfFailed();
                     }
@@ -86,11 +87,11 @@ namespace StreamVideo.Core.Stats
                 return;
             }
             
-            var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync();
-            var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync();
-            var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync();
-            var encodeStats = await _webRtcStatsCollector.GetEncodeStatsAsync();
-            var decodeStats = await _webRtcStatsCollector.GetDecodeStatsAsync();
+            var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync(cancellationToken);
+            var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync(cancellationToken);
+            var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync(cancellationToken);
+            var encodeStats = await _webRtcStatsCollector.GetEncodeStatsAsync(cancellationToken);
+            var decodeStats = await _webRtcStatsCollector.GetDecodeStatsAsync(cancellationToken);
 
             if (subscriberStatsJson == null || publisherStatsJson == null || rtcStatsJson == null)
             {

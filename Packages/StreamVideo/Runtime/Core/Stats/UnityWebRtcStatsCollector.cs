@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Trace;
@@ -34,23 +35,23 @@ namespace StreamVideo.Core.Stats
             public Dictionary<string, object> Dict { get; set; }
         }
 
-        public async Task<string> GetPublisherStatsJsonAsync()
+        public async Task<string> GetPublisherStatsJsonAsync(CancellationToken cancellationToken)
         {
-            var report = await _rtcSession.Publisher.GetStatsReportAsync();
+            var report = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
             return ConvertStatsToJson(report.Stats);
         }
 
-        public async Task<string> GetSubscriberStatsJsonAsync()
+        public async Task<string> GetSubscriberStatsJsonAsync(CancellationToken cancellationToken)
         {
-            var report = await _rtcSession.Subscriber.GetStatsReportAsync();
+            var report = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
             return ConvertStatsToJson(report.Stats);
         }
 
-        public async Task<string> GetRtcStatsJsonAsync()
+        public async Task<string> GetRtcStatsJsonAsync(CancellationToken cancellationToken)
         {
             // Get both publisher and subscriber stats
-            var publisherReport = await _rtcSession.Publisher.GetStatsReportAsync();
-            var subscriberReport = await _rtcSession.Subscriber.GetStatsReportAsync();
+            var publisherReport = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
+            var subscriberReport = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
 
             // Compute delta-compressed stats
             var publisherDelta = ComputeDeltaCompression(_previousPublisherStats, publisherReport.Stats);
@@ -239,15 +240,15 @@ namespace StreamVideo.Core.Stats
             return result;
         }
 
-        public async Task<IReadOnlyList<PerformanceStats>> GetEncodeStatsAsync()
+        public async Task<IReadOnlyList<PerformanceStats>> GetEncodeStatsAsync(CancellationToken cancellationToken)
         {
-            var report = await _rtcSession.Publisher.GetStatsReportAsync();
+            var report = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
             return ComputeEncodeStats(report.Stats);
         }
 
-        public async Task<IReadOnlyList<PerformanceStats>> GetDecodeStatsAsync()
+        public async Task<IReadOnlyList<PerformanceStats>> GetDecodeStatsAsync(CancellationToken cancellationToken)
         {
-            var report = await _rtcSession.Subscriber.GetStatsReportAsync();
+            var report = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
             return ComputeDecodeStats(report.Stats);
         }
 

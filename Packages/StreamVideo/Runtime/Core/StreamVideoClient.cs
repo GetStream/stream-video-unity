@@ -157,7 +157,7 @@ namespace StreamVideo.Core
             if (!create)
             {
                 //StreamTodo: check android SDK if the flow is the same
-                call = await GetCallAsync(callType, callId);
+                call = await GetCallAsync(callType, callId, cancellationToken);
                 if (call == null)
                 {
                     throw new StreamCallNotFoundException(
@@ -166,7 +166,7 @@ namespace StreamVideo.Core
             }
             else
             {
-                call = await GetOrCreateCallAsync(callType, callId);
+                call = await GetOrCreateCallAsync(callType, callId, cancellationToken);
             }
 
             // StreamTodo: check state if we don't have an active session already

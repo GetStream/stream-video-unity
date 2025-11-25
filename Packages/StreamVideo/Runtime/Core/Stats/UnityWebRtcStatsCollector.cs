@@ -37,32 +37,44 @@ namespace StreamVideo.Core.Stats
 
         public async Task<string> GetPublisherStatsJsonAsync(CancellationToken cancellationToken)
         {
+            if (_rtcSession.Publisher == null)
+            {
+                return ConvertStatsToJson(new Dictionary<string, RTCStats>());
+            }
+            
             var report = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
             return ConvertStatsToJson(report.Stats);
         }
 
         public async Task<string> GetSubscriberStatsJsonAsync(CancellationToken cancellationToken)
         {
+            if (_rtcSession.Subscriber == null)
+            {
+                return ConvertStatsToJson(new Dictionary<string, RTCStats>());
+            }
+            
             var report = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
             return ConvertStatsToJson(report.Stats);
         }
 
         public async Task<string> GetRtcStatsJsonAsync(CancellationToken cancellationToken)
         {
-            // Get both publisher and subscriber stats
+            if (_rtcSession.Publisher == null || _rtcSession.Subscriber == null)
+            {
+                var emptyTraces = new List<object[]>();
+                return _serializer.Serialize(emptyTraces, _serializationOptions);
+            }
+            
             var publisherReport = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
             var subscriberReport = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
 
-            // Compute delta-compressed stats
             var publisherDelta = ComputeDeltaCompression(_previousPublisherStats, publisherReport.Stats);
             var subscriberDelta = ComputeDeltaCompression(_previousSubscriberStats, subscriberReport.Stats);
 
-            // Update previous stats for next delta - create snapshots to avoid holding native references
             _previousPublisherStats = CreateStatsSnapshot(publisherReport.Stats);
             _previousSubscriberStats = CreateStatsSnapshot(subscriberReport.Stats);
 
-            // Collect ALL tracer data from the TracerManager
-            // This includes all SFU events traced in RtcSession plus the getstats traces we'll add
+            //StreamTodo: check later if we can use fixed buffer e.g. list from pool
             var allTraces = new List<object[]>();
             
             foreach (var tracer in _tracerManager.GetTracers())
@@ -242,12 +254,22 @@ namespace StreamVideo.Core.Stats
 
         public async Task<IReadOnlyList<PerformanceStats>> GetEncodeStatsAsync(CancellationToken cancellationToken)
         {
+            if (_rtcSession.Publisher == null)
+            {
+                return new List<PerformanceStats>();
+            }
+            
             var report = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
             return ComputeEncodeStats(report.Stats);
         }
 
         public async Task<IReadOnlyList<PerformanceStats>> GetDecodeStatsAsync(CancellationToken cancellationToken)
         {
+            if (_rtcSession.Subscriber == null)
+            {
+                return new List<PerformanceStats>();
+            }
+            
             var report = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
             return ComputeDecodeStats(report.Stats);
         }

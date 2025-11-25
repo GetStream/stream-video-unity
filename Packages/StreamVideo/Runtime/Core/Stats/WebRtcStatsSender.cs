@@ -87,6 +87,12 @@ namespace StreamVideo.Core.Stats
                 return;
             }
             
+            if(_rtcSession.Publisher == null || _rtcSession.Subscriber == null)
+            {
+                _logs.Warning("WebRtcStatsSender: Publisher or Subscriber is null, skipping stats collection.");
+                return;
+            }
+            
             var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync(cancellationToken);
             var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync(cancellationToken);
             var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync(cancellationToken);

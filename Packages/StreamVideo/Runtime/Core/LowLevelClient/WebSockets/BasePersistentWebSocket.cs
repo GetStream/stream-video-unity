@@ -228,6 +228,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected virtual Task OnDisconnectingAsync(string closeMessage)
         {
+            _reconnectScheduler.Reset();
             return Task.CompletedTask;
         }
 

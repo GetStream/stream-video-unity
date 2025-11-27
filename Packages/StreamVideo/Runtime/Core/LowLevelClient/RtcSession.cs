@@ -463,6 +463,11 @@ namespace StreamVideo.Core.LowLevelClient
                     WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
 #endif
                 }
+                
+                foreach(var p in ActiveCall.Participants)
+                {
+                    NotifyParticipantJoined(p.SessionId);
+                }
 
                 //StreamTodo: validate when this state should set
                 CallState = CallingState.Joined;

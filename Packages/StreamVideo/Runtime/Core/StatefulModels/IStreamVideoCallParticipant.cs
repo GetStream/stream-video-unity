@@ -85,5 +85,17 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         /// <param name="videoResolution">Video resolution you wish to receive for this participant. You can use a predefined size or pick a predefined one from <see cref="VideoResolution"/></param>
         void UpdateRequestedVideoResolution(VideoResolution videoResolution);
+
+        /// <summary>
+        /// Should video track of this participant be received.
+        /// </summary>
+        /// <param name="enabled">If enabled, the video stream will be requested from the server</param>
+        void SetIncomingVideoEnabled(bool enabled);
+
+        /// <summary>
+        /// Should audio track of this participant be received
+        /// </summary>
+        /// <param name="enabled">If enabled, the audio stream will be requested from the server</param>
+        void SetIncomingAudioEnabled(bool enabled);
     }
 }

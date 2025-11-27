@@ -79,6 +79,8 @@ namespace StreamVideo.Core.LowLevelClient
         public const bool UseNativeAudioBindings = false;
 #endif
 
+        public const int MaxParticipantsForVideoAutoSubscription = 5;
+
         public event Action<bool> PublisherAudioTrackIsEnabledChanged;
         public event Action<bool> PublisherVideoTrackIsEnabledChanged;
 
@@ -214,7 +216,7 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         #endregion
-        
+
         public bool ShouldSfuAttemptToReconnect()
         {
             if (CallState != CallingState.Joined && CallState != CallingState.Joining)
@@ -344,6 +346,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        public void SetCallingState(CallingState newState) => CallState = newState;
+
         public async Task StartAsync(StreamCall call, CancellationToken cancellationToken = default)
         {
             if (ActiveCall != null)
@@ -360,7 +364,7 @@ namespace StreamVideo.Core.LowLevelClient
             try
             {
                 _logs.Info($"Start joining a call: type={call.Type}, id={call.Id}");
-                
+
                 //StreamTodo: perhaps not necessary here
                 ClearSession();
 
@@ -422,6 +426,12 @@ namespace StreamVideo.Core.LowLevelClient
                 _sfuWebSocket.SetSessionData(SessionId, offer.sdp, sfuUrl, sfuToken);
                 await _sfuWebSocket.ConnectAsync(cancellationToken);
 
+#if STREAM_TESTS_ENABLED && UNITY_EDITOR
+                // Simulate a bit of delay for tests so we can test killing the operation in progress
+                //StreamTOdo: we could add fake delays in multiple places and this way control exiting from every step in tests
+                await Task.Delay(100);
+#endif
+
                 // Wait for call to be joined with timeout
                 const int joinTimeoutSeconds = 30;
                 var joinStartTime = _timeService.Time;
@@ -453,6 +463,11 @@ namespace StreamVideo.Core.LowLevelClient
                     WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
 #endif
                 }
+                
+                foreach(var p in ActiveCall.Participants)
+                {
+                    NotifyParticipantJoined(p.SessionId);
+                }
 
                 //StreamTodo: validate when this state should set
                 CallState = CallingState.Joined;
@@ -465,12 +480,12 @@ namespace StreamVideo.Core.LowLevelClient
                 _videoAudioSyncBenchmark?.Init(call);
 #endif
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
                 ClearSession();
                 throw;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 _logs.Exception(e);
                 ClearSession();
@@ -494,7 +509,7 @@ namespace StreamVideo.Core.LowLevelClient
                 WebRTC.StopAudioPlayback();
 #endif
             }
-            
+
             if (CallState == CallingState.Leaving || CallState == CallingState.Offline)
             {
                 //StreamTODO: should this return a task of the ongoing stop?
@@ -537,6 +552,14 @@ namespace StreamVideo.Core.LowLevelClient
                         }
                     }
                 }
+                catch (HttpRequestException httpEx)
+                {
+                    _logs.Info($"Network unavailable during final stats send: {httpEx.Message}");
+                }
+                catch (OperationCanceledException)
+                {
+                    _logs.Info("Final stats send timed out.");
+                }
                 catch (Exception e)
                 {
                     _logs.Warning($"Failed to send final stats on leave: {e.Message}");
@@ -578,6 +601,42 @@ namespace StreamVideo.Core.LowLevelClient
         public void UpdateRequestedVideoResolution(string participantSessionId, VideoResolution videoResolution)
         {
             _videoResolutionByParticipantSessionId[participantSessionId] = videoResolution;
+            QueueTracksSubscriptionRequest();
+        }
+
+        public void UpdateIncomingVideoRequested(string participantSessionId, bool isRequested)
+        {
+            _incomingVideoRequestedByParticipantSessionId[participantSessionId] = isRequested;
+            QueueTracksSubscriptionRequest();
+        }
+
+        public void UpdateIncomingAudioRequested(string participantSessionId, bool isRequested)
+        {
+            _incomingAudioRequestedByParticipantSessionId[participantSessionId] = isRequested;
+            QueueTracksSubscriptionRequest();
+        }
+
+        // Let's request video for the first 10 participants that join
+        public void NotifyParticipantJoined(string participantSessionId)
+        {
+            if (ActiveCall == null)
+            {
+                return;
+            }
+
+            var participantCount = ActiveCall.Participants?.Count ?? 0;
+            var requestVideo = participantCount <= MaxParticipantsForVideoAutoSubscription;
+            var requestAudio = true; // No limit by default
+
+            _incomingVideoRequestedByParticipantSessionId.TryAdd(participantSessionId, requestVideo);
+            _incomingAudioRequestedByParticipantSessionId.TryAdd(participantSessionId, requestAudio);
+        }
+
+        public void NotifyParticipantLeft(string participantSessionId)
+        {
+            _videoResolutionByParticipantSessionId.Remove(participantSessionId);
+            _incomingVideoRequestedByParticipantSessionId.Remove(participantSessionId);
+            _incomingAudioRequestedByParticipantSessionId.Remove(participantSessionId);
             QueueTracksSubscriptionRequest();
         }
 
@@ -659,6 +718,12 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly Dictionary<string, VideoResolution> _videoResolutionByParticipantSessionId
             = new Dictionary<string, VideoResolution>();
 
+        private readonly Dictionary<string, bool> _incomingVideoRequestedByParticipantSessionId
+            = new Dictionary<string, bool>();
+
+        private readonly Dictionary<string, bool> _incomingAudioRequestedByParticipantSessionId
+            = new Dictionary<string, bool>();
+
         private HttpClient _httpClient;
         private CallingState _callState;
 
@@ -686,6 +751,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             _pendingIceTrickleRequests.Clear();
             _videoResolutionByParticipantSessionId.Clear();
+            _incomingVideoRequestedByParticipantSessionId.Clear();
+            _incomingAudioRequestedByParticipantSessionId.Clear();
             _tracerManager?.Clear();
 
             Subscriber?.Dispose();
@@ -843,32 +910,46 @@ namespace StreamVideo.Core.LowLevelClient
                     continue;
                 }
 
-                var requestedVideoResolution = GetRequestedVideoResolution(participant);
-
-                foreach (var trackType in trackTypes)
+                var userId = GetUserId(participant);
+                if (string.IsNullOrEmpty(userId))
                 {
-                    //StreamTODO: UserId is sometimes null here
-                    //This was before changing the IUpdateableFrom<CallParticipantResponseInternalDTO, StreamVideoCallParticipant>.UpdateFromDto
-                    //to extract UserId from User obj
+                    _logs.Error(
+                        $"Cannot subscribe to any tracks - participant UserId is null or empty. SessionID: {participant.SessionId}");
+                    continue;
+                }
 
-                    var userId = GetUserId(participant);
-                    if (string.IsNullOrEmpty(userId))
+                var shouldConsumeAudio = ShouldSubscribeToAudioTrack(participant);
+                if (shouldConsumeAudio)
+                {
+                    yield return new TrackSubscriptionDetails
                     {
-                        _logs.Error(
-                            $"Cannot subscribe to {trackType} - participant UserId is null or empty. SessionID: {participant.SessionId}");
-                        continue;
-                    }
+                        UserId = userId,
+                        SessionId = participant.SessionId,
+                        TrackType = SfuTrackType.Audio,
+                    };
+                }
+
+                var shouldConsumeVideo = ShouldSubscribeToVideoTrack(participant);
+                if (shouldConsumeVideo)
+                {
+                    var requestedVideoResolution = GetRequestedVideoResolution(participant);
 
                     yield return new TrackSubscriptionDetails
                     {
                         UserId = userId,
                         SessionId = participant.SessionId,
-                        TrackType = trackType,
+                        TrackType = SfuTrackType.Video,
                         Dimension = requestedVideoResolution.ToVideoDimension()
                     };
                 }
             }
         }
+
+        private bool ShouldSubscribeToVideoTrack(IStreamVideoCallParticipant participant)
+            => _incomingVideoRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false);
+
+        private bool ShouldSubscribeToAudioTrack(IStreamVideoCallParticipant participant)
+            => _incomingAudioRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false);
 
         //StreamTodo: remove this, this is a workaround to Null UserId error
         private string GetUserId(IStreamVideoCallParticipant participant)
@@ -963,7 +1044,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuJoinResponse(JoinResponse joinResponse)
         {
             //StreamTODO: what if left the call and started a new one but the JoinResponse belongs to the previous session?
-            
+
             _sfuTracer?.Trace(PeerConnectionTraceKey.JoinRequest, joinResponse);
             _logs.InfoIfDebug($"Handle Sfu {nameof(JoinResponse)}");
             ActiveCall.UpdateFromSfu(joinResponse);
@@ -1029,7 +1110,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
                 //StreamTodo: handle subscriberOffer.iceRestart
                 var rtcSessionDescription = new RTCSessionDescription
                 {
@@ -1039,7 +1120,8 @@ namespace StreamVideo.Core.LowLevelClient
 
                 try
                 {
-                    await Subscriber.SetRemoteDescriptionAsync(rtcSessionDescription, GetCurrentCancellationTokenOrDefault());
+                    await Subscriber.SetRemoteDescriptionAsync(rtcSessionDescription,
+                        GetCurrentCancellationTokenOrDefault());
                     Subscriber.ThrowDisposedDuringOperationIfNull();
                 }
                 catch (Exception e)
@@ -1099,14 +1181,16 @@ namespace StreamVideo.Core.LowLevelClient
             var sessionId = trackUnpublished.SessionId;
             var type = trackUnpublished.Type.ToPublicEnum();
             var cause = trackUnpublished.Cause;
-            
+
             // StreamTODO: test if this works well with other user muting this user
-            var updateLocalParticipantState = cause != TrackUnpublishReason.Unspecified && cause != TrackUnpublishReason.UserMuted;
+            var updateLocalParticipantState
+                = cause != TrackUnpublishReason.Unspecified && cause != TrackUnpublishReason.UserMuted;
 
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
             var participantSfuDto = trackUnpublished.Participant;
 
-            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, updateLocalParticipantState, out var participant);
+            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, updateLocalParticipantState,
+                out var participant);
 
             if (participantSfuDto != null && participant != null)
             {
@@ -1127,7 +1211,8 @@ namespace StreamVideo.Core.LowLevelClient
             // Optionally available. Read TrackUnpublished.participant comment in events.proto
             var participantSfuDto = trackPublished.Participant;
 
-            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, updateLocalParticipantState: true, out var participant);
+            UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, updateLocalParticipantState: true,
+                out var participant);
 
             if (participantSfuDto != null && participant != null)
             {
@@ -1498,7 +1583,7 @@ namespace StreamVideo.Core.LowLevelClient
                         $"{nameof(Publisher.SignalingState)} state is not stable, current state: {Publisher.SignalingState}");
                 }
 
-                if(GetCurrentCancellationTokenOrDefault().IsCancellationRequested)
+                if (GetCurrentCancellationTokenOrDefault().IsCancellationRequested)
                 {
                     return;
                 }
@@ -1885,7 +1970,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             PublisherVideoTrackChanged?.Invoke();
         }
-        
+
         void PublisherOnDisconnected()
         {
             if (CallState == CallingState.Joined || CallState == CallingState.Joining)
@@ -1912,7 +1997,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             return true;
         }
-        
+
 
         private void SubscribeToSfuEvents()
         {

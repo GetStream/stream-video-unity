@@ -103,4 +103,7 @@ Assets/LocalOnlyTools_53854/
 Assets/LocalOnlyTools_53854.meta
 last_build_version_4983432740324322.txt
 last_build_version_4983432740324322.meta
+replace_imported_sample_scene_credentials.bat
+replace_imported_sample_scene_credentials.ps1
+replace_imported_sample_scene_credentials.sh
 

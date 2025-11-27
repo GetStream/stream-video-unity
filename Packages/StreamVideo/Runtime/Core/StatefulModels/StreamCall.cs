@@ -658,7 +658,9 @@ namespace StreamVideo.Core.StatefulModels
         internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
         {
             var participant = Session.UpdateFromSfu(participantJoined, cache);
+            LowLevelClient.RtcSession.NotifyParticipantJoined(participantJoined.Participant.SessionId);
             UpdateSortedParticipants();
+
             ParticipantJoined?.Invoke(participant);
         }
 
@@ -677,6 +679,8 @@ namespace StreamVideo.Core.StatefulModels
             {
                 Logs.Warning("Error when generating debug log: " + e.Message);
             }
+
+            LowLevelClient.RtcSession.NotifyParticipantLeft(participantLeft.Participant.SessionId);
 
             var participant = Session.UpdateFromSfu(participantLeft, cache);
 

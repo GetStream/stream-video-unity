@@ -94,6 +94,12 @@ namespace StreamVideo.Core.StatefulModels
                 yield return _screenShareTrack;
             }
         }
+        
+        public void SetIncomingVideoEnabled(bool enabled)
+            => LowLevelClient.RtcSession.UpdateIncomingVideoRequested(SessionId, enabled);
+        
+        public void SetIncomingAudioEnabled(bool enabled)
+            => LowLevelClient.RtcSession.UpdateIncomingAudioRequested(SessionId, enabled);
 
         public void UpdateRequestedVideoResolution(VideoResolution videoResolution)
             => LowLevelClient.RtcSession.UpdateRequestedVideoResolution(SessionId, videoResolution);

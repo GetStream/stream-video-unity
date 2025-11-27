@@ -79,7 +79,7 @@ namespace StreamVideo.Core.LowLevelClient
         public const bool UseNativeAudioBindings = false;
 #endif
 
-        public const int MaxParticipantsForVideoAutoSubscription = 10;
+        public const int MaxParticipantsForVideoAutoSubscription = 5;
 
         public event Action<bool> PublisherAudioTrackIsEnabledChanged;
         public event Action<bool> PublisherVideoTrackIsEnabledChanged;

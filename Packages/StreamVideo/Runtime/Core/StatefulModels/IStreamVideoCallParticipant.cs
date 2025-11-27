@@ -87,7 +87,7 @@ namespace StreamVideo.Core.StatefulModels
         void UpdateRequestedVideoResolution(VideoResolution videoResolution);
 
         /// <summary>
-        /// Should video track of this participant be received. By default, only few 
+        /// Should video track of this participant be received.
         /// </summary>
         /// <param name="enabled">If enabled, the video stream will be requested from the server</param>
         void SetIncomingVideoEnabled(bool enabled);

@@ -1,3 +1,10 @@
+0.8.16:
+
+- from now on, each participant needs to explicitly set which tracks of other participants he wants to request by calling: `participant.SetIncomingVideoEnabled`. This needs to be set for all `call.Participants` when joining the call and also in reaction to `call.ParticipantJoined` event. Previously, the SDK was auto-subscribing to every joined participants but there's a server limit of 40 subscriptions. Audio subscriptions have no limit, but can also be controlled.
+`participant.SetIncomingVideoEnabled` - request receiving video for this participant
+`participant.SetIncomingAudioEnabled` - request receiving audio for this participant
+- A typical pattern is to control the video request based on the rendering state of the UI. So the video should only be requested for participants who are currently rendered on screen. The rendering resolution should be passed to `participant.UpdateRequestedVideoResolution` to request video resolution matching the rendered resolution.
+
 0.8.15:
 
 - Add support for cancellation tokens. GetCallAsync/JoinCallAsync/ConnectUserAsync operations can now be cancelled via CancellationToken

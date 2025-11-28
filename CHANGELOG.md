@@ -1,3 +1,7 @@
+0.8.17:
+
+- Recompiled the native Android library with NDK 28 to fix missing 16KB alignment requirement for Android builds
+
 0.8.16:
 
 - from now on, each participant needs to explicitly set which tracks of other participants he wants to request by calling: `participant.SetIncomingVideoEnabled`. This needs to be set for all `call.Participants` when joining the call and also in reaction to `call.ParticipantJoined` event. Previously, the SDK was auto-subscribing to every joined participants but there's a server limit of 40 subscriptions. Audio subscriptions have no limit, but can also be controlled.

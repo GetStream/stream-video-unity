@@ -23,6 +23,11 @@ namespace StreamVideo.Tests.Shared
 
         public async Task<IStreamCall> JoinRandomCallAsync()
         {
+            if (Client.ActiveCall != null)
+            {
+                await Client.ActiveCall.LeaveAsync();
+            }
+            
             var callId = Guid.NewGuid().ToString();
             return await Client.JoinCallAsync(StreamCallType.Default, callId, create: true, ring: false,
                 notify: false);

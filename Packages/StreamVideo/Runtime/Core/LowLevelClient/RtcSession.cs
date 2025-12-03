@@ -1421,7 +1421,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)
         {
-            _sfuTracer?.Trace("audioLevelChanged", audioLevelChanged);
+
             // StreamTODO: Implement OnSfuAudioLevelChanged
         }
 

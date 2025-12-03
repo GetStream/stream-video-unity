@@ -1,3 +1,8 @@
+0.8.18:
+
+- Force hardware AEC in calls
+- Potential fix for audio delay after previously pausing/resuming the audio
+
 0.8.17:
 
 - Recompiled the native Android library with NDK 28 to fix missing 16KB alignment requirement for Android builds

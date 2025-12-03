@@ -715,6 +715,26 @@ namespace Unity.WebRTC
         None,
     };
 
+#if UNITY_ANDROID && !UNITY_EDITOR
+    /// <summary>
+    /// Android audio usage modes for Oboe audio streams.
+    /// </summary>
+    public enum AndroidAudioUsageMode
+    {
+        /// <summary>
+        /// Media usage mode - suitable for media playback (e.g., music, video).
+        /// Use this for viewers/consumers in livestream scenarios.
+        /// </summary>
+        Media = 1,
+
+        /// <summary>
+        /// Voice communication usage mode - optimized for voice calls.
+        /// Use this for broadcasters/hosts in livestream scenarios.
+        /// </summary>
+        VoiceCommunication = 2
+    }
+#endif
+
     /// <summary>
     ///     Provides utilities and management functions for integrating WebRTC functionality.
     /// </summary>
@@ -1131,6 +1151,20 @@ namespace Unity.WebRTC
         public static void StopAudioPlayback()
         {
             Context.StopAudioPlayback();
+        }
+
+        /// <summary>
+        /// Sets the Android audio usage mode for audio playback.
+        /// Changing the usage mode during an active call will restart the audio stream.
+        /// </summary>
+        /// <param name="usage">The audio usage mode to set (Media or VoiceCommunication)</param>
+        /// <remarks>
+        /// - Use VoiceCommunication for broadcasters/hosts in livestream scenarios
+        /// - Use Media for viewers/consumers in livestream scenarios
+        /// </remarks>
+        public static void SetAndroidAudioUsageMode(AndroidAudioUsageMode usage)
+        {
+            Context.SetAndroidAudioUsageMode((int)usage);
         }
 
 #endif
@@ -1837,6 +1871,9 @@ namespace Unity.WebRTC
 
         [DllImport(WebRTC.Lib)]
         public static extern void GetAudioProcessingModuleConfig(IntPtr context, out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel);
+
+        [DllImport(WebRTC.Lib)]
+        public static extern void SetAndroidAudioUsageMode(IntPtr context, int usage);
 #endif
 
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Tests.Shared;
 using UnityEngine;
@@ -35,27 +36,32 @@ namespace StreamVideo.Tests.Runtime
         private async Task When_client_joins_call_with_video_expect_receiving_video_track_Async(
             ITestClient clientA, ITestClient clientB)
         {
-            var streamCall = await clientA.JoinRandomCallAsync();
+            var clientACall = await clientA.JoinRandomCallAsync();
 
             var cameraDevice = await TestUtils.TryGetFirstWorkingCameraDeviceAsync(clientA.Client);
             Debug.Log("Selected camera device: " + cameraDevice);
             clientA.Client.VideoDeviceManager.SelectDevice(cameraDevice, enable: true);
 
-            var call = await clientB.Client.JoinCallAsync(streamCall.Type, streamCall.Id, create: false,
+            var clientBCall = await clientB.Client.JoinCallAsync(clientACall.Type, clientACall.Id, create: false,
                 ring: false,
                 notify: false);
 
-            var otherParticipant = call.Participants.First(p => !p.IsLocalParticipant);
+            // Wait for client B to get client A participant
+            await WaitForConditionAsync(()
+                => clientBCall.Participants.Any(p => p.SessionId == clientACall.GetLocalParticipant().SessionId));
+            
+            var clientAParticipant = clientBCall.Participants.First(p => p.SessionId == clientACall.GetLocalParticipant().SessionId);
+            clientAParticipant.UpdateRequestedVideoResolution(VideoResolution.Res_720p);
 
             StreamVideoTrack streamTrack = null;
 
-            if (otherParticipant.VideoTrack != null)
+            if (clientAParticipant.VideoTrack != null)
             {
-                streamTrack = (StreamVideoTrack)otherParticipant.VideoTrack;
+                streamTrack = (StreamVideoTrack)clientAParticipant.VideoTrack;
             }
             else
             {
-                otherParticipant.TrackAdded += (_, track) => { streamTrack = (StreamVideoTrack)track; };
+                clientAParticipant.TrackAdded += (_, track) => { streamTrack = (StreamVideoTrack)track; };
 
                 await WaitForConditionAsync(() => streamTrack != null);
             }

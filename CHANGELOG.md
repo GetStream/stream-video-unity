@@ -1,3 +1,9 @@
+0.8.19:
+
+- Fix for this crash in `unity::webrtc::VideoFrameAdapter::ToI420`
+- Potential fix for audio delay after pausing the app
+- Fix SFU WebSocket reconnecting when Coordinator Websocket connection was lost
+
 0.8.18:
 
 - Force hardware AEC in calls

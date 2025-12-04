@@ -1598,14 +1598,16 @@ namespace StreamVideo.Core.LowLevelClient
                 //This is most likely issue with the webRTC lib
                 if (_config.Audio.EnableDtx)
                 {
-                    offer = new RTCSessionDescription()
-                    {
-                        type = offer.type,
-                        sdp = _sdpMungeUtils.ModifySdp(offer.sdp, enableRed: false, _config.Audio.EnableDtx)
-                    };
-
-                    _logs.Info(
-                        $"Modified SDP, enable red: {_config.Audio.EnableRed}, enable DTX: {_config.Audio.EnableDtx} ");
+                    _logs.Error($"The {nameof(IStreamAudioConfig)} option {nameof(IStreamAudioConfig.EnableDtx)} is temporarily disabled and was ignored. " +
+                                $"This error only notifies that this particular setting does not have any effect currently. Send a support ticket if you need this feature.");
+                    // offer = new RTCSessionDescription()
+                    // {
+                    //     type = offer.type,
+                    //     sdp = _sdpMungeUtils.ModifySdp(offer.sdp, enableRed: false, _config.Audio.EnableDtx)
+                    // };
+                    //
+                    // _logs.Info(
+                    //     $"Modified SDP, enable red: {_config.Audio.EnableRed}, enable DTX: {_config.Audio.EnableDtx} ");
                 }
 
                 try

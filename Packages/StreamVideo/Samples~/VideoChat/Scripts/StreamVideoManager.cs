@@ -66,7 +66,7 @@ namespace StreamVideo.ExampleProject
 
             Debug.Log($"Join call, create: {create}, callId: {callId}");
             await Client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
-            
+
             if (_autoEnableMicrophone)
             {
                 Client.AudioDeviceManager.SetEnabled(true);
@@ -111,7 +111,7 @@ namespace StreamVideo.ExampleProject
             {
                 throw new ArgumentNullException($"{nameof(_musicClip)} is not assigned.");
             }
-            
+
             var audioSource = gameObject.GetComponent<AudioSource>();
             if (audioSource == null)
             {
@@ -123,7 +123,7 @@ namespace StreamVideo.ExampleProject
                 audioSource.Stop();
                 return;
             }
-            
+
             audioSource.clip = _musicClip;
             audioSource.loop = loop;
             audioSource.Play();
@@ -175,7 +175,45 @@ namespace StreamVideo.ExampleProject
             Client.Dispose();
             Client = null;
         }
-        
+
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+        protected void OnApplicationPause(bool pauseStatus)
+        {
+            if (Client == null)
+            {
+                return;
+            }
+
+            if (pauseStatus)
+            {
+                // App is going to background
+                Client.PauseAndroidAudioPlayback();
+                _wasAudioPublishEnabledOnPause = Client.AudioDeviceManager.IsEnabled;
+                _wasVideoPublishEnabledOnPause = Client.VideoDeviceManager.IsEnabled;
+
+                Client.AudioDeviceManager.SetEnabled(false);
+                Client.VideoDeviceManager.SetEnabled(false);
+            }
+            else
+            {
+                // App is coming to foreground
+                Client.ResumeAndroidAudioPlayback();
+
+                if (_wasAudioPublishEnabledOnPause)
+                {
+                    Client.AudioDeviceManager.SetEnabled(true);
+                    _wasAudioPublishEnabledOnPause = false;
+                }
+
+                if (_wasVideoPublishEnabledOnPause)
+                {
+                    Client.VideoDeviceManager.SetEnabled(true);
+                    _wasVideoPublishEnabledOnPause = false;
+                }
+            }
+        }
+#endif
+
         /// <summary>
         /// API success response template when using Stream's Demo Credentials
         /// </summary>
@@ -212,23 +250,26 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private string _userToken = "";
-        
+
         [Header("Background Music in a call")]
         [SerializeField]
         private AudioClip _musicClip = null;
-        
+
         [SerializeField]
         private bool _playOnCallStart = false;
-        
+
         [Header("Auto-enable devices on joining a call")]
         [SerializeField]
         private bool _autoEnableCamera = false;
-        
+
         [SerializeField]
         private bool _autoEnableMicrophone = false;
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
+
+        private bool _wasAudioPublishEnabledOnPause;
+        private bool _wasVideoPublishEnabledOnPause;
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {
@@ -299,9 +340,11 @@ namespace StreamVideo.ExampleProject
 
                 if (_activeCall.Participants == null)
                 {
-                    Debug.LogError("Active call participants were null when trying to end it. call is null " + (call == null));
+                    Debug.LogError("Active call participants were null when trying to end it. call is null " +
+                                   (call == null));
                     return;
                 }
+
                 var callId = _activeCall.Id;
                 var localParticipant = _activeCall.Participants.First(p => p.IsLocalParticipant);
                 Client.SendDebugLogs(call.Id, localParticipant.SessionId);

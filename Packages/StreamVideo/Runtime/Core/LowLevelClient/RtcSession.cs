@@ -670,7 +670,7 @@ namespace StreamVideo.Core.LowLevelClient
         public void PauseAndroidAudioPlayback()
         {
 #if STREAM_NATIVE_AUDIO
-            WebRTC.StopAudioPlayback();
+            WebRTC.MuteAndroidAudioPlayback();
             _logs.Warning("Audio Playback is paused. This stops all audio coming from StreamVideo SDK on Android platform.");
 #else
             throw new NotSupportedException(
@@ -682,7 +682,7 @@ namespace StreamVideo.Core.LowLevelClient
         public void ResumeAndroidAudioPlayback()
         {
 #if STREAM_NATIVE_AUDIO
-            WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+            WebRTC.UnmuteAndroidAudioPlayback();
             _logs.Warning("Audio Playback is resumed. This resumes audio coming from StreamVideo SDK on Android platform.");
 #else
             throw new NotSupportedException(

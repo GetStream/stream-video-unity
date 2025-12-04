@@ -1887,7 +1887,7 @@ namespace Unity.WebRTC
         public static extern void GetAudioProcessingModuleConfig(IntPtr context, out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel);
 
         [DllImport(WebRTC.Lib)]
-        public static extern void SetAndroidAudioUsageMode(IntPtr context, int usage);
+        public static extern void SetAudioUsageMode(IntPtr context, int usage);
 #endif
 
     }

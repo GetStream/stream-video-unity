@@ -78,5 +78,17 @@ namespace StreamVideo.Libs.DeviceManagers
             UnityEngine.Debug.LogWarning($"{nameof(GetAudioInputDevices)} is not supported on this platform: " + UnityEngine.Application.platform);
 #endif
         }
+        
+        /// <summary>
+        /// Gets the current audio route and prints it to Unity console.
+        /// </summary>
+        public static void GetAudioRoute()
+        {
+#if UNITY_ANDROID
+            AndroidAudioDeviceManager.GetAudioRoute();
+#else
+            UnityEngine.Debug.LogWarning($"{nameof(GetAudioRoute)} is not supported on this platform: " + UnityEngine.Application.platform);
+#endif
+        }
     }
 }

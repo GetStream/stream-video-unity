@@ -159,6 +159,19 @@ namespace StreamVideo.Core.DeviceManagers
             base.OnUpdate();
 
             TrySyncMicrophoneAudioSourceReadPosWithMicrophoneWritePos();
+            
+            // Check audio route every second on Android with native audio bindings
+#if UNITY_ANDROID && STREAM_DEBUG_ENABLED
+            if (RtcSession.UseNativeAudioBindings)
+            {
+                var currentTime = Time.time;
+                if (currentTime - _lastAudioRouteCheckTime >= AudioRouteCheckInterval)
+                {
+                    _lastAudioRouteCheckTime = currentTime;
+                    NativeAudioDeviceManager.GetAudioRoute();
+                }
+            }
+#endif
         }
 
         protected override void OnDisposing()
@@ -185,6 +198,9 @@ namespace StreamVideo.Core.DeviceManagers
 
         private NativeAudioDeviceManager.AudioDeviceInfo[] _inputDevicesBuffer
             = new NativeAudioDeviceManager.AudioDeviceInfo[128];
+        
+        private float _lastAudioRouteCheckTime;
+        private const float AudioRouteCheckInterval = 5.0f;
 
         private AudioSource GetOrCreateTargetAudioSource()
         {

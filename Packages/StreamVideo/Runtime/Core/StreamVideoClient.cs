@@ -358,7 +358,7 @@ namespace StreamVideo.Core
         {
 #if STREAM_NATIVE_AUDIO
             WebRTC.SetAndroidAudioUsageMode((Unity.WebRTC.AndroidAudioUsageMode)usageMode);
-            _logs.Warning("Audio Playback is paused. This stops all audio coming from StreamVideo SDK on Android platform.");
+            _logs.Warning("Set audio usage mode to " + Enum.GetName(typeof(AndroidAudioUsageMode), usageMode));
 #else
             throw new NotSupportedException(
                 $"{nameof(SetAndroidAudioUsageMode)} is only supported on Android platform.");

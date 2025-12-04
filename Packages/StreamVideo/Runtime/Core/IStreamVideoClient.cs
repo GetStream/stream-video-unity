@@ -139,5 +139,11 @@ namespace StreamVideo.Core
         /// Call this resume audio playback if it was previously paused using <see cref="PauseAndroidAudioPlayback"/>.
         /// </summary>
         void ResumeAndroidAudioPlayback();
+
+        /// <summary>
+        /// Set Android Audio usage mode
+        /// </summary>
+        /// <param name="usageMode"></param>
+        void SetAndroidAudioUsageMode(AndroidAudioUsageMode usageMode);
     }
 }

@@ -33,6 +33,7 @@ using StreamVideo.Libs.Websockets;
 using Unity.WebRTC;
 using UnityEngine;
 using Cache = StreamVideo.Core.State.Caches.Cache;
+using AndroidAudioUsageMode = StreamVideo.Core.AndroidAudioUsageMode;
 
 namespace StreamVideo.Core
 {
@@ -49,6 +50,24 @@ namespace StreamVideo.Core
         CoordinatorWsDisconnected,
         
         VideoServerDisconnected,
+    }
+    
+    /// <summary>
+    /// Android audio usage modes for Oboe audio streams.
+    /// </summary>
+    public enum AndroidAudioUsageMode
+    {
+        /// <summary>
+        /// Media usage mode - suitable for media playback (e.g., music, video).
+        /// Use this for viewers/consumers in livestream scenarios.
+        /// </summary>
+        Media = 1,
+
+        /// <summary>
+        /// Voice communication usage mode - optimized for voice calls.
+        /// Use this for broadcasters/hosts in livestream scenarios.
+        /// </summary>
+        VoiceCommunication = 2
     }
 
     public delegate void CallHandler(IStreamCall call);
@@ -334,6 +353,17 @@ namespace StreamVideo.Core
         public void PauseAndroidAudioPlayback() => InternalLowLevelClient.RtcSession.PauseAndroidAudioPlayback();
 
         public void ResumeAndroidAudioPlayback() => InternalLowLevelClient.RtcSession.ResumeAndroidAudioPlayback();
+
+        public void SetAndroidAudioUsageMode(AndroidAudioUsageMode usageMode)
+        {
+#if STREAM_NATIVE_AUDIO
+            WebRTC.SetAndroidAudioUsageMode((Unity.WebRTC.AndroidAudioUsageMode)usageMode);
+            _logs.Warning("Set audio usage mode to " + Enum.GetName(typeof(AndroidAudioUsageMode), usageMode));
+#else
+            throw new NotSupportedException(
+                $"{nameof(SetAndroidAudioUsageMode)} is only supported on Android platform.");
+#endif
+        }
 
         #region IStreamVideoClientEventsListener
 

@@ -23,6 +23,29 @@ namespace StreamVideo.Libs.DeviceManagers
         }
         
         /// <summary>
+        /// Gets the current audio route and prints it to Unity console.
+        /// </summary>
+        public static void GetAudioRoute()
+        {
+            var routeId = CallStatic<int>("getAudioRoute");
+            var routeName = GetRouteName(routeId);
+            Debug.Log($"[AndroidAudioDeviceManager] Current audio route: {routeName} (ID: {routeId})");
+        }
+        
+        private static string GetRouteName(int routeId)
+        {
+            switch (routeId)
+            {
+                case 0: return "Earpiece";
+                case 1: return "Speaker";
+                case 2: return "Bluetooth";
+                case 3: return "Wired Headset";
+                case 4: return "USB Headset";
+                default: return $"Unknown ({routeId})";
+            }
+        }
+        
+        /// <summary>
         /// For Android, the devices represent available audio routing options instead of physical devices.
         /// </summary>
         /// <param name="result"></param>

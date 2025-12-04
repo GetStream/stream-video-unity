@@ -424,7 +424,7 @@ namespace Unity.WebRTC
 
         public void SetAndroidAudioUsageMode(int usage)
         {
-            NativeMethods.SetAndroidAudioUsageMode(self, usage);
+            NativeMethods.SetAudioUsageMode(self, usage);
         }
 #endif
 

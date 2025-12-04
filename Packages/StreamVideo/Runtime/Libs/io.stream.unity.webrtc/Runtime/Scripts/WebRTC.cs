@@ -715,7 +715,6 @@ namespace Unity.WebRTC
         None,
     };
 
-#if UNITY_ANDROID && !UNITY_EDITOR
     /// <summary>
     /// Android audio usage modes for Oboe audio streams.
     /// </summary>
@@ -733,7 +732,6 @@ namespace Unity.WebRTC
         /// </summary>
         VoiceCommunication = 2
     }
-#endif
 
     /// <summary>
     ///     Provides utilities and management functions for integrating WebRTC functionality.
@@ -1889,7 +1887,7 @@ namespace Unity.WebRTC
         public static extern void GetAudioProcessingModuleConfig(IntPtr context, out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel);
 
         [DllImport(WebRTC.Lib)]
-        public static extern void SetAndroidAudioUsageMode(IntPtr context, int usage);
+        public static extern void SetAudioUsageMode(IntPtr context, int usage);
 #endif
 
     }

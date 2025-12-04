@@ -1,3 +1,8 @@
+0.8.20:
+
+- Introduce `Client.SetAndroidAudioUsageMode` to allow setting Android audio mode (media or voice communication)
+- Add `NativeAudioDeviceManager.GetAudioRoute()` to easily inspect current audio route on Android for debug purposes
+
 0.8.19:
 
 - Fix for this crash in `unity::webrtc::VideoFrameAdapter::ToI420`

@@ -1153,6 +1153,16 @@ namespace Unity.WebRTC
             Context.StopAudioPlayback();
         }
 
+        public static void MuteAndroidAudioPlayback()
+        {
+            Context.MuteAndroidAudioPlayback();
+        }
+
+        public static void UnmuteAndroidAudioPlayback()
+        {
+            Context.UnmuteAndroidAudioPlayback();
+        }
+
         /// <summary>
         /// Sets the Android audio usage mode for audio playback.
         /// Changing the usage mode during an active call will restart the audio stream.
@@ -1865,6 +1875,12 @@ namespace Unity.WebRTC
 
         [DllImport(WebRTC.Lib)]
         public static extern void StopAudioPlayback(IntPtr context);
+
+        [DllImport(WebRTC.Lib)]
+        public static extern void MuteAndroidAudioPlayback(IntPtr context);
+
+        [DllImport(WebRTC.Lib)]
+        public static extern void UnmuteAndroidAudioPlayback(IntPtr context);
 
         [DllImport(WebRTC.Lib)]
         public static extern void SetAudioProcessingModule(IntPtr context, bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel);

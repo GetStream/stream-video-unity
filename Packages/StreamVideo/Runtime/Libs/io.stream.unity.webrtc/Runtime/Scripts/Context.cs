@@ -412,6 +412,16 @@ namespace Unity.WebRTC
             NativeMethods.StopAudioPlayback(self);
         }
 
+        public void MuteAndroidAudioPlayback()
+        {
+            NativeMethods.MuteAndroidAudioPlayback(self);
+        }
+
+        public void UnmuteAndroidAudioPlayback()
+        {
+            NativeMethods.UnmuteAndroidAudioPlayback(self);
+        }
+
         public void SetAndroidAudioUsageMode(int usage)
         {
             NativeMethods.SetAndroidAudioUsageMode(self, usage);

@@ -176,6 +176,44 @@ namespace StreamVideo.ExampleProject
             Client = null;
         }
         
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+        protected void OnApplicationPause(bool pauseStatus)
+        {
+            if (Client == null)
+            {
+                return;
+            }
+
+            if (pauseStatus)
+            {
+                // App is going to background
+                Client.PauseAndroidAudioPlayback();
+                _wasAudioPublishEnabledOnPause = Client.AudioDeviceManager.IsEnabled;
+                _wasVideoPublishEnabledOnPause = Client.VideoDeviceManager.IsEnabled;
+
+                Client.AudioDeviceManager.SetEnabled(false);
+                Client.VideoDeviceManager.SetEnabled(false);
+            }
+            else
+            {
+                // App is coming to foreground
+                Client.ResumeAndroidAudioPlayback();
+
+                if (_wasAudioPublishEnabledOnPause)
+                {
+                    Client.AudioDeviceManager.SetEnabled(true);
+                    _wasAudioPublishEnabledOnPause = false;
+                }
+
+                if (_wasVideoPublishEnabledOnPause)
+                {
+                    Client.VideoDeviceManager.SetEnabled(true);
+                    _wasVideoPublishEnabledOnPause = false;
+                }
+            }
+        }
+#endif
+        
         /// <summary>
         /// API success response template when using Stream's Demo Credentials
         /// </summary>
@@ -229,6 +267,9 @@ namespace StreamVideo.ExampleProject
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
+        
+        private bool _wasAudioPublishEnabledOnPause;
+        private bool _wasVideoPublishEnabledOnPause;
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {

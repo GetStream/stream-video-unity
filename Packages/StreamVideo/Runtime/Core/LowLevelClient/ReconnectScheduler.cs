@@ -10,7 +10,16 @@ namespace StreamVideo.Core.LowLevelClient
         event Action ReconnectionScheduled;
 
         void Reset();
+
+        void SetTarget(IReconnectTarget target);
     }
+
+    internal interface IReconnectTarget
+    {
+        event ConnectionStateChangeHandler ConnectionStateChanged;
+        ConnectionState ConnectionState { get; }
+    }
+    
     /// <summary>
     /// Schedules next reconnection time based on the past attempts and network availability
     /// </summary>
@@ -44,29 +53,26 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public ReconnectScheduler(ITimeService timeService, IStreamVideoLowLevelClient lowLevelClient,
-            INetworkMonitor networkMonitor, Func<bool> shouldReconnect)
+        public ReconnectScheduler(ITimeService timeService, INetworkMonitor networkMonitor, Func<bool> shouldReconnect)
         {
             _shouldReconnect = shouldReconnect ?? throw new ArgumentNullException(nameof(shouldReconnect));
-            _client = lowLevelClient ?? throw new ArgumentNullException(nameof(lowLevelClient));
             _timeService = timeService ?? throw new ArgumentNullException(nameof(timeService));
             _networkMonitor = networkMonitor ?? throw new ArgumentNullException(nameof(networkMonitor));
 
             _networkMonitor.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
+        }
 
-            _client.Connected += OnConnected;
-            //_client.Reconnecting += OnReconnecting;
-            _client.ConnectionStateChanged += OnConnectionStateChanged;
+        //StreamTODO: refactor so that each WS instance creates the reconnector internally and injects its instance
+        public void SetTarget(IReconnectTarget target)
+        {
+            UnsubscribeFromTarget();
+            _target = target ?? throw new ArgumentNullException(nameof(target));
+            SubscribeToTarget();
         }
         
         public void Dispose()
         {
-            if (_client != null)
-            {
-                _client.Connected -= OnConnected;
-                //_client.Reconnecting -= OnReconnecting;
-                _client.ConnectionStateChanged -= OnConnectionStateChanged;
-            }
+            UnsubscribeFromTarget();
         }
 
         public void SetReconnectStrategySettings(ReconnectStrategy reconnectStrategy, float? exponentialMinInterval,
@@ -114,7 +120,6 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         //StreamTodo: connection info could be split to separate interface
-        private readonly IStreamVideoLowLevelClient _client;
         private readonly ITimeService _timeService;
         private readonly INetworkMonitor _networkMonitor;
 
@@ -122,6 +127,28 @@ namespace StreamVideo.Core.LowLevelClient
         private bool _isStopped;
         private double? _nextReconnectTime;
         private Func<bool> _shouldReconnect;
+        
+        private IReconnectTarget _target;
+        
+        private void SubscribeToTarget()
+        {
+            if (_target == null)
+            {
+                return;
+            }
+            
+            _target.ConnectionStateChanged += OnConnectionStateChanged;
+        }
+
+        private void UnsubscribeFromTarget()
+        {
+            if (_target == null)
+            {
+                return;
+            }
+            
+            _target.ConnectionStateChanged -= OnConnectionStateChanged;
+        }
 
         private void TryScheduleNextReconnectTime()
         {
@@ -198,8 +225,8 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            if (_client.ConnectionState == ConnectionState.Connected ||
-                _client.ConnectionState == ConnectionState.Connecting)
+            if (_target.ConnectionState == ConnectionState.Connected ||
+                _target.ConnectionState == ConnectionState.Connecting)
             {
                 return;
             }

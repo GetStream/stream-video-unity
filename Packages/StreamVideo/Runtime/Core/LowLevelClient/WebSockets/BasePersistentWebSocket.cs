@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
-    internal abstract class BasePersistentWebSocket : IPersistentWebSocket
+    internal abstract class BasePersistentWebSocket : IPersistentWebSocket, IReconnectTarget
     {
         public event ConnectionStateChangeHandler ConnectionStateChanged;
         public event Action Connected;
@@ -206,6 +206,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             TimeService = timeService;
             Logs = logs;
             WebsocketClient = websocketClient ?? throw new ArgumentNullException(nameof(websocketClient));
+
+            _reconnectScheduler.SetTarget(this);
 
             WebsocketClient.ConnectionFailed += OnConnectionFailed;
             WebsocketClient.Disconnected += OnDisconnected;

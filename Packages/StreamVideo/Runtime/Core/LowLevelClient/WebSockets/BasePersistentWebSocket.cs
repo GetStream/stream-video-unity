@@ -76,6 +76,14 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
+            // StreamTODO: revise this. The wrapper state should be perfectly in sync with the inner WebSocket
+            // Most likely this class should fully rely on WS state and not maintain it's own state
+            // This check should be handled already by the ConnectionState.IsValidToConnect() above
+            if (WebsocketClient != null && (WebsocketClient.IsConnecting || WebsocketClient.IsConnected))
+            {
+                return;
+            }
+
 #if STREAM_DEBUG_ENABLED
             Logs.Info($"{GetType()} TryToReconnect");
 #endif

@@ -16,6 +16,8 @@ namespace StreamVideo.Libs.Websockets
         
         int ReceiveQueueCount { get; }
         int SendQueueCount { get; }
+        bool IsConnected { get; }
+        bool IsConnecting { get; }
 
         bool TryDequeueMessage(out byte[] message);
 

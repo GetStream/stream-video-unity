@@ -9,7 +9,7 @@ namespace StreamVideo.Core.LowLevelClient
 
     internal static class AppDisposedDuringOperationExceptionExt
     {
-        public static void ThrowDisposedDuringOperationIfNull(this StreamPeerConnection streamPeerConnection)
+        public static void ThrowDisposedDuringOperationIfNull(this PeerConnectionBase streamPeerConnection)
         {
             if (streamPeerConnection == null)
             {

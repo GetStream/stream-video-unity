@@ -140,8 +140,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public StreamCall ActiveCall { get; private set; }
 
-        public StreamPeerConnection Subscriber { get; private set; }
-        public StreamPeerConnection Publisher { get; private set; }
+        public SubscriberPeerConnection Subscriber { get; private set; }
+        public PublisherPeerConnection Publisher { get; private set; }
 
         #region IInputProvider
 
@@ -1909,8 +1909,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
-            Subscriber = new StreamPeerConnection(_logs, StreamPeerType.Subscriber, iceServers,
-                this, _config.Audio, _publisherVideoSettings, _subscriberTracer);
+            Subscriber = new SubscriberPeerConnection(_logs, iceServers, _subscriberTracer);
             Subscriber.IceTrickled += OnIceTrickled;
             Subscriber.StreamAdded += OnSubscriberStreamAdded;
         }
@@ -1934,8 +1933,7 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: Handle default settings -> speaker off, mic off, cam off
             var callSettings = ActiveCall.Settings;
 
-            Publisher = new StreamPeerConnection(_logs, StreamPeerType.Publisher, iceServers,
-                this, _config.Audio, _publisherVideoSettings, _publisherTracer);
+            Publisher = new PublisherPeerConnection(_logs, iceServers, this, _config.Audio, _publisherVideoSettings, _publisherTracer);
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;

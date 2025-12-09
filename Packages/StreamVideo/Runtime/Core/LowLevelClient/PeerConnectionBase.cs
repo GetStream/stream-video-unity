@@ -156,14 +156,6 @@ namespace StreamVideo.Core.LowLevelClient
             PeerConnection.OnConnectionStateChange -= OnConnectionStateChange;
             PeerConnection.OnTrack -= OnTrack;
 
-#if STREAM_NATIVE_AUDIO
-            if (PublisherAudioTrack != null)
-            {
-                //StreamTODO: call this when PublisherAudioTrack is set to null
-                PublisherAudioTrack.StopLocalAudioCapture();
-            }
-#endif
-
             _tracer?.Trace(PeerConnectionTraceKey.Close, null);
             PeerConnection.Close();
             PeerConnection.Dispose();

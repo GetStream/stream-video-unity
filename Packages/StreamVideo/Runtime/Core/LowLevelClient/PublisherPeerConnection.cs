@@ -64,15 +64,12 @@ namespace StreamVideo.Core.LowLevelClient
             _publisherVideoSettings = publisherVideoSettings ??
                                       throw new ArgumentNullException(nameof(publisherVideoSettings));
 
-            //if (_peerType == StreamPeerType.Publisher)
-            {
-                _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
-                _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
-                _mediaInputProvider.VideoInputChanged += OnVideoInputChanged;
+            _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
+            _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
+            _mediaInputProvider.VideoInputChanged += OnVideoInputChanged;
 
-                _mediaInputProvider.PublisherAudioTrackIsEnabledChanged += OnPublisherAudioTrackIsEnabledChanged;
-                _mediaInputProvider.PublisherVideoTrackIsEnabledChanged += OnPublisherVideoTrackIsEnabledChanged;
-            }
+            _mediaInputProvider.PublisherAudioTrackIsEnabledChanged += OnPublisherAudioTrackIsEnabledChanged;
+            _mediaInputProvider.PublisherVideoTrackIsEnabledChanged += OnPublisherVideoTrackIsEnabledChanged;
         }
         
         public PublisherVideoSettings GetLatestVideoSettings()
@@ -93,13 +90,10 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         public void InitPublisherTracks()
         {
-            //if (_peerType == StreamPeerType.Publisher)
-            {
-                ReplacePublisherAudioTrack();
-                ReplacePublisherVideoTrack();
+            ReplacePublisherAudioTrack();
+            ReplacePublisherVideoTrack();
 
-                // StreamTodo: VideoSceneInput is not handled
-            }
+            // StreamTodo: VideoSceneInput is not handled
         }
 
         protected override void OnUpdate()
@@ -135,6 +129,14 @@ namespace StreamVideo.Core.LowLevelClient
                 _publisherVideoTrackTexture.Release();
                 _publisherVideoTrackTexture = null;
             }
+
+#if STREAM_NATIVE_AUDIO
+            if (PublisherAudioTrack != null)
+            {
+                //StreamTODO: call this when PublisherAudioTrack is set to null
+                PublisherAudioTrack.StopLocalAudioCapture();
+            }
+#endif
 
             PublisherAudioTrack?.Stop();
             PublisherVideoTrack?.Stop();
@@ -359,7 +361,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (_mediaInputProvider.VideoInput == null)
             {
                 throw new ArgumentException(
-                    $"Can't create publisher video track because `{nameof(_mediaInputProvider.VideoInput)}` is not null");
+                    $"Can't create publisher video track because `{nameof(_mediaInputProvider.VideoInput)}` is null");
             }
 
             var gfxType = SystemInfo.graphicsDeviceType;

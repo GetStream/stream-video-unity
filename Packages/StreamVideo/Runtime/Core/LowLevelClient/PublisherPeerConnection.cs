@@ -73,14 +73,12 @@ namespace StreamVideo.Core.LowLevelClient
         public PublisherPeerConnection(ILogs logs, IEnumerable<ICEServer> iceServers,
             IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig,
             PublisherVideoSettings publisherVideoSettings, ISfuClient sfuClient, Tracer tracer, ISerializer serializer)
-            : base(logs, StreamPeerType.Publisher, iceServers, tracer, serializer)
+            : base(logs, StreamPeerType.Publisher, iceServers, tracer, serializer, sfuClient)
         {
             _mediaInputProvider = mediaInputProvider ?? throw new ArgumentNullException(nameof(mediaInputProvider));
             _audioConfig = audioConfig ?? throw new ArgumentNullException(nameof(audioConfig));
             _publisherVideoSettings = publisherVideoSettings ??
                                       throw new ArgumentNullException(nameof(publisherVideoSettings));
-
-            _sfuClient = sfuClient ?? throw new ArgumentNullException(nameof(sfuClient));
 
             _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
@@ -161,7 +159,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var request = new SetPublisherRequest
                 {
                     Sdp = offer.sdp,
-                    SessionId = _sfuClient.SessionId,
+                    SessionId = SfuClient.SessionId,
                 };
                 request.Tracks.AddRange(tracks);
 
@@ -172,7 +170,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 //StreamTODO: add cancellation token support
                 // 3. Send SetPublisher request to get the SFU SDP answer
-                var result = await _sfuClient.RpcCallAsync(request, GeneratedAPI.SetPublisher,
+                var result = await SfuClient.RpcCallAsync(request, GeneratedAPI.SetPublisher,
                     nameof(GeneratedAPI.SetPublisher),
                     GetCurrentCancellationTokenOrDefault(), response => response.Error);
 
@@ -227,10 +225,7 @@ namespace StreamVideo.Core.LowLevelClient
             AddTrickledIceCandidates();
         }
 
-        private CancellationToken GetCurrentCancellationTokenOrDefault()
-        {
-            return default; //StreamTODO: implement, take the token from RtcSession
-        }
+
 
         private void AddTrickledIceCandidates()
         {
@@ -483,7 +478,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly IMediaInputProvider _mediaInputProvider;
         private readonly IStreamAudioConfig _audioConfig;
-        private readonly ISfuClient _sfuClient;
 
         private RenderTexture _publisherVideoTrackTexture;
         private VideoStreamTrack _publisherVideoTrack;

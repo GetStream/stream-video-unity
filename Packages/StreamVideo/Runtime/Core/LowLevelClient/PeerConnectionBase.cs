@@ -37,12 +37,13 @@ namespace StreamVideo.Core.LowLevelClient
         public RTCSignalingState SignalingState => PeerConnection.SignalingState;
 
         protected PeerConnectionBase(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
-            Tracer tracer, ISerializer serializer)
+            Tracer tracer, ISerializer serializer, ISfuClient sfuClient)
         {
             Logs = logs ?? throw new ArgumentNullException(nameof(logs));
             PeerType = peerType;
             Tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
             Serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            SfuClient = sfuClient ?? throw new ArgumentNullException(nameof(sfuClient));
 
             var rtcIceServers = new List<RTCIceServer>();
 
@@ -183,6 +184,7 @@ namespace StreamVideo.Core.LowLevelClient
         protected StreamPeerType PeerType { get; }
         protected ISerializer Serializer { get; }
         protected Tracer Tracer { get; }
+        protected ISfuClient SfuClient { get; }
         
         protected bool IsIceRestarting { get; set; }
         
@@ -214,6 +216,11 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 ReconnectionNeeded?.Invoke(WebsocketReconnectStrategy.Rejoin, errorReason, PeerType);
             }
+        }
+        
+        protected CancellationToken GetCurrentCancellationTokenOrDefault()
+        {
+            return default; //StreamTODO: implement, take the token from RtcSession
         }
         
         private bool IsRemoteDescriptionAvailable

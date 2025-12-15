@@ -1934,7 +1934,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
-            Subscriber = new SubscriberPeerConnection(_logs, iceServers, _subscriberTracer, _serializer);
+            Subscriber = new SubscriberPeerConnection(_logs, iceServers, _subscriberTracer, _serializer, sfuClient: this);
             Subscriber.IceTrickled += OnIceTrickled;
             Subscriber.StreamAdded += OnSubscriberStreamAdded;
             Subscriber.ReconnectionNeeded += OnReconnectionNeeded;

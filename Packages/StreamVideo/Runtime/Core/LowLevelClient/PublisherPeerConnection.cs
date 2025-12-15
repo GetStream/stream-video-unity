@@ -1,13 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.Models.Sfu;
+using StreamVideo.Core.Sfu;
 using StreamVideo.Core.Trace;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
+using StreamVideo.Libs.Serialization;
+using StreamVideo.Libs.Utils;
+using StreamVideo.v1.Sfu.Models;
+using StreamVideo.v1.Sfu.Signal;
 using Unity.WebRTC;
 using UnityEngine;
+using TrackType = StreamVideo.v1.Sfu.Models.TrackType;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -15,6 +24,13 @@ namespace StreamVideo.Core.LowLevelClient
     {
         public event Action<VideoStreamTrack> PublisherVideoTrackChanged;
         public event Action<AudioStreamTrack> PublisherAudioTrackChanged;
+
+        public const ulong MaxPublishAudioBitrate = 500_000;
+        public const ulong MaxPublishVideoBitrate = 1_200_000;
+
+        public const ulong FullPublishVideoBitrate = 1_200_000;
+        public const ulong HalfPublishVideoBitrate = MaxPublishVideoBitrate / 2;
+        public const ulong QuarterPublishVideoBitrate = MaxPublishVideoBitrate / 4;
 
         public MediaStream PublisherVideoMediaStream { get; private set; }
         public MediaStream PublisherAudioMediaStream { get; private set; }
@@ -56,13 +72,15 @@ namespace StreamVideo.Core.LowLevelClient
 
         public PublisherPeerConnection(ILogs logs, IEnumerable<ICEServer> iceServers,
             IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig,
-            PublisherVideoSettings publisherVideoSettings, Tracer tracer)
-            : base(logs, StreamPeerType.Publisher, iceServers, tracer)
+            PublisherVideoSettings publisherVideoSettings, ISfuClient sfuClient, Tracer tracer, ISerializer serializer)
+            : base(logs, StreamPeerType.Publisher, iceServers, tracer, serializer)
         {
             _mediaInputProvider = mediaInputProvider ?? throw new ArgumentNullException(nameof(mediaInputProvider));
             _audioConfig = audioConfig ?? throw new ArgumentNullException(nameof(audioConfig));
             _publisherVideoSettings = publisherVideoSettings ??
                                       throw new ArgumentNullException(nameof(publisherVideoSettings));
+
+            _sfuClient = sfuClient ?? throw new ArgumentNullException(nameof(sfuClient));
 
             _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
@@ -71,7 +89,7 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider.PublisherAudioTrackIsEnabledChanged += OnPublisherAudioTrackIsEnabledChanged;
             _mediaInputProvider.PublisherVideoTrackIsEnabledChanged += OnPublisherVideoTrackIsEnabledChanged;
         }
-        
+
         public PublisherVideoSettings GetLatestVideoSettings()
         {
             if (_publisherVideoSettings == null)
@@ -108,7 +126,280 @@ namespace StreamVideo.Core.LowLevelClient
                 Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
             }
         }
-        
+
+        protected override Task RestartIce()
+        {
+            Logs.InfoIfDebug($"[{PeerType}] Restarting ICE connection");
+            if (IsIceRestarting || SignalingState == RTCSignalingState.HaveLocalOffer)
+            {
+                Logs.InfoIfDebug($"[{PeerType}] ICE restart is already in progress");
+                return Task.CompletedTask;
+            }
+
+            return Negotiate(iceRestart: true);
+        }
+
+        //StreamTODO: Delete RtcSession.OnPublisherNegotiationNeeded
+        private async Task Negotiate(bool iceRestart = false)
+        {
+            try
+            {
+                var options = new RTCOfferAnswerOptions
+                {
+                    iceRestart = iceRestart
+                };
+
+                IsIceRestarting = iceRestart;
+
+                // 1. Create offer
+                var offer = await PeerConnection.CreateOfferAsync(ref options, GetCurrentCancellationTokenOrDefault());
+
+                // 2. Set local description
+                await PeerConnection.SetLocalDescriptionAsync(ref offer, GetCurrentCancellationTokenOrDefault());
+
+                var tracks = GetAnnouncedTracks(offer.sdp);
+                var request = new SetPublisherRequest
+                {
+                    Sdp = offer.sdp,
+                    SessionId = _sfuClient.SessionId,
+                };
+                request.Tracks.AddRange(tracks);
+
+#if STREAM_DEBUG_ENABLED
+                var serializedRequest = Serializer.Serialize(request);
+                Logs.Warning($"SetPublisherRequest:\n{serializedRequest}");
+#endif
+
+                //StreamTODO: add cancellation token support
+                // 3. Send SetPublisher request to get the SFU SDP answer
+                var result = await _sfuClient.RpcCallAsync(request, GeneratedAPI.SetPublisher,
+                    nameof(GeneratedAPI.SetPublisher),
+                    GetCurrentCancellationTokenOrDefault(), response => response.Error);
+
+#if STREAM_DEBUG_ENABLED
+                Logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
+#endif
+
+                if (result.Error != null)
+                {
+                    //StreamTODO: handle/log error from SFU
+                    // throw exception because the processs failed
+                }
+
+                try
+                {
+                    // 4. Set remote description
+                    await SetRemoteDescriptionAsync(new RTCSessionDescription()
+                    {
+                        type = RTCSdpType.Answer,
+                        sdp = result.Sdp
+                    }, GetCurrentCancellationTokenOrDefault());
+
+                    AddPendingIceCandidates();
+                }
+                catch (Exception e)
+                {
+                    Tracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription,
+                        e.Message ?? "unknown");
+                    throw;
+                }
+            }
+            catch (Exception e)
+            {
+                // Negotiation failed, rollback to the previous state
+                if (SignalingState == RTCSignalingState.HaveLocalOffer)
+                {
+                    var rollbackDesc = new RTCSessionDescription
+                    {
+                        type = RTCSdpType.Rollback
+                    };
+                    await PeerConnection.SetLocalDescriptionAsync(ref rollbackDesc,
+                        GetCurrentCancellationTokenOrDefault());
+                }
+
+                throw;
+            }
+            finally
+            {
+                iceRestart = false;
+            }
+
+            AddTrickledIceCandidates();
+        }
+
+        private CancellationToken GetCurrentCancellationTokenOrDefault()
+        {
+            return default; //StreamTODO: implement, take the token from RtcSession
+        }
+
+        private void AddTrickledIceCandidates()
+        {
+            
+        }
+
+        /// <summary>
+        ///    * Returns a list of tracks that are currently being published.
+        /// * @param sdp an optional SDP to extract the `mid` from.
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerable<TrackInfo> GetAnnouncedTracks(string sdp)
+        {
+            foreach (var transceiver in GetTransceivers())
+            {
+                if (transceiver.Sender?.Track != null)
+                {
+                    continue;
+                }
+
+                var trackInfo = GenerateTrackInfo(transceiver, sdp);
+                if (trackInfo != null)
+                {
+                    yield return trackInfo;
+                }
+            }
+        }
+
+        private TrackInfo GenerateTrackInfo(RTCRtpTransceiver transceiver, string sdp)
+        {
+            var track = transceiver.Sender.Track;
+            if (track == null)
+            {
+#if STREAM_DEBUG_ENABLED
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("Error: Track was NULL. Transceiver dump:");
+                sb.AppendLine(DebugObjectPrinter.PrintObject(transceiver));
+                sb.AppendLine("SDP:");
+                sb.AppendLine(sdp);
+                Logs.Error(sb.ToString());
+#endif
+                return null;
+            }
+
+            var isTrackLive = (track.ReadyState == TrackState.Live);
+
+            //StreamTODO: verify why this was needed in the past. The JS client just takes the track.id
+            var trackId = transceiver.Sender.Track.Kind == TrackKind.Video
+                ? ExtractVideoTrackId(sdp)
+                : transceiver.Sender.Track.Id;
+
+            var mid = ExtractMid(transceiver, sdp);
+
+            var trackInfo = new TrackInfo
+            {
+                TrackId = trackId,
+                TrackType = track.Kind.ToInternalEnum(),
+                Mid = mid,
+                Dtx = false, //StreamTODO: enable this option but test on multiple devices
+                Stereo = false, //StreamTODO: implement stereo
+                Red = false, //StreamTODO: enable this option but test on multiple devices
+                Muted = !isTrackLive,
+                //Codec = null, //StreamTODO: implement option to force a code. Beware that in in the current Unity webrtc package not every codec works with simulcast
+                //PublishOptionId = 0 //StreamTODO implement publish options
+            };
+
+            if (track.Kind == TrackKind.Video)
+            {
+                //Add layers
+            }
+
+            return trackInfo;
+        }
+
+        private IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings)
+        {
+#if STREAM_DEBUG_ENABLED
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("GetPublisherVideoLayers:");
+#endif
+            foreach (var encoding in encodings)
+            {
+                var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
+                var resolution = GetLatestVideoSettings().MaxResolution;
+                var width = (uint)(resolution.Width / scaleBy);
+                var height = (uint)(resolution.Height / scaleBy);
+
+                var quality = EncodingsToVideoQuality(encoding);
+
+#if STREAM_DEBUG_ENABLED
+                sb.AppendLine(
+                    $"- rid: {encoding.rid} quality: {quality}, scaleBy: {scaleBy}, width: {width}, height: {height}, bitrate: {encoding.maxBitrate}");
+#endif
+
+                yield return new VideoLayer
+                {
+                    Rid = string.IsNullOrEmpty(encoding.rid) ? "f" : encoding.rid,
+                    VideoDimension = new VideoDimension
+                    {
+                        Width = width,
+                        Height = height
+                    },
+                    Bitrate = (uint)(encoding.maxBitrate ?? 0),
+                    Fps = encoding.maxFramerate.GetValueOrDefault(30),
+                    Quality = quality,
+                };
+            }
+
+#if STREAM_DEBUG_ENABLED
+            Logs.Warning(sb.ToString());
+#endif
+        }
+
+        private static VideoQuality EncodingsToVideoQuality(RTCRtpEncodingParameters encodings)
+        {
+            //StreamTodo: probably remove this or put as DEBUG_ONLY, this is only needed when testing with single video layer because `rid` is set only when simulcasting
+            if (string.IsNullOrEmpty(encodings.rid))
+            {
+                switch (encodings.maxBitrate)
+                {
+                    case FullPublishVideoBitrate: return VideoQuality.High;
+                    case HalfPublishVideoBitrate: return VideoQuality.Mid;
+                    default: return VideoQuality.LowUnspecified;
+                }
+            }
+
+            switch (encodings.rid)
+            {
+                case "f": return VideoQuality.High;
+                case "h": return VideoQuality.Mid;
+                default: return VideoQuality.LowUnspecified;
+            }
+        }
+
+        private string ExtractMid(RTCRtpTransceiver transceiver, string sdp)
+        {
+            if (!string.IsNullOrEmpty(transceiver.Mid))
+            {
+                return transceiver.Mid;
+            }
+
+            //StreamTODO: 
+
+#if STREAM_DEBUG_ENABLED
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Error: Track MID was NULL. Transceiver dump:");
+            sb.AppendLine(DebugObjectPrinter.PrintObject(transceiver));
+            sb.AppendLine("SDP:");
+            sb.AppendLine(sdp);
+            Logs.Error(sb.ToString());
+#endif
+
+            return null;
+        }
+
+        private string ExtractVideoTrackId(string sdp)
+        {
+            var lines = sdp.Split("\n");
+            var mediaStreamRecord
+                = lines.Single(l => l.StartsWith($"a=msid:{PublisherVideoMediaStream.Id}"));
+            var parts = mediaStreamRecord.Split(" ");
+            var result = parts[1];
+
+            // StreamTodo: verify if this is needed
+            result = result.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
+
+            return result;
+        }
+
         protected override void OnDisposing()
         {
             _mediaInputProvider.AudioInputChanged -= OnAudioInputChanged;
@@ -192,6 +483,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly IMediaInputProvider _mediaInputProvider;
         private readonly IStreamAudioConfig _audioConfig;
+        private readonly ISfuClient _sfuClient;
 
         private RenderTexture _publisherVideoTrackTexture;
         private VideoStreamTrack _publisherVideoTrack;
@@ -279,8 +571,15 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        //StreamTODO: this should not be called when updating the track
+        //Considering splitting into AddTransceiver, UpdateTransceiver
         private void CreatePublisherAudioTransceiverAndTrack()
         {
+            if (_audioTransceiver != null)
+            {
+                throw new InvalidOperationException("");
+            }
+
             var audioTransceiverInit = BuildTransceiverInit(TrackKind.Audio, _publisherVideoSettings);
             _audioTransceiver = PeerConnection.AddTransceiver(TrackKind.Audio, audioTransceiverInit);
 
@@ -293,6 +592,9 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 ForceCodec(_audioTransceiver, AudioCodecKeyRed, TrackKind.Audio);
             }
+
+            // StreamTODO: better handle async??
+            Negotiate().LogIfFailed();
         }
 
         private void SetPublisherActiveAudioTrack(AudioStreamTrack audioTrack)
@@ -328,6 +630,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreatePublisherVideoTransceiver()
         {
+            if (_videoTransceiver != null)
+            {
+                throw new InvalidOperationException("");
+            }
+
             var videoTransceiverInit = BuildTransceiverInit(TrackKind.Video, _publisherVideoSettings);
 
             PublisherVideoMediaStream = new MediaStream();
@@ -343,6 +650,9 @@ namespace StreamVideo.Core.LowLevelClient
             ForceCodec(_videoTransceiver, VideoCodecKeyH264, TrackKind.Video);
 
             VideoSender = _videoTransceiver.Sender;
+
+            // StreamTODO: better handle async??
+            Negotiate().LogIfFailed();
         }
 
         private void ReplaceActiveVideoTrack(VideoStreamTrack videoTrack)

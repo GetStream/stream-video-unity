@@ -12,6 +12,9 @@ using StreamVideo.Core.Models;
 using StreamVideo.Core.Trace;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
+using StreamVideo.Libs.Serialization;
+using StreamVideo.Libs.Utils;
+using StreamVideo.v1.Sfu.Models;
 using Unity.WebRTC;
 
 namespace StreamVideo.Core.LowLevelClient
@@ -24,18 +27,22 @@ namespace StreamVideo.Core.LowLevelClient
         public event Action<MediaStream> StreamAdded;
 
         public event Action NegotiationNeeded;
-        public event Action<RTCIceCandidate, StreamPeerType> IceTrickled; //StreamTODO: remove StreamPeerType
+        public event Action<RTCIceCandidate, StreamPeerType> IceTrickled; //StreamTODO: remove StreamPeerType?
 
         public event Action Disconnected;
+
+        //StreamTODO: change to custom delegate
+        public event Action<WebsocketReconnectStrategy, string, StreamPeerType> ReconnectionNeeded;
 
         public RTCSignalingState SignalingState => PeerConnection.SignalingState;
 
         protected PeerConnectionBase(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
-            Tracer tracer)
+            Tracer tracer, ISerializer serializer)
         {
             Logs = logs ?? throw new ArgumentNullException(nameof(logs));
-            _peerType = peerType;
-            _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
+            PeerType = peerType;
+            Tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
+            Serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
 
             var rtcIceServers = new List<RTCIceServer>();
 
@@ -65,36 +72,41 @@ namespace StreamVideo.Core.LowLevelClient
             PeerConnection.OnNegotiationNeeded += OnNegotiationNeeded;
             PeerConnection.OnConnectionStateChange += OnConnectionStateChange;
             PeerConnection.OnTrack += OnTrack;
+            
+            //StreamTODO: add tracer "create"
+            
+            //StreamTODO: review missing trace events
         }
-
-        public void RestartIce() => PeerConnection.RestartIce();
-
+        
         public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer,
             CancellationToken cancellationToken)
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{_peerType}] Set LocalDesc:\n" + offer.sdp);
+            Logs.Warning($"[{PeerType}] Set LocalDesc:\n" + offer.sdp);
 #endif
-            _tracer?.Trace(PeerConnectionTraceKey.SetLocalDescription, offer.sdp);
+            Tracer?.Trace(PeerConnectionTraceKey.SetLocalDescription, offer.sdp);
             return PeerConnection.SetLocalDescriptionAsync(ref offer, cancellationToken);
         }
 
         public async Task SetRemoteDescriptionAsync(RTCSessionDescription offer, CancellationToken cancellationToken)
         {
-            _tracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, offer.sdp);
+            Tracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, offer.sdp);
 
             await PeerConnection.SetRemoteDescriptionAsync(ref offer, cancellationToken);
 
 #if STREAM_DEBUG_ENABLED
             Logs.Warning(
-                $"[{_peerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer:\n{offer.sdp}");
+                $"[{PeerType}] Set RemoteDesc & send pending ICE Candidates: {_pendingIceCandidates.Count}, IsRemoteDescriptionAvailable: {IsRemoteDescriptionAvailable}, offer:\n{offer.sdp}");
 #endif
+        }
 
+        public void AddPendingIceCandidates()
+        {
             foreach (var iceCandidate in _pendingIceCandidates)
             {
                 if (!PeerConnection.AddIceCandidate(iceCandidate))
                 {
-                    Logs.Error($"[{_peerType}] AddIceCandidate failed: {iceCandidate.Print()}");
+                    Logs.Error($"[{PeerType}] AddIceCandidate failed: {iceCandidate.Print()}");
                 }
             }
         }
@@ -103,9 +115,9 @@ namespace StreamVideo.Core.LowLevelClient
         {
 #if STREAM_DEBUG_ENABLED
             Logs.Warning(
-                $"[{_peerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
+                $"[{PeerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
 #endif
-            _tracer?.Trace(PeerConnectionTraceKey.AddIceCandidate, iceCandidateInit.candidate);
+            Tracer?.Trace(PeerConnectionTraceKey.AddIceCandidate, iceCandidateInit.candidate);
 
             var iceCandidate = new RTCIceCandidate(iceCandidateInit);
             if (!IsRemoteDescriptionAvailable)
@@ -120,19 +132,20 @@ namespace StreamVideo.Core.LowLevelClient
         public async Task<RTCSessionDescription> CreateOfferAsync(CancellationToken cancellationToken)
         {
             var offer = await PeerConnection.CreateOfferAsync(cancellationToken);
-            _tracer?.Trace(PeerConnectionTraceKey.CreateOffer, offer.sdp);
+            Tracer?.Trace(PeerConnectionTraceKey.CreateOffer, offer.sdp);
             return offer;
         }
 
         public async Task<RTCSessionDescription> CreateAnswerAsync(CancellationToken cancellationToken)
         {
             var answer = await PeerConnection.CreateAnswerAsync(cancellationToken);
-            _tracer?.Trace(PeerConnectionTraceKey.CreateAnswer, answer.sdp);
+            Tracer?.Trace(PeerConnectionTraceKey.CreateAnswer, answer.sdp);
             return answer;
         }
 
+        //StreamTODO: perhaps no need to make a native call and just return _videoTransceiver, _audioTransceiver
         public IEnumerable<RTCRtpTransceiver> GetTransceivers() => PeerConnection.GetTransceivers();
-
+        
         public void Update()
         {
             OnUpdate();
@@ -146,7 +159,7 @@ namespace StreamVideo.Core.LowLevelClient
             OnDisposing();
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"Disposing PeerConnection [{_peerType}]");
+            Logs.Warning($"Disposing PeerConnection [{PeerType}]");
 #endif
 
             PeerConnection.OnIceCandidate -= OnIceCandidate;
@@ -156,17 +169,22 @@ namespace StreamVideo.Core.LowLevelClient
             PeerConnection.OnConnectionStateChange -= OnConnectionStateChange;
             PeerConnection.OnTrack -= OnTrack;
 
-            _tracer?.Trace(PeerConnectionTraceKey.Close, null);
+            Tracer?.Trace(PeerConnectionTraceKey.Close, null);
             PeerConnection.Close();
             PeerConnection.Dispose();
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"Disposed PeerConnection [{_peerType}]");
+            Logs.Warning($"Disposed PeerConnection [{PeerType}]");
 #endif
         }
 
         protected RTCPeerConnection PeerConnection { get; }
         protected ILogs Logs { get; }
+        protected StreamPeerType PeerType { get; }
+        protected ISerializer Serializer { get; }
+        protected Tracer Tracer { get; }
+        
+        protected bool IsIceRestarting { get; set; }
         
         protected virtual void OnDisposing()
         {
@@ -174,6 +192,28 @@ namespace StreamVideo.Core.LowLevelClient
         
         protected virtual void OnUpdate()
         {
+        }
+        
+        protected abstract Task RestartIce();
+
+        // On JS this is intentionally not an async method
+        protected async Task TryRestartIce()
+        {
+            const string errorReason = "restartICE() failed, initiating reconnect";
+            try
+            {
+                await RestartIce();
+            }
+            catch (NegotiationException negotiationException)
+            {
+                var isSignalLostError = (negotiationException.SfuErrorCode == ErrorCode.ParticipantSignalLost);
+                var strategy = isSignalLostError ? WebsocketReconnectStrategy.Fast : WebsocketReconnectStrategy.Rejoin;
+                ReconnectionNeeded?.Invoke(strategy, errorReason, PeerType);
+            }
+            catch (Exception e)
+            {
+                ReconnectionNeeded?.Invoke(WebsocketReconnectStrategy.Rejoin, errorReason, PeerType);
+            }
         }
         
         private bool IsRemoteDescriptionAvailable
@@ -191,52 +231,140 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
         }
-        
-        private readonly StreamPeerType _peerType;
-        private readonly Tracer _tracer;
+
         private readonly List<RTCIceCandidate> _pendingIceCandidates = new List<RTCIceCandidate>();
+
+        //StreamTODO: properly handle async
+        //Perhaps LogIfFailed() should be in the very start of the call chain
+        private void HandleConnectionStateUpdate(RTCIceConnectionState connectionState)
+        {
+            //TODO: ignore if calling state Offline or Reconnecting -> handleConnectionStateUpdate()
+
+            if (IsIceRestarting)
+            {
+                return;
+            }
+
+            switch (connectionState)
+            {
+                case RTCIceConnectionState.Failed:
+                    TryRestartIce().LogIfFailed();
+                    break;
+                case RTCIceConnectionState.Disconnected:
+                    
+                    // TODO: here JS client does a timeout, checks if still Disconnected or Failed and only then triggers the restart
+                    // But it looks like this is because the browser does some restarting which we don't have
+                    
+                    TryRestartIce().LogIfFailed();
+                    break;
+                case RTCIceConnectionState.Connected:
+                    
+                    // TODO: here, we'd clear the timeout if the Disconnected state initiated the timeout
+                    
+                    break;
+            }
+        }
 
         private void OnIceCandidate(RTCIceCandidate candidate)
         {
 #if STREAM_DEBUG_ENABLED
             Logs.Warning(
-                $"[{_peerType}] OnIceCandidate: {(candidate == null ? "null (gathering complete)" : candidate.ToString())}");
+                $"[{PeerType}] OnIceCandidate: {(candidate == null ? "null (gathering complete)" : candidate.ToString())}");
 #endif
 
             if (candidate == null)
             {
                 // Null candidate signals that ICE gathering is complete
-                _tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, "null (ICE gathering complete)");
+                Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, "null (ICE gathering complete)");
                 return;
             }
 
-            _tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, candidate.ToString());
-            IceTrickled?.Invoke(candidate, _peerType);
+            Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, candidate.ToString());
+            IceTrickled?.Invoke(candidate, PeerType);
+        }
+        
+        private void OnConnectionStateChange(RTCPeerConnectionState state)
+        {
+#if STREAM_DEBUG_ENABLED
+            Logs.Warning($"[{PeerType}] OnConnectionStateChange to: {state}");
+#endif
+            Tracer?.Trace(PeerConnectionTraceKey.OnConnectionStateChange, state.ToString());
+            
+            //StreamTODO: trace getstats:
+            /*
+             *    if (this.tracer && (state === 'connected' || state === 'failed')) {
+      try {
+        const stats = await this.stats.get();
+        this.tracer.trace('getstats', stats.delta);
+      } catch (err) {
+        this.tracer.trace('getstatsOnFailure', (err as Error).toString());
+      }
+    }
+             * 
+             */
+
+            //StreamTODO: probably remove this after reconnection flow is completed.
+            // We don't want SDK integrator trying to reconnect on his own
+            // Then again, if he wants to know the state change it should be possible
+            // So perhaps a global stateChanged event
+            if (state == RTCPeerConnectionState.Disconnected || state == RTCPeerConnectionState.Failed)
+            {
+                Disconnected?.Invoke();
+            }
+            
+            // Failed state means we need a new PC. It's not possible to recover
+            if (state == RTCPeerConnectionState.Failed)
+            {
+                ReconnectionNeeded?.Invoke(WebsocketReconnectStrategy.Rejoin, "Connection failed", PeerType);
+                return;
+            }
+            
+            HandleConnectionStateUpdate(ToIceState(state));
+
+            return;
+
+            //StreamTODO: get rid of this. HandleConnectionStateUpdate() should depend on abstract state
+            RTCIceConnectionState ToIceState(RTCPeerConnectionState connectionState)
+            {
+                switch (connectionState)
+                {
+                    case RTCPeerConnectionState.New: return RTCIceConnectionState.New;
+                    case RTCPeerConnectionState.Connecting: return RTCIceConnectionState.Checking; 
+                    case RTCPeerConnectionState.Connected: return RTCIceConnectionState.Connected;
+                    case RTCPeerConnectionState.Disconnected: return RTCIceConnectionState.Disconnected;
+                    case RTCPeerConnectionState.Failed: return RTCIceConnectionState.Failed;
+                    case RTCPeerConnectionState.Closed: return RTCIceConnectionState.Closed;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(connectionState), connectionState, null);
+                }
+            }
         }
 
         private void OnIceConnectionChange(RTCIceConnectionState state)
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{_peerType}] OnIceConnectionChange to: " + state);
+            Logs.Warning($"[{PeerType}] OnIceConnectionChange to: " + state);
 #endif
-            _tracer?.Trace(PeerConnectionTraceKey.OnIceConnectionStateChange, state.ToString());
+            Tracer?.Trace(PeerConnectionTraceKey.OnIceConnectionStateChange, state.ToString());
+            
+            HandleConnectionStateUpdate(state);
         }
 
         private void OnIceGatheringStateChange(RTCIceGatheringState state)
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{_peerType}] OnIceGatheringStateChange to: " + state);
+            Logs.Warning($"[{PeerType}] OnIceGatheringStateChange to: " + state);
 #endif
-            _tracer?.Trace(PeerConnectionTraceKey.OnIceGatheringStateChange, state.ToString());
+            Tracer?.Trace(PeerConnectionTraceKey.OnIceGatheringStateChange, state.ToString());
         }
 
         private void OnNegotiationNeeded()
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{_peerType}] OnNegotiationNeeded");
+            Logs.Warning($"[{PeerType}] OnNegotiationNeeded");
 #endif
 
-            _tracer?.Trace(PeerConnectionTraceKey.OnNegotiationNeeded, null);
+            Tracer?.Trace(PeerConnectionTraceKey.OnNegotiationNeeded, null);
 
             //StreamTodo: take into account race conditions https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
             //We want to set the local description if signalingState is stable - we need to check it because state could change during async operations
@@ -244,23 +372,10 @@ namespace StreamVideo.Core.LowLevelClient
             NegotiationNeeded?.Invoke();
         }
 
-        private void OnConnectionStateChange(RTCPeerConnectionState state)
-        {
-#if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{_peerType}] OnConnectionStateChange to: {state}");
-#endif
-            _tracer?.Trace(PeerConnectionTraceKey.OnConnectionStateChange, state.ToString());
-
-            if (state == RTCPeerConnectionState.Disconnected)
-            {
-                Disconnected?.Invoke();
-            }
-        }
-
         private void OnTrack(RTCTrackEvent trackEvent)
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{_peerType}] OnTrack {trackEvent.Track.GetType()}");
+            Logs.Warning($"[{PeerType}] OnTrack {trackEvent.Track.GetType()}");
 #endif
 
             var trackType = trackEvent.Track is AudioStreamTrack ? "audio" : "video";
@@ -272,11 +387,11 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (!string.IsNullOrEmpty(streamIds))
             {
-                _tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId} {streamIds}");
+                Tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId} {streamIds}");
             }
             else
             {
-                _tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId}");
+                Tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId}");
             }
 
             foreach (var stream in trackEvent.Streams)

@@ -37,6 +37,16 @@ using StreamVideo.Core.Trace;
 
 namespace StreamVideo.Core.LowLevelClient
 {
+    internal interface ISfuClient
+    {
+        string SessionId { get; }
+        
+        Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
+            Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,
+            CancellationToken cancellationToken, Func<TResponse, StreamVideo.v1.Sfu.Models.Error> getError,
+            bool preLog = false, bool postLog = true);
+    }
+
     public delegate void ParticipantTrackChangedHandler(IStreamVideoCallParticipant participant, IStreamTrack track);
 
     public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
@@ -50,7 +60,7 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
 
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
-    internal sealed class RtcSession : IMediaInputProvider, IDisposable
+    internal sealed class RtcSession : IMediaInputProvider, ISfuClient, IDisposable
     {
         // Static session counter to track the number of sessions created
         private static int _sessionCounter = 0;
@@ -463,8 +473,8 @@ namespace StreamVideo.Core.LowLevelClient
                     WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
 #endif
                 }
-                
-                foreach(var p in ActiveCall.Participants)
+
+                foreach (var p in ActiveCall.Participants)
                 {
                     NotifyParticipantJoined(p.SessionId);
                 }
@@ -579,23 +589,6 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _videoAudioSyncBenchmark?.Finish();
 #endif
-        }
-
-        //StreamTodo: call by call.reconnectOrSwitchSfu()
-        public void Reconnect()
-        {
-            //StreamTodo: Add fastReconnect trace here when implementing full reconnect logic like Android SDK
-            //Example: _publisherTracer?.Trace(PeerConnectionTraceKey.FastReconnect, reconnectDetails);
-
-            //StreamTodo: When implementing IceRestart RPC call, add error tracing:
-            //try {
-            //    await RpcCallAsync(iceRestartRequest, GeneratedAPI.IceRestart, nameof(GeneratedAPI.IceRestart), response => response.Error);
-            //} catch (Exception e) {
-            //    _subscriberTracer?.Trace(PeerConnectionTraceKey.IceRestartError, e.Message ?? "unknown");
-            //}
-
-            Subscriber?.RestartIce();
-            Publisher?.RestartIce();
         }
 
         public void UpdateRequestedVideoResolution(string participantSessionId, VideoResolution videoResolution)
@@ -1123,6 +1116,8 @@ namespace StreamVideo.Core.LowLevelClient
                     await Subscriber.SetRemoteDescriptionAsync(rtcSessionDescription,
                         GetCurrentCancellationTokenOrDefault());
                     Subscriber.ThrowDisposedDuringOperationIfNull();
+
+                    Subscriber.AddPendingIceCandidates();
                 }
                 catch (Exception e)
                 {
@@ -1263,6 +1258,25 @@ namespace StreamVideo.Core.LowLevelClient
             participant.NotifyTrackEnabled(trackType, isEnabled);
 
             ActiveCall.NotifyTrackStateChanged(participant, trackType, isEnabled);
+        }
+
+        private async void OnReconnectionNeeded(WebsocketReconnectStrategy strategy, string reason,
+            StreamPeerType peerType)
+        {
+            try
+            {
+                await Reconnect(strategy, reason);
+            }
+            catch (Exception e)
+            {
+                //Js logs reconnect errors as warning only
+                _logs.Warning($"[Reconnect] Reconnection error from {peerType}, Reason: `{reason}`. Error: `{e}`");
+            }
+        }
+
+        private Task Reconnect(WebsocketReconnectStrategy strategy, string reason)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task UpdateMuteStateAsync(TrackType trackType, bool isEnabled)
@@ -1421,7 +1435,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)
         {
-
             // StreamTODO: Implement OnSfuAudioLevelChanged
         }
 
@@ -1461,13 +1474,19 @@ namespace StreamVideo.Core.LowLevelClient
             // StreamTODO: Implement OnSfuWebSocketOnCallEnded
         }
 
-        //StreamTodo: implement retry strategy like in Android SDK
-        //If possible, take into account if we the update is still valid e.g. 
-        private async Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
+        private Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,
             CancellationToken cancellationToken, Func<TResponse, StreamVideo.v1.Sfu.Models.Error> getError,
-            bool preLog = false,
-            bool postLog = true)
+            bool preLog = false, bool postLog = true)
+            => ((ISfuClient)this).RpcCallAsync(request, rpcCallAsync, debugRequestName, cancellationToken, getError,
+                preLog, postLog);
+
+        //StreamTodo: implement retry strategy like in Android SDK
+        //If possible, take into account if we the update is still valid e.g. 
+        async Task<TResponse> ISfuClient.RpcCallAsync<TRequest, TResponse>(TRequest request,
+            Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,
+            CancellationToken cancellationToken, Func<TResponse, StreamVideo.v1.Sfu.Models.Error> getError,
+            bool preLog, bool postLog)
         {
             //StreamTodo: use rpcCallAsync.GetMethodInfo().Name; instead debugRequestName
 
@@ -1572,8 +1591,10 @@ namespace StreamVideo.Core.LowLevelClient
         private async void OnPublisherNegotiationNeeded()
         {
 #if STREAM_DEBUG_ENABLED
-            Debug.LogWarning("OnPublisherNegotiationNeeded");
+            Debug.LogWarning("OnPublisherNegotiationNeeded. IGNORED.");
 #endif
+
+            return;
 
             try
             {
@@ -1598,8 +1619,9 @@ namespace StreamVideo.Core.LowLevelClient
                 //This is most likely issue with the webRTC lib
                 if (_config.Audio.EnableDtx)
                 {
-                    _logs.Error($"The {nameof(IStreamAudioConfig)} option {nameof(IStreamAudioConfig.EnableDtx)} is temporarily disabled and was ignored. " +
-                                $"This error only notifies that this particular setting does not have any effect currently. Send a support ticket if you need this feature.");
+                    _logs.Error(
+                        $"The {nameof(IStreamAudioConfig)} option {nameof(IStreamAudioConfig.EnableDtx)} is temporarily disabled and was ignored. " +
+                        $"This error only notifies that this particular setting does not have any effect currently. Send a support ticket if you need this feature.");
                     // offer = new RTCSessionDescription()
                     // {
                     //     type = offer.type,
@@ -1667,6 +1689,8 @@ namespace StreamVideo.Core.LowLevelClient
                         type = RTCSdpType.Answer,
                         sdp = result.Sdp
                     }, GetCurrentCancellationTokenOrDefault());
+
+                    Publisher.AddPendingIceCandidates();
                 }
                 catch (Exception e)
                 {
@@ -1791,6 +1815,7 @@ namespace StreamVideo.Core.LowLevelClient
             return sdpOffer;
         }
 
+        //StreamTODO: delete
         private IEnumerable<VideoLayer> GetPublisherVideoLayers(IEnumerable<RTCRtpEncodingParameters> encodings)
         {
 #if STREAM_DEBUG_ENABLED
@@ -1909,9 +1934,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
-            Subscriber = new SubscriberPeerConnection(_logs, iceServers, _subscriberTracer);
+            Subscriber = new SubscriberPeerConnection(_logs, iceServers, _subscriberTracer, _serializer);
             Subscriber.IceTrickled += OnIceTrickled;
             Subscriber.StreamAdded += OnSubscriberStreamAdded;
+            Subscriber.ReconnectionNeeded += OnReconnectionNeeded;
         }
 
         private void DisposeSubscriber()
@@ -1920,6 +1946,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 Subscriber.IceTrickled -= OnIceTrickled;
                 Subscriber.StreamAdded -= OnSubscriberStreamAdded;
+                Subscriber.ReconnectionNeeded -= OnReconnectionNeeded;
                 Subscriber.Dispose();
                 Subscriber = null;
             }
@@ -1933,11 +1960,13 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: Handle default settings -> speaker off, mic off, cam off
             var callSettings = ActiveCall.Settings;
 
-            Publisher = new PublisherPeerConnection(_logs, iceServers, this, _config.Audio, _publisherVideoSettings, _publisherTracer);
+            Publisher = new PublisherPeerConnection(_logs, iceServers, this, _config.Audio, _publisherVideoSettings,
+                sfuClient: this, _publisherTracer, _serializer);
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.NegotiationNeeded += OnPublisherNegotiationNeeded;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
             Publisher.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
+            Publisher.ReconnectionNeeded += OnReconnectionNeeded;
             Publisher.Disconnected += PublisherOnDisconnected;
 
             Publisher.InitPublisherTracks();
@@ -1954,7 +1983,8 @@ namespace StreamVideo.Core.LowLevelClient
                 Publisher.NegotiationNeeded -= OnPublisherNegotiationNeeded;
                 Publisher.PublisherAudioTrackChanged -= OnPublisherAudioTrackChanged;
                 Publisher.PublisherVideoTrackChanged -= OnPublisherVideoTrackChanged;
-                Publisher.Disconnected += PublisherOnDisconnected;
+                Publisher.ReconnectionNeeded -= OnReconnectionNeeded;
+                Publisher.Disconnected -= PublisherOnDisconnected;
                 Publisher.Dispose();
                 Publisher = null;
             }

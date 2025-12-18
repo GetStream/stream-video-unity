@@ -143,8 +143,10 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             //StreamTodo: move to factory
-            var coordinatorReconnect = new ReconnectScheduler(_timeService, _networkMonitor, shouldReconnect: () => true);
-            var sfuReconnect = new ReconnectScheduler(_timeService, _networkMonitor, shouldReconnect: () => RtcSession.ShouldSfuAttemptToReconnect());
+            var coordinatorReconnect
+                = new ReconnectScheduler(_timeService, _networkMonitor, shouldReconnect: () => true);
+            var sfuReconnect = new ReconnectScheduler(_timeService, _networkMonitor,
+                shouldReconnect: () => RtcSession.ShouldSfuAttemptToReconnect());
 
             //StreamTodo: move to factory
             _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, authProvider: this,
@@ -159,7 +161,7 @@ namespace StreamVideo.Core.LowLevelClient
                 lowLevelClient: this);
 
             RtcSession = new RtcSession(_sfuWebSocketWrapper, CreateSessionHttpClient, _logs, _serializer, _timeService,
-                _config);
+                lowLevelClient: this, _config);
 
             RegisterCoordinatorEventHandlers();
 
@@ -229,6 +231,7 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.Warning("No location hint - retrying to fetch it");
                 await UpdateLocationHintAsync(cancellationToken);
             }
+
             // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
             if (_locationHint.IsNullOrEmpty())
             {
@@ -289,7 +292,10 @@ namespace StreamVideo.Core.LowLevelClient
         internal event Action<CallSessionStartedEventInternalDTO> InternalCallSessionStartedEvent;
         internal event Action<CallSessionParticipantJoinedEventInternalDTO> InternalCallSessionParticipantJoinedEvent;
         internal event Action<CallSessionParticipantLeftEventInternalDTO> InternalCallSessionParticipantLeftEvent;
-        internal event Action<CallSessionParticipantCountsUpdatedEventInternalDTO> InternalCallSessionParticipantCountsUpdatedEvent;
+
+        internal event Action<CallSessionParticipantCountsUpdatedEventInternalDTO>
+            InternalCallSessionParticipantCountsUpdatedEvent;
+
         internal event Action<BlockedUserEventInternalDTO> InternalCallUnblockedUserEvent;
         internal event Action<ConnectionErrorEventInternalDTO> InternalConnectionErrorEvent;
         internal event Action<CustomVideoEventInternalDTO> InternalCustomVideoEvent;
@@ -297,7 +303,8 @@ namespace StreamVideo.Core.LowLevelClient
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
         internal RtcSession RtcSession { get; }
 
-        internal Task StartCallSessionAsync(StreamCall call, CancellationToken cancellationToken) => RtcSession.StartAsync(call, cancellationToken);
+        internal Task StartCallSessionAsync(StreamCall call, CancellationToken cancellationToken)
+            => RtcSession.StartAsync(call, cancellationToken);
 
         //internal Task StopCallSessionAsync() => RtcSession.StopAsync(); //StreamTodo: remove
 
@@ -345,6 +352,7 @@ namespace StreamVideo.Core.LowLevelClient
                 _connectionId = _coordinatorWS.ConnectionId;
                 Connected?.Invoke();
             }
+
             ConnectionStateChanged?.Invoke(previous, current);
 
             if (current == ConnectionState.Disconnected)
@@ -352,7 +360,7 @@ namespace StreamVideo.Core.LowLevelClient
                 Disconnected?.Invoke();
             }
         }
-        
+
         private void OnSfuWebSocketConnectionStateChanged(ConnectionState previous, ConnectionState current)
         {
 #if STREAM_DEBUG_ENABLED
@@ -364,8 +372,6 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        //StreamTodo: cancellation token
-        //StreamTodo: make few attempts + can be awaited by the JoinCallAsync + support reconnections
         private async Task UpdateLocationHintAsync(CancellationToken cancellationToken)
         {
             var headers = new List<KeyValuePair<string, IEnumerable<string>>>();

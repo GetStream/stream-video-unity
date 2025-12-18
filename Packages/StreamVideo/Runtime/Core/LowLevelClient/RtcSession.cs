@@ -14,6 +14,7 @@ using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
+using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Models.Sfu;
@@ -39,12 +40,45 @@ namespace StreamVideo.Core.LowLevelClient
 {
     internal interface ISfuClient
     {
-        string SessionId { get; }
-        
+        SessionID SessionId { get; }
+
         Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,
             CancellationToken cancellationToken, Func<TResponse, StreamVideo.v1.Sfu.Models.Error> getError,
             bool preLog = false, bool postLog = true);
+    }
+
+    internal readonly struct JoinCallData
+    {
+        public readonly StreamCallType Type;
+        public readonly string Id;
+        public readonly bool Create;
+        public readonly bool Ring;
+        public readonly bool Notify;
+
+        //StreamTODO: map all CallRequestInternalDTO fields here and create helper method like ToInternalCallRequest
+
+        public JoinCallData(StreamCallType type, string id, bool create, bool ring, bool notify)
+        {
+            Type = type;
+            Id = id;
+            Create = create;
+            Ring = ring;
+            Notify = notify;
+        }
+    }
+
+    internal class SessionID
+    {
+        public bool IsEmpty => string.IsNullOrEmpty(_sessionID);
+        
+        public void Regenerate() => _sessionID = Guid.NewGuid().ToString();
+
+        public void Clear() => _sessionID = string.Empty;
+        
+        public static implicit operator string(SessionID s) => s._sessionID;
+        
+        private string _sessionID;
     }
 
     public delegate void ParticipantTrackChangedHandler(IStreamVideoCallParticipant participant, IStreamTrack track);
@@ -237,12 +271,13 @@ namespace StreamVideo.Core.LowLevelClient
             return !GetCurrentCancellationTokenOrDefault().IsCancellationRequested;
         }
 
-        public string SessionId { get; private set; } = "(empty)";
+        public SessionID SessionId { get; } = new SessionID();
 
         public RtcSession(SfuWebSocket sfuWebSocket, Func<IStreamCall, HttpClient> httpClientFactory, ILogs logs,
-            ISerializer serializer, ITimeService timeService,
+            ISerializer serializer, ITimeService timeService, StreamVideoLowLevelClient lowLevelClient,
             IStreamClientConfig config)
         {
+            _lowLevelClient = lowLevelClient;
             _httpClientFactory = httpClientFactory;
             _config = config;
             _timeService = timeService;
@@ -419,21 +454,22 @@ namespace StreamVideo.Core.LowLevelClient
 
                 CreateSubscriber(iceServers);
 
-                SessionId = Guid.NewGuid().ToString();
+                SessionId.Regenerate();
 
 #if STREAM_DEBUG_ENABLED
                 _logs.Info($"START Session: " + SessionId);
 #endif
 
                 // We don't set initial offer as local. Later on we set generated answer as a local
-                var offer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
+                var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
+                var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
 
-                if (string.IsNullOrEmpty(offer.sdp))
+                if (string.IsNullOrEmpty(subscriberOffer.sdp))
                 {
                     throw new ArgumentException("Generated offer SDP is null or empty");
                 }
 
-                _sfuWebSocket.SetSessionData(SessionId, offer.sdp, sfuUrl, sfuToken);
+                _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
                 await _sfuWebSocket.ConnectAsync(cancellationToken);
 
 #if STREAM_TESTS_ENABLED && UNITY_EDITOR
@@ -509,6 +545,106 @@ namespace StreamVideo.Core.LowLevelClient
                     _joinCallCts = null;
                 }
             }
+        }
+
+        //StreamTODO: cancellation token
+        public async Task DoJoin(JoinCallData joinCallData, CancellationToken cancellationToken)
+        {
+            var prevCallState = CallState;
+
+            _joinCallData = joinCallData;
+
+            CallState = CallingState.Joining;
+
+            var isMigration = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
+            var isRejoin = _reconnectStrategy == WebsocketReconnectStrategy.Rejoin;
+            var isFast = _reconnectStrategy == WebsocketReconnectStrategy.Fast;
+
+            var callCid = joinCallData.Type + ":" + joinCallData.Id;
+            var callExists = _cache.Calls.TryGet(callCid, out var call);
+            var streamCall = (IStreamCall)call;
+
+            if (!callExists || isRejoin || isMigration)
+            {
+                try
+                {
+                    streamCall = await ExecuteJoinRequest(joinCallData, cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    if (CallState != CallingState.Offline)
+                    {
+                        CallState = prevCallState;
+                    }
+
+                    throw;
+                }
+            }
+
+            var isWsHealthy = _sfuWebSocket.IsHealthy;
+            var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
+
+            if (isRejoin || SessionId.IsEmpty)
+            {
+                SessionId.Regenerate();
+            }
+            
+            if (startNewSfuWsSession)
+            {
+                if (_sfuWebSocket.ConnectionState == ConnectionState.Connected)
+                {
+                    await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure,
+                        $"Join call. {nameof(isRejoin)}:{isRejoin}, {nameof(isMigration)}:{isMigration}, {nameof(isWsHealthy)}:{isWsHealthy}");
+                }
+                
+                var sfuUrl = call.Credentials.Server.Url;
+                var sfuToken = call.Credentials.Token;
+                var iceServers = call.Credentials.IceServers;
+                
+                // We don't set initial offer as local. Later on we set generated answer as a local
+                var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
+                var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
+                
+                _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
+                await _sfuWebSocket.ConnectAsync(cancellationToken);
+            }
+        }
+
+        private async Task<IStreamCall> ExecuteJoinRequest(JoinCallData data, CancellationToken cancellationToken)
+        {
+            // StreamTodo: check state if we don't have an active session already
+            var locationHint = await _lowLevelClient.GetLocationHintAsync(cancellationToken);
+
+            //StreamTodo: move this logic to call.Join, this way user can create call object and join later on 
+
+            // StreamTodo: expose params
+            var joinCallRequest = new JoinCallRequestInternalDTO
+            {
+                Create = data.Create,
+                Data = new CallRequestInternalDTO
+                {
+                    Custom = null,
+                    Members = null,
+                    SettingsOverride = null,
+
+                    //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
+                    StartsAt = DateTimeOffset.Now,
+                    Team = null
+                },
+                Location = locationHint,
+                MembersLimit = 0,
+                MigratingFrom = null,
+                Notify = data.Notify,
+                Ring = data.Ring
+            };
+
+            var joinCallResponse
+                = await _lowLevelClient.InternalVideoClientApi.JoinCallAsync(data.Type, data.Id, joinCallRequest);
+            var streamCall = _cache.TryCreateOrUpdate(joinCallResponse);
+
+            //StreamTODO: add ring accept logic. Check JS doJoinRequest
+
+            return streamCall;
         }
 
         public async Task StopAsync(string reason = "")
@@ -737,6 +873,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private CancellationTokenSource _joinCallCts;
         private CancellationTokenSource _activeCallCts;
+
+        private TaskCompletionSource<bool> _joinTaskCompletionSource;
 
         private void ClearSession()
         {
@@ -1274,9 +1412,118 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private Task Reconnect(WebsocketReconnectStrategy strategy, string reason)
+        //StreamTODO: add triggering from SFU WS closed.
+        // In JS -> Call.ts -> onSignalClose -> handleSfuSignalClose -> reconnect
+        //StreamTODO: add triggering from network changed -> js Call.ts "network.changed"
+        private async Task Reconnect(WebsocketReconnectStrategy strategy, string reason)
+        {
+            var ignoredStates = new[]
+                { CallingState.Reconnecting, CallingState.Migrating, CallingState.ReconnectingFailed };
+            if (ignoredStates.Any(s => s == CallState))
+            {
+                return;
+            }
+
+            _reconnectStrategy = strategy;
+            _reconnectReason = reason;
+
+            var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left };
+
+            // Try get the latest state from the server. State might have changed while we were offline
+            try
+            {
+                //StreamTODO: execute get call to refresh the state in cache
+            }
+            catch (Exception e)
+            {
+                CallState = CallingState.ReconnectingFailed;
+            }
+
+            var attempt = 0;
+            var reconnectStartTime = DateTime.UtcNow;
+
+            do
+            {
+                // StreamTODO: consider give up timeout. JS has it
+
+                // Only increment attempts if the strategy is not FAST
+                if (_reconnectStrategy != WebsocketReconnectStrategy.Fast)
+                {
+                    _reconnectAttempts++;
+                }
+
+                try
+                {
+                    _logs.Info("Reconnect with strategy: " + _reconnectStrategy);
+
+                    switch (_reconnectStrategy)
+                    {
+                        case WebsocketReconnectStrategy.Unspecified:
+                        case WebsocketReconnectStrategy.Disconnect:
+
+                            // Log warning
+
+                            break;
+                        case WebsocketReconnectStrategy.Fast:
+                            await ReconnectFast();
+                            break;
+                        case WebsocketReconnectStrategy.Rejoin:
+                            await ReconnectRejoin();
+                            break;
+                        case WebsocketReconnectStrategy.Migrate:
+                            await ReconnectMigrate();
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            } while (finishedStates.All(s => s != CallState));
+        }
+
+        //move
+        private WebsocketReconnectStrategy _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
+        private string _reconnectReason;
+        private int _reconnectAttempts;
+        private StreamVideoLowLevelClient _lowLevelClient;
+        private JoinCallData _joinCallData;
+
+        private async Task ReconnectFast()
+        {
+            _reconnectStrategy = WebsocketReconnectStrategy.Fast;
+            CallState = CallingState.Reconnecting;
+            await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
+
+            //StreamTODO: update call state, execute call Get here
+        }
+
+        private async Task ReconnectRejoin()
+        {
+            _reconnectStrategy = WebsocketReconnectStrategy.Rejoin;
+            CallState = CallingState.Reconnecting;
+            await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
+
+            await RestorePublishedTracks();
+            await RestoreSubscribedTracks();
+        }
+
+        private Task ReconnectMigrate()
         {
             throw new NotImplementedException();
+        }
+
+        private async Task RestorePublishedTracks()
+        {
+            // the tracks need to be restored in their original order of publishing
+            // otherwise, we might get `m-lines order mismatch` errors
+        }
+
+        private async Task RestoreSubscribedTracks()
+        {
         }
 
         private async Task UpdateMuteStateAsync(TrackType trackType, bool isEnabled)
@@ -1377,18 +1624,38 @@ namespace StreamVideo.Core.LowLevelClient
             ActiveCall.UpdateFromSfu(dominantSpeakerChanged, _cache);
         }
 
-        private void OnSfuWebSocketOnError(SfuError obj)
+        private void OnSfuWebSocketOnError(SfuError sfuError)
         {
-            _sfuTracer?.Trace(PeerConnectionTraceKey.SfuError, obj);
-            if (CallState == CallingState.Offline)
+            _sfuTracer?.Trace(PeerConnectionTraceKey.SfuError, sfuError);
+
+            var reconnectionStrategy = sfuError.ReconnectStrategy;
+
+            _logs.WarningIfDebug(
+                $"Sfu Error - Code: {sfuError.Error_.Code}, Message: {sfuError.Error_.Message}, ShouldRetry: {sfuError.Error_.ShouldRetry}");
+
+            switch (reconnectionStrategy)
             {
-                return;
+                case WebsocketReconnectStrategy.Unspecified:
+                    break;
+                case WebsocketReconnectStrategy.Disconnect:
+
+                    //StreamTODO: leve the call
+
+                    break;
+                case WebsocketReconnectStrategy.Fast:
+                case WebsocketReconnectStrategy.Rejoin:
+                case WebsocketReconnectStrategy.Migrate:
+
+                    //StreamTODO: should this be awaited an this method should be async void?
+                    var reason
+                        = $"SFU Error -> msg: {sfuError.Error_.Message}, code: {sfuError.Error_.Code}, should retry: {sfuError.Error_.ShouldRetry}";
+                    Reconnect(reconnectionStrategy, reason).LogIfFailed();
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        $"Unhandled {nameof(sfuError)} case: `{reconnectionStrategy}` in {nameof(OnSfuWebSocketOnError)}");
             }
-
-            _logs.Error(
-                $"Sfu Error - Code: {obj.Error_.Code}, Message: {obj.Error_.Message}, ShouldRetry: {obj.Error_.ShouldRetry}");
-
-            //StreamTODO: add event here
         }
 
         private void OnSfuPinsUpdated(PinsChanged pinsChanged)
@@ -1934,7 +2201,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
-            Subscriber = new SubscriberPeerConnection(_logs, iceServers, _subscriberTracer, _serializer, sfuClient: this);
+            Subscriber = new SubscriberPeerConnection(_logs, iceServers, _subscriberTracer, _serializer,
+                sfuClient: this);
             Subscriber.IceTrickled += OnIceTrickled;
             Subscriber.StreamAdded += OnSubscriberStreamAdded;
             Subscriber.ReconnectionNeeded += OnReconnectionNeeded;

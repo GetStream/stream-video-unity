@@ -229,7 +229,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void AddTrickledIceCandidates()
         {
-            
+            //StreamTODO: in JS this subscribes to ICE trickle. Figure out if our way is correct
         }
 
         /// <summary>

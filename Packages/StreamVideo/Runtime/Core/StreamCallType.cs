@@ -16,12 +16,12 @@ namespace StreamVideo.Core
         public static readonly StreamCallType Default = new StreamCallType("default");
 
         /// <summary>
-        /// pre configured for a workflow around requesting permissions to speak
+        /// pre-configured for a workflow around requesting permissions to speak
         /// </summary>
         public static StreamCallType AudioRoom => new StreamCallType("audio_room");
 
         /// <summary>
-        /// pre configured for livestream use cases, access to calls is granted to all authenticated users
+        /// pre-configured for livestream use cases, access to calls is granted to all authenticated users
         /// </summary>
         public static StreamCallType Livestream => new StreamCallType("livestream");
 

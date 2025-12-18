@@ -50,8 +50,13 @@ namespace StreamVideo.Core.LowLevelClient
                 Logs.Warning($"ICERestartRequest:\n{serializedRequest}");
 #endif
 
-                await SfuClient.RpcCallAsync(request, GeneratedAPI.IceRestart, nameof(GeneratedAPI.IceRestart),
+                var result = await SfuClient.RpcCallAsync(request, GeneratedAPI.IceRestart, nameof(GeneratedAPI.IceRestart),
                     GetCurrentCancellationTokenOrDefault(), response => response.Error);
+                
+                if (result.Error != null)
+                {
+                    throw new NegotiationException(result.Error.Code);
+                }
             }
             catch (Exception e)
             {

@@ -46,6 +46,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         
         public int SendQueueCount => WebsocketClient.SendQueueCount;
 
+        public bool IsHealthy => JoinReceived && ConnectionState == ConnectionState.Connected;
+        
+        public bool JoinReceived { get; private set; }
+
         public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs,
@@ -56,16 +60,19 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _sdkVersion = sdkVersion;
         }
 
-        public void SetSessionData(string sessionId, string sdpOffer, string sfuUrl, string sfuToken)
+        public void InitNewSession(string sessionId, string sfuUrl, string sfuToken, string subscriberOfferSdp, string publisherOfferSdp)
         {
             _sfuToken = sfuToken;
             _sfuUrl = sfuUrl;
-            _sdpOffer = sdpOffer;
+            _subscriberOfferSdp = subscriberOfferSdp;
+            _subscriberOfferSdp = publisherOfferSdp;
             _sessionId = sessionId;
             
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"[SFU WS] SetSessionData: sessionId: {_sessionId}, sdpOffer: {_sdpOffer}, sfuUrl: {_sfuUrl}, sfuToken: {_sfuToken}");
+            Logs.Info($"[SFU WS] SetSessionData: sessionId: {_sessionId}, sdpOffer: {_subscriberOfferSdp}, sfuUrl: {_sfuUrl}, sfuToken: {_sfuToken}");
 #endif
+
+            JoinReceived = false;
         }
 
         public void SendLeaveCallRequest(string reason = "")
@@ -132,16 +139,18 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 throw new ArgumentException($"{nameof(_sfuToken)} is null or empty");
             }
 
-            _connectUserTaskSource = new TaskCompletionSource<bool>(cancellationToken);
+            _joinEventReceivedCompletionSource = new TaskCompletionSource<bool>(cancellationToken);
 
             try
             {
+                JoinReceived = false;
+                
                 //StreamTOdo: implement missing fields: PublisherSdp, ReconnectDetails
                 var joinRequest = new JoinRequest
                 {
                     Token = _sfuToken,
                     SessionId = _sessionId,
-                    SubscriberSdp = _sdpOffer,
+                    SubscriberSdp = _subscriberOfferSdp,
                     ClientDetails = new ClientDetails
                     {
                         Sdk = new Sdk
@@ -180,20 +189,18 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuUri = UriFactory.CreateSfuConnectionUri(_sfuUrl);
 
                 await WebsocketClient.ConnectAsync(sfuUri, cancellationToken);
-
-                //StreamTodo: review when is the actual "connected state" - perhaps not the WS connection itself but receiving an appropriate event should set the flag
-                //e.g. are we able to send any data as soon as the connection is established?
-
                 WebsocketClient.Send(sfuJoinRequestEncoded);
 
-                await _connectUserTaskSource.Task;
+                await _joinEventReceivedCompletionSource.Task;
             }
             catch (Exception e)
             {
-                if (!_connectUserTaskSource.TrySetException(e))
+                if (!_joinEventReceivedCompletionSource.TrySetException(e))
                 {
-                    Logs.Error($"Failed set exception in {nameof(_connectUserTaskSource)}. Exception:" + e.Message);
+                    Logs.Error($"Failed set exception in {nameof(_joinEventReceivedCompletionSource)}. Exception:" + e.Message);
                 }
+
+                JoinReceived = false;
 
                 throw;
             }
@@ -292,7 +299,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override async Task OnDisconnectingAsync(string closeMessage)
         {
-            _connectUserTaskSource?.TrySetCanceled();
+            _joinEventReceivedCompletionSource?.TrySetCanceled();
+            JoinReceived = false;
             
             WebsocketClient.ClearSendQueue();
             
@@ -321,7 +329,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void OnDisposing()
         {
-            _connectUserTaskSource?.TrySetCanceled();
+            _joinEventReceivedCompletionSource?.TrySetCanceled();
 
             base.OnDisposing();
         }
@@ -330,18 +338,20 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private readonly IApplicationInfo _applicationInfo;
 
         private string _sessionId;
-        private string _sdpOffer;
+        private string _subscriberOfferSdp;
+        private string _publisherOfferSdp;
         private string _sfuUrl;
         private string _sfuToken;
 
-        private TaskCompletionSource<bool> _connectUserTaskSource;
+        private TaskCompletionSource<bool> _joinEventReceivedCompletionSource;
 
         private void OnHandleJoinResponse(JoinResponse joinResponse)
         {
             ConnectionState = ConnectionState.Connected;
 
-            _connectUserTaskSource.TrySetResult(true);
-            _connectUserTaskSource = null;
+            _joinEventReceivedCompletionSource.TrySetResult(true);
+            _joinEventReceivedCompletionSource = null;
+            JoinReceived = true;
 
             JoinResponse?.Invoke(joinResponse);
         }

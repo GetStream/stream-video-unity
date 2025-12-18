@@ -290,6 +290,80 @@ namespace Unity.WebRTC
                 GetSelfOrThrow(), renderer.self);
         }
 
+#if UNITY_ANDROID && !UNITY_EDITOR
+        /// <summary>
+        ///     Mutes this audio track locally without affecting other users.
+        /// </summary>
+        /// <remarks>
+        ///     `MuteLocally` mutes this audio track on the local device only. 
+        ///     Other users in the call will not be affected. This is useful for temporarily
+        ///     stopping playback of incoming audio without disconnecting the track.
+        ///     This method is only available on Android platform.
+        /// </remarks>
+        /// <example>
+        ///     <code lang="cs"><![CDATA[
+        ///         audioStreamTrack.MuteLocally();
+        ///     ]]></code>
+        /// </example>
+        /// <seealso cref="UnmuteLocally"/>
+        /// <seealso cref="IsLocallyMuted"/>
+        public void MuteLocally()
+        {
+            if (_streamRenderer == null)
+                throw new InvalidOperationException("MuteLocally is only available for receiver side audio tracks.");
+            
+            NativeMethods.AudioTrackSinkMute(_streamRenderer.self);
+        }
+
+        /// <summary>
+        ///     Unmutes this audio track locally.
+        /// </summary>
+        /// <remarks>
+        ///     `UnmuteLocally` unmutes a previously muted audio track on the local device.
+        ///     This method is only available on Android platform.
+        /// </remarks>
+        /// <example>
+        ///     <code lang="cs"><![CDATA[
+        ///         audioStreamTrack.UnmuteLocally();
+        ///     ]]></code>
+        /// </example>
+        /// <seealso cref="MuteLocally"/>
+        /// <seealso cref="IsLocallyMuted"/>
+        public void UnmuteLocally()
+        {
+            if (_streamRenderer == null)
+                throw new InvalidOperationException("UnmuteLocally is only available for receiver side audio tracks.");
+            
+            NativeMethods.AudioTrackSinkUnmute(_streamRenderer.self);
+        }
+
+        /// <summary>
+        ///     Checks if this audio track is locally muted.
+        /// </summary>
+        /// <remarks>
+        ///     `IsLocallyMuted` returns true if the track is currently muted on the local device.
+        ///     This method is only available on Android platform.
+        /// </remarks>
+        /// <returns>True if the track is locally muted, false otherwise.</returns>
+        /// <example>
+        ///     <code lang="cs"><![CDATA[
+        ///         if (audioStreamTrack.IsLocallyMuted())
+        ///         {
+        ///             Debug.Log("Track is muted locally");
+        ///         }
+        ///     ]]></code>
+        /// </example>
+        /// <seealso cref="MuteLocally"/>
+        /// <seealso cref="UnmuteLocally"/>
+        public bool IsLocallyMuted()
+        {
+            if (_streamRenderer == null)
+                throw new InvalidOperationException("IsLocallyMuted is only available for receiver side audio tracks.");
+            
+            return NativeMethods.AudioTrackSinkIsMuted(_streamRenderer.self);
+        }
+#endif
+
         /// <summary>
         ///     Disposes of AudioStreamTrack.
         /// </summary>

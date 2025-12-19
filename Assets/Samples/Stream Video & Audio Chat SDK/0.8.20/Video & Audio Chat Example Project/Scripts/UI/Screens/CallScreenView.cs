@@ -198,12 +198,12 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             var parent = GetParticipantViewParent(participant);
             var view = Instantiate(_participantViewPrefab, parent);
-            view.Init(participant);
+            view.Init(participant, VideoManager);
             _participantSessionIdToView.Add(participant.SessionId, view);
 
             if (participant.IsLocalParticipant)
             {
-                // Set input camera as a video source for local participant - we won't receive OnTrack event for local participant
+                // Set input camera as a video source for local participant - we won't receive TrackAdded event for local participant
                 var webCamTexture = VideoManager.Client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
                 view.SetLocalCameraSource(webCamTexture);
                 //StreamTodo: this will invalidate each time WebCamTexture is internally replaced so we need a better way to expose this

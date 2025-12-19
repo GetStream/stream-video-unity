@@ -12,8 +12,10 @@ namespace StreamVideo.ExampleProject.UI
     {
         public IStreamVideoCallParticipant Participant { get; private set; }
 
-        public void Init(IStreamVideoCallParticipant participant)
+        public void Init(IStreamVideoCallParticipant participant, StreamVideoManager videoManager)
         {
+            _videoManager = videoManager ?? throw new ArgumentNullException(nameof(videoManager));
+            
             if (Participant != null)
             {
                 throw new NotSupportedException("reusing participant view for new participant is not supported yet");
@@ -57,6 +59,7 @@ namespace StreamVideo.ExampleProject.UI
         {
             _videoRectTransform = _video.GetComponent<RectTransform>();
             _baseVideoRotation = _videoRectTransform.rotation;
+            _muteLocallyToggleButton.onClick.AddListener(OnMuteLocallyToggleClicked);
         }
 
         // Called by Unity Engine
@@ -131,10 +134,17 @@ namespace StreamVideo.ExampleProject.UI
         [SerializeField]
         private int _forceRequestedResolutionHeight = 300;
 
+        [SerializeField]
+        private GameObject _isMutedIcon;
+
+        [SerializeField]
+        private Button _muteLocallyToggleButton;
+        
         private AudioSource _audioSource;
         private RectTransform _videoRectTransform;
         private Vector2 _lastRequestedResolution;
         private Quaternion _baseVideoRotation;
+        private StreamVideoManager _videoManager;
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {
@@ -152,6 +162,14 @@ namespace StreamVideo.ExampleProject.UI
 
                     _audioSource = gameObject.AddComponent<AudioSource>();
                     streamAudioTrack.SetAudioSourceTarget(_audioSource);
+
+                    // Apply cached local mute state in case participant rejoined
+                    if (_videoManager.IsParticipantMutedLocally(participant))
+                    {
+                        streamAudioTrack.MuteLocally();
+                        UpdateMuteIcon();
+                    }
+                    
                     break;
 
                 case StreamVideoTrack streamVideoTrack:
@@ -161,6 +179,37 @@ namespace StreamVideo.ExampleProject.UI
                 default:
                     throw new ArgumentOutOfRangeException(nameof(track));
             }
+        }
+        
+        private void OnMuteLocallyToggleClicked()
+        {
+            if (Participant == null)
+            {
+                return;
+            }
+
+            var isMuted = _videoManager.IsParticipantMutedLocally(Participant);
+            var newIsMuted = !isMuted;
+
+            var actionLabel = newIsMuted ? "Muted" : "Unmuted";
+            Debug.Log(actionLabel + " participant with user ID: " + Participant.UserId);
+
+            if (newIsMuted)
+            {
+                _videoManager.MuteLocally(Participant);
+            }
+            else
+            {
+                _videoManager.UnmuteLocally(Participant);
+            }
+
+            UpdateMuteIcon();
+        }
+
+        private void UpdateMuteIcon()
+        {
+            var isMuted = _videoManager.IsParticipantMutedLocally(Participant);
+            _isMutedIcon.SetActive(isMuted);
         }
     }
 }

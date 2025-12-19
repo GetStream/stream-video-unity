@@ -1,0 +1,19 @@
+{
+    "name": "StreamVideo.ExampleProject",
+    "rootNamespace": "",
+    "references": [
+        "StreamVideo.Libs",
+        "Unity.WebRTC",
+        "Unity.TextMeshPro",
+        "StreamVideo.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

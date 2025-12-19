@@ -1736,6 +1736,15 @@ namespace Unity.WebRTC
         [DllImport(WebRTC.Lib)]
         public static extern void AudioTrackSinkProcessAudio(
             IntPtr sink, float[] data, int length, int channels, int sampleRate);
+#if UNITY_ANDROID && !UNITY_EDITOR
+        [DllImport(WebRTC.Lib)]
+        public static extern void AudioTrackSinkMute(IntPtr sink);
+        [DllImport(WebRTC.Lib)]
+        public static extern void AudioTrackSinkUnmute(IntPtr sink);
+        [DllImport(WebRTC.Lib)]
+        [return: MarshalAs(UnmanagedType.U1)]
+        public static extern bool AudioTrackSinkIsMuted(IntPtr sink);
+#endif
         [DllImport(WebRTC.Lib)]
         [return: MarshalAs(UnmanagedType.U1)]
         public static extern bool MediaStreamAddTrack(IntPtr stream, IntPtr track);

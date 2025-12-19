@@ -1,3 +1,7 @@
+0.8.21:
+
+- Added an option to mute an audio track locally. This mute is applied only to the current audio track on the local device. Note that a new audio track instance is created each time the same user leaves and rejoins the call. Therefore, it’s up to the integrator to cache the mute state and reapply it whenever the participant joins and adds an audio track. An example of caching can be found in this PR: https://github.com/GetStream/stream-video-unity/pull/203
+
 0.8.20:
 
 - Introduce `Client.SetAndroidAudioUsageMode` to allow setting Android audio mode (media or voice communication)

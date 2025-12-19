@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
@@ -140,6 +142,33 @@ namespace StreamVideo.ExampleProject
         /// </summary>
         public void SetAudioREDundancyEncoding(bool value) => _clientConfig.Audio.EnableRed = value;
 
+        public void MuteLocally(IStreamVideoCallParticipant participant)
+        {
+            _isUserMutedLocally[participant.UserId] = true;
+
+            if (participant.AudioTrack != null && participant.AudioTrack is StreamAudioTrack streamAudioTrack)
+            {
+                streamAudioTrack.MuteLocally();
+            }
+        }
+
+        public void UnmuteLocally(IStreamVideoCallParticipant participant)
+        {
+            if (!_isUserMutedLocally.ContainsKey(participant.UserId))
+            {
+                return;
+            }
+            _isUserMutedLocally.Remove(participant.UserId);
+            
+            if (participant.AudioTrack != null && participant.AudioTrack is StreamAudioTrack streamAudioTrack)
+            {
+                streamAudioTrack.UnmuteLocally();
+            }
+        }
+
+        public bool IsParticipantMutedLocally(IStreamVideoCallParticipant participant)
+            => _isUserMutedLocally.ContainsKey(participant.UserId) && _isUserMutedLocally[participant.UserId];
+
         protected async void Start()
         {
             var credentials = new AuthCredentials(_apiKey, _userId, _userToken);
@@ -270,6 +299,9 @@ namespace StreamVideo.ExampleProject
 
         private bool _wasAudioPublishEnabledOnPause;
         private bool _wasVideoPublishEnabledOnPause;
+
+        // We mute by user ID because Session ID will change every time the user reconnects
+        private readonly Dictionary<string, bool> _isUserMutedLocally = new Dictionary<string, bool>();
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {

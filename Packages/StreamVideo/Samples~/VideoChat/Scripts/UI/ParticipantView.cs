@@ -28,7 +28,12 @@ namespace StreamVideo.ExampleProject.UI
                 OnParticipantTrackAdded(Participant, track);
             }
             
+            OnIsSpeakingChanged(Participant.IsSpeaking);
+            OnAudioLevelChanged(Participant.AudioLevel);
+            
             Participant.TrackAdded += OnParticipantTrackAdded;
+            Participant.AudioLevelChanged += OnAudioLevelChanged;
+            Participant.IsSpeakingChanged += OnIsSpeakingChanged;
 
             _name.text = Participant.Name;
         }
@@ -107,6 +112,8 @@ namespace StreamVideo.ExampleProject.UI
             if (Participant != null)
             {
                 Participant.TrackAdded -= OnParticipantTrackAdded;
+                Participant.AudioLevelChanged -= OnAudioLevelChanged;
+                Participant.IsSpeakingChanged -= OnIsSpeakingChanged;
             }
         }
 
@@ -139,6 +146,12 @@ namespace StreamVideo.ExampleProject.UI
 
         [SerializeField]
         private Button _muteLocallyToggleButton;
+        
+        [SerializeField]
+        private TMP_Text _audioLevel;
+        
+        [SerializeField]
+        private GameObject _isSpeakingIcon;
         
         private AudioSource _audioSource;
         private RectTransform _videoRectTransform;
@@ -210,6 +223,16 @@ namespace StreamVideo.ExampleProject.UI
         {
             var isMuted = _videoManager.IsParticipantMutedLocally(Participant);
             _isMutedIcon.SetActive(isMuted);
+        }
+        
+        private void OnIsSpeakingChanged(bool isSpeaking)
+        {
+            _isSpeakingIcon.SetActive(isSpeaking);
+        }
+
+        private void OnAudioLevelChanged(float audioLevel)
+        {
+            _audioLevel.text = audioLevel.ToString();
         }
     }
 }

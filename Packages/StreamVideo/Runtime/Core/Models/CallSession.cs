@@ -232,5 +232,19 @@ namespace StreamVideo.Core.Models
             ((IStateLoadableFrom<SfuParticipantCount, ParticipantCount>)ParticipantCount)
                 .LoadFromDto(dto, null);
         }
+
+        internal void UpdateFromSfu(AudioLevelChanged audioLevelChanged)
+        {
+            foreach (var entry in audioLevelChanged.AudioLevels)
+            {
+                for (int i = 0; i < _participants.Count; i++)
+                {
+                    if (_participants[i].SessionId == entry.SessionId)
+                    {
+                        _participants[i].UpdateFromSfu(entry);
+                    }
+                }
+            }
+        }
     }
 }

@@ -23,6 +23,16 @@ namespace StreamVideo.Core.StatefulModels
         event ParticipantTrackChangedHandler TrackIsEnabledChanged;
         
         /// <summary>
+        /// Event notifying that the value of <see cref="AudioLevel"/> changed for this participant. The event callback contains the current value of <see cref="AudioLevel"/>
+        /// </summary>
+        event Action<float> AudioLevelChanged;
+        
+        /// <summary>
+        /// Event notifying that the value of <see cref="IsSpeaking"/> changed for this participant. The event callback contains the current value of <see cref="IsSpeaking"/>
+        /// </summary>
+        event Action<bool> IsSpeakingChanged;
+        
+        /// <summary>
         /// Is this participant "pinned" in the call meaning it will have precedence in <see cref="IStreamCall.SortedParticipants"/> list
         /// </summary>
         bool IsPinned { get; }

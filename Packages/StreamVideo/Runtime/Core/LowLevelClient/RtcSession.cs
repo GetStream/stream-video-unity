@@ -1421,8 +1421,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)
         {
-
-            // StreamTODO: Implement OnSfuAudioLevelChanged
+            // Ignore tracing AudioLevelChanged -> not much debug value + creates too much noise in data
+            ActiveCall?.UpdateFromSfu(audioLevelChanged);
         }
 
         private void OnSfuPublisherAnswer(PublisherAnswer publisherAnswer)

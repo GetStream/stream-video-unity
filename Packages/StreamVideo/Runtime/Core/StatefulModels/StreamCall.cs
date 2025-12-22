@@ -720,6 +720,11 @@ namespace StreamVideo.Core.StatefulModels
         {
             Session?.UpdateFromSfu(healthCheckResponse, cache);
         }
+        
+        internal void UpdateFromSfu(AudioLevelChanged audioLevelChanged)
+        {
+            Session?.UpdateFromSfu(audioLevelChanged);
+        }
 
         internal void UpdateFromCoordinator(CallSessionParticipantCountsUpdatedEventInternalDTO eventData)
         {

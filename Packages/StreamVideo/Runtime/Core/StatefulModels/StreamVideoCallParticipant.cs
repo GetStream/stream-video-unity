@@ -9,6 +9,7 @@ using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
 using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Serialization;
+using StreamVideo.v1.Sfu.Events;
 using Unity.WebRTC;
 using UnityEngine;
 using Participant = StreamVideo.v1.Sfu.Models.Participant;
@@ -22,6 +23,9 @@ namespace StreamVideo.Core.StatefulModels
     {
         public event ParticipantTrackChangedHandler TrackAdded;
         public event ParticipantTrackChangedHandler TrackIsEnabledChanged;
+        
+        public event Action<float> AudioLevelChanged;
+        public event Action<bool> IsSpeakingChanged;
 
         public bool IsLocalParticipant => SessionId == Client.InternalLowLevelClient.RtcSession.SessionId;
 
@@ -60,9 +64,39 @@ namespace StreamVideo.Core.StatefulModels
 
         public string TrackLookupPrefix { get; private set; }
         public ConnectionQuality ConnectionQuality { get; private set; }
-        public bool IsSpeaking { get; private set; }
+
+        public bool IsSpeaking
+        {
+            get => _isSpeaking;
+            private set
+            {
+                if (_isSpeaking == value)
+                {
+                    return;
+                }
+                
+                _isSpeaking = value;
+                IsSpeakingChanged?.Invoke(value);
+            }
+        }
+
         public bool IsDominantSpeaker { get; private set; }
-        public float AudioLevel { get; private set; }
+
+        public float AudioLevel
+        {
+            get => _audioLevel;
+            private set
+            {
+                if (Math.Abs(_audioLevel - value) < Mathf.Epsilon)
+                {
+                    return;
+                }
+                
+                _audioLevel = value;
+                AudioLevelChanged?.Invoke(value);
+            }
+        }
+
         public string Name { get; private set; }
         public string Image { get; private set; }
         public IEnumerable<string> Roles => _roles;
@@ -176,6 +210,12 @@ namespace StreamVideo.Core.StatefulModels
         {
             ((IUpdateableFrom<Participant, StreamVideoCallParticipant>)this).UpdateFromDto(dto, Cache);
         }
+        
+        internal void UpdateFromSfu(AudioLevel audioLevel)
+        {
+            IsSpeaking = audioLevel.IsSpeaking;
+            AudioLevel = audioLevel.Level;
+        }
 
         internal void Update()
         {
@@ -280,6 +320,8 @@ namespace StreamVideo.Core.StatefulModels
 
         private readonly List<TrackType> _publishedTracks = new List<TrackType>();
         private readonly List<string> _roles = new List<string>();
+        private float _audioLevel;
+        private bool _isSpeaking;
 
         #endregion
 

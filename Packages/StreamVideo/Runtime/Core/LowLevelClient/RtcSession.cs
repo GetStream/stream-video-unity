@@ -1737,7 +1737,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)
         {
-            // StreamTODO: Implement OnSfuAudioLevelChanged
+
+            ActiveCall?.UpdateFromSfu(audioLevelChanged);
         }
 
         private void OnSfuPublisherAnswer(PublisherAnswer publisherAnswer)

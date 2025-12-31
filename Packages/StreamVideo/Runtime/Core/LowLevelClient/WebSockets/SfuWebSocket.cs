@@ -18,8 +18,13 @@ using ICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
-    internal class SfuWebSocket : BasePersistentWebSocket
+    internal class SfuWebSocket : BasePersistentWebSocket<SfuWebSocket.ConnectRequest, JoinResponse>
     {
+        public struct ConnectRequest
+        {
+            
+        }
+        
         public event Action<SubscriberOffer> SubscriberOffer;
         public event Action<PublisherAnswer> PublisherAnswer;
         public event Action<ConnectionQualityChanged> ConnectionQualityChanged;
@@ -125,12 +130,12 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             WebsocketClient.Send(sfuRequestByteArray);
         }
 
-        protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
+        protected override async Task<JoinResponse> ExecuteConnectAsync(ConnectRequest request, CancellationToken cancellationToken = default)
         {
             if (ConnectionState == ConnectionState.Disconnecting || ConnectionState == ConnectionState.Closing)
             {
                 Logs.Error($"Tried to connect to the {nameof(SfuWebSocket)} while disconnecting or closing. Aborting.");
-                return;
+                throw new Exception();
             }
             //StreamTodo: validate session data
 
@@ -139,7 +144,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 throw new ArgumentException($"{nameof(_sfuToken)} is null or empty");
             }
 
-            _joinEventReceivedCompletionSource = new TaskCompletionSource<bool>(cancellationToken);
+            _joinEventReceivedCompletionSource = new TaskCompletionSource<JoinResponse>(cancellationToken);
 
             try
             {
@@ -151,6 +156,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                     Token = _sfuToken,
                     SessionId = _sessionId,
                     SubscriberSdp = _subscriberOfferSdp,
+                    PublisherSdp = _publisherOfferSdp,
                     ClientDetails = new ClientDetails
                     {
                         Sdk = new Sdk
@@ -172,6 +178,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                             Version = _applicationInfo.DeviceModel
                         }
                     },
+                    Source = ParticipantSource.WebrtcUnspecified,
                 };
 
                 var sfuJoinRequest = new SfuRequest
@@ -191,7 +198,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 await WebsocketClient.ConnectAsync(sfuUri, cancellationToken);
                 WebsocketClient.Send(sfuJoinRequestEncoded);
 
-                await _joinEventReceivedCompletionSource.Task;
+                //StramTODO: implement timeout
+                return await _joinEventReceivedCompletionSource.Task;
             }
             catch (Exception e)
             {
@@ -343,13 +351,13 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private string _sfuUrl;
         private string _sfuToken;
 
-        private TaskCompletionSource<bool> _joinEventReceivedCompletionSource;
+        private TaskCompletionSource<JoinResponse> _joinEventReceivedCompletionSource;
 
         private void OnHandleJoinResponse(JoinResponse joinResponse)
         {
             ConnectionState = ConnectionState.Connected;
 
-            _joinEventReceivedCompletionSource.TrySetResult(true);
+            _joinEventReceivedCompletionSource.TrySetResult(joinResponse);
             _joinEventReceivedCompletionSource = null;
             JoinReceived = true;
 

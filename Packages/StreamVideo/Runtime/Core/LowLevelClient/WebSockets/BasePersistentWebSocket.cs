@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
-    internal abstract class BasePersistentWebSocket : IPersistentWebSocket, IReconnectTarget
+    internal abstract class BasePersistentWebSocket<TConnectRequest, TConnectResponse> : IPersistentWebSocket<TConnectRequest, TConnectResponse>, IReconnectTarget
     {
         public event ConnectionStateChangeHandler ConnectionStateChanged;
         public event Action Connected;
@@ -90,16 +90,17 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             var cts = new CancellationTokenSource();
             cts.CancelAfter(ConnectTimeoutMs);
-            ConnectAsync(cts.Token).LogIfFailed();
+            ConnectAsync(_lastConnectRequest, cts.Token).LogIfFailed();
         }
 
-        public Task ConnectAsync(CancellationToken cancellationToken = default)
+        public Task<TConnectResponse> ConnectAsync(TConnectRequest request, CancellationToken cancellationToken = default)
         {
+            _lastConnectRequest = request;
             //StreamTodo: TryCancelWaitingForUserConnection()
             ConnectionState = ConnectionState.Connecting;
             try
             {
-                return ExecuteConnectAsync(cancellationToken);
+                return ExecuteConnectAsync(request, cancellationToken);
             }
             catch (Exception)
             {
@@ -225,7 +226,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected abstract void SendHealthCheck();
 
-        protected abstract Task ExecuteConnectAsync(CancellationToken cancellationToken = default);
+        protected abstract Task<TConnectResponse> ExecuteConnectAsync(TConnectRequest request, CancellationToken cancellationToken = default);
 
         protected void OnHealthCheckReceived()
         {
@@ -258,6 +259,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private bool _websocketConnectionFailed;
         private float _lastHealthCheckReceivedTime;
         private float _lastHealthCheckSendTime;
+
+        private TConnectRequest _lastConnectRequest;
 
         private void TryHandleWebsocketsConnectionFailed()
         {

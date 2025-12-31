@@ -125,7 +125,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        protected override Task RestartIce()
+        public override Task RestartIce()
         {
             Logs.InfoIfDebug($"[{PeerType}] Restarting ICE connection");
             if (IsIceRestarting || SignalingState == RTCSignalingState.HaveLocalOffer)
@@ -224,8 +224,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             AddTrickledIceCandidates();
         }
-
-
 
         private void AddTrickledIceCandidates()
         {

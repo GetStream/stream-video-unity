@@ -71,13 +71,13 @@ namespace StreamVideo.Core.LowLevelClient
     internal class SessionID
     {
         public bool IsEmpty => string.IsNullOrEmpty(_sessionID);
-        
+
         public void Regenerate() => _sessionID = Guid.NewGuid().ToString();
 
         public void Clear() => _sessionID = string.Empty;
-        
+
         public static implicit operator string(SessionID s) => s._sessionID;
-        
+
         private string _sessionID;
     }
 
@@ -470,7 +470,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
-                await _sfuWebSocket.ConnectAsync(cancellationToken);
+                await _sfuWebSocket.ConnectAsync(default, cancellationToken);
 
 #if STREAM_TESTS_ENABLED && UNITY_EDITOR
                 // Simulate a bit of delay for tests so we can test killing the operation in progress
@@ -588,7 +588,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 SessionId.Regenerate();
             }
-            
+
             if (startNewSfuWsSession)
             {
                 if (_sfuWebSocket.ConnectionState == ConnectionState.Connected)
@@ -596,17 +596,51 @@ namespace StreamVideo.Core.LowLevelClient
                     await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure,
                         $"Join call. {nameof(isRejoin)}:{isRejoin}, {nameof(isMigration)}:{isMigration}, {nameof(isWsHealthy)}:{isWsHealthy}");
                 }
-                
+
                 var sfuUrl = call.Credentials.Server.Url;
                 var sfuToken = call.Credentials.Token;
                 var iceServers = call.Credentials.IceServers;
-                
+
                 // We don't set initial offer as local. Later on we set generated answer as a local
                 var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
                 var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
-                
+
                 _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
-                await _sfuWebSocket.ConnectAsync(cancellationToken);
+                var joinResponse = await _sfuWebSocket.ConnectAsync(default, cancellationToken);
+
+                _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
+            }
+
+            if (!isMigration)
+            {
+                // in MIGRATION, `JOINED` state is set in `this.reconnectMigrate()`
+                CallState = CallingState.Joined;
+            }
+
+            // when performing fast reconnect, or when we reuse the same SFU client,
+            // (ws remained healthy), we just need to restore the ICE connection
+            if (isFast)
+            {
+                // the SFU automatically issues an ICE restart on the subscriber
+                // we don't have to do it ourselves
+                await Publisher.RestartIce();
+            }
+            else
+            {
+                //TODO: but probably destroy previous ones first???
+
+                CreatePublisher(call.Credentials.IceServers);
+                CreateSubscriber(call.Credentials.IceServers);
+            }
+
+            if (!isRejoin && !isFast && !isMigration)
+            {
+                // TODO: send sendConnectionTime   
+            }
+
+            if (isRejoin && isWsHealthy)
+            {
+                // Close previous SFU WS client
             }
         }
 
@@ -875,6 +909,7 @@ namespace StreamVideo.Core.LowLevelClient
         private CancellationTokenSource _activeCallCts;
 
         private TaskCompletionSource<bool> _joinTaskCompletionSource;
+        private int _fastReconnectDeadlineSeconds;
 
         private void ClearSession()
         {
@@ -2201,6 +2236,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {
+            if (Subscriber != null)
+            {
+                DisposeSubscriber();
+            }
+
             Subscriber = new SubscriberPeerConnection(_logs, iceServers, _subscriberTracer, _serializer,
                 sfuClient: this);
             Subscriber.IceTrickled += OnIceTrickled;
@@ -2227,6 +2267,11 @@ namespace StreamVideo.Core.LowLevelClient
         {
             //StreamTodo: Handle default settings -> speaker off, mic off, cam off
             var callSettings = ActiveCall.Settings;
+
+            if (Publisher != null)
+            {
+                DisposePublisher();
+            }
 
             Publisher = new PublisherPeerConnection(_logs, iceServers, this, _config.Audio, _publisherVideoSettings,
                 sfuClient: this, _publisherTracer, _serializer);

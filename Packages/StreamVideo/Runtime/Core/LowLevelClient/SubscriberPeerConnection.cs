@@ -20,7 +20,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
         }
 
-        protected override async Task RestartIce()
+        public override async Task RestartIce()
         {
             if (SignalingState == RTCSignalingState.HaveRemoteOffer)
             {

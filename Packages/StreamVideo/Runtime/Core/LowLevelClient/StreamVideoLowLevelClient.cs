@@ -190,7 +190,7 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Info($"Connect to coordinator: {connectUri}");
 #endif
 
-            await _coordinatorWS.ConnectAsync(cancellationToken);
+            await _coordinatorWS.ConnectAsync(default, cancellationToken);
             await UpdateLocationHintAsync(cancellationToken);
             Connected?.Invoke();
         }

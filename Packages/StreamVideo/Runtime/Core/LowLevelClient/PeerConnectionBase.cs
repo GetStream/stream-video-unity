@@ -196,7 +196,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
         }
         
-        protected abstract Task RestartIce();
+        public abstract Task RestartIce();
 
         // On JS this is intentionally not an async method
         protected async Task TryRestartIce()

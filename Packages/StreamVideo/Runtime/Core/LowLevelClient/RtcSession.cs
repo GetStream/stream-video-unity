@@ -623,12 +623,10 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 // the SFU automatically issues an ICE restart on the subscriber
                 // we don't have to do it ourselves
-                await Publisher.RestartIce();
+                await Publisher.RestartIce(); //StreamTODO: cancellation token
             }
             else
             {
-                //TODO: but probably destroy previous ones first???
-
                 CreatePublisher(call.Credentials.IceServers);
                 CreateSubscriber(call.Credentials.IceServers);
             }
@@ -642,6 +640,19 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 // Close previous SFU WS client
             }
+            else if (!isWsHealthy)
+            {
+                // Close unhealthy WS client
+            }
+
+            //StreamTODO: JS client deletes here ring and notify data because these are one-time actions
+            //delete this.joinCallData?.ring;
+            //delete this.joinCallData?.notify;
+
+            _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
+            _reconnectReason = string.Empty;
+
+            _logs.Info("Joined call: " + call.Cid);
         }
 
         private async Task<IStreamCall> ExecuteJoinRequest(JoinCallData data, CancellationToken cancellationToken)
@@ -1464,7 +1475,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left };
 
-            // Try get the latest state from the server. State might have changed while we were offline
+            // Try to get the latest state from the server. State might have changed while we were offline
             try
             {
                 //StreamTODO: execute get call to refresh the state in cache
@@ -1524,7 +1535,7 @@ namespace StreamVideo.Core.LowLevelClient
         private WebsocketReconnectStrategy _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
         private string _reconnectReason;
         private int _reconnectAttempts;
-        private StreamVideoLowLevelClient _lowLevelClient;
+        private readonly StreamVideoLowLevelClient _lowLevelClient;
         private JoinCallData _joinCallData;
 
         private async Task ReconnectFast()
@@ -1548,13 +1559,36 @@ namespace StreamVideo.Core.LowLevelClient
 
         private Task ReconnectMigrate()
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Sfu migration is not yet implemented.");
         }
 
         private async Task RestorePublishedTracks()
         {
             // the tracks need to be restored in their original order of publishing
             // otherwise, we might get `m-lines order mismatch` errors
+
+            foreach (var type in Publisher.PublishedTrackOrder)
+            {
+                switch (type)
+                {
+                    case SfuTrackType.Unspecified:
+                        break;
+                    case SfuTrackType.Audio:
+                        TrySetPublisherAudioTrackEnabled(true);
+                        break;
+                    case SfuTrackType.Video:
+                        TrySetPublisherVideoTrackEnabled(true);
+                        break;
+                    case SfuTrackType.ScreenShare:
+                        break;
+                    case SfuTrackType.ScreenShareAudio:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+            
+            //StreamTODO: revise this, the JS client executes this a bit differently
         }
 
         private async Task RestoreSubscribedTracks()
@@ -1737,7 +1771,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)
         {
-
             ActiveCall?.UpdateFromSfu(audioLevelChanged);
         }
 
@@ -2269,11 +2302,14 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: Handle default settings -> speaker off, mic off, cam off
             var callSettings = ActiveCall.Settings;
 
+            //StreamTODO: solve this differently. We probably need to keep old WS client live when migrating
+            //But we don't want to create a leak
             if (Publisher != null)
             {
                 DisposePublisher();
             }
 
+            //StreamTODO: pass factory for WS creation. We may need two WS clients for migration so we can't rely on the same one
             Publisher = new PublisherPeerConnection(_logs, iceServers, this, _config.Audio, _publisherVideoSettings,
                 sfuClient: this, _publisherTracer, _serializer);
             Publisher.IceTrickled += OnIceTrickled;

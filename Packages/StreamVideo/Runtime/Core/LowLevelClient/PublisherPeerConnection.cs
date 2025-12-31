@@ -45,6 +45,8 @@ namespace StreamVideo.Core.LowLevelClient
                     return;
                 }
 
+                SavePublishedTrackOrder(TrackType.Audio);
+
                 _publisherAudioTrack = value;
                 PublisherAudioTrackChanged?.Invoke(_publisherAudioTrack);
             }
@@ -59,6 +61,8 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
+                
+                SavePublishedTrackOrder(TrackType.Video);
 
                 _publisherVideoTrack = value;
                 PublisherVideoTrackChanged?.Invoke(_publisherVideoTrack);
@@ -66,6 +70,8 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public RTCRtpSender VideoSender { get; private set; }
+
+        public IEnumerable<TrackType> PublishedTrackOrder => _publishedTrackOrder;
 
         // Full: 704×576  -> half: 352×288 -> quarter: 176×144 <- We want the smallest resolution to be above 96x96
         public static VideoResolution MinimumSafeTargetResolution => new VideoResolution(704, 576);
@@ -477,12 +483,24 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IMediaInputProvider _mediaInputProvider;
         private readonly IStreamAudioConfig _audioConfig;
 
+        private readonly List<TrackType> _publishedTrackOrder = new List<TrackType>();
+
         private RenderTexture _publisherVideoTrackTexture;
         private VideoStreamTrack _publisherVideoTrack;
         private AudioStreamTrack _publisherAudioTrack;
 
         private RTCRtpTransceiver _videoTransceiver;
         private RTCRtpTransceiver _audioTransceiver;
+
+        private void SavePublishedTrackOrder(TrackType type)
+        {
+            if (_publishedTrackOrder.Contains(type))
+            {
+                return;
+            }
+
+            _publishedTrackOrder.Add(type);
+        }
 
         private static RTCRtpTransceiverInit BuildTransceiverInit(TrackKind kind,
             PublisherVideoSettings publisherVideoSettings)

@@ -70,7 +70,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _sfuToken = sfuToken;
             _sfuUrl = sfuUrl;
             _subscriberOfferSdp = subscriberOfferSdp;
-            _subscriberOfferSdp = publisherOfferSdp;
+            _publisherOfferSdp = publisherOfferSdp;
             _sessionId = sessionId;
             
 #if STREAM_DEBUG_ENABLED

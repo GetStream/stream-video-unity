@@ -245,7 +245,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             foreach (var transceiver in GetTransceivers())
             {
-                if (transceiver.Sender?.Track != null)
+                if (transceiver.Sender?.Track == null)
                 {
                     continue;
                 }
@@ -298,7 +298,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (track.Kind == TrackKind.Video)
             {
-                //Add layers
+                var videoLayers = GetPublisherVideoLayers(transceiver.Sender.GetParameters().encodings);
+                trackInfo.Layers.AddRange(videoLayers);
             }
 
             return trackInfo;

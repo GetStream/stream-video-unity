@@ -55,6 +55,11 @@ namespace StreamVideo.Core.LowLevelClient
         public readonly bool Create;
         public readonly bool Ring;
         public readonly bool Notify;
+        
+        /// <summary>
+        /// If the participant is migrating from the SFU
+        /// </summary>
+        public readonly string MigratingFromSfu;
 
         //StreamTODO: map all CallRequestInternalDTO fields here and create helper method like ToInternalCallRequest
 
@@ -65,6 +70,22 @@ namespace StreamVideo.Core.LowLevelClient
             Create = create;
             Ring = ring;
             Notify = notify;
+            MigratingFromSfu = string.Empty;
+        }
+        
+        public JoinCallData(StreamCallType type, string id, bool create, bool ring, bool notify, string migratingFromSfu)
+        {
+            Type = type;
+            Id = id;
+            Create = create;
+            Ring = ring;
+            Notify = notify;
+            MigratingFromSfu = migratingFromSfu;
+        }
+
+        public JoinCallData CloneWithMigratingFromSfu(string migratingFromSfu)
+        {
+            return new JoinCallData(Type, Id, Create, Ring, Notify, migratingFromSfu);
         }
     }
 
@@ -547,6 +568,64 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        private const int CallJoinMaxRetries = 3;
+        
+        public async Task Join(JoinCallData joinCallData, CancellationToken cancellationToken)
+        {
+            if (CallState == CallingState.Joined)
+            {
+                throw new InvalidOperationException($"Call is already joined. Please leave the current call before joining a new one.");
+            }
+
+            if (CallState == CallingState.Joining)
+            {
+                throw new InvalidOperationException($"Joining a `{_joinCallData.Id}` call is in progress. Please cancel the current join operation before joining a new one.");
+            }
+            
+            // we will count the number of join failures per SFU.
+            // once the number of failures reaches 2, we will piggyback on the `migrating_from`
+            // field to force the coordinator to provide us another SFU
+            var joinFailsPerSfu = new Dictionary<string, int>();
+
+            for (int attempt = 0; attempt < CallJoinMaxRetries; attempt++)
+            {
+                try
+                {
+                    _lastJoinCallCredentials = null;
+                    await DoJoin(joinCallData, cancellationToken);
+                    
+                    //TODO: joinData.ClearMigrationData
+                }
+                catch (Exception e)
+                {
+                    _logs.Warning($"Failed to join call `{joinCallData.Id}`, attempt: {attempt}");
+                    
+                    //TODO: check if error is no recoverable
+                    //if (err instanceof ErrorFromResponse && err.unrecoverable)
+
+                    var sfuId = _lastJoinCallCredentials?.Server.EdgeName ?? string.Empty;
+                    var sfuFails = joinFailsPerSfu.GetValueOrDefault(sfuId) + 1;
+
+                    if (sfuFails > 2)
+                    {
+                        joinCallData = joinCallData.CloneWithMigratingFromSfu(sfuId);
+                    }
+
+                    if (attempt == CallJoinMaxRetries - 1)
+                    {
+                        throw;
+                    }
+
+                    //StreamTODO: randomize a bit
+                    await Task.Delay(500, cancellationToken);
+                }
+            }
+        }
+        
+        //StreamTODO: add Join with multiple attempts to DoJoin then remove the StartAsync
+
+        private Credentials _lastJoinCallCredentials;
+
         //StreamTODO: cancellation token
         public async Task DoJoin(JoinCallData joinCallData, CancellationToken cancellationToken)
         {
@@ -569,6 +648,7 @@ namespace StreamVideo.Core.LowLevelClient
                 try
                 {
                     streamCall = await ExecuteJoinRequest(joinCallData, cancellationToken);
+                    _lastJoinCallCredentials = streamCall.Credentials;
                 }
                 catch (Exception e)
                 {
@@ -1580,8 +1660,10 @@ namespace StreamVideo.Core.LowLevelClient
                         TrySetPublisherVideoTrackEnabled(true);
                         break;
                     case SfuTrackType.ScreenShare:
+                        // Skipped, not supported yet
                         break;
                     case SfuTrackType.ScreenShareAudio:
+                        // Skipped, not supported yet
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

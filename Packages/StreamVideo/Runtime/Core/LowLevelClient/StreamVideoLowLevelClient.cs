@@ -303,8 +303,8 @@ namespace StreamVideo.Core.LowLevelClient
         internal IInternalVideoClientApi InternalVideoClientApi { get; }
         internal RtcSession RtcSession { get; }
 
-        internal Task StartCallSessionAsync(StreamCall call, CancellationToken cancellationToken)
-            => RtcSession.StartAsync(call, cancellationToken);
+        internal Task StartCallSessionAsync(JoinCallData joinCallData, CancellationToken cancellationToken)
+            => RtcSession.Join(joinCallData, cancellationToken);
 
         //internal Task StopCallSessionAsync() => RtcSession.StopAsync(); //StreamTodo: remove
 

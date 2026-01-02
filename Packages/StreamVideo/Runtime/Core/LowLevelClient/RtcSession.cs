@@ -663,6 +663,10 @@ namespace StreamVideo.Core.LowLevelClient
 
             var isWsHealthy = _sfuWebSocket.IsHealthy;
             var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
+            
+            // a new session_id is necessary for the REJOIN strategy.
+            // we use the previous session_id if available
+            var previousSessionId = isRejoin ? null : SessionId;
 
             if (isRejoin || SessionId.IsEmpty)
             {
@@ -686,7 +690,20 @@ namespace StreamVideo.Core.LowLevelClient
                 var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
 
                 _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
-                var joinResponse = await _sfuWebSocket.ConnectAsync(default, cancellationToken);
+
+                var joinRequest = new SfuWebSocket.ConnectRequest
+                {
+                    ReconnectDetails = new ReconnectDetails
+                    {
+                        Strategy = _reconnectStrategy,
+                        ReconnectAttempt = (uint)_reconnectAttempts,
+                        FromSfuId = joinCallData.MigratingFromSfu,
+                        PreviousSessionId = previousSessionId,
+                        Reason = _reconnectReason
+                    }
+                };
+                
+                var joinResponse = await _sfuWebSocket.ConnectAsync(joinRequest, cancellationToken);
 
                 _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
             }
@@ -731,6 +748,14 @@ namespace StreamVideo.Core.LowLevelClient
 
             _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
             _reconnectReason = string.Empty;
+            
+            if (UseNativeAudioBindings)
+            {
+                //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
+#if STREAM_NATIVE_AUDIO
+                    WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+#endif
+            }
 
             _logs.Info("Joined call: " + call.Cid);
         }

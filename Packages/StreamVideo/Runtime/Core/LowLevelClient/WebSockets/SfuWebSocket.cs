@@ -22,7 +22,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
     {
         public struct ConnectRequest
         {
-            
+            public ReconnectDetails ReconnectDetails;
         }
         
         public event Action<SubscriberOffer> SubscriberOffer;
@@ -178,6 +178,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                             Version = _applicationInfo.DeviceModel
                         }
                     },
+                    ReconnectDetails = request.ReconnectDetails,
                     Source = ParticipantSource.WebrtcUnspecified,
                 };
 

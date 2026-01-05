@@ -145,8 +145,10 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: move to factory
             var coordinatorReconnect
                 = new ReconnectScheduler(_timeService, _networkMonitor, shouldReconnect: () => true);
+            
+            // SFU reconnection is handled by RTCSession
             var sfuReconnect = new ReconnectScheduler(_timeService, _networkMonitor,
-                shouldReconnect: () => RtcSession.ShouldSfuAttemptToReconnect());
+                shouldReconnect: () => false);
 
             //StreamTodo: move to factory
             _coordinatorWS = new CoordinatorWebSocket(coordinatorWebSocket, coordinatorReconnect, authProvider: this,

@@ -38,70 +38,6 @@ using StreamVideo.Core.Trace;
 
 namespace StreamVideo.Core.LowLevelClient
 {
-    internal interface ISfuClient
-    {
-        SessionID SessionId { get; }
-
-        Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
-            Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,
-            CancellationToken cancellationToken, Func<TResponse, StreamVideo.v1.Sfu.Models.Error> getError,
-            bool preLog = false, bool postLog = true);
-    }
-
-    internal readonly struct JoinCallData
-    {
-        public readonly StreamCallType Type;
-        public readonly string Id;
-        public readonly bool Create;
-        public readonly bool Ring;
-        public readonly bool Notify;
-        
-        /// <summary>
-        /// If the participant is migrating from the SFU
-        /// </summary>
-        public readonly string MigratingFromSfu;
-
-        //StreamTODO: map all CallRequestInternalDTO fields here and create helper method like ToInternalCallRequest
-
-        public JoinCallData(StreamCallType type, string id, bool create, bool ring, bool notify)
-        {
-            Type = type;
-            Id = id;
-            Create = create;
-            Ring = ring;
-            Notify = notify;
-            MigratingFromSfu = string.Empty;
-        }
-        
-        public JoinCallData(StreamCallType type, string id, bool create, bool ring, bool notify, string migratingFromSfu)
-        {
-            Type = type;
-            Id = id;
-            Create = create;
-            Ring = ring;
-            Notify = notify;
-            MigratingFromSfu = migratingFromSfu;
-        }
-
-        public JoinCallData CloneWithMigratingFromSfu(string migratingFromSfu)
-        {
-            return new JoinCallData(Type, Id, Create, Ring, Notify, migratingFromSfu);
-        }
-    }
-
-    internal class SessionID
-    {
-        public bool IsEmpty => string.IsNullOrEmpty(_sessionID);
-
-        public void Regenerate() => _sessionID = Guid.NewGuid().ToString();
-
-        public void Clear() => _sessionID = string.Empty;
-
-        public static implicit operator string(SessionID s) => s._sessionID;
-
-        private string _sessionID;
-    }
-
     public delegate void ParticipantTrackChangedHandler(IStreamVideoCallParticipant participant, IStreamTrack track);
 
     public delegate void ParticipantJoinedHandler(IStreamVideoCallParticipant participant);
@@ -1702,7 +1638,7 @@ namespace StreamVideo.Core.LowLevelClient
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
 
             await RestorePublishedTracks();
-            await RestoreSubscribedTracks();
+            RestoreSubscribedTracks();
         }
 
         private Task ReconnectMigrate()
@@ -1741,9 +1677,10 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTODO: revise this, the JS client executes this a bit differently
         }
 
-        private async Task RestoreSubscribedTracks()
+        private void RestoreSubscribedTracks()
         {
             TryExecuteSubscribeToTracks();
+            
         }
 
         private async Task UpdateMuteStateAsync(TrackType trackType, bool isEnabled)

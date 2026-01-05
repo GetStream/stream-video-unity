@@ -634,130 +634,174 @@ namespace StreamVideo.Core.LowLevelClient
             _joinCallData = joinCallData;
 
             CallState = CallingState.Joining;
-
-            var isMigration = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
-            var isRejoin = _reconnectStrategy == WebsocketReconnectStrategy.Rejoin;
-            var isFast = _reconnectStrategy == WebsocketReconnectStrategy.Fast;
-
-            var callCid = joinCallData.Type + ":" + joinCallData.Id;
-            var callExists = _cache.Calls.TryGet(callCid, out var call);
-            var streamCall = (IStreamCall)call;
-
-            if (!callExists || isRejoin || isMigration)
+            
+            if (_joinCallCts != null)
             {
-                try
+                _logs.ErrorIfDebug("Previous join call CTS was not cleaned up properly. Cancelling it now.");
+                _joinCallCts.Cancel();
+                _joinCallCts.Dispose();
+                _joinCallCts = null;
+            }
+
+            if (_activeCallCts != null)
+            {
+                _logs.ErrorIfDebug("Previous active call CTS was not cleaned up properly. Cancelling it now.");
+                _activeCallCts.Cancel();
+                _activeCallCts.Dispose();
+                _activeCallCts = null;
+            }
+
+            _joinCallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            try
+            {
+
+
+
+                var isMigration = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
+                var isRejoin = _reconnectStrategy == WebsocketReconnectStrategy.Rejoin;
+                var isFast = _reconnectStrategy == WebsocketReconnectStrategy.Fast;
+
+                var callCid = joinCallData.Type + ":" + joinCallData.Id;
+                var callExists = _cache.Calls.TryGet(callCid, out var call);
+                var streamCall = (IStreamCall)call;
+
+                if (!callExists || isRejoin || isMigration)
                 {
-                    streamCall = await ExecuteJoinRequest(joinCallData, cancellationToken);
-                    _lastJoinCallCredentials = streamCall.Credentials;
-                }
-                catch (Exception e)
-                {
-                    if (CallState != CallingState.Offline)
+                    try
                     {
-                        CallState = prevCallState;
+                        streamCall = await ExecuteJoinRequest(joinCallData, cancellationToken);
+                        _lastJoinCallCredentials = streamCall.Credentials;
+                    }
+                    catch (Exception e)
+                    {
+                        if (CallState != CallingState.Offline)
+                        {
+                            CallState = prevCallState;
+                        }
+
+                        throw;
+                    }
+                }
+
+                var isWsHealthy = _sfuWebSocket.IsHealthy;
+                var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
+
+                // a new session_id is necessary for the REJOIN strategy.
+                // we use the previous session_id if available
+                var previousSessionId = isRejoin ? null : SessionId;
+
+                if (isRejoin || SessionId.IsEmpty)
+                {
+                    SessionId.Regenerate();
+                }
+
+                if (startNewSfuWsSession)
+                {
+                    if (_sfuWebSocket.ConnectionState == ConnectionState.Connected)
+                    {
+                        await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure,
+                            $"Join call. {nameof(isRejoin)}:{isRejoin}, {nameof(isMigration)}:{isMigration}, {nameof(isWsHealthy)}:{isWsHealthy}");
                     }
 
-                    throw;
-                }
-            }
+                    var sfuUrl = call.Credentials.Server.Url;
+                    var sfuToken = call.Credentials.Token;
+                    var iceServers = call.Credentials.IceServers;
 
-            var isWsHealthy = _sfuWebSocket.IsHealthy;
-            var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
-            
-            // a new session_id is necessary for the REJOIN strategy.
-            // we use the previous session_id if available
-            var previousSessionId = isRejoin ? null : SessionId;
+                    // Initialize tracers with the correct ID format - separate tracers for SFU, Publisher, and Subscriber
+                    var sfuUrlForId = sfuUrl.Replace("https://", "").Replace("/twirp", "");
+                    var sessionNumber = _sessionCounter + 1;
+                    _sfuTracer = _tracerManager.GetTracer($"{sessionNumber}-{sfuUrlForId}");
+                    _publisherTracer = _tracerManager.GetTracer($"{sessionNumber}-pub");
+                    _subscriberTracer = _tracerManager.GetTracer($"{sessionNumber}-sub");
+                    _sessionCounter++;
 
-            if (isRejoin || SessionId.IsEmpty)
-            {
-                SessionId.Regenerate();
-            }
+                    CreatePublisher(call.Credentials.IceServers);
+                    CreateSubscriber(call.Credentials.IceServers);
 
-            if (startNewSfuWsSession)
-            {
-                if (_sfuWebSocket.ConnectionState == ConnectionState.Connected)
-                {
-                    await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure,
-                        $"Join call. {nameof(isRejoin)}:{isRejoin}, {nameof(isMigration)}:{isMigration}, {nameof(isWsHealthy)}:{isWsHealthy}");
-                }
+                    // We don't set initial offer as local. Later on we set generated answer as a local
+                    var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
+                    var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
 
-                var sfuUrl = call.Credentials.Server.Url;
-                var sfuToken = call.Credentials.Token;
-                var iceServers = call.Credentials.IceServers;
+                    _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
 
-                // We don't set initial offer as local. Later on we set generated answer as a local
-                var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
-                var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
-
-                _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
-
-                var joinRequest = new SfuWebSocket.ConnectRequest
-                {
-                    ReconnectDetails = new ReconnectDetails
+                    var joinRequest = new SfuWebSocket.ConnectRequest
                     {
-                        Strategy = _reconnectStrategy,
-                        ReconnectAttempt = (uint)_reconnectAttempts,
-                        FromSfuId = joinCallData.MigratingFromSfu,
-                        PreviousSessionId = previousSessionId,
-                        Reason = _reconnectReason
-                    }
-                };
-                
-                var joinResponse = await _sfuWebSocket.ConnectAsync(joinRequest, cancellationToken);
+                        ReconnectDetails = new ReconnectDetails
+                        {
+                            Strategy = _reconnectStrategy,
+                            ReconnectAttempt = (uint)_reconnectAttempts,
+                            FromSfuId = joinCallData.MigratingFromSfu,
+                            PreviousSessionId = previousSessionId,
+                            Reason = _reconnectReason ?? string.Empty
+                        }
+                    };
 
-                _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
-            }
+                    var joinResponse = await _sfuWebSocket.ConnectAsync(joinRequest, cancellationToken);
 
-            if (!isMigration)
-            {
-                // in MIGRATION, `JOINED` state is set in `this.reconnectMigrate()`
-                CallState = CallingState.Joined;
-            }
+                    _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
+                }
 
-            // when performing fast reconnect, or when we reuse the same SFU client,
-            // (ws remained healthy), we just need to restore the ICE connection
-            if (isFast)
-            {
-                // the SFU automatically issues an ICE restart on the subscriber
-                // we don't have to do it ourselves
-                await Publisher.RestartIce(); //StreamTODO: cancellation token
-            }
-            else
-            {
-                CreatePublisher(call.Credentials.IceServers);
-                CreateSubscriber(call.Credentials.IceServers);
-            }
+                if (!isMigration)
+                {
+                    // in MIGRATION, `JOINED` state is set in `this.reconnectMigrate()`
+                    CallState = CallingState.Joined;
+                }
 
-            if (!isRejoin && !isFast && !isMigration)
-            {
-                // TODO: send sendConnectionTime   
-            }
+                // when performing fast reconnect, or when we reuse the same SFU client,
+                // (ws remained healthy), we just need to restore the ICE connection
+                if (isFast)
+                {
+                    // the SFU automatically issues an ICE restart on the subscriber
+                    // we don't have to do it ourselves
+                    await Publisher.RestartIce(); //StreamTODO: cancellation token
+                }
+                else
+                {
+                    CreatePublisher(call.Credentials.IceServers);
+                    CreateSubscriber(call.Credentials.IceServers);
+                }
 
-            if (isRejoin && isWsHealthy)
-            {
-                // Close previous SFU WS client
-            }
-            else if (!isWsHealthy)
-            {
-                // Close unhealthy WS client
-            }
+                if (!isRejoin && !isFast && !isMigration)
+                {
+                    // TODO: send sendConnectionTime   
+                }
 
-            //StreamTODO: JS client deletes here ring and notify data because these are one-time actions
-            //delete this.joinCallData?.ring;
-            //delete this.joinCallData?.notify;
+                if (isRejoin && isWsHealthy)
+                {
+                    // Close previous SFU WS client
+                }
+                else if (!isWsHealthy)
+                {
+                    // Close unhealthy WS client
+                }
 
-            _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
-            _reconnectReason = string.Empty;
-            
-            if (UseNativeAudioBindings)
-            {
-                //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
+                //StreamTODO: JS client deletes here ring and notify data because these are one-time actions
+                //delete this.joinCallData?.ring;
+                //delete this.joinCallData?.notify;
+
+                _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
+                _reconnectReason = string.Empty;
+
+                if (UseNativeAudioBindings)
+                {
+                    //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
 #if STREAM_NATIVE_AUDIO
                     WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
 #endif
+                }
+
+                _logs.Info("Joined call: " + call.Cid);
+            }
+            finally
+            {
+                if (_joinCallCts != null)
+                {
+                    _joinCallCts.Dispose();
+                    _joinCallCts = null;
+                }
             }
 
-            _logs.Info("Joined call: " + call.Cid);
         }
 
         private async Task<IStreamCall> ExecuteJoinRequest(JoinCallData data, CancellationToken cancellationToken)
@@ -1105,7 +1149,6 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            //StreamTODO: add cancellation token support
             SubscribeToTracksAsync(GetCurrentCancellationTokenOrDefault()).ContinueWith(t =>
             {
                 if (ActiveCall == null)
@@ -1700,6 +1743,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private async Task RestoreSubscribedTracks()
         {
+            TryExecuteSubscribeToTracks();
         }
 
         private async Task UpdateMuteStateAsync(TrackType trackType, bool isEnabled)
@@ -2406,8 +2450,7 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         private void CreatePublisher(IEnumerable<ICEServer> iceServers)
         {
-            //StreamTodo: Handle default settings -> speaker off, mic off, cam off
-            var callSettings = ActiveCall.Settings;
+            //StreamTodo: Handle default settings -> speaker off, mic off, cam off. From call.Settings
 
             //StreamTODO: solve this differently. We probably need to keep old WS client live when migrating
             //But we don't want to create a leak
@@ -2484,7 +2527,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             return true;
         }
-
 
         private void SubscribeToSfuEvents()
         {

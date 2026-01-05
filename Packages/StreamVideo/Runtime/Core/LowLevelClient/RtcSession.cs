@@ -14,6 +14,7 @@ using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
+using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.LowLevelClient.WebSockets;
 using StreamVideo.Core.Models;
@@ -338,161 +339,161 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public void SetCallingState(CallingState newState) => CallState = newState;
+        //public void SetCallingState(CallingState newState) => CallState = newState;
 
-        public async Task StartAsync(StreamCall call, CancellationToken cancellationToken = default)
-        {
-            if (ActiveCall != null)
-            {
-                throw new InvalidOperationException(
-                    $"Cannot start new session until previous call is active. Active call: {ActiveCall}");
-            }
-
-            if (call == null)
-            {
-                throw new ArgumentNullException(nameof(call));
-            }
-
-            try
-            {
-                _logs.Info($"Start joining a call: type={call.Type}, id={call.Id}");
-
-                //StreamTodo: perhaps not necessary here
-                ClearSession();
-
-                if (_joinCallCts != null)
-                {
-                    _logs.ErrorIfDebug("Previous join call CTS was not cleaned up properly. Cancelling it now.");
-                    _joinCallCts.Cancel();
-                    _joinCallCts.Dispose();
-                    _joinCallCts = null;
-                }
-
-                if (_activeCallCts != null)
-                {
-                    _logs.ErrorIfDebug("Previous active call CTS was not cleaned up properly. Cancelling it now.");
-                    _activeCallCts.Cancel();
-                    _activeCallCts.Dispose();
-                    _activeCallCts = null;
-                }
-
-                _joinCallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-                SubscribeToSfuEvents();
-
-                ActiveCall = call;
-                _httpClient = _httpClientFactory(ActiveCall);
-
-                CallState = CallingState.Joining;
-
-                ValidateCallCredentialsOrThrow(ActiveCall);
-
-                var sfuUrl = call.Credentials.Server.Url;
-                var sfuToken = call.Credentials.Token;
-                var iceServers = call.Credentials.IceServers;
-
-                // Initialize tracers with the correct ID format - separate tracers for SFU, Publisher, and Subscriber
-                var sfuUrlForId = sfuUrl.Replace("https://", "").Replace("/twirp", "");
-                var sessionNumber = _sessionCounter + 1;
-                _sfuTracer = _tracerManager.GetTracer($"{sessionNumber}-{sfuUrlForId}");
-                _publisherTracer = _tracerManager.GetTracer($"{sessionNumber}-pub");
-                _subscriberTracer = _tracerManager.GetTracer($"{sessionNumber}-sub");
-                _sessionCounter++;
-
-                CreateSubscriber(iceServers);
-
-                SessionId.Regenerate();
-
-#if STREAM_DEBUG_ENABLED
-                _logs.Info($"START Session: " + SessionId);
-#endif
-
-                // We don't set initial offer as local. Later on we set generated answer as a local
-                var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
-                var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
-
-                if (string.IsNullOrEmpty(subscriberOffer.sdp))
-                {
-                    throw new ArgumentException("Generated offer SDP is null or empty");
-                }
-
-                _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
-                await _sfuWebSocket.ConnectAsync(default, cancellationToken);
-
-#if STREAM_TESTS_ENABLED && UNITY_EDITOR
-                // Simulate a bit of delay for tests so we can test killing the operation in progress
-                //StreamTOdo: we could add fake delays in multiple places and this way control exiting from every step in tests
-                await Task.Delay(100);
-#endif
-
-                // Wait for call to be joined with timeout
-                const int joinTimeoutSeconds = 30;
-                var joinStartTime = _timeService.Time;
-                while (CallState != CallingState.Joined)
-                {
-                    await Task.Delay(1, cancellationToken);
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    var elapsedTime = _timeService.Time - joinStartTime;
-                    if (elapsedTime > joinTimeoutSeconds)
-                    {
-                        throw new TimeoutException(
-                            $"Failed to join call within {joinTimeoutSeconds} seconds. Current state: {CallState}");
-                    }
-                }
-
-                // Wait for SFU connected to receive track prefix
-                if (CanPublish())
-                {
-                    CreatePublisher(iceServers);
-                }
-
-                await SubscribeToTracksAsync(cancellationToken);
-
-                if (UseNativeAudioBindings)
-                {
-                    //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
-#if STREAM_NATIVE_AUDIO
-                    WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
-#endif
-                }
-
-                foreach (var p in ActiveCall.Participants)
-                {
-                    NotifyParticipantJoined(p.SessionId);
-                }
-
-                //StreamTodo: validate when this state should set
-                CallState = CallingState.Joined;
-
-                _activeCallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-                _logs.Info($"Joined call: type={call.Type}, id={call.Id}");
-
-#if STREAM_DEBUG_ENABLED
-                _videoAudioSyncBenchmark?.Init(call);
-#endif
-            }
-            catch (OperationCanceledException)
-            {
-                ClearSession();
-                throw;
-            }
-            catch (Exception e)
-            {
-                _logs.Exception(e);
-                ClearSession();
-                throw;
-            }
-            finally
-            {
-                if (_joinCallCts != null)
-                {
-                    _joinCallCts.Dispose();
-                    _joinCallCts = null;
-                }
-            }
-        }
+//         public async Task StartAsync(StreamCall call, CancellationToken cancellationToken = default)
+//         {
+//             if (ActiveCall != null)
+//             {
+//                 throw new InvalidOperationException(
+//                     $"Cannot start new session until previous call is active. Active call: {ActiveCall}");
+//             }
+//
+//             if (call == null)
+//             {
+//                 throw new ArgumentNullException(nameof(call));
+//             }
+//
+//             try
+//             {
+//                 _logs.Info($"Start joining a call: type={call.Type}, id={call.Id}");
+//
+//                 //StreamTodo: perhaps not necessary here
+//                 ClearSession();
+//
+//                 if (_joinCallCts != null)
+//                 {
+//                     _logs.ErrorIfDebug("Previous join call CTS was not cleaned up properly. Cancelling it now.");
+//                     _joinCallCts.Cancel();
+//                     _joinCallCts.Dispose();
+//                     _joinCallCts = null;
+//                 }
+//
+//                 if (_activeCallCts != null)
+//                 {
+//                     _logs.ErrorIfDebug("Previous active call CTS was not cleaned up properly. Cancelling it now.");
+//                     _activeCallCts.Cancel();
+//                     _activeCallCts.Dispose();
+//                     _activeCallCts = null;
+//                 }
+//
+//                 _joinCallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+//
+//                 SubscribeToSfuEvents();
+//
+//                 ActiveCall = call;
+//                 _httpClient = _httpClientFactory(ActiveCall);
+//
+//                 CallState = CallingState.Joining;
+//
+//                 ValidateCallCredentialsOrThrow(ActiveCall);
+//
+//                 var sfuUrl = call.Credentials.Server.Url;
+//                 var sfuToken = call.Credentials.Token;
+//                 var iceServers = call.Credentials.IceServers;
+//
+//                 // Initialize tracers with the correct ID format - separate tracers for SFU, Publisher, and Subscriber
+//                 var sfuUrlForId = sfuUrl.Replace("https://", "").Replace("/twirp", "");
+//                 var sessionNumber = _sessionCounter + 1;
+//                 _sfuTracer = _tracerManager.GetTracer($"{sessionNumber}-{sfuUrlForId}");
+//                 _publisherTracer = _tracerManager.GetTracer($"{sessionNumber}-pub");
+//                 _subscriberTracer = _tracerManager.GetTracer($"{sessionNumber}-sub");
+//                 _sessionCounter++;
+//
+//                 CreateSubscriber(iceServers);
+//
+//                 SessionId.Regenerate();
+//
+// #if STREAM_DEBUG_ENABLED
+//                 _logs.Info($"START Session: " + SessionId);
+// #endif
+//
+//                 // We don't set initial offer as local. Later on we set generated answer as a local
+//                 var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
+//                 var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
+//
+//                 if (string.IsNullOrEmpty(subscriberOffer.sdp))
+//                 {
+//                     throw new ArgumentException("Generated offer SDP is null or empty");
+//                 }
+//
+//                 _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
+//                 await _sfuWebSocket.ConnectAsync(default, cancellationToken);
+//
+// #if STREAM_TESTS_ENABLED && UNITY_EDITOR
+//                 // Simulate a bit of delay for tests so we can test killing the operation in progress
+//                 //StreamTOdo: we could add fake delays in multiple places and this way control exiting from every step in tests
+//                 await Task.Delay(100);
+// #endif
+//
+//                 // Wait for call to be joined with timeout
+//                 const int joinTimeoutSeconds = 30;
+//                 var joinStartTime = _timeService.Time;
+//                 while (CallState != CallingState.Joined)
+//                 {
+//                     await Task.Delay(1, cancellationToken);
+//                     cancellationToken.ThrowIfCancellationRequested();
+//
+//                     var elapsedTime = _timeService.Time - joinStartTime;
+//                     if (elapsedTime > joinTimeoutSeconds)
+//                     {
+//                         throw new TimeoutException(
+//                             $"Failed to join call within {joinTimeoutSeconds} seconds. Current state: {CallState}");
+//                     }
+//                 }
+//
+//                 // Wait for SFU connected to receive track prefix
+//                 if (CanPublish())
+//                 {
+//                     CreatePublisher(iceServers);
+//                 }
+//
+//                 await SubscribeToTracksAsync(cancellationToken);
+//
+//                 if (UseNativeAudioBindings)
+//                 {
+//                     //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
+// #if STREAM_NATIVE_AUDIO
+//                     WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+// #endif
+//                 }
+//
+//                 foreach (var p in ActiveCall.Participants)
+//                 {
+//                     NotifyParticipantJoined(p.SessionId);
+//                 }
+//
+//                 //StreamTodo: validate when this state should set
+//                 CallState = CallingState.Joined;
+//
+//                 _activeCallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+//
+//                 _logs.Info($"Joined call: type={call.Type}, id={call.Id}");
+//
+// #if STREAM_DEBUG_ENABLED
+//                 _videoAudioSyncBenchmark?.Init(call);
+// #endif
+//             }
+//             catch (OperationCanceledException)
+//             {
+//                 ClearSession();
+//                 throw;
+//             }
+//             catch (Exception e)
+//             {
+//                 _logs.Exception(e);
+//                 ClearSession();
+//                 throw;
+//             }
+//             finally
+//             {
+//                 if (_joinCallCts != null)
+//                 {
+//                     _joinCallCts.Dispose();
+//                     _joinCallCts = null;
+//                 }
+//             }
+//         }
 
         private const int CallJoinMaxRetries = 3;
 
@@ -954,6 +955,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly VideoAudioSyncBenchmark _videoAudioSyncBenchmark;
         private readonly SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
         private readonly TracerManager _tracerManager = new TracerManager(enabled: true);
+        private readonly StreamVideoLowLevelClient _lowLevelClient;
 
         private Tracer _sfuTracer;
         private Tracer _publisherTracer;
@@ -994,6 +996,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private TaskCompletionSource<bool> _joinTaskCompletionSource;
         private int _fastReconnectDeadlineSeconds;
+
+        private WebsocketReconnectStrategy _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
+        private string _reconnectReason;
+        private int _reconnectAttempts;
+        private JoinCallData _joinCallData;
 
         private void ClearSession()
         {
@@ -1597,18 +1604,33 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
+                    if (e is StreamApiException apiException && apiException.Unrecoverable)
+                    {
+                        _logs.Error("Can't reconnect due to coordinator unrecoverable error: " + apiException);
+                        throw;
+                    }
+
+                    await Task.Delay(500, GetCurrentCancellationTokenOrDefault());
+
+                    var wasMigrating = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
+
+                    var fastReconnectTimeout = (DateTime.UtcNow - reconnectStartTime).TotalSeconds >
+                                               _fastReconnectDeadlineSeconds;
+
+                    var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? true) && (Subscriber?.IsHealthy ?? true);
+
+                    // don't immediately switch to the REJOIN strategy, but instead attempt
+                    // to reconnect with the FAST strategy for a few times before switching.
+                    // in some cases, we immediately switch to the REJOIN strategy.
+                    var shouldRejoin = fastReconnectTimeout || wasMigrating || attempt >= 3 ||
+                                       !arePeerConnectionsHealthy;
+
+                    attempt++;
+                    _reconnectStrategy
+                        = shouldRejoin ? WebsocketReconnectStrategy.Rejoin : WebsocketReconnectStrategy.Fast;
                 }
             } while (finishedStates.All(s => s != CallState));
         }
-
-        //move
-        private WebsocketReconnectStrategy _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
-        private string _reconnectReason;
-        private int _reconnectAttempts;
-        private readonly StreamVideoLowLevelClient _lowLevelClient;
-        private JoinCallData _joinCallData;
 
         private async Task ReconnectFast()
         {
@@ -2460,6 +2482,14 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             //StreamTODO: check if we're closing intentionally
+            // For this to work we probably need to refactor our SFU and Coordinator WS wrapper
+            // Currently the wrappers are only created once and each Connect creates a new WS internally
+            // We should probably follow more closely the JS approach so that internal WS client lifetime is tied to wrapper lifetime
+            // So when we need a new WS we'd create a new wrapper as well
+            // This way, when the WS is closed intentionally we can mark it with isLeaving or isClosingClean
+            //
+
+
             //if (sfuClient.isLeaving || sfuClient.isClosingClean) return;
 
             var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);

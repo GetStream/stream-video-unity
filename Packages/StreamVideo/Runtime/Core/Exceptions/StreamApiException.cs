@@ -22,6 +22,7 @@ namespace StreamVideo.Core.Exceptions
         public string Duration { get; }
         public string ErrorMessage { get; }
         public string MoreInfo { get; }
+        public bool Unrecoverable { get; }
 
         public IReadOnlyDictionary<string, string> ExceptionFields => _exceptionFields;
 
@@ -34,6 +35,7 @@ namespace StreamVideo.Core.Exceptions
             Duration = apiError.Duration;
             ErrorMessage = apiError.Message;
             MoreInfo = apiError.MoreInfo;
+            Unrecoverable = apiError.Unrecoverable;
 
             if (apiError.ExceptionFields != null && apiError.ExceptionFields.Count > 0)
             {

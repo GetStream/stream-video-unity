@@ -36,6 +36,27 @@ namespace StreamVideo.Core.LowLevelClient
 
         public RTCSignalingState SignalingState => PeerConnection.SignalingState;
 
+        public bool IsHealthy
+        {
+            get
+            {
+                var iceState = PeerConnection.IceConnectionState;
+                if (iceState == RTCIceConnectionState.Closed || iceState == RTCIceConnectionState.Failed)
+                {
+                    return false;
+                }
+
+                var connectionState = PeerConnection.ConnectionState;
+                if (connectionState == RTCPeerConnectionState.Closed ||
+                    connectionState == RTCPeerConnectionState.Failed)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
         protected PeerConnectionBase(ILogs logs, StreamPeerType peerType, IEnumerable<ICEServer> iceServers,
             Tracer tracer, ISerializer serializer, ISfuClient sfuClient)
         {

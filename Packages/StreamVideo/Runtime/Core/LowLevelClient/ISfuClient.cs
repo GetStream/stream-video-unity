@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace StreamVideo.Core.LowLevelClient
 {
+    //StreamTODO: rename to ISfuRpcClient?
     internal interface ISfuClient
     {
         SessionID SessionId { get; }

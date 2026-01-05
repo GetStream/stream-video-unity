@@ -218,16 +218,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         #endregion
 
-        public bool ShouldSfuAttemptToReconnect()
-        {
-            if (CallState != CallingState.Joined && CallState != CallingState.Joining)
-            {
-                return false;
-            }
-
-            return !GetCurrentCancellationTokenOrDefault().IsCancellationRequested;
-        }
-
         public SessionID SessionId { get; } = new SessionID();
 
         public RtcSession(SfuWebSocket sfuWebSocket, Func<IStreamCall, HttpClient> httpClientFactory, ILogs logs,
@@ -505,19 +495,21 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private const int CallJoinMaxRetries = 3;
-        
+
         public async Task Join(JoinCallData joinCallData, CancellationToken cancellationToken)
         {
             if (CallState == CallingState.Joined)
             {
-                throw new InvalidOperationException($"Call is already joined. Please leave the current call before joining a new one.");
+                throw new InvalidOperationException(
+                    $"Call is already joined. Please leave the current call before joining a new one.");
             }
 
             if (CallState == CallingState.Joining)
             {
-                throw new InvalidOperationException($"Joining a `{_joinCallData.Id}` call is in progress. Please cancel the current join operation before joining a new one.");
+                throw new InvalidOperationException(
+                    $"Joining a `{_joinCallData.Id}` call is in progress. Please cancel the current join operation before joining a new one.");
             }
-            
+
             // we will count the number of join failures per SFU.
             // once the number of failures reaches 2, we will piggyback on the `migrating_from`
             // field to force the coordinator to provide us another SFU
@@ -529,13 +521,13 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     _lastJoinCallCredentials = null;
                     await DoJoin(joinCallData, cancellationToken);
-                    
+
                     //TODO: joinData.ClearMigrationData
                 }
                 catch (Exception e)
                 {
                     _logs.Warning($"Failed to join call `{joinCallData.Id}`, attempt: {attempt}");
-                    
+
                     //TODO: check if error is no recoverable
                     //if (err instanceof ErrorFromResponse && err.unrecoverable)
 
@@ -557,7 +549,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
         }
-        
+
         //StreamTODO: add Join with multiple attempts to DoJoin then remove the StartAsync
 
         private Credentials _lastJoinCallCredentials;
@@ -570,7 +562,7 @@ namespace StreamVideo.Core.LowLevelClient
             _joinCallData = joinCallData;
 
             CallState = CallingState.Joining;
-            
+
             if (_joinCallCts != null)
             {
                 _logs.ErrorIfDebug("Previous join call CTS was not cleaned up properly. Cancelling it now.");
@@ -591,9 +583,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             try
             {
-
-
-
                 var isMigration = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
                 var isRejoin = _reconnectStrategy == WebsocketReconnectStrategy.Rejoin;
                 var isFast = _reconnectStrategy == WebsocketReconnectStrategy.Fast;
@@ -737,7 +726,6 @@ namespace StreamVideo.Core.LowLevelClient
                     _joinCallCts = null;
                 }
             }
-
         }
 
         private async Task<IStreamCall> ExecuteJoinRequest(JoinCallData data, CancellationToken cancellationToken)
@@ -1628,7 +1616,16 @@ namespace StreamVideo.Core.LowLevelClient
             CallState = CallingState.Reconnecting;
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
 
-            //StreamTODO: update call state, execute call Get here
+            var getCallResponse
+                = await _lowLevelClient.InternalVideoClientApi.GetCallAsync(ActiveCall.Type, ActiveCall.Id,
+                    new GetOrCreateCallRequestInternalDTO(), GetCurrentCancellationTokenOrDefault());
+            _cache.TryCreateOrUpdate(getCallResponse);
+
+            //StreamTODO: send reconnection time
+            //this.sfuStatsReporter?.sendReconnectionTime(
+            //    WebsocketReconnectStrategy.FAST,
+            //    (Date.now() - reconnectStartTime) / 1000,
+            //);
         }
 
         private async Task ReconnectRejoin()
@@ -1673,14 +1670,13 @@ namespace StreamVideo.Core.LowLevelClient
                         throw new ArgumentOutOfRangeException();
                 }
             }
-            
+
             //StreamTODO: revise this, the JS client executes this a bit differently
         }
 
         private void RestoreSubscribedTracks()
         {
             TryExecuteSubscribeToTracks();
-            
         }
 
         private async Task UpdateMuteStateAsync(TrackType trackType, bool isEnabled)
@@ -2448,7 +2444,30 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuWebSocketDisconnected()
         {
-            //StreamTODO: check how other SDKs are handling this. Ideally we should have call recovery logic here
+            // JS client doesn't trigger reconnect() in these cases
+            switch (CallState)
+            {
+                // SFU WS closed before we finished joining
+                case CallingState.Joining:
+
+                // SFU WS closed due to unsuccessful join
+                case CallingState.Idle:
+                case CallingState.Left:
+
+                // We're already reconnecting
+                case CallingState.Reconnecting:
+                    return;
+            }
+
+            //StreamTODO: check if we're closing intentionally
+            //if (sfuClient.isLeaving || sfuClient.isClosingClean) return;
+
+            var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);
+            var strategy = arePeerConnectionsHealthy
+                ? WebsocketReconnectStrategy.Fast
+                : WebsocketReconnectStrategy.Rejoin;
+
+            Reconnect(strategy, "SFU WS was disconnected").LogIfFailed();
         }
 
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)

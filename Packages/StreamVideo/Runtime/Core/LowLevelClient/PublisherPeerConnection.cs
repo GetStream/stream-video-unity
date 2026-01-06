@@ -61,7 +61,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
                 SavePublishedTrackOrder(TrackType.Video);
 
                 _publisherVideoTrack = value;
@@ -263,17 +263,22 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         public IEnumerable<TrackInfo> GetAnnouncedTracksForReconnect()
         {
-            var sdp = PeerConnection?.LocalDescription.sdp;
-            if (string.IsNullOrEmpty(sdp))
+            string sdp;
+            try
+            {
+                // Throws exception if SDP was not set
+                sdp = PeerConnection?.LocalDescription.sdp;
+            }
+            catch
             {
                 yield break;
             }
-            
+
             //StreamTODO: skip tracks stopped due to a codec switch
             foreach (var t in GetAnnouncedTracks(sdp))
             {
                 yield return t;
-            } 
+            }
         }
 
         private TrackInfo GenerateTrackInfo(RTCRtpTransceiver transceiver, string sdp)

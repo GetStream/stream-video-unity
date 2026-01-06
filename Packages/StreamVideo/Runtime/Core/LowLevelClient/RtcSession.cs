@@ -585,14 +585,13 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var callCid = joinCallData.Type + ":" + joinCallData.Id;
                 var callExists = _cache.Calls.TryGet(callCid, out var call);
-                var streamCall = (IStreamCall)call;
 
                 if (!callExists || isRejoin || isMigration)
                 {
                     try
                     {
-                        streamCall = await ExecuteJoinRequest(joinCallData, cancellationToken);
-                        _lastJoinCallCredentials = streamCall.Credentials;
+                        call = await ExecuteJoinRequest(joinCallData, cancellationToken);
+                        _lastJoinCallCredentials = call.Credentials;
                     }
                     catch (Exception e)
                     {
@@ -604,6 +603,8 @@ namespace StreamVideo.Core.LowLevelClient
                         throw;
                     }
                 }
+
+                ActiveCall = call ?? throw new NullReferenceException(nameof(call));
 
                 var isWsHealthy = _sfuWebSocket.IsHealthy;
                 var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
@@ -666,7 +667,7 @@ namespace StreamVideo.Core.LowLevelClient
                     {
                         reconnectDetails.Subscriptions.AddRange(desiredTracks);
                     }
-                    
+
                     var joinRequest = new SfuWebSocket.ConnectRequest
                     {
                         ReconnectDetails = reconnectDetails
@@ -728,6 +729,11 @@ namespace StreamVideo.Core.LowLevelClient
 
                 _logs.Info("Joined call: " + call.Cid);
             }
+            catch (Exception e)
+            {
+                _logs.ExceptionIfDebug(e);
+                throw;
+            }
             finally
             {
                 if (_joinCallCts != null)
@@ -738,7 +744,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private async Task<IStreamCall> ExecuteJoinRequest(JoinCallData data, CancellationToken cancellationToken)
+        private async Task<StreamCall> ExecuteJoinRequest(JoinCallData data, CancellationToken cancellationToken)
         {
             // StreamTodo: check state if we don't have an active session already
             var locationHint = await _lowLevelClient.GetLocationHintAsync(cancellationToken);

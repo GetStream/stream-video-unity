@@ -85,7 +85,18 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
 #if STREAM_DEBUG_ENABLED
                 Debug.Log($"Stream Video Client Disposed - destroy {nameof(UnityStreamVideoClientRunner)} instance");
 #endif
-                Destroy(gameObject);
+                #if UNITY_EDITOR
+                if (Application.isPlaying)
+                {
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(gameObject);
+                }
+                #else
+                    Destroy(gameObject);
+                #endif
             }
 
         }

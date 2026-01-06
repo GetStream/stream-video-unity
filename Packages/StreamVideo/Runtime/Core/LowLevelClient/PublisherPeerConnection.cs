@@ -258,6 +258,24 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        /// <summary>
+        /// Returns the list of published tracks for the reconnect flow
+        /// </summary>
+        public IEnumerable<TrackInfo> GetAnnouncedTracksForReconnect()
+        {
+            var sdp = PeerConnection?.LocalDescription.sdp;
+            if (string.IsNullOrEmpty(sdp))
+            {
+                yield break;
+            }
+            
+            //StreamTODO: skip tracks stopped due to a codec switch
+            foreach (var t in GetAnnouncedTracks(sdp))
+            {
+                yield return t;
+            } 
+        }
+
         private TrackInfo GenerateTrackInfo(RTCRtpTransceiver transceiver, string sdp)
         {
             var track = transceiver.Sender.Track;

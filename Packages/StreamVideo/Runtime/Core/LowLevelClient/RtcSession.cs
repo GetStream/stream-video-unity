@@ -495,8 +495,6 @@ namespace StreamVideo.Core.LowLevelClient
 //             }
 //         }
 
-        private const int CallJoinMaxRetries = 3;
-
         public async Task Join(JoinCallData joinCallData, CancellationToken cancellationToken)
         {
             if (CallState == CallingState.Joined)
@@ -551,9 +549,6 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        //StreamTODO: add Join with multiple attempts to DoJoin then remove the StartAsync
-
-        private Credentials _lastJoinCallCredentials;
 
         //StreamTODO: cancellation token
         public async Task DoJoin(JoinCallData joinCallData, CancellationToken cancellationToken)
@@ -651,16 +646,30 @@ namespace StreamVideo.Core.LowLevelClient
 
                     _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
 
+                    var reconnectDetails = new ReconnectDetails
+                    {
+                        Strategy = _reconnectStrategy,
+                        ReconnectAttempt = (uint)_reconnectAttempts,
+                        FromSfuId = joinCallData.MigratingFromSfu,
+                        PreviousSessionId = previousSessionId,
+                        Reason = _reconnectReason ?? string.Empty,
+                    };
+
+                    var announcedTracks = Publisher?.GetAnnouncedTracksForReconnect();
+                    if (announcedTracks?.Any() ?? false)
+                    {
+                        reconnectDetails.AnnouncedTracks.AddRange(announcedTracks);
+                    }
+
+                    var desiredTracks = GetDesiredTracksDetails();
+                    if (desiredTracks.Any())
+                    {
+                        reconnectDetails.Subscriptions.AddRange(desiredTracks);
+                    }
+                    
                     var joinRequest = new SfuWebSocket.ConnectRequest
                     {
-                        ReconnectDetails = new ReconnectDetails
-                        {
-                            Strategy = _reconnectStrategy,
-                            ReconnectAttempt = (uint)_reconnectAttempts,
-                            FromSfuId = joinCallData.MigratingFromSfu,
-                            PreviousSessionId = previousSessionId,
-                            Reason = _reconnectReason ?? string.Empty
-                        }
+                        ReconnectDetails = reconnectDetails
                     };
 
                     var joinResponse = await _sfuWebSocket.ConnectAsync(joinRequest, cancellationToken);
@@ -944,6 +953,8 @@ namespace StreamVideo.Core.LowLevelClient
         public void TrySetPublisherVideoTrackEnabled(bool isEnabled) => PublisherVideoTrackIsEnabled = isEnabled;
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
+        private const int CallJoinMaxRetries = 3;
+        private const int CallRejoinMaxFastAttempts = 3;
 
         private readonly SfuWebSocket _sfuWebSocket;
         private readonly ISerializer _serializer;
@@ -1001,6 +1012,8 @@ namespace StreamVideo.Core.LowLevelClient
         private string _reconnectReason;
         private int _reconnectAttempts;
         private JoinCallData _joinCallData;
+        
+        private Credentials _lastJoinCallCredentials;
 
         private void ClearSession()
         {
@@ -1565,6 +1578,7 @@ namespace StreamVideo.Core.LowLevelClient
             catch (Exception e)
             {
                 CallState = CallingState.ReconnectingFailed;
+                throw;
             }
 
             var attempt = 0;
@@ -1627,7 +1641,7 @@ namespace StreamVideo.Core.LowLevelClient
                     // don't immediately switch to the REJOIN strategy, but instead attempt
                     // to reconnect with the FAST strategy for a few times before switching.
                     // in some cases, we immediately switch to the REJOIN strategy.
-                    var shouldRejoin = fastReconnectTimeout || wasMigrating || attempt >= 3 ||
+                    var shouldRejoin = fastReconnectTimeout || wasMigrating || attempt >= CallRejoinMaxFastAttempts ||
                                        !arePeerConnectionsHealthy;
 
                     attempt++;

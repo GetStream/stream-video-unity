@@ -1557,7 +1557,10 @@ namespace StreamVideo.Core.LowLevelClient
             // Try to get the latest state from the server. State might have changed while we were offline
             try
             {
-                //StreamTODO: execute get call to refresh the state in cache
+                var getCallResponse
+                    = await _lowLevelClient.InternalVideoClientApi.GetCallAsync(ActiveCall.Type, ActiveCall.Id,
+                        new GetOrCreateCallRequestInternalDTO(), GetCurrentCancellationTokenOrDefault());
+                _cache.TryCreateOrUpdate(getCallResponse);
             }
             catch (Exception e)
             {
@@ -1566,6 +1569,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             var attempt = 0;
             var reconnectStartTime = DateTime.UtcNow;
+            
+            //StreamTODO: we should handle cancellation token between each await
 
             do
             {
@@ -1617,7 +1622,7 @@ namespace StreamVideo.Core.LowLevelClient
                     var fastReconnectTimeout = (DateTime.UtcNow - reconnectStartTime).TotalSeconds >
                                                _fastReconnectDeadlineSeconds;
 
-                    var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? true) && (Subscriber?.IsHealthy ?? true);
+                    var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);
 
                     // don't immediately switch to the REJOIN strategy, but instead attempt
                     // to reconnect with the FAST strategy for a few times before switching.
@@ -1628,6 +1633,12 @@ namespace StreamVideo.Core.LowLevelClient
                     attempt++;
                     _reconnectStrategy
                         = shouldRejoin ? WebsocketReconnectStrategy.Rejoin : WebsocketReconnectStrategy.Fast;
+
+                    _logs.WarningIfDebug(
+                        $"Connection failed, attempt: {attempt}, next strategy: {_reconnectStrategy}, wasMigrating: {wasMigrating}, " +
+                        $"fastReconnectTimeout: {fastReconnectTimeout}, arePeerConnectionsHealthy: {arePeerConnectionsHealthy}");
+
+                    //StreamTODO: handle cancellation token
                 }
             } while (finishedStates.All(s => s != CallState));
         }

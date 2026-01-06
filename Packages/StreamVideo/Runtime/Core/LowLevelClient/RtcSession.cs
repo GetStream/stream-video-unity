@@ -549,7 +549,6 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-
         //StreamTODO: cancellation token
         public async Task DoJoin(JoinCallData joinCallData, CancellationToken cancellationToken)
         {
@@ -605,6 +604,10 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 ActiveCall = call ?? throw new NullReferenceException(nameof(call));
+                _httpClient = _httpClientFactory(ActiveCall);
+                
+                UnsubscribeFromSfuEvents();
+                SubscribeToSfuEvents();
 
                 var isWsHealthy = _sfuWebSocket.IsHealthy;
                 var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
@@ -1321,15 +1324,8 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTODO: what if left the call and started a new one but the JoinResponse belongs to the previous session?
 
             _sfuTracer?.Trace(PeerConnectionTraceKey.JoinRequest, joinResponse);
-            _logs.InfoIfDebug($"Handle Sfu {nameof(JoinResponse)}");
-            ActiveCall.UpdateFromSfu(joinResponse);
-            OnSfuJoinedCall();
-        }
 
-        private void OnSfuJoinedCall()
-        {
-            CallState = CallingState.Joined;
-
+            // Not sure if still neded but as a safe net we flush any pending ice candidates
             var cancellationToken = GetCurrentCancellationTokenOrDefault();
             foreach (var iceTrickle in _pendingIceTrickleRequests)
             {

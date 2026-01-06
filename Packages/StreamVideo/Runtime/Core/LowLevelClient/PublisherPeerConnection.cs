@@ -210,15 +210,18 @@ namespace StreamVideo.Core.LowLevelClient
             }
             catch (Exception e)
             {
+                Logs.ExceptionIfDebug(e);
+                
                 // Negotiation failed, rollback to the previous state
                 if (SignalingState == RTCSignalingState.HaveLocalOffer)
                 {
-                    var rollbackDesc = new RTCSessionDescription
-                    {
-                        type = RTCSdpType.Rollback
-                    };
-                    await PeerConnection.SetLocalDescriptionAsync(ref rollbackDesc,
-                        GetCurrentCancellationTokenOrDefault());
+                    //StreamTODO: JS client does below but in Unity webrtc, SetLocalDescriptionAsync throws if sdp is null/empty 
+                    // var rollbackDesc = new RTCSessionDescription
+                    // {
+                    //     type = RTCSdpType.Rollback
+                    // };
+                    // await PeerConnection.SetLocalDescriptionAsync(ref rollbackDesc,
+                    //     GetCurrentCancellationTokenOrDefault());
                 }
 
                 throw;

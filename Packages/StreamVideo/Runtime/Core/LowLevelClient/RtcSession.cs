@@ -701,11 +701,6 @@ namespace StreamVideo.Core.LowLevelClient
                     // we don't have to do it ourselves
                     await Publisher.RestartIce(); //StreamTODO: cancellation token
                 }
-                else
-                {
-                    CreatePublisher(call.Credentials.IceServers);
-                    CreateSubscriber(call.Credentials.IceServers);
-                }
 
                 if (!isRejoin && !isFast && !isMigration)
                 {
@@ -1673,6 +1668,7 @@ namespace StreamVideo.Core.LowLevelClient
             CallState = CallingState.Reconnecting;
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
 
+            // Refresh state, it might have changed while we were shortly offline 
             var getCallResponse
                 = await _lowLevelClient.InternalVideoClientApi.GetCallAsync(ActiveCall.Type, ActiveCall.Id,
                     new GetOrCreateCallRequestInternalDTO(), GetCurrentCancellationTokenOrDefault());

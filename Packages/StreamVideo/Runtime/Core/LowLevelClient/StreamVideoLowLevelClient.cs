@@ -163,7 +163,7 @@ namespace StreamVideo.Core.LowLevelClient
                 lowLevelClient: this);
 
             RtcSession = new RtcSession(_sfuWebSocketWrapper, CreateSessionHttpClient, _logs, _serializer, _timeService,
-                lowLevelClient: this, _config);
+                lowLevelClient: this, _config, _networkMonitor);
 
             RegisterCoordinatorEventHandlers();
 

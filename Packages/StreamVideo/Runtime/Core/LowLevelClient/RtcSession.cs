@@ -36,6 +36,7 @@ using SfuTrackType = StreamVideo.v1.Sfu.Models.TrackType;
 using StreamVideo.Core.Sfu;
 using StreamVideo.Core.Stats;
 using StreamVideo.Core.Trace;
+using StreamVideo.Libs.NetworkMonitors;
 
 namespace StreamVideo.Core.LowLevelClient
 {
@@ -223,14 +224,15 @@ namespace StreamVideo.Core.LowLevelClient
 
         public RtcSession(SfuWebSocket sfuWebSocket, Func<IStreamCall, HttpClient> httpClientFactory, ILogs logs,
             ISerializer serializer, ITimeService timeService, StreamVideoLowLevelClient lowLevelClient,
-            IStreamClientConfig config)
+            IStreamClientConfig config, INetworkMonitor networkMonitor)
         {
-            _lowLevelClient = lowLevelClient;
             _httpClientFactory = httpClientFactory;
-            _config = config;
-            _timeService = timeService;
-            _serializer = serializer;
             _logs = logs;
+            _serializer = serializer;
+            _timeService = timeService;
+            _lowLevelClient = lowLevelClient;
+            _config = config;
+            _networkMonitor = networkMonitor;
 
             //StreamTodo: SFU WS should be created here so that RTC session owns it
             _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
@@ -243,6 +245,8 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning($"Audio benchmark enabled. Waiting for a special video stream to measure audio-video sync. Check {nameof(VideoAudioSyncBenchmark)} summary for more details.");
             _videoAudioSyncBenchmark = new VideoAudioSyncBenchmark(_timeService, _logs);
 #endif
+            
+            _networkMonitor.NetworkAvailabilityChanged += NetworkMonitorOnNetworkAvailabilityChanged;
         }
 
         public void Dispose()
@@ -255,6 +259,8 @@ namespace StreamVideo.Core.LowLevelClient
             DisposePublisher();
 
             _tracerManager?.Clear();
+            
+            _networkMonitor.NetworkAvailabilityChanged -= NetworkMonitorOnNetworkAvailabilityChanged;
         }
 
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
@@ -976,6 +982,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly SdpMungeUtils _sdpMungeUtils = new SdpMungeUtils();
         private readonly TracerManager _tracerManager = new TracerManager(enabled: true);
         private readonly StreamVideoLowLevelClient _lowLevelClient;
+        private readonly INetworkMonitor _networkMonitor;
 
         private Tracer _sfuTracer;
         private Tracer _publisherTracer;
@@ -1023,7 +1030,8 @@ namespace StreamVideo.Core.LowLevelClient
         private JoinCallData _joinCallData;
         
         private Credentials _lastJoinCallCredentials;
-
+        private DateTime _lastTimeOffline;
+        
         private void ClearSession()
         {
             UnsubscribeFromSfuEvents();
@@ -2525,6 +2533,30 @@ namespace StreamVideo.Core.LowLevelClient
                 : WebsocketReconnectStrategy.Rejoin;
 
             Reconnect(strategy, "SFU WS was disconnected").LogIfFailed();
+        }
+        
+        private void NetworkMonitorOnNetworkAvailabilityChanged(bool isNetworkAvailable)
+        {
+            if (isNetworkAvailable)
+            {
+                //StreamTODO: JS client seems to be closing the previous SFU WS client here
+                //this.sfuClient?.close(
+                //    StreamSfuClient.DISPOSE_OLD_SOCKET,
+                //    'Closing WS to reconnect after going online',
+                //);
+                
+                _logs.WarningIfDebug("Going Online");
+                var offlineTime = DateTime.UtcNow - _lastTimeOffline;
+                var strategy = offlineTime.TotalSeconds > _fastReconnectDeadlineSeconds
+                    ? WebsocketReconnectStrategy.Rejoin
+                    : WebsocketReconnectStrategy.Fast;
+                Reconnect(strategy, "Going online").LogIfFailed();
+            }
+            else
+            {
+                _logs.WarningIfDebug("Going Offline");
+                _lastTimeOffline = DateTime.UtcNow;
+            }
         }
 
         private static bool AssertCallIdMatch(IStreamCall activeCall, string callId, ILogs logs)

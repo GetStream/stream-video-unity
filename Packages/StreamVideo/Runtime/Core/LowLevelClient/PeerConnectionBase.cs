@@ -266,7 +266,10 @@ namespace StreamVideo.Core.LowLevelClient
         //Perhaps LogIfFailed() should be in the very start of the call chain
         private void HandleConnectionStateUpdate(RTCIceConnectionState connectionState)
         {
-            //TODO: ignore if calling state Offline or Reconnecting -> handleConnectionStateUpdate()
+            if (SfuClient.CallState == CallingState.Reconnecting || SfuClient.CallState == CallingState.Offline)
+            {
+                return;
+            }
 
             if (IsIceRestarting)
             {
@@ -279,16 +282,10 @@ namespace StreamVideo.Core.LowLevelClient
                     TryRestartIce().LogIfFailed();
                     break;
                 case RTCIceConnectionState.Disconnected:
-                    
-                    // TODO: here JS client does a timeout, checks if still Disconnected or Failed and only then triggers the restart
-                    // But it looks like this is because the browser does some restarting which we don't have
-                    
+                    // JS client runs this after delay but this is probably related to browser behavior and we can skip the delay
                     TryRestartIce().LogIfFailed();
                     break;
                 case RTCIceConnectionState.Connected:
-                    
-                    // TODO: here, we'd clear the timeout if the Disconnected state initiated the timeout
-                    
                     break;
             }
         }

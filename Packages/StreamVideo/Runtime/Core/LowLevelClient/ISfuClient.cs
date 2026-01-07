@@ -9,6 +9,7 @@ namespace StreamVideo.Core.LowLevelClient
     internal interface ISfuClient
     {
         SessionID SessionId { get; }
+        CallingState CallState { get; }
 
         Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,

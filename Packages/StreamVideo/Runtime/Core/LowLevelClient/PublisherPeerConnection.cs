@@ -228,7 +228,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
             finally
             {
-                iceRestart = false;
+                IsIceRestarting = false;
             }
 
             AddTrickledIceCandidates();

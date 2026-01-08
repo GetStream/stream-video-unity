@@ -530,7 +530,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     _lastJoinCallCredentials = null;
                     await DoJoin(joinCallData, cancellationToken);
-
+                    return;
                     //TODO: joinData.ClearMigrationData
                 }
                 catch (Exception e)

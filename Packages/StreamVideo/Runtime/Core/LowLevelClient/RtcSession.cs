@@ -2578,8 +2578,13 @@ namespace StreamVideo.Core.LowLevelClient
                     return;
             }
 
-            if (_sfuWebSocket != null && !_sfuWebSocket.IsClosingClean)
+            if (_sfuWebSocket != null)
             {
+                if (_sfuWebSocket.IsLeaving || _sfuWebSocket.IsClosingClean)
+                {
+                    return;
+                }
+                
 #if STREAM_DEBUG_ENABLED
                 _logs.Info($"[RtcSession] SFU WS disconnected (IsLeaving={_sfuWebSocket.IsLeaving}, IsClosingClean={_sfuWebSocket.IsClosingClean})");
 #endif

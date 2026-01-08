@@ -23,6 +23,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public event Action Disconnected;
 
         public const int ConnectTimeoutMs = 1000;
+        
+        public bool IsLeaving { get; private set; }
+        public bool IsClosingClean { get; private set; }
 
         public ConnectionState ConnectionState
         {
@@ -100,6 +103,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             ConnectionState = ConnectionState.Connecting;
             try
             {
+                IsLeaving = false;
+                IsClosingClean = false;
                 return ExecuteConnectAsync(request, cancellationToken);
             }
             catch (Exception)
@@ -118,6 +123,12 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
 
             ConnectionState = ConnectionState.Disconnecting;
+            IsLeaving = true;
+
+            if (closeStatus == WebSocketCloseStatus.NormalClosure)
+            {
+                IsClosingClean = true;
+            }
 
             await OnDisconnectingAsync(closeMessage);
 

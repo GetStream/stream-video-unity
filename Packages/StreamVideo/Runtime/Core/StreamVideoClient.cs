@@ -33,7 +33,6 @@ using StreamVideo.Libs.Websockets;
 using Unity.WebRTC;
 using UnityEngine;
 using Cache = StreamVideo.Core.State.Caches.Cache;
-using AndroidAudioUsageMode = StreamVideo.Core.AndroidAudioUsageMode;
 
 namespace StreamVideo.Core
 {
@@ -48,10 +47,10 @@ namespace StreamVideo.Core
         /// 
         /// </summary>
         CoordinatorWsDisconnected,
-        
+
         VideoServerDisconnected,
     }
-    
+
     /// <summary>
     /// Android audio usage modes for Oboe audio streams.
     /// </summary>
@@ -107,20 +106,22 @@ namespace StreamVideo.Core
             var applicationInfo = factory.CreateApplicationInfo();
             var coordinatorWebSocket
                 = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
-            var sfuWebSocket
-                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
+
             var httpClient = factory.CreateHttpClient();
             var serializer = factory.CreateSerializer();
             var timeService = factory.CreateTimeService();
             var networkMonitor = factory.CreateNetworkMonitor();
             var gameObjectRunner = factory.CreateClientRunner();
 
-            var client = new StreamVideoClient(coordinatorWebSocket, sfuWebSocket, httpClient,
+            var client = new StreamVideoClient(coordinatorWebSocket, SfuWebSocketFactory, httpClient,
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
 
             gameObjectRunner?.RunClientInstance(client);
 
             return client;
+
+            IWebsocketClient SfuWebSocketFactory()
+                => factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
         }
 
         /// <inheritdoc cref="StreamVideoLowLevelClient.CreateDeveloperAuthToken"/>
@@ -146,9 +147,10 @@ namespace StreamVideo.Core
 
         public Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId)
             => GetOrCreateCallAsync(callType, callId, CancellationToken.None);
-        
+
         //StreamTodo: add more params (same as in JoinCallAsync) + add to interface
-        public async Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId, CancellationToken cancellationToken)
+        public async Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId,
+            CancellationToken cancellationToken)
         {
             //StreamTodo: validate input
 
@@ -253,8 +255,9 @@ namespace StreamVideo.Core
 
         public Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials)
             => ConnectUserAsync(credentials, CancellationToken.None);
-        
-        public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials, CancellationToken cancellationToken)
+
+        public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials,
+            CancellationToken cancellationToken)
         {
             await InternalLowLevelClient.ConnectUserAsync(credentials, cancellationToken);
 
@@ -532,13 +535,13 @@ namespace StreamVideo.Core
             CallEnded?.Invoke(call);
         }
 
-        private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
+        private StreamVideoClient(IWebsocketClient coordinatorWebSocket, Func<IWebsocketClient> webSocketFactory,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
 
-            InternalLowLevelClient = new StreamVideoLowLevelClient(coordinatorWebSocket, sfuWebSocket, httpClient,
+            InternalLowLevelClient = new StreamVideoLowLevelClient(coordinatorWebSocket, webSocketFactory, httpClient,
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
 
             _cache = new Cache(this, serializer, _logs);
@@ -597,7 +600,8 @@ namespace StreamVideo.Core
 
             lowLevelClient.Disconnected += OnLowLevelClientDisconnected;
             lowLevelClient.SfuDisconnected += OnLowLevelClientSfuDisconnected;
-            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession += OnRtcPeerConnectionDisconnectedDuringSession;
+            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession
+                += OnRtcPeerConnectionDisconnectedDuringSession;
         }
 
         private void OnRtcPeerConnectionDisconnectedDuringSession()
@@ -641,8 +645,9 @@ namespace StreamVideo.Core
 
             lowLevelClient.Disconnected -= OnLowLevelClientDisconnected;
             lowLevelClient.SfuDisconnected -= OnLowLevelClientSfuDisconnected;
-            
-            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession -= OnRtcPeerConnectionDisconnectedDuringSession;
+
+            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession
+                -= OnRtcPeerConnectionDisconnectedDuringSession;
         }
 
         private void InternalLowLevelClientOnConnected()

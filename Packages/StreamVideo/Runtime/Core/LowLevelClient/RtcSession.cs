@@ -92,6 +92,12 @@ namespace StreamVideo.Core.LowLevelClient
 
         public event Action PeerConnectionDisconnectedDuringSession;
 
+        /// <summary>
+        /// Fired when the SFU WebSocket disconnects unexpectedly.
+        /// This is NOT fired when the disconnect is intentional (e.g., leaving a call).
+        /// </summary>
+        public event Action SfuDisconnected;
+
         public bool PublisherAudioTrackIsEnabled
         {
             get => _publisherAudioTrackIsEnabled;
@@ -222,8 +228,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public SessionID SessionId { get; } = new SessionID();
 
-        public RtcSession(SfuWebSocket sfuWebSocket, Func<IStreamCall, HttpClient> httpClientFactory, ILogs logs,
-            ISerializer serializer, ITimeService timeService, StreamVideoLowLevelClient lowLevelClient,
+        public RtcSession(ISfuWebSocketFactory sfuWebSocketFactory, Func<IStreamCall, HttpClient> httpClientFactory,
+            ILogs logs, ISerializer serializer, ITimeService timeService, StreamVideoLowLevelClient lowLevelClient,
             IStreamClientConfig config, INetworkMonitor networkMonitor)
         {
             _httpClientFactory = httpClientFactory;
@@ -233,9 +239,7 @@ namespace StreamVideo.Core.LowLevelClient
             _lowLevelClient = lowLevelClient;
             _config = config;
             _networkMonitor = networkMonitor;
-
-            //StreamTodo: SFU WS should be created here so that RTC session owns it
-            _sfuWebSocket = sfuWebSocket ?? throw new ArgumentNullException(nameof(sfuWebSocket));
+            _sfuWebSocketFactory = sfuWebSocketFactory ?? throw new ArgumentNullException(nameof(sfuWebSocketFactory));
 
             var statsCollector = new UnityWebRtcStatsCollector(this, _serializer, _tracerManager);
             _statsSender = new WebRtcStatsSender(this, statsCollector, _timeService, _logs);
@@ -245,7 +249,7 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning($"Audio benchmark enabled. Waiting for a special video stream to measure audio-video sync. Check {nameof(VideoAudioSyncBenchmark)} summary for more details.");
             _videoAudioSyncBenchmark = new VideoAudioSyncBenchmark(_timeService, _logs);
 #endif
-            
+
             _networkMonitor.NetworkAvailabilityChanged += NetworkMonitorOnNetworkAvailabilityChanged;
         }
 
@@ -253,20 +257,20 @@ namespace StreamVideo.Core.LowLevelClient
         {
             StopAsync("Video Client is being disposed").LogIfFailed();
 
-            _sfuWebSocket.Dispose();
+            DisposeSfuWebSocket();
 
             DisposeSubscriber();
             DisposePublisher();
 
             _tracerManager?.Clear();
-            
+
             _networkMonitor.NetworkAvailabilityChanged -= NetworkMonitorOnNetworkAvailabilityChanged;
         }
 
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
         public void Update()
         {
-            _sfuWebSocket.Update();
+            _sfuWebSocket?.Update();
             Publisher?.Update();
             _statsSender.Update();
             _videoAudioSyncBenchmark?.Update();
@@ -611,11 +615,9 @@ namespace StreamVideo.Core.LowLevelClient
 
                 ActiveCall = call ?? throw new NullReferenceException(nameof(call));
                 _httpClient = _httpClientFactory(ActiveCall);
-                
-                UnsubscribeFromSfuEvents();
-                SubscribeToSfuEvents();
 
-                var isWsHealthy = _sfuWebSocket.IsHealthy;
+                var previousSfuWebSocket = _sfuWebSocket;
+                var isWsHealthy = previousSfuWebSocket?.IsHealthy ?? false;
                 var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
 
                 // a new session_id is necessary for the REJOIN strategy.
@@ -629,11 +631,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (startNewSfuWsSession)
                 {
-                    if (_sfuWebSocket.ConnectionState == ConnectionState.Connected)
-                    {
-                        await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure,
-                            $"Join call. {nameof(isRejoin)}:{isRejoin}, {nameof(isMigration)}:{isMigration}, {nameof(isWsHealthy)}:{isWsHealthy}");
-                    }
+                    CreateNewSfuWebSocket(out previousSfuWebSocket);
 
                     var sfuUrl = call.Credentials.Server.Url;
                     var sfuToken = call.Credentials.Token;
@@ -707,13 +705,13 @@ namespace StreamVideo.Core.LowLevelClient
                     // TODO: send sendConnectionTime   
                 }
 
-                if (isRejoin && isWsHealthy)
+                if (previousSfuWebSocket != null && previousSfuWebSocket != _sfuWebSocket)
                 {
-                    // Close previous SFU WS client
-                }
-                else if (!isWsHealthy)
-                {
-                    // Close unhealthy WS client
+                    var closeReason = isRejoin
+                        ? "Closing WS after rejoin"
+                        : "Closing unhealthy WS after reconnect";
+
+                    ClosePreviousSfuWebSocketAsync(previousSfuWebSocket, closeReason).LogIfFailed();
                 }
 
                 //StreamTODO: JS client deletes here ring and notify data because these are one-time actions
@@ -966,7 +964,8 @@ namespace StreamVideo.Core.LowLevelClient
         private const int CallJoinMaxRetries = 3;
         private const int CallRejoinMaxFastAttempts = 3;
 
-        private readonly SfuWebSocket _sfuWebSocket;
+        private readonly ISfuWebSocketFactory _sfuWebSocketFactory;
+        private SfuWebSocket _sfuWebSocket;
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
         private readonly ITimeService _timeService;
@@ -1023,13 +1022,16 @@ namespace StreamVideo.Core.LowLevelClient
         private string _reconnectReason;
         private int _reconnectAttempts;
         private JoinCallData _joinCallData;
-        
+
         private Credentials _lastJoinCallCredentials;
         private DateTime _lastTimeOffline;
-        
+
         private void ClearSession()
         {
-            UnsubscribeFromSfuEvents();
+            if (_sfuWebSocket != null)
+            {
+                UnsubscribeFromSfuEvents(_sfuWebSocket);
+            }
 
             _pendingIceTrickleRequests.Clear();
             _videoResolutionByParticipantSessionId.Clear();
@@ -1588,7 +1590,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             var attempt = 0;
             var reconnectStartTime = DateTime.UtcNow;
-            
+
             //StreamTODO: we should handle cancellation token between each await
 
             do
@@ -2476,6 +2478,70 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        /// <summary>
+        /// Creates a new SfuWebSocket instance using the factory.
+        /// Disposes the previous instance if one exists.
+        /// </summary>
+        /// <param name="previousSfuWebSocket">Returns the previous SfuWebSocket instance (if any) for cleanup after transition.</param>
+        /// <returns>The newly created SfuWebSocket instance.</returns>
+        private SfuWebSocket CreateNewSfuWebSocket(out SfuWebSocket previousSfuWebSocket)
+        {
+            previousSfuWebSocket = _sfuWebSocket;
+
+            if (_sfuWebSocket != null)
+            {
+                UnsubscribeFromSfuEvents(_sfuWebSocket);
+            }
+
+            _sfuWebSocket = _sfuWebSocketFactory.Create();
+
+            SubscribeToSfuEvents(_sfuWebSocket);
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Info($"[RtcSession] Created new SfuWebSocket instance");
+#endif
+
+            return _sfuWebSocket;
+        }
+
+        /// <summary>
+        /// Disposes the current SfuWebSocket instance if one exists.
+        /// </summary>
+        private void DisposeSfuWebSocket()
+        {
+            if (_sfuWebSocket != null)
+            {
+                UnsubscribeFromSfuEvents(_sfuWebSocket);
+                _sfuWebSocket.Dispose();
+                _sfuWebSocket = null;
+            }
+        }
+
+        private async Task ClosePreviousSfuWebSocketAsync(SfuWebSocket previousSfuWebSocket, string reason)
+        {
+            if (previousSfuWebSocket == null)
+            {
+                return;
+            }
+
+            try
+            {
+#if STREAM_DEBUG_ENABLED
+                _logs.Info($"[RtcSession] Closing previous SfuWebSocket: reason={reason}");
+#endif
+                UnsubscribeFromSfuEvents(previousSfuWebSocket);
+                await previousSfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
+            }
+            catch (Exception e)
+            {
+                _logs.Warning($"Failed to close previous SfuWebSocket: {e.Message}");
+            }
+            finally
+            {
+                previousSfuWebSocket.Dispose();
+            }
+        }
+
         private void OnPublisherAudioTrackChanged(AudioStreamTrack audioTrack)
         {
             UpdateAudioRecording();
@@ -2512,16 +2578,13 @@ namespace StreamVideo.Core.LowLevelClient
                     return;
             }
 
-            //StreamTODO: check if we're closing intentionally
-            // For this to work we probably need to refactor our SFU and Coordinator WS wrapper
-            // Currently the wrappers are only created once and each Connect creates a new WS internally
-            // We should probably follow more closely the JS approach so that internal WS client lifetime is tied to wrapper lifetime
-            // So when we need a new WS we'd create a new wrapper as well
-            // This way, when the WS is closed intentionally we can mark it with isLeaving or isClosingClean
-            //
-
-
-            //if (sfuClient.isLeaving || sfuClient.isClosingClean) return;
+            if (_sfuWebSocket != null && !_sfuWebSocket.IsClosingClean)
+            {
+#if STREAM_DEBUG_ENABLED
+                _logs.Info($"[RtcSession] SFU WS disconnected (IsLeaving={_sfuWebSocket.IsLeaving}, IsClosingClean={_sfuWebSocket.IsClosingClean})");
+#endif
+                SfuDisconnected?.Invoke();
+            }
 
             var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);
             var strategy = arePeerConnectionsHealthy
@@ -2530,22 +2593,26 @@ namespace StreamVideo.Core.LowLevelClient
 
             Reconnect(strategy, "SFU WS was disconnected").LogIfFailed();
         }
-        
+
         private void NetworkMonitorOnNetworkAvailabilityChanged(bool isNetworkAvailable)
         {
             if (isNetworkAvailable)
             {
-                //StreamTODO: JS client seems to be closing the previous SFU WS client here
-                //this.sfuClient?.close(
-                //    StreamSfuClient.DISPOSE_OLD_SOCKET,
-                //    'Closing WS to reconnect after going online',
-                //);
-                
                 _logs.WarningIfDebug("Going Online");
+
+                // Close the previous SFU WS client to force a clean WS join
+                // JS always re-creates the SFU WS when getting back online
+                if (_sfuWebSocket != null)
+                {
+                    _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure,
+                        "Closing WS to reconnect after going online").LogIfFailed();
+                }
+
                 var offlineTime = DateTime.UtcNow - _lastTimeOffline;
                 var strategy = offlineTime.TotalSeconds > _fastReconnectDeadlineSeconds
                     ? WebsocketReconnectStrategy.Rejoin
                     : WebsocketReconnectStrategy.Fast;
+
                 Reconnect(strategy, "Going online").LogIfFailed();
             }
             else
@@ -2569,63 +2636,62 @@ namespace StreamVideo.Core.LowLevelClient
             return true;
         }
 
-        private void SubscribeToSfuEvents()
+        private void SubscribeToSfuEvents(SfuWebSocket sfuWebSocket)
         {
-            _sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
-            _sfuWebSocket.PublisherAnswer += OnSfuPublisherAnswer;
-            _sfuWebSocket.ConnectionQualityChanged += OnSfuConnectionQualityChanged;
-            _sfuWebSocket.AudioLevelChanged += OnSfuAudioLevelChanged;
-            _sfuWebSocket.IceTrickle += OnSfuIceTrickle;
-            _sfuWebSocket.ChangePublishQuality += OnSfuChangePublishQuality;
-            _sfuWebSocket.ParticipantJoined += OnSfuParticipantJoined;
-            _sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
-            _sfuWebSocket.DominantSpeakerChanged += OnSfuDominantSpeakerChanged;
-            _sfuWebSocket.JoinResponse += OnSfuJoinResponse;
-            _sfuWebSocket.HealthCheck += OnSfuHealthCheck;
-            _sfuWebSocket.TrackPublished += OnSfuTrackPublished;
-            _sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
-            _sfuWebSocket.Error += OnSfuWebSocketOnError;
-            _sfuWebSocket.CallGrantsUpdated += OnSfuCallGrantsUpdated;
-            _sfuWebSocket.GoAway += OnSfuGoAway;
-            _sfuWebSocket.IceRestart += OnSfuIceRestart;
-            _sfuWebSocket.PinsUpdated += OnSfuPinsUpdated;
-            _sfuWebSocket.CallEnded += OnSfuWebSocketOnCallEnded;
-            _sfuWebSocket.ParticipantUpdated += OnSfuWebSocketOnParticipantUpdated;
-            _sfuWebSocket.ParticipantMigrationComplete += OnSfuWebSocketOnParticipantMigrationComplete;
-            _sfuWebSocket.ChangePublishOptions += OnSfuWebSocketOnChangePublishOptions;
-            _sfuWebSocket.InboundStateNotification += OnSfuInboundStateNotification;
+            sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
+            sfuWebSocket.PublisherAnswer += OnSfuPublisherAnswer;
+            sfuWebSocket.ConnectionQualityChanged += OnSfuConnectionQualityChanged;
+            sfuWebSocket.AudioLevelChanged += OnSfuAudioLevelChanged;
+            sfuWebSocket.IceTrickle += OnSfuIceTrickle;
+            sfuWebSocket.ChangePublishQuality += OnSfuChangePublishQuality;
+            sfuWebSocket.ParticipantJoined += OnSfuParticipantJoined;
+            sfuWebSocket.ParticipantLeft += OnSfuParticipantLeft;
+            sfuWebSocket.DominantSpeakerChanged += OnSfuDominantSpeakerChanged;
+            sfuWebSocket.JoinResponse += OnSfuJoinResponse;
+            sfuWebSocket.HealthCheck += OnSfuHealthCheck;
+            sfuWebSocket.TrackPublished += OnSfuTrackPublished;
+            sfuWebSocket.TrackUnpublished += OnSfuTrackUnpublished;
+            sfuWebSocket.Error += OnSfuWebSocketOnError;
+            sfuWebSocket.CallGrantsUpdated += OnSfuCallGrantsUpdated;
+            sfuWebSocket.GoAway += OnSfuGoAway;
+            sfuWebSocket.IceRestart += OnSfuIceRestart;
+            sfuWebSocket.PinsUpdated += OnSfuPinsUpdated;
+            sfuWebSocket.CallEnded += OnSfuWebSocketOnCallEnded;
+            sfuWebSocket.ParticipantUpdated += OnSfuWebSocketOnParticipantUpdated;
+            sfuWebSocket.ParticipantMigrationComplete += OnSfuWebSocketOnParticipantMigrationComplete;
+            sfuWebSocket.ChangePublishOptions += OnSfuWebSocketOnChangePublishOptions;
+            sfuWebSocket.InboundStateNotification += OnSfuInboundStateNotification;
 
-
-            _sfuWebSocket.Disconnected += OnSfuWebSocketDisconnected;
+            sfuWebSocket.Disconnected += OnSfuWebSocketDisconnected;
         }
 
-        private void UnsubscribeFromSfuEvents()
+        private void UnsubscribeFromSfuEvents(SfuWebSocket sfuWebSocket)
         {
-            _sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
-            _sfuWebSocket.PublisherAnswer -= OnSfuPublisherAnswer;
-            _sfuWebSocket.ConnectionQualityChanged -= OnSfuConnectionQualityChanged;
-            _sfuWebSocket.AudioLevelChanged -= OnSfuAudioLevelChanged;
-            _sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
-            _sfuWebSocket.ChangePublishQuality -= OnSfuChangePublishQuality;
-            _sfuWebSocket.ParticipantJoined -= OnSfuParticipantJoined;
-            _sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
-            _sfuWebSocket.DominantSpeakerChanged -= OnSfuDominantSpeakerChanged;
-            _sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
-            _sfuWebSocket.HealthCheck -= OnSfuHealthCheck;
-            _sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
-            _sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
-            _sfuWebSocket.Error -= OnSfuWebSocketOnError;
-            _sfuWebSocket.CallGrantsUpdated -= OnSfuCallGrantsUpdated;
-            _sfuWebSocket.GoAway -= OnSfuGoAway;
-            _sfuWebSocket.IceRestart -= OnSfuIceRestart;
-            _sfuWebSocket.PinsUpdated -= OnSfuPinsUpdated;
-            _sfuWebSocket.CallEnded -= OnSfuWebSocketOnCallEnded;
-            _sfuWebSocket.ParticipantUpdated -= OnSfuWebSocketOnParticipantUpdated;
-            _sfuWebSocket.ParticipantMigrationComplete -= OnSfuWebSocketOnParticipantMigrationComplete;
-            _sfuWebSocket.ChangePublishOptions -= OnSfuWebSocketOnChangePublishOptions;
-            _sfuWebSocket.InboundStateNotification -= OnSfuInboundStateNotification;
+            sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
+            sfuWebSocket.PublisherAnswer -= OnSfuPublisherAnswer;
+            sfuWebSocket.ConnectionQualityChanged -= OnSfuConnectionQualityChanged;
+            sfuWebSocket.AudioLevelChanged -= OnSfuAudioLevelChanged;
+            sfuWebSocket.IceTrickle -= OnSfuIceTrickle;
+            sfuWebSocket.ChangePublishQuality -= OnSfuChangePublishQuality;
+            sfuWebSocket.ParticipantJoined -= OnSfuParticipantJoined;
+            sfuWebSocket.ParticipantLeft -= OnSfuParticipantLeft;
+            sfuWebSocket.DominantSpeakerChanged -= OnSfuDominantSpeakerChanged;
+            sfuWebSocket.JoinResponse -= OnSfuJoinResponse;
+            sfuWebSocket.HealthCheck -= OnSfuHealthCheck;
+            sfuWebSocket.TrackPublished -= OnSfuTrackPublished;
+            sfuWebSocket.TrackUnpublished -= OnSfuTrackUnpublished;
+            sfuWebSocket.Error -= OnSfuWebSocketOnError;
+            sfuWebSocket.CallGrantsUpdated -= OnSfuCallGrantsUpdated;
+            sfuWebSocket.GoAway -= OnSfuGoAway;
+            sfuWebSocket.IceRestart -= OnSfuIceRestart;
+            sfuWebSocket.PinsUpdated -= OnSfuPinsUpdated;
+            sfuWebSocket.CallEnded -= OnSfuWebSocketOnCallEnded;
+            sfuWebSocket.ParticipantUpdated -= OnSfuWebSocketOnParticipantUpdated;
+            sfuWebSocket.ParticipantMigrationComplete -= OnSfuWebSocketOnParticipantMigrationComplete;
+            sfuWebSocket.ChangePublishOptions -= OnSfuWebSocketOnChangePublishOptions;
+            sfuWebSocket.InboundStateNotification -= OnSfuInboundStateNotification;
 
-            _sfuWebSocket.Disconnected -= OnSfuWebSocketDisconnected;
+            sfuWebSocket.Disconnected -= OnSfuWebSocketDisconnected;
         }
     }
 }

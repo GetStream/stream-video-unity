@@ -54,7 +54,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         public bool IsHealthy => JoinReceived && ConnectionState == ConnectionState.Connected;
         
         public bool JoinReceived { get; private set; }
-
+        
         public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs,

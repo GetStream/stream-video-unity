@@ -12,6 +12,8 @@ namespace StreamVideo.Core.LowLevelClient
         void Reset();
 
         void SetTarget(IReconnectTarget target);
+
+        void Stop();
     }
 
     internal interface IReconnectTarget
@@ -72,6 +74,7 @@ namespace StreamVideo.Core.LowLevelClient
         
         public void Dispose()
         {
+            Stop();
             UnsubscribeFromTarget();
         }
 

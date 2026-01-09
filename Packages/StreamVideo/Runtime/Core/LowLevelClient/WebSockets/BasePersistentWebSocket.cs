@@ -130,6 +130,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 IsClosingClean = true;
             }
 
+            _reconnectScheduler.Stop();
+
             await OnDisconnectingAsync(closeMessage);
 
             if (WebsocketClient == null)

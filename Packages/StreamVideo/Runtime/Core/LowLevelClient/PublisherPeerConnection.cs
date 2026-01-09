@@ -594,10 +594,6 @@ namespace StreamVideo.Core.LowLevelClient
                         rid = "q"
                     };
 
-#if STREAM_DEBUG_ENABLED
-                    Debug.LogWarning($"Rid values: {fullQuality.rid}, {halfQuality.rid}, {quarterQuality.rid}");
-#endif
-
                     yield return quarterQuality;
                     yield return halfQuality;
                     yield return fullQuality;

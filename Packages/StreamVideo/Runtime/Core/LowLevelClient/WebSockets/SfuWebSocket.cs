@@ -6,6 +6,7 @@ using Google.Protobuf;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.Core.Auth;
+using StreamVideo.Core.Utils;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Logs;
@@ -149,7 +150,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             try
             {
                 JoinReceived = false;
-                
+
                 //StreamTOdo: implement missing fields: PublisherSdp, ReconnectDetails
                 var joinRequest = new JoinRequest
                 {
@@ -199,14 +200,19 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 await WebsocketClient.ConnectAsync(sfuUri, cancellationToken);
                 WebsocketClient.Send(sfuJoinRequestEncoded);
 
-                //StramTODO: implement timeout
+                //StreamTODO: implement timeout
                 return await _joinEventReceivedCompletionSource.Task;
+            }
+            catch (OperationCanceledException e)
+            {
+                Logs.WarningIfDebug("[SFU] Connect - Cancelled");
+                throw;
             }
             catch (Exception e)
             {
                 if (!_joinEventReceivedCompletionSource.TrySetException(e))
                 {
-                    Logs.Error($"Failed set exception in {nameof(_joinEventReceivedCompletionSource)}. Exception:" + e.Message);
+                    Logs.Error($"[SFU] Connect - Failed set exception in {nameof(_joinEventReceivedCompletionSource)}. Exception:" + e.Message);
                 }
 
                 JoinReceived = false;

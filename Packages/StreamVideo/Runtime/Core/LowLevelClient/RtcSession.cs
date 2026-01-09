@@ -680,7 +680,9 @@ namespace StreamVideo.Core.LowLevelClient
                         ReconnectDetails = reconnectDetails
                     };
 
+                    _logs.WarningIfDebug("SFU Sending join request");
                     var joinResponse = await _sfuWebSocket.ConnectAsync(joinRequest, cancellationToken);
+                    _logs.WarningIfDebug("SFU Sending join response received");
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
                 }

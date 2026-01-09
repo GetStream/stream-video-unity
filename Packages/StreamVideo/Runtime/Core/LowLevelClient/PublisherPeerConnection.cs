@@ -186,8 +186,8 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (result.Error != null)
                 {
-                    //StreamTODO: handle/log error from SFU
-                    // throw exception because the processs failed
+                    //StreamTODO: create custom exception
+                    throw new Exception($"{nameof(GeneratedAPI.SetPublisher)} request failed with: {result.Error.Code}, {result.Error.Message}.");
                 }
 
                 try
@@ -437,10 +437,17 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (_publisherVideoTrackTexture != null)
             {
-                // Unity gives warning when releasing an active texture
-                if (RenderTexture.active == _publisherVideoTrackTexture)
+                try
                 {
-                    RenderTexture.active = null;
+                    // Unity gives warning when releasing an active texture
+                    if (RenderTexture.active == _publisherVideoTrackTexture)
+                    {
+                        RenderTexture.active = null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logs.WarningIfDebug(e.Message);
                 }
 
                 _publisherVideoTrackTexture.Release();

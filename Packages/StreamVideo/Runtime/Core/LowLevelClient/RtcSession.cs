@@ -251,6 +251,8 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             _networkMonitor.NetworkAvailabilityChanged += NetworkMonitorOnNetworkAvailabilityChanged;
+
+            _mainThreadId = Thread.CurrentThread.ManagedThreadId;
         }
 
         public void Dispose()
@@ -748,6 +750,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        //StreamTODO: move
         private async Task<StreamCall> ExecuteJoinRequest(JoinCallData data, CancellationToken cancellationToken)
         {
             // StreamTodo: check state if we don't have an active session already
@@ -800,11 +803,12 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            if (CallState != CallingState.Joined && CallState != CallingState.Joining)
-            {
-                throw new InvalidOperationException(
-                    "Tried to leave call that is not joined or joining. Current state: " + CallState);
-            }
+            //StreamTODO: revise this. Right now StopAsync is always called on disconnect, perhaps we can leave it this way
+            // if (CallState != CallingState.Joined && CallState != CallingState.Joining)
+            // {
+            //     throw new InvalidOperationException(
+            //         "Tried to leave call that is not joined or joining. Current state: " + CallState);
+            // }
 
             CallState = CallingState.Leaving;
 
@@ -852,9 +856,12 @@ namespace StreamVideo.Core.LowLevelClient
 
             ClearSession();
 
-            using (new TimeLogScope("Sending leave call request & disconnect", _logs.Info))
+            if (_sfuWebSocket != null)
             {
-                await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
+                using (new TimeLogScope("Sending leave call request & disconnect", _logs.Info))
+                {
+                    await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
+                }
             }
 
             //StreamTodo: check with js definition of "offline" 
@@ -1027,6 +1034,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private Credentials _lastJoinCallCredentials;
         private DateTime _lastTimeOffline;
+        private int _mainThreadId;
 
         private void ClearSession()
         {
@@ -1564,6 +1572,8 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTODO: add triggering from network changed -> js Call.ts "network.changed"
         private async Task Reconnect(WebsocketReconnectStrategy strategy, string reason)
         {
+            AssertMainThread();
+            
             var ignoredStates = new[]
                 { CallingState.Reconnecting, CallingState.Migrating, CallingState.ReconnectingFailed };
             if (ignoredStates.Any(s => s == CallState))
@@ -1836,6 +1846,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuWebSocketOnError(SfuError sfuError)
         {
+            AssertMainThread();
+            
             _sfuTracer?.Trace(PeerConnectionTraceKey.SfuError, sfuError);
 
             var reconnectionStrategy = sfuError.ReconnectStrategy;
@@ -2565,6 +2577,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuWebSocketDisconnected()
         {
+            AssertMainThread();
             // JS client doesn't trigger reconnect() in these cases
             switch (CallState)
             {
@@ -2699,6 +2712,15 @@ namespace StreamVideo.Core.LowLevelClient
             sfuWebSocket.InboundStateNotification -= OnSfuInboundStateNotification;
 
             sfuWebSocket.Disconnected -= OnSfuWebSocketDisconnected;
+        }
+
+        private void AssertMainThread()
+        {
+            if (Thread.CurrentThread.ManagedThreadId != _mainThreadId)
+            {
+                _logs.Error("Called Not from the main thread!!!");
+                throw new InvalidOperationException("Called Not from the main thread!!!");
+            }
         }
     }
 }

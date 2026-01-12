@@ -622,6 +622,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     _logs.ErrorIfDebug("Missing credentials!");
                 }
+                
                 _httpClient = _httpClientFactory(ActiveCall);
 
                 var previousSfuWebSocket = _sfuWebSocket;
@@ -694,6 +695,17 @@ namespace StreamVideo.Core.LowLevelClient
                     _logs.WarningIfDebug("SFU Sending join response received");
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
+                    
+                    // Handle tracks subscriptions for already present participants
+                    foreach (var participant in ActiveCall.Participants)
+                    {
+                        if (!participant.IsLocalParticipant)
+                        {
+                            NotifyParticipantJoined(participant.SessionId);
+                        }
+                    }
+                    
+                    QueueTracksSubscriptionRequest();
                 }
 
                 if (!isMigration)

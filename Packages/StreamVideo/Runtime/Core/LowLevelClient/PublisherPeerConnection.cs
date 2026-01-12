@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -112,9 +112,14 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         public void InitPublisherTracks()
         {
-            ReplacePublisherAudioTrack();
-            ReplacePublisherVideoTrack();
+            // Create both transceivers WITHOUT individual negotiations to avoid concurrent negotiate calls
+            // which would cause "m-lines order mismatch" errors
+            ReplacePublisherAudioTrack(negotiate: false);
+            ReplacePublisherVideoTrack(negotiate: false);
 
+            // Single negotiation after all transceivers are added
+            Negotiate().LogIfFailed();
+            
             // StreamTodo: VideoSceneInput is not handled
         }
 
@@ -631,7 +636,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         //StreamTODO: this should not be called when updating the track
         //Considering splitting into AddTransceiver, UpdateTransceiver
-        private void CreatePublisherAudioTransceiverAndTrack()
+        private void CreatePublisherAudioTransceiverAndTrack(bool negotiate = true)
         {
             if (_audioTransceiver != null)
             {
@@ -651,8 +656,11 @@ namespace StreamVideo.Core.LowLevelClient
                 ForceCodec(_audioTransceiver, AudioCodecKeyRed, TrackKind.Audio);
             }
 
-            // StreamTODO: better handle async??
-            Negotiate().LogIfFailed();
+            if (negotiate)
+            {
+                // StreamTODO: better handle async??
+                Negotiate().LogIfFailed();
+            }
         }
 
         private void SetPublisherActiveAudioTrack(AudioStreamTrack audioTrack)
@@ -686,7 +694,7 @@ namespace StreamVideo.Core.LowLevelClient
             PublisherAudioTrack = null;
         }
 
-        private void CreatePublisherVideoTransceiver()
+        private void CreatePublisherVideoTransceiver(bool negotiate = true)
         {
             if (_videoTransceiver != null)
             {
@@ -709,8 +717,11 @@ namespace StreamVideo.Core.LowLevelClient
 
             VideoSender = _videoTransceiver.Sender;
 
-            // StreamTODO: better handle async??
-            Negotiate().LogIfFailed();
+            if (negotiate)
+            {
+                // StreamTODO: better handle async??
+                Negotiate().LogIfFailed();
+            }
         }
 
         private void ReplaceActiveVideoTrack(VideoStreamTrack videoTrack)
@@ -804,7 +815,9 @@ namespace StreamVideo.Core.LowLevelClient
         /// <summary>
         /// Needed to init or when device changes
         /// </summary>
-        private void ReplacePublisherAudioTrack()
+        /// <param name="negotiate">If true, triggers SDP negotiation after creating transceiver. 
+        /// Set to false during InitPublisherTracks to avoid concurrent negotiations.</param>
+        private void ReplacePublisherAudioTrack(bool negotiate = true)
         {
             var isActive = _mediaInputProvider.AudioInput != null && _mediaInputProvider.PublisherAudioTrackIsEnabled;
             if (!isActive)
@@ -817,7 +830,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (_audioTransceiver == null)
             {
-                CreatePublisherAudioTransceiverAndTrack();
+                CreatePublisherAudioTransceiverAndTrack(negotiate);
                 return;
             }
 
@@ -840,7 +853,9 @@ namespace StreamVideo.Core.LowLevelClient
         /// <summary>
         /// Needed to init or when device changes
         /// </summary>
-        private void ReplacePublisherVideoTrack()
+        /// <param name="negotiate">If true, triggers SDP negotiation after creating transceiver. 
+        /// Set to false during InitPublisherTracks to avoid concurrent negotiations.</param>
+        private void ReplacePublisherVideoTrack(bool negotiate = true)
         {
             var isActive = _mediaInputProvider.VideoInput != null && _mediaInputProvider.PublisherVideoTrackIsEnabled;
             if (!isActive)
@@ -851,7 +866,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (_videoTransceiver == null)
             {
-                CreatePublisherVideoTransceiver();
+                CreatePublisherVideoTransceiver(negotiate);
                 return;
             }
 

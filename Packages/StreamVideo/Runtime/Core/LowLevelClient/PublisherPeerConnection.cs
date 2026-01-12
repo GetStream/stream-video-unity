@@ -117,8 +117,12 @@ namespace StreamVideo.Core.LowLevelClient
             ReplacePublisherAudioTrack(negotiate: false);
             ReplacePublisherVideoTrack(negotiate: false);
 
-            // Single negotiation after all transceivers are added
-            Negotiate().LogIfFailed();
+            // Only negotiate if at least one transceiver was created
+            // Otherwise, SFU rejects the empty SetPublisher request with RequestValidationFailed
+            if (_audioTransceiver != null || _videoTransceiver != null)
+            {
+                Negotiate().LogIfFailed();
+            }
             
             // StreamTodo: VideoSceneInput is not handled
         }

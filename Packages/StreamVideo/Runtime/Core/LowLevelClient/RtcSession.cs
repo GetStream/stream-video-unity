@@ -833,7 +833,7 @@ namespace StreamVideo.Core.LowLevelClient
                     if (_statsSender != null) // This was null in tests
                     {
                         var sendStatsCancellationToken = new CancellationTokenSource();
-                        sendStatsCancellationToken.CancelAfter(400);
+                        sendStatsCancellationToken.CancelAfter(800);
                         using (new TimeLogScope("Sending final stats on leave", _logs.Info))
                         {
                             await _statsSender.SendFinalStatsAsync(sendStatsCancellationToken.Token);
@@ -1596,6 +1596,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
             catch (Exception e)
             {
+                _logs.ExceptionIfDebug(e);
                 CallState = CallingState.ReconnectingFailed;
                 throw;
             }
@@ -1701,7 +1702,7 @@ namespace StreamVideo.Core.LowLevelClient
             CallState = CallingState.Reconnecting;
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
 
-            await RestorePublishedTracks();
+            RestorePublishedTracks();
             RestoreSubscribedTracks();
         }
 
@@ -1710,7 +1711,7 @@ namespace StreamVideo.Core.LowLevelClient
             throw new NotImplementedException("Sfu migration is not yet implemented.");
         }
 
-        private async Task RestorePublishedTracks()
+        private void RestorePublishedTracks()
         {
             // the tracks need to be restored in their original order of publishing
             // otherwise, we might get `m-lines order mismatch` errors

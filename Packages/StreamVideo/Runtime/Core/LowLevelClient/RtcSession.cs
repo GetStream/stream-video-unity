@@ -601,6 +601,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     try
                     {
+                        _logs.WarningIfDebug("Execute join call request.");
                         call = await ExecuteJoinRequest(joinCallData, cancellationToken);
                         _lastJoinCallCredentials = call.Credentials;
                     }
@@ -616,6 +617,11 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 ActiveCall = call ?? throw new NullReferenceException(nameof(call));
+
+                if (ActiveCall.Credentials == null || string.IsNullOrEmpty(ActiveCall.Credentials.Token))
+                {
+                    _logs.ErrorIfDebug("Missing credentials!");
+                }
                 _httpClient = _httpClientFactory(ActiveCall);
 
                 var previousSfuWebSocket = _sfuWebSocket;

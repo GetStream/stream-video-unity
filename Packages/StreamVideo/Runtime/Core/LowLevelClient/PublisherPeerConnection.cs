@@ -187,7 +187,8 @@ namespace StreamVideo.Core.LowLevelClient
                 if (result.Error != null)
                 {
                     //StreamTODO: create custom exception
-                    throw new Exception($"{nameof(GeneratedAPI.SetPublisher)} request failed with: {result.Error.Code}, {result.Error.Message}.\nRequest:\n{serializedRequest}");
+                    throw new Exception(
+                        $"{nameof(GeneratedAPI.SetPublisher)} request failed with: {result.Error.Code}, {result.Error.Message}.\nRequest:\n{serializedRequest}");
                 }
 
                 try
@@ -211,7 +212,7 @@ namespace StreamVideo.Core.LowLevelClient
             catch (Exception e)
             {
                 Logs.ExceptionIfDebug(e);
-                
+
                 // Negotiation failed, rollback to the previous state
                 if (SignalingState == RTCSignalingState.HaveLocalOffer)
                 {
@@ -885,10 +886,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
 #if STREAM_DEBUG_ENABLED
-            foreach (var c in forcedCodecs)
-            {
-                Logs.Info($"Forced Codec of kind `{kind}`: {c.mimeType}, ");
-            }
+            Logs.Info($"Forced Codec of kind `{kind}`: " + string.Join(", ", forcedCodecs.Select(c => c.mimeType)));
 #endif
 
             var error = transceiver.SetCodecPreferences(forcedCodecs.ToArray());

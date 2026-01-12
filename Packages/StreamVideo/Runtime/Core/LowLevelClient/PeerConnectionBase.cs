@@ -298,8 +298,8 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnIceCandidate(RTCIceCandidate candidate)
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning(
-                $"[{PeerType}] OnIceCandidate: {(candidate == null ? "null (gathering complete)" : candidate.ToString())}");
+            //Logs.Warning(
+                //$"[{PeerType}] OnIceCandidate: {(candidate == null ? "null (gathering complete)" : candidate.ToString())}");
 #endif
 
             if (candidate == null)

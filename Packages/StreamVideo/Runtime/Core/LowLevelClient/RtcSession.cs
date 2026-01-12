@@ -679,7 +679,7 @@ namespace StreamVideo.Core.LowLevelClient
                         Reason = _reconnectReason ?? string.Empty,
                     };
 
-                    var announcedTracks = Publisher?.GetAnnouncedTracksForReconnect();
+                    var announcedTracks = Publisher.GetAnnouncedTracksForReconnect();
                     if (announcedTracks?.Any() ?? false)
                     {
                         reconnectDetails.AnnouncedTracks.AddRange(announcedTracks);
@@ -702,6 +702,11 @@ namespace StreamVideo.Core.LowLevelClient
                     _logs.WarningIfDebug("SFU Sending join response received");
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
+                    
+                    // Init publisher tracks
+                    Publisher.InitPublisherTracks();
+                    TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
+                    TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);
                     
                     // Handle tracks subscriptions for already present participants
                     foreach (var participant in ActiveCall.Participants)
@@ -2501,11 +2506,6 @@ namespace StreamVideo.Core.LowLevelClient
             Publisher.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
             Publisher.ReconnectionNeeded += OnReconnectionNeeded;
             Publisher.Disconnected += PublisherOnDisconnected;
-
-            Publisher.InitPublisherTracks();
-
-            TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
-            TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);
         }
 
         private void DisposePublisher()

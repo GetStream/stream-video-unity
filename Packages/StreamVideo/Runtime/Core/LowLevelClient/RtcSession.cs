@@ -684,6 +684,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                     _logs.WarningIfDebug("SFU Sending join request");
                     var joinResponse = await _sfuWebSocket.ConnectAsync(joinRequest, cancellationToken);
+                    ActiveCall.UpdateFromSfu(joinResponse);
                     _logs.WarningIfDebug("SFU Sending join response received");
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
@@ -1339,8 +1340,10 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTODO: what if left the call and started a new one but the JoinResponse belongs to the previous session?
 
             _sfuTracer?.Trace(PeerConnectionTraceKey.JoinRequest, joinResponse);
-
-            // Not sure if still neded but as a safe net we flush any pending ice candidates
+            
+            // State update was already handled in DoJoin
+            
+            // Not sure if still needed but as a safe net we flush any pending ice candidates
             var cancellationToken = GetCurrentCancellationTokenOrDefault();
             foreach (var iceTrickle in _pendingIceTrickleRequests)
             {

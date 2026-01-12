@@ -414,16 +414,33 @@ namespace StreamVideo.Core.LowLevelClient
 
         private string ExtractVideoTrackId(string sdp)
         {
-            var lines = sdp.Split("\n");
-            var mediaStreamRecord
-                = lines.Single(l => l.StartsWith($"a=msid:{PublisherVideoMediaStream.Id}"));
-            var parts = mediaStreamRecord.Split(" ");
-            var result = parts[1];
+            try
+            {
+                var lines = sdp.Split("\n");
+                var mediaStreamRecord
+                    = lines.Single(l => l.StartsWith($"a=msid:{PublisherVideoMediaStream.Id}"));
+                var parts = mediaStreamRecord.Split(" ");
+                var result = parts[1];
 
-            // StreamTodo: verify if this is needed
-            result = result.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
+                // StreamTodo: verify if this is needed
+                result = result.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
 
-            return result;
+                return result;
+            }
+            catch (Exception e)
+            {
+                using (new StringBuilderPoolScope(out var tempSb))
+                {
+                    tempSb.AppendLine($"Failed searching for: a=msid:{PublisherVideoMediaStream.Id}");
+                    tempSb.AppendLine("In:");
+                    tempSb.AppendLine(sdp);
+                    tempSb.AppendLine("Error:");
+                    tempSb.AppendLine(e.Message);
+                    Logs.Error(tempSb.ToString());
+                }
+
+                throw;
+            }
         }
 
         protected override void OnDisposing()

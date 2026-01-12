@@ -595,9 +595,11 @@ namespace StreamVideo.Core.LowLevelClient
                 var isFast = _reconnectStrategy == WebsocketReconnectStrategy.Fast;
 
                 var callCid = joinCallData.Type + ":" + joinCallData.Id;
-                var callExists = _cache.Calls.TryGet(callCid, out var call);
+                
+                // Call can exist without credentials because it can be added via call.created event
+                var callCredentialsExists = _cache.Calls.TryGet(callCid, out var call) && call.Credentials != null;
 
-                if (!callExists || isRejoin || isMigration)
+                if (!callCredentialsExists || isRejoin || isMigration)
                 {
                     try
                     {
@@ -607,6 +609,7 @@ namespace StreamVideo.Core.LowLevelClient
                     }
                     catch (Exception e)
                     {
+                        _logs.ExceptionIfDebug(e);
                         if (CallState != CallingState.Offline)
                         {
                             CallState = prevCallState;
@@ -617,7 +620,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 else
                 {
-                    _logs.WarningIfDebug($"Skipped join call request: callExists: {callExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
+                    _logs.WarningIfDebug($"Skipped join call request: callExists: {callCredentialsExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
                 }
 
                 ActiveCall = call ?? throw new NullReferenceException(nameof(call));

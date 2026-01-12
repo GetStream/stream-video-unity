@@ -615,6 +615,10 @@ namespace StreamVideo.Core.LowLevelClient
                         throw;
                     }
                 }
+                else
+                {
+                    _logs.WarningIfDebug($"Skipped join call request: callExists: {callExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
+                }
 
                 ActiveCall = call ?? throw new NullReferenceException(nameof(call));
 

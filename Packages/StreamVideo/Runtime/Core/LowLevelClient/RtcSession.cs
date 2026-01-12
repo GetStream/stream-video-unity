@@ -818,6 +818,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (CallState == CallingState.Leaving || CallState == CallingState.Offline)
             {
+                _logs.WarningIfDebug($"{nameof(StopAsync)} ignored because call is in state: " + CallState);
                 //StreamTODO: should this return a task of the ongoing stop?
                 return;
             }
@@ -830,6 +831,7 @@ namespace StreamVideo.Core.LowLevelClient
             // }
 
             CallState = CallingState.Leaving;
+            _logs.InfoIfDebug("Leaving the call - cleanup session");
 
             if (_joinCallCts != null)
             {
@@ -843,7 +845,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (ActiveCall != null)
             {
-                _logs.Info("Leaving call...");
+                _logs.Info("Leaving active call with Cid: " + ActiveCall.Cid);
                 try
                 {
                     // Trace leave call before leaving the call. Otherwise, stats are not send because SFU WS disconnects

@@ -187,7 +187,7 @@ namespace StreamVideo.Core.LowLevelClient
                 if (result.Error != null)
                 {
                     //StreamTODO: create custom exception
-                    throw new Exception($"{nameof(GeneratedAPI.SetPublisher)} request failed with: {result.Error.Code}, {result.Error.Message}.");
+                    throw new Exception($"{nameof(GeneratedAPI.SetPublisher)} request failed with: {result.Error.Code}, {result.Error.Message}.\nRequest:\n{serializedRequest}");
                 }
 
                 try

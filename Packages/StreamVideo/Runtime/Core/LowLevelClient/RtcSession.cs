@@ -635,6 +635,10 @@ namespace StreamVideo.Core.LowLevelClient
                 var previousSfuWebSocket = _sfuWebSocket;
                 var isWsHealthy = previousSfuWebSocket?.IsHealthy ?? false;
                 var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
+                
+                // Following JS: Publisher/Subscriber are only recreated for REJOIN/MIGRATE.
+                // For FAST reconnect (even with unhealthy WS), we keep existing pub/sub and update their SfuClient reference.
+                var startNewPeerConnections = isRejoin || isMigration;
 
                 // a new session_id is necessary for the REJOIN strategy.
                 // we use the previous session_id if available
@@ -661,8 +665,15 @@ namespace StreamVideo.Core.LowLevelClient
                     _subscriberTracer = _tracerManager.GetTracer($"{sessionNumber}-sub");
                     _sessionCounter++;
 
-                    CreatePublisher(call.Credentials.IceServers);
-                    CreateSubscriber(call.Credentials.IceServers);
+                    if (startNewPeerConnections)
+                    {
+                        // REJOIN/MIGRATE: Create new Publisher/Subscriber
+                        CreatePublisher(call.Credentials.IceServers);
+                        CreateSubscriber(call.Credentials.IceServers);
+                    }
+                    // else: FAST with unhealthy WS - keep existing Publisher/Subscriber.
+                    // No need to update SfuClient reference because Publisher/Subscriber hold a reference to RtcSession
+                    // (which implements ISfuClient), and RtcSession internally manages the _sfuWebSocket.
 
                     // We don't set initial offer as local. Later on we set generated answer as a local
                     var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
@@ -703,21 +714,24 @@ namespace StreamVideo.Core.LowLevelClient
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
                     
-                    // Init publisher tracks
-                    Publisher.InitPublisherTracks();
-                    TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
-                    TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);
-                    
-                    // Handle tracks subscriptions for already present participants
-                    foreach (var participant in ActiveCall.Participants)
+                    if (startNewPeerConnections)
                     {
-                        if (!participant.IsLocalParticipant)
+                        // Only init publisher tracks for new Publisher
+                        Publisher.InitPublisherTracks();
+                        TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
+                        TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);
+                        
+                        // Handle tracks subscriptions for already present participants
+                        foreach (var participant in ActiveCall.Participants)
                         {
-                            NotifyParticipantJoined(participant.SessionId);
+                            if (!participant.IsLocalParticipant)
+                            {
+                                NotifyParticipantJoined(participant.SessionId);
+                            }
                         }
+                        
+                        QueueTracksSubscriptionRequest();
                     }
-                    
-                    QueueTracksSubscriptionRequest();
                 }
 
                 if (!isMigration)
@@ -726,12 +740,10 @@ namespace StreamVideo.Core.LowLevelClient
                     CallState = CallingState.Joined;
                 }
 
-                // when performing fast reconnect, or when we reuse the same SFU client,
-                // (ws remained healthy), we just need to restore the ICE connection
+                // Following JS: For FAST reconnect, always call RestartIce (after updating SfuClient if needed).
+                // The SFU automatically issues an ICE restart on the subscriber, we don't have to do it ourselves.
                 if (isFast)
                 {
-                    // the SFU automatically issues an ICE restart on the subscriber
-                    // we don't have to do it ourselves
                     await Publisher.RestartIce(); //StreamTODO: cancellation token
                 }
 
@@ -1613,9 +1625,13 @@ namespace StreamVideo.Core.LowLevelClient
                 { CallingState.Reconnecting, CallingState.Migrating, CallingState.ReconnectingFailed };
             if (ignoredStates.Any(s => s == CallState))
             {
+                _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request because CallState is {CallState}");
                 return;
             }
 
+            // Set state to Reconnecting immediately to prevent parallel reconnection attempts
+            CallState = CallingState.Reconnecting;
+            
             _reconnectStrategy = strategy;
             _reconnectReason = reason;
 
@@ -1715,7 +1731,7 @@ namespace StreamVideo.Core.LowLevelClient
         private async Task ReconnectFast()
         {
             _reconnectStrategy = WebsocketReconnectStrategy.Fast;
-            CallState = CallingState.Reconnecting;
+            // CallState is already set to Reconnecting in Reconnect()
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
 
             // Refresh state, it might have changed while we were shortly offline 
@@ -1734,7 +1750,7 @@ namespace StreamVideo.Core.LowLevelClient
         private async Task ReconnectRejoin()
         {
             _reconnectStrategy = WebsocketReconnectStrategy.Rejoin;
-            CallState = CallingState.Reconnecting;
+            // CallState is already set to Reconnecting in Reconnect()
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
 
             RestorePublishedTracks();

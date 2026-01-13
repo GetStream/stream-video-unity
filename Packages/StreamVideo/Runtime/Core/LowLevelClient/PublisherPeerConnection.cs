@@ -491,6 +491,10 @@ namespace StreamVideo.Core.LowLevelClient
 
             PublisherAudioTrack?.Stop();
             PublisherVideoTrack?.Stop();
+            
+            _publisherAudioTrack?.Dispose();
+            _publisherVideoTrack?.Dispose();
+            
             PublisherAudioTrack = null;
             PublisherVideoTrack = null;
 
@@ -695,6 +699,8 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_NATIVE_AUDIO
             PublisherAudioTrack.StopLocalAudioCapture();
 #endif
+            
+            PublisherAudioTrack.Dispose();
             PublisherAudioTrack = null;
         }
 
@@ -802,7 +808,8 @@ namespace StreamVideo.Core.LowLevelClient
             PublisherVideoTrack.Stop();
 
             PublisherVideoMediaStream.RemoveTrack(PublisherVideoTrack);
-
+            
+            PublisherVideoTrack?.Dispose();
             PublisherVideoTrack = null;
         }
 

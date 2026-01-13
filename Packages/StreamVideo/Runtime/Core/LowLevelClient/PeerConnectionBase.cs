@@ -405,7 +405,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnTrack(RTCTrackEvent trackEvent)
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{PeerType}] OnTrack {trackEvent.Track.GetType()}");
+            Logs.Warning($"[{PeerType}] OnTrack {trackEvent.Track.GetType().Name}, Id: {trackEvent.Track.Id}");
 #endif
 
             var trackType = trackEvent.Track is AudioStreamTrack ? "audio" : "video";

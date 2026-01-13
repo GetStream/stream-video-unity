@@ -22,11 +22,6 @@ namespace StreamVideo.ExampleProject.UI
             }
 
             Participant = participant ?? throw new ArgumentNullException(nameof(participant));
-
-            foreach (var track in Participant.GetTracks())
-            {
-                OnParticipantTrackAdded(Participant, track);
-            }
             
             OnIsSpeakingChanged(Participant.IsSpeaking);
             OnAudioLevelChanged(Participant.AudioLevel);

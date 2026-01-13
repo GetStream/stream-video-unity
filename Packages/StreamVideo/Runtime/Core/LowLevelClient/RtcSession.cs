@@ -595,7 +595,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var isFast = _reconnectStrategy == WebsocketReconnectStrategy.Fast;
 
                 var callCid = joinCallData.Type + ":" + joinCallData.Id;
-                
+
                 // Call can exist without credentials because it can be added via call.created event
                 var callCredentialsExists = _cache.Calls.TryGet(callCid, out var call) && call.Credentials != null;
 
@@ -620,7 +620,8 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 else
                 {
-                    _logs.WarningIfDebug($"Skipped join call request: callExists: {callCredentialsExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
+                    _logs.WarningIfDebug(
+                        $"Skipped join call request: callExists: {callCredentialsExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
                 }
 
                 ActiveCall = call ?? throw new NullReferenceException(nameof(call));
@@ -629,16 +630,18 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     _logs.ErrorIfDebug("Missing credentials!");
                 }
-                
+
                 _httpClient = _httpClientFactory(ActiveCall);
 
                 var previousSfuWebSocket = _sfuWebSocket;
                 var isWsHealthy = previousSfuWebSocket?.IsHealthy ?? false;
                 var startNewSfuWsSession = isRejoin || isMigration || !isWsHealthy;
-                
+
                 // Following JS: Publisher/Subscriber are only recreated for REJOIN/MIGRATE.
-                // For FAST reconnect (even with unhealthy WS), we keep existing pub/sub and update their SfuClient reference.
-                var startNewPeerConnections = isRejoin || isMigration;
+                // For FAST reconnect (even with unhealthy WS), we keep existing pub/sub.
+                // Also create new ones if they don't exist (initial join).
+                var startNewPeerConnections = isRejoin || isMigration || Publisher == null || !Publisher.IsHealthy ||
+                                              Subscriber == null || !Subscriber.IsHealthy;
 
                 // a new session_id is necessary for the REJOIN strategy.
                 // we use the previous session_id if available
@@ -713,14 +716,14 @@ namespace StreamVideo.Core.LowLevelClient
                     _logs.WarningIfDebug("SFU Sending join response received");
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
-                    
+
                     if (startNewPeerConnections)
                     {
                         // Only init publisher tracks for new Publisher
                         Publisher.InitPublisherTracks();
                         TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
                         TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);
-                        
+
                         // Handle tracks subscriptions for already present participants
                         foreach (var participant in ActiveCall.Participants)
                         {
@@ -729,7 +732,7 @@ namespace StreamVideo.Core.LowLevelClient
                                 NotifyParticipantJoined(participant.SessionId);
                             }
                         }
-                        
+
                         QueueTracksSubscriptionRequest();
                     }
                 }
@@ -1384,9 +1387,9 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTODO: what if left the call and started a new one but the JoinResponse belongs to the previous session?
 
             _sfuTracer?.Trace(PeerConnectionTraceKey.JoinRequest, joinResponse);
-            
+
             // State update was already handled in DoJoin
-            
+
             // Not sure if still needed but as a safe net we flush any pending ice candidates
             var cancellationToken = GetCurrentCancellationTokenOrDefault();
             foreach (var iceTrickle in _pendingIceTrickleRequests)
@@ -1620,7 +1623,7 @@ namespace StreamVideo.Core.LowLevelClient
         private async Task Reconnect(WebsocketReconnectStrategy strategy, string reason)
         {
             AssertMainThread();
-            
+
             var ignoredStates = new[]
                 { CallingState.Reconnecting, CallingState.Migrating, CallingState.ReconnectingFailed };
             if (ignoredStates.Any(s => s == CallState))
@@ -1631,7 +1634,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             // Set state to Reconnecting immediately to prevent parallel reconnection attempts
             CallState = CallingState.Reconnecting;
-            
+
             _reconnectStrategy = strategy;
             _reconnectReason = reason;
 
@@ -1899,7 +1902,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuWebSocketOnError(SfuError sfuError)
         {
             AssertMainThread();
-            
+
             _sfuTracer?.Trace(PeerConnectionTraceKey.SfuError, sfuError);
 
             var reconnectionStrategy = sfuError.ReconnectStrategy;
@@ -2646,9 +2649,10 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     return;
                 }
-                
+
 #if STREAM_DEBUG_ENABLED
-                _logs.Info($"[RtcSession] SFU WS disconnected (IsLeaving={_sfuWebSocket.IsLeaving}, IsClosingClean={_sfuWebSocket.IsClosingClean})");
+                _logs.Info(
+                    $"[RtcSession] SFU WS disconnected (IsLeaving={_sfuWebSocket.IsLeaving}, IsClosingClean={_sfuWebSocket.IsClosingClean})");
 #endif
                 SfuDisconnected?.Invoke();
             }

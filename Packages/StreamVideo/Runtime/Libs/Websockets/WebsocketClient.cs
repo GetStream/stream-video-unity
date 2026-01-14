@@ -54,6 +54,10 @@ namespace StreamVideo.Libs.Websockets
                     "Clean up resources before connecting");
                 cancellationToken.ThrowIfCancellationRequested();
                 _connectionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning($"{nameof(ConnectAsync)} to `{serverUri}`");
+#endif
 
                 _internalClient = new ClientWebSocket();
                 _internalClient.Options.SetRequestHeader("User-Agent", "unity-video-sdk-ws-client");
@@ -324,6 +328,9 @@ namespace StreamVideo.Libs.Websockets
                 //StreamTOdo: this fixes possible null ref if Dispose was called multiple times but perhaps this logic should not be called multiple times
                 if (_internalClient == null)
                 {
+#if STREAM_DEBUG_ENABLED
+                    LogExceptionIfDebugMode(new Exception("Internal WS -> Disposing internal client"));
+#endif
                     _internalClient.Dispose();
                     _internalClient = null;
                 }

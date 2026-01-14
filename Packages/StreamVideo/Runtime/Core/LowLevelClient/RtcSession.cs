@@ -250,7 +250,7 @@ namespace StreamVideo.Core.LowLevelClient
             _videoAudioSyncBenchmark = new VideoAudioSyncBenchmark(_timeService, _logs);
 #endif
 
-            _networkMonitor.NetworkAvailabilityChanged += NetworkMonitorOnNetworkAvailabilityChanged;
+            _networkMonitor.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
 
             _mainThreadId = Thread.CurrentThread.ManagedThreadId;
         }
@@ -266,7 +266,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             _tracerManager?.Clear();
 
-            _networkMonitor.NetworkAvailabilityChanged -= NetworkMonitorOnNetworkAvailabilityChanged;
+            _networkMonitor.NetworkAvailabilityChanged -= OnNetworkAvailabilityChanged;
         }
 
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
@@ -1608,6 +1608,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             try
             {
+                _logs.WarningIfDebug($"Reconnect triggered by {nameof(OnReconnectionNeeded)}");
                 await Reconnect(strategy, reason);
             }
             catch (Exception e)
@@ -1922,6 +1923,8 @@ namespace StreamVideo.Core.LowLevelClient
                 case WebsocketReconnectStrategy.Fast:
                 case WebsocketReconnectStrategy.Rejoin:
                 case WebsocketReconnectStrategy.Migrate:
+                    
+                    _logs.WarningIfDebug($"Reconnect triggered by {nameof(OnSfuWebSocketOnError)}");
 
                     //StreamTODO: should this be awaited an this method should be async void?
                     var reason
@@ -2665,7 +2668,7 @@ namespace StreamVideo.Core.LowLevelClient
             Reconnect(strategy, "SFU WS was disconnected").LogIfFailed();
         }
 
-        private void NetworkMonitorOnNetworkAvailabilityChanged(bool isNetworkAvailable)
+        private void OnNetworkAvailabilityChanged(bool isNetworkAvailable)
         {
             if (isNetworkAvailable)
             {
@@ -2684,6 +2687,7 @@ namespace StreamVideo.Core.LowLevelClient
                     ? WebsocketReconnectStrategy.Rejoin
                     : WebsocketReconnectStrategy.Fast;
 
+                _logs.WarningIfDebug($"Reconnect triggered by {nameof(OnNetworkAvailabilityChanged)}");
                 Reconnect(strategy, "Going online").LogIfFailed();
             }
             else

@@ -272,6 +272,7 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
         public void Update()
         {
+            _networkMonitor.Update();
             _sfuWebSocket?.Update();
             Publisher?.Update();
             _statsSender.Update();
@@ -603,7 +604,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     try
                     {
-                        _logs.WarningIfDebug("Execute join call request.");
+                        _logs.WarningIfDebug("Execute join call API request.");
                         call = await ExecuteJoinRequest(joinCallData, cancellationToken);
                         _lastJoinCallCredentials = call.Credentials;
                     }

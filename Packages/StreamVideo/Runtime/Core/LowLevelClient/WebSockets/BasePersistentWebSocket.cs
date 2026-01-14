@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
+using StreamVideo.Core.Utils;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
@@ -39,11 +40,17 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
                 var previous = _connectionState;
                 _connectionState = value;
+                
+                // Apply state changes before raising any events so that event responders have the latest state
+                if (value == ConnectionState.Connected)
+                {
+                    OnConnected();
+                }
+                
                 ConnectionStateChanged?.Invoke(previous, _connectionState);
 
                 if (value == ConnectionState.Connected)
                 {
-                    OnConnected();
                     Connected?.Invoke();
                 }
                 else if (value == ConnectionState.Disconnected)
@@ -347,6 +354,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private void OnConnected()
         {
             _lastHealthCheckReceivedTime = TimeService.Time;
+            Logs.WarningIfDebug("OnConnected - Reset _lastHealthCheckReceivedTime to " + TimeService.Time);
         }
 
         private TEvent DeserializeEvent<TDto, TEvent>(string content, out TDto dto)

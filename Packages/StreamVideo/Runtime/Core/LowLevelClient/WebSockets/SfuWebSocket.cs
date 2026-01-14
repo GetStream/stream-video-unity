@@ -64,6 +64,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             _applicationInfo = applicationInfo;
             _sdkVersion = sdkVersion;
+            
+            logs.WarningIfDebug("SFU instance created");
         }
 
         public void InitNewSession(string sessionId, string sfuUrl, string sfuToken, string subscriberOfferSdp, string publisherOfferSdp)
@@ -344,6 +346,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void OnDisposing()
         {
+            Logs.WarningIfDebug("[WS] Disposing SFU instance");
             _joinEventReceivedCompletionSource?.TrySetCanceled();
 
             base.OnDisposing();

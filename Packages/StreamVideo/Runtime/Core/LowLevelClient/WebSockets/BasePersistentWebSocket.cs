@@ -323,7 +323,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             if (timeSinceLastHealthCheck > HealthCheckMaxWaitingTime)
             {
                 Logs.Warning(
-                    $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
+                    $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}, reset connection. Last: {_lastHealthCheckReceivedTime}, Current: {TimeService.Time}");
                 WebsocketClient
                     .DisconnectAsync(WebSocketCloseStatus.InternalServerError,
                         $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}")

@@ -9,6 +9,7 @@ using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.Utils;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
@@ -48,6 +49,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             RegisterEventType<ConnectedEventInternalDTO>(CoordinatorEventType.ConnectionOk,
                 HandleConnectedEvent);
+            
+            logs.WarningIfDebug("Coordinator instance created");
         }
 
         protected override string LogsPrefix { get; set; } = "Coordinator";
@@ -124,6 +127,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void OnDisposing()
         {
+            Logs.WarningIfDebug("Disposing coordinator instance");
             _connectUserTaskSource?.TrySetCanceled();
             
             base.OnDisposing();

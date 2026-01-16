@@ -98,8 +98,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             Logs.Info($"{GetType().Name} TryToReconnect");
 #endif
 
+            // StreamTODO: this is not handling the original Cancellation Token passed from the user
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(ConnectTimeoutMs);
+            //cts.CancelAfter(ConnectTimeoutMs);
             ConnectAsync(_lastConnectRequest, cts.Token).LogIfFailed();
         }
 

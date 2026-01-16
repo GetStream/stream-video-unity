@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -65,7 +66,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
 #if STREAM_DEBUG_ENABLED
                 // Ignoring some messages for causing too much noise in logs
-                var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged", "call.session_participant_count_updated" };
+                var ignoredMessages = new[] { "audioLevelChanged", "connectionQualityChanged", "call.session_participant_count_updated" };
                 if(!ignoredMessages.Any(decodedMessage.Contains))
                 {
                     Logs.Info($"{LogsPrefix} WS message: " + decodedMessage);
@@ -135,7 +136,17 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void SendHealthCheck()
         {
-            WebsocketClient.Send(Serializer.Serialize(new HealthCheckEventInternalDTO()));
+            try
+            {
+                WebsocketClient.Send(Serializer.Serialize(new HealthCheckEventInternalDTO()
+                {
+                    ConnectionId = ConnectionId
+                }));
+            }
+            catch (Exception e)
+            {
+                Logs.ErrorIfDebug($"[{GetType().Name}] Failed to send health check. Error: " + e.Message);
+            }
         }
 
         private readonly StringBuilder _errorSb = new StringBuilder();
@@ -155,7 +166,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _connectUserTaskSource = null;
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Info("Connected to the coordinator. Connection id: " + ConnectionId);
+            Logs.Info($"[{TimeService.Time}] Connected to the coordinator. Connection id: " + ConnectionId);
 #endif
         }
 

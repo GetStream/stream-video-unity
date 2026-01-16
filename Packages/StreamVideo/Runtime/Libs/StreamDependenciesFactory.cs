@@ -20,14 +20,14 @@ namespace StreamVideo.Libs
         public virtual ILogs CreateLogger(LogLevel logLevel = LogLevel.All)
             => new UnityLogs(logLevel);
 
-        public virtual IWebsocketClient CreateWebsocketClient(ILogs logs, bool isDebugMode = false)
+        public virtual IWebsocketClient CreateWebsocketClient(ILogs logs, bool isDebugMode = false, string debugTag = "")
         {
 
 #if UNITY_WEBGL
             //StreamTodo: handle debug mode
             return new NativeWebSocketWrapper(logs, isDebugMode: isDebugMode);
 #else
-            return new WebsocketClient(logs, isDebugMode: isDebugMode);
+            return new WebsocketClient(logs, isDebugMode:isDebugMode, debugTag:debugTag);
 #endif
         }
 

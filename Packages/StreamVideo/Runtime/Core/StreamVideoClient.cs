@@ -105,7 +105,7 @@ namespace StreamVideo.Core
             var logs = factory.CreateLogger(config.LogLevel.ToLogLevel());
             var applicationInfo = factory.CreateApplicationInfo();
             var coordinatorWebSocket
-                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
+                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled(), "Coordinator");
 
             var httpClient = factory.CreateHttpClient();
             var serializer = factory.CreateSerializer();
@@ -121,7 +121,7 @@ namespace StreamVideo.Core
             return client;
 
             IWebsocketClient SfuWebSocketFactory()
-                => factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
+                => factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled(), "SFU");
         }
 
         /// <inheritdoc cref="StreamVideoLowLevelClient.CreateDeveloperAuthToken"/>

@@ -73,7 +73,7 @@ namespace StreamVideo.Core.LowLevelClient
             var logs = factory.CreateLogger(config.LogLevel.ToLogLevel());
             var applicationInfo = factory.CreateApplicationInfo();
             var coordinatorWebSocket
-                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
+                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled(), debugTag: "Coordinator");
 
             var httpClient = factory.CreateHttpClient();
             var serializer = factory.CreateSerializer();
@@ -84,7 +84,7 @@ namespace StreamVideo.Core.LowLevelClient
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
             
             IWebsocketClient SfuWebSocketFactory()
-                => factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
+                => factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled(), debugTag: "SFU");
         }
 
         //StreamTodo: add video SDK docs link

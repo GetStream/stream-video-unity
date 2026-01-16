@@ -95,7 +95,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"{GetType()} TryToReconnect");
+            Logs.Info($"{GetType().Name} TryToReconnect");
 #endif
 
             var cts = new CancellationTokenSource();
@@ -385,6 +385,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             ConnectionState = ConnectionState.WaitToReconnect;
             var timeLeft = NextReconnectTime.Value - TimeService.Time;
 
+            _logSb.Append("[");
+            _logSb.Append(GetType().Name);
+            _logSb.Append("] ");
             _logSb.Append("Reconnect scheduled to time: <b>");
             _logSb.Append(Math.Round(NextReconnectTime.Value));
             _logSb.Append(" seconds</b>, current time: <b>");

@@ -14,7 +14,7 @@ namespace StreamVideo.Libs
     {
         ILogs CreateLogger(LogLevel logLevel = LogLevel.All);
 
-        IWebsocketClient CreateWebsocketClient(ILogs logs, bool isDebugMode = false);
+        IWebsocketClient CreateWebsocketClient(ILogs logs, bool isDebugMode = false, string debugTag = "");
 
         IHttpClient CreateHttpClient();
 

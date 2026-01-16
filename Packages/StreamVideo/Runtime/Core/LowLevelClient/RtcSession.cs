@@ -784,7 +784,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
             catch (Exception e)
             {
-                _logs.ExceptionIfDebug(e);
+                _logs.Error($"{nameof(DoJoin)} failed with exception: " + e.Message);
                 throw;
             }
             finally

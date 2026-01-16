@@ -342,7 +342,7 @@ namespace StreamVideo.Libs.Websockets
             finally
             {
                 //StreamTOdo: this fixes possible null ref if Dispose was called multiple times but perhaps this logic should not be called multiple times
-                if (_internalClient == null)
+                if (_internalClient != null)
                 {
 #if STREAM_DEBUG_ENABLED
                     _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Dispose Client");

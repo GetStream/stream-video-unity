@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -152,7 +151,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private readonly StringBuilder _errorSb = new StringBuilder();
         private TaskCompletionSource<bool> _connectUserTaskSource;
 
-        private void HandleHealthCheckEvent(HealthCheckEventInternalDTO healthCheckEvent) => OnHealthCheckReceived();
+        private void HandleHealthCheckEvent(HealthCheckEventInternalDTO healthCheckEvent) => OnHealthCheckReceived(healthCheckEvent.ConnectionId);
 
         private void HandleConnectedEvent(ConnectedEventInternalDTO connectedEvent)
         {

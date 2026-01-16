@@ -248,11 +248,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected abstract Task<TConnectResponse> ExecuteConnectAsync(TConnectRequest request, CancellationToken cancellationToken = default);
 
-        protected void OnHealthCheckReceived()
+        protected void OnHealthCheckReceived(string connectionId)
         {
 #if STREAM_DEBUG_ENABLED
             var timeSinceLast = Mathf.Round(TimeService.Time - _lastHealthCheckReceivedTime);
-            Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds. Current: " + TimeService.Time);
+            Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds. Connection: {connectionId}. Current: " + TimeService.Time);
 #endif
             _lastHealthCheckReceivedTime = TimeService.Time;
         }

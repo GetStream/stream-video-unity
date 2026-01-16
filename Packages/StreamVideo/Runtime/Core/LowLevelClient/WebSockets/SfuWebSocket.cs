@@ -269,7 +269,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                         break;
                     case SfuEvent.EventPayloadOneofCase.HealthCheckResponse:
                         HealthCheck?.Invoke(sfuEvent.HealthCheckResponse);
-                        OnHealthCheckReceived();
+                        OnHealthCheckReceived("SFU undefined");
                         break;
                     case SfuEvent.EventPayloadOneofCase.TrackPublished:
                         TrackPublished?.Invoke(sfuEvent.TrackPublished);

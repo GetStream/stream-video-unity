@@ -2683,6 +2683,11 @@ namespace StreamVideo.Core.LowLevelClient
                         "Closing WS to reconnect after going online").LogIfFailed();
                 }
 
+                if (ActiveCall == null)
+                {
+                    return;
+                }
+
                 var offlineTime = DateTime.UtcNow - _lastTimeOffline;
                 var strategy = offlineTime.TotalSeconds > _fastReconnectDeadlineSeconds
                     ? WebsocketReconnectStrategy.Rejoin

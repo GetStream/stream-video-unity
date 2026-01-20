@@ -288,6 +288,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             TryExecuteSubscribeToTracks();
+
+            TryExecutePendingReconnectRequest();
         }
 
         public async Task SendWebRtcStats(SendStatsRequest request, CancellationToken cancellationToken)
@@ -565,6 +567,12 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTODO: cancellation token
         public async Task DoJoin(JoinCallData joinCallData, CancellationToken cancellationToken)
         {
+            if (CallState == CallingState.Joining)
+            {
+                _logs.Error($"{nameof(DoJoin)} called while already joining.");
+                throw new NotSupportedException("Already joining");
+
+            }
             var prevCallState = CallState;
 
             _joinCallData = joinCallData;
@@ -604,7 +612,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     try
                     {
-                        _logs.WarningIfDebug("Execute join call API request.");
+                        _logs.WarningIfDebug($"{nameof(DoJoin)} - Execute join call API request.");
                         call = await ExecuteJoinRequest(joinCallData, cancellationToken);
                         _lastJoinCallCredentials = call.Credentials;
                     }
@@ -622,14 +630,14 @@ namespace StreamVideo.Core.LowLevelClient
                 else
                 {
                     _logs.WarningIfDebug(
-                        $"Skipped join call request: callExists: {callCredentialsExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
+                        $"{nameof(DoJoin)} - Skipped join call request: callExists: {callCredentialsExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
                 }
 
                 ActiveCall = call ?? throw new NullReferenceException(nameof(call));
 
                 if (ActiveCall.Credentials == null || string.IsNullOrEmpty(ActiveCall.Credentials.Token))
                 {
-                    _logs.ErrorIfDebug("Missing credentials!");
+                    _logs.ErrorIfDebug($"{nameof(DoJoin)} - Missing credentials!");
                 }
 
                 _httpClient = _httpClientFactory(ActiveCall);
@@ -650,11 +658,13 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (isRejoin || SessionId.IsEmpty)
                 {
+                    _logs.WarningIfDebug($"{nameof(DoJoin)} - Regenerate session ID. {nameof(isRejoin)}:{isRejoin}, SessionID is empty: {SessionId.IsEmpty}");
                     SessionId.Regenerate();
                 }
 
                 if (startNewSfuWsSession)
                 {
+                    _logs.WarningIfDebug($"{nameof(DoJoin)} - Create new SFU Session");
                     CreateNewSfuWebSocket(out previousSfuWebSocket);
 
                     var sfuUrl = call.Credentials.Server.Url;
@@ -671,6 +681,8 @@ namespace StreamVideo.Core.LowLevelClient
 
                     if (startNewPeerConnections)
                     {
+                        _logs.WarningIfDebug($"{nameof(DoJoin)} - Create new Publisher and Subscriber");
+                        
                         // REJOIN/MIGRATE: Create new Publisher/Subscriber
                         CreatePublisher(call.Credentials.IceServers);
                         CreateSubscriber(call.Credentials.IceServers);
@@ -711,10 +723,15 @@ namespace StreamVideo.Core.LowLevelClient
                         ReconnectDetails = reconnectDetails
                     };
 
-                    _logs.WarningIfDebug("SFU Sending join request");
+                    _logs.WarningIfDebug($"{nameof(DoJoin)} - SFU Sending join request");
                     var joinResponse = await _sfuWebSocket.ConnectAsync(joinRequest, cancellationToken);
+                    
+                    //StreamTODO: if we try to rejoin a call with no other participants we'll get error from SFU not call FOUND
+                    // What should we do then?
+                    
+                    
                     ActiveCall.UpdateFromSfu(joinResponse);
-                    _logs.WarningIfDebug("SFU Sending join response received");
+                    _logs.WarningIfDebug($"{nameof(DoJoin)} - SFU Sending join response received");
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
 
@@ -737,6 +754,10 @@ namespace StreamVideo.Core.LowLevelClient
                         QueueTracksSubscriptionRequest();
                     }
                 }
+                else
+                {
+                    _logs.WarningIfDebug($"{nameof(DoJoin)} - Reuse SFU Session");
+                }
 
                 if (!isMigration)
                 {
@@ -748,6 +769,7 @@ namespace StreamVideo.Core.LowLevelClient
                 // The SFU automatically issues an ICE restart on the subscriber, we don't have to do it ourselves.
                 if (isFast)
                 {
+                    _logs.WarningIfDebug($"{nameof(DoJoin)} - Restart ICE");
                     await Publisher.RestartIce(); //StreamTODO: cancellation token
                 }
 
@@ -762,6 +784,7 @@ namespace StreamVideo.Core.LowLevelClient
                         ? "Closing WS after rejoin"
                         : "Closing unhealthy WS after reconnect";
 
+                    _logs.WarningIfDebug($"{nameof(DoJoin)} - Close previous SFU WS - " + closeReason);
                     ClosePreviousSfuWebSocketAsync(previousSfuWebSocket, closeReason).LogIfFailed();
                 }
 
@@ -780,11 +803,12 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
                 }
 
-                _logs.Info("Joined call: " + call.Cid);
+                _logs.Info($"{nameof(DoJoin)} - Joined call: {call.Cid}, Call State: {CallState}");
             }
             catch (Exception e)
             {
-                _logs.Error($"{nameof(DoJoin)} failed with exception: " + e.Message);
+                _logs.Error($"{nameof(DoJoin)} failed with exception: {e.Message}");
+                _logs.Exception(e);
                 throw;
             }
             finally
@@ -1236,6 +1260,12 @@ namespace StreamVideo.Core.LowLevelClient
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()
         {
+            if (ActiveCall.Participants == null || ActiveCall.Participants.Count == 0)
+            {
+                var count = ActiveCall.Participants?.Count.ToString() ?? "null";
+                _logs.WarningIfDebug($"{nameof(GetDesiredTracksDetails)} participants null or empty. Participants: " + count);
+                yield break;
+            }
             //StreamTodo: inject info on what tracks we want. Hardcoded audio & video but missing screenshare support
             var trackTypes = new[] { SfuTrackType.Video, SfuTrackType.Audio };
 
@@ -1619,15 +1649,32 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        private (WebsocketReconnectStrategy strategy, string reason)? _pendingReconnectRequest;
+
+        private void TryExecutePendingReconnectRequest()
+        {
+            var pendingRequest = _pendingReconnectRequest;
+            _pendingReconnectRequest = default;
+
+            if (pendingRequest.HasValue)
+            {
+                Reconnect(pendingRequest.Value.strategy, pendingRequest.Value.reason).LogIfFailed();
+            }
+        }
+
         //StreamTODO: add triggering from SFU WS closed.
         // In JS -> Call.ts -> onSignalClose -> handleSfuSignalClose -> reconnect
         //StreamTODO: add triggering from network changed -> js Call.ts "network.changed"
         private async Task Reconnect(WebsocketReconnectStrategy strategy, string reason)
         {
-            AssertMainThread();
+            if (!AssertMainThread())
+            {
+                _pendingReconnectRequest = new ValueTuple<WebsocketReconnectStrategy, string>(strategy, reason);
+                return;
+            }
 
             var ignoredStates = new[]
-                { CallingState.Reconnecting, CallingState.Migrating, CallingState.ReconnectingFailed };
+                { CallingState.Reconnecting, CallingState.Migrating };
             if (ignoredStates.Any(s => s == CallState))
             {
                 _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request because CallState is {CallState}");
@@ -1635,7 +1682,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             // Set state to Reconnecting immediately to prevent parallel reconnection attempts
-            CallState = CallingState.Reconnecting;
+            //CallState = CallingState.Reconnecting;
+            _logs.WarningIfDebug($"--------- Reconnection FLOW TRIGGERED ---------- {strategy} {reason}");
 
             _reconnectStrategy = strategy;
             _reconnectReason = reason;
@@ -1725,7 +1773,7 @@ namespace StreamVideo.Core.LowLevelClient
                         = shouldRejoin ? WebsocketReconnectStrategy.Rejoin : WebsocketReconnectStrategy.Fast;
 
                     _logs.WarningIfDebug(
-                        $"Connection failed, attempt: {attempt}, next strategy: {_reconnectStrategy}, wasMigrating: {wasMigrating}, " +
+                        $"Reconnect failed, attempt: {attempt}, next strategy: {_reconnectStrategy}, wasMigrating: {wasMigrating}, " +
                         $"fastReconnectTimeout: {fastReconnectTimeout}, arePeerConnectionsHealthy: {arePeerConnectionsHealthy}");
 
                     //StreamTODO: handle cancellation token
@@ -1736,7 +1784,7 @@ namespace StreamVideo.Core.LowLevelClient
         private async Task ReconnectFast()
         {
             _reconnectStrategy = WebsocketReconnectStrategy.Fast;
-            // CallState is already set to Reconnecting in Reconnect()
+            CallState = CallingState.Reconnecting;
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
 
             // Refresh state, it might have changed while we were shortly offline 
@@ -1755,7 +1803,7 @@ namespace StreamVideo.Core.LowLevelClient
         private async Task ReconnectRejoin()
         {
             _reconnectStrategy = WebsocketReconnectStrategy.Rejoin;
-            // CallState is already set to Reconnecting in Reconnect()
+            CallState = CallingState.Reconnecting;
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());
 
             RestorePublishedTracks();
@@ -2644,6 +2692,11 @@ namespace StreamVideo.Core.LowLevelClient
 
                 // We're already reconnecting
                 case CallingState.Reconnecting:
+                    
+#if STREAM_DEBUG_ENABLED
+                    _logs.Info(
+                        $"[RtcSession] OnSfuWebSocketDisconnected - ignored in state: " + CallState);
+#endif
                     return;
             }
 
@@ -2651,12 +2704,16 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 if (_sfuWebSocket.IsLeaving || _sfuWebSocket.IsClosingClean)
                 {
+#if STREAM_DEBUG_ENABLED
+                    _logs.Info(
+                        $"[RtcSession] OnSfuWebSocketDisconnected Ignored (IsLeaving={_sfuWebSocket.IsLeaving}, IsClosingClean={_sfuWebSocket.IsClosingClean})");
+#endif
                     return;
                 }
 
 #if STREAM_DEBUG_ENABLED
                 _logs.Info(
-                    $"[RtcSession] SFU WS disconnected (IsLeaving={_sfuWebSocket.IsLeaving}, IsClosingClean={_sfuWebSocket.IsClosingClean})");
+                    $"[RtcSession] OnSfuWebSocketDisconnected (IsLeaving={_sfuWebSocket.IsLeaving}, IsClosingClean={_sfuWebSocket.IsClosingClean})");
 #endif
                 SfuDisconnected?.Invoke();
             }
@@ -2775,13 +2832,19 @@ namespace StreamVideo.Core.LowLevelClient
             sfuWebSocket.Disconnected -= OnSfuWebSocketDisconnected;
         }
 
-        private void AssertMainThread()
+        private bool AssertMainThread()
         {
             if (Thread.CurrentThread.ManagedThreadId != _mainThreadId)
             {
                 _logs.Error("Called Not from the main thread!!!");
-                throw new InvalidOperationException("Called Not from the main thread!!!");
+                //throw new InvalidOperationException("Called Not from the main thread!!!");
+                
+                //StreamTODO: fix this later, if not main thread then set a flag and execute by Update()
+
+                return false;
             }
+
+            return true;
         }
     }
 }

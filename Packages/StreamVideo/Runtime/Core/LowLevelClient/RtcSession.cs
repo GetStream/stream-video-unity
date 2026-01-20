@@ -652,10 +652,10 @@ namespace StreamVideo.Core.LowLevelClient
                 var startNewPeerConnections = isRejoin || isMigration || Publisher == null || !Publisher.IsHealthy ||
                                               Subscriber == null || !Subscriber.IsHealthy;
 
+                var previousSessionId = SessionId;
+
                 // a new session_id is necessary for the REJOIN strategy.
                 // we use the previous session_id if available
-                var previousSessionId = isRejoin ? null : SessionId;
-
                 if (isRejoin || SessionId.IsEmpty)
                 {
                     _logs.WarningIfDebug($"{nameof(DoJoin)} - Regenerate session ID. {nameof(isRejoin)}:{isRejoin}, SessionID is empty: {SessionId.IsEmpty}");
@@ -1683,7 +1683,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             // Set state to Reconnecting immediately to prevent parallel reconnection attempts
             //CallState = CallingState.Reconnecting;
-            _logs.WarningIfDebug($"--------- Reconnection FLOW TRIGGERED ---------- {strategy} {reason}");
+            _logs.WarningIfDebug($"--------- Reconnection FLOW TRIGGERED ---------- strategy: {strategy}, reason: {reason}");
 
             _reconnectStrategy = strategy;
             _reconnectReason = reason;
@@ -1747,6 +1747,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
                 catch (Exception e)
                 {
+                    _logs.ExceptionIfDebug(e);
                     if (e is StreamApiException apiException && apiException.Unrecoverable)
                     {
                         _logs.Error("Can't reconnect due to coordinator unrecoverable error: " + apiException);

@@ -83,6 +83,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             JoinReceived = false;
         }
 
+        public void DebugMarkAsOld() => LogsPrefix = "[Old SFU WS]";
+
         public void SendLeaveCallRequest(string reason = "")
         {
             if (string.IsNullOrEmpty(_sessionId))
@@ -96,7 +98,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
             
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"[SFU WS] Send {nameof(LeaveCallRequest)}: sessionId: {_sessionId}, reason: {reason}");
+            Logs.Info($"[{LogsPrefix}] Send {nameof(LeaveCallRequest)}: sessionId: {_sessionId}, reason: {reason}");
 #endif
             
             var sfuRequest = new SfuRequest

@@ -2604,6 +2604,7 @@ namespace StreamVideo.Core.LowLevelClient
         private SfuWebSocket CreateNewSfuWebSocket(out SfuWebSocket previousSfuWebSocket)
         {
             previousSfuWebSocket = _sfuWebSocket;
+            previousSfuWebSocket.DebugMarkAsOld();
 
             if (_sfuWebSocket != null)
             {

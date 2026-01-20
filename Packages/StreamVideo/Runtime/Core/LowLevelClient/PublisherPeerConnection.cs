@@ -178,8 +178,9 @@ namespace StreamVideo.Core.LowLevelClient
                 };
                 request.Tracks.AddRange(tracks);
 
+                var serializedRequest = "Only available in debug mode";
 #if STREAM_DEBUG_ENABLED
-                var serializedRequest = Serializer.Serialize(request);
+                serializedRequest = Serializer.Serialize(request);
                 Logs.Warning($"SetPublisherRequest:\n{serializedRequest}");
 #endif
 

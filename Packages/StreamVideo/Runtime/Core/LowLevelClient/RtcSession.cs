@@ -687,6 +687,10 @@ namespace StreamVideo.Core.LowLevelClient
                         CreatePublisher(call.Credentials.IceServers);
                         CreateSubscriber(call.Credentials.IceServers);
                     }
+                    else
+                    {
+                        _logs.WarningIfDebug($"{nameof(DoJoin)} - Don't create new Publisher and Subscriber. Are both null: {(Subscriber != null)}, {(Publisher != null)}");
+                    }
                     // else: FAST with unhealthy WS - keep existing Publisher/Subscriber.
                     // No need to update SfuClient reference because Publisher/Subscriber hold a reference to RtcSession
                     // (which implements ISfuClient), and RtcSession internally manages the _sfuWebSocket.

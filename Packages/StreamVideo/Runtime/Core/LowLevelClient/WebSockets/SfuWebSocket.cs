@@ -337,7 +337,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 }
                 catch (Exception e)
                 {
-                    Logs.Warning("Failed to send LeaveCallRequest during disconnect: " + e.Message);
+                    Logs.Warning($"[{LogsPrefix}] Failed to send LeaveCallRequest during disconnect: " + e.Message);
                 }
             }
 
@@ -346,7 +346,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void OnDisposing()
         {
-            Logs.WarningIfDebug("[WS] Disposing SFU instance");
+            Logs.WarningIfDebug($"[{LogsPrefix}] Disposing SFU instance");
             _joinEventReceivedCompletionSource?.TrySetCanceled();
 
             base.OnDisposing();

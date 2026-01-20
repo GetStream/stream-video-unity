@@ -143,7 +143,7 @@ namespace StreamVideo.Libs.Websockets
 
         public async Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
         {
-            LogInfoIfDebugMode("Disconnect");
+            LogInfoIfDebugMode($"[{_debugTag}] Disconnect");
             await TryDisposeResourcesAsync(closeStatus, closeMessage);
 
             _receiveQueue.Clear();
@@ -163,7 +163,7 @@ namespace StreamVideo.Libs.Websockets
 
         public void Dispose()
         {
-            LogInfoIfDebugMode("Dispose");
+            LogInfoIfDebugMode($"[{_debugTag}] Dispose");
             DisconnectAsync(WebSocketCloseStatus.NormalClosure, "WebSocket client is disposed")
                 .ContinueWith(_ => LogExceptionIfDebugMode(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }

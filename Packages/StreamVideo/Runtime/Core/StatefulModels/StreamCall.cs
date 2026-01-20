@@ -63,7 +63,7 @@ namespace StreamVideo.Core.StatefulModels
         //StreamTodo: Maybe add OtherParticipants -> All participants except for the local participant?
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session?.Participants;
 
-        public ParticipantCount ParticipantCount => Session.ParticipantCount;
+        public ParticipantCount ParticipantCount => Session?.ParticipantCount;
 
         public bool IsLocalUserOwner
         {

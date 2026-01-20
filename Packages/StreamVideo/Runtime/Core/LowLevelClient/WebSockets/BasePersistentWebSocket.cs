@@ -94,9 +94,16 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
+            if (GetType() == typeof(SfuWebSocket))
+            {
+                // RtcSession controls SFU WS reconnections
+                return;
+            }
+
 #if STREAM_DEBUG_ENABLED
             Logs.Info($"{LogsPrefix} TryToReconnect");
 #endif
+            
 
             // StreamTODO: this is not handling the original Cancellation Token passed from the user
             var cts = new CancellationTokenSource();

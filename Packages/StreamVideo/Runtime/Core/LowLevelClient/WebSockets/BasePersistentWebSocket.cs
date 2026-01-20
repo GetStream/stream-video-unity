@@ -95,7 +95,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"{GetType().Name} TryToReconnect");
+            Logs.Info($"{LogsPrefix} TryToReconnect");
 #endif
 
             // StreamTODO: this is not handling the original Cancellation Token passed from the user
@@ -347,7 +347,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private void OnDisconnected()
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"{LogsPrefix} Websocket Disconnected. Messages left: {WebsocketClient.ReceiveQueueCount}");
+            Logs.Warning($"[{LogsPrefix}] Websocket Disconnected. Messages left: {WebsocketClient.ReceiveQueueCount}");
 #endif
             ConnectionState = ConnectionState.Disconnected;
         }
@@ -355,7 +355,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private void OnConnected()
         {
             _lastHealthCheckReceivedTime = TimeService.Time;
-            Logs.WarningIfDebug("OnConnected - Reset _lastHealthCheckReceivedTime to " + TimeService.Time);
+            Logs.WarningIfDebug($"[{LogsPrefix}] OnConnected - Reset _lastHealthCheckReceivedTime to " + TimeService.Time);
         }
 
         private TEvent DeserializeEvent<TDto, TEvent>(string content, out TDto dto)
@@ -387,7 +387,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             var timeLeft = NextReconnectTime.Value - TimeService.Time;
 
             _logSb.Append("[");
-            _logSb.Append(GetType().Name);
+            _logSb.Append(LogsPrefix);
             _logSb.Append("] ");
             _logSb.Append("Reconnect scheduled to time: <b>");
             _logSb.Append(Math.Round(NextReconnectTime.Value));

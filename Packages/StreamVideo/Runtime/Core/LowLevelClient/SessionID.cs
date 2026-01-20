@@ -10,7 +10,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void Clear() => _sessionID = string.Empty;
 
-        public static implicit operator string(SessionID s) => s._sessionID;
+        public static implicit operator string(SessionID s) => s?._sessionID;
 
         private string _sessionID;
     }

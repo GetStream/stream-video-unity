@@ -10,6 +10,11 @@ namespace StreamVideo.Core.LowLevelClient
     {
         SessionID SessionId { get; }
         CallingState CallState { get; }
+        
+        /// <summary>
+        /// Returns the current session version. Used to ignore errors for outdated SFU WS
+        /// </summary>
+        int SessionVersion { get; }
 
         Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,

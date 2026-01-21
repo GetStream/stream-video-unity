@@ -228,18 +228,33 @@ namespace StreamVideo.Core.LowLevelClient
         protected async Task TryRestartIce()
         {
             const string errorReason = "restartICE() failed, initiating reconnect";
+            
+            var sessionVersionAtStart = SfuClient.SessionVersion;
+            
             try
             {
                 await RestartIce();
             }
             catch (NegotiationException negotiationException)
             {
+                if (SfuClient.SessionVersion != sessionVersionAtStart)
+                {
+                    Logs.InfoIfDebug($"[{PeerType}] Ignoring stale ICE restart error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                    return;
+                }
+                
                 var isSignalLostError = (negotiationException.SfuErrorCode == ErrorCode.ParticipantSignalLost);
                 var strategy = isSignalLostError ? WebsocketReconnectStrategy.Fast : WebsocketReconnectStrategy.Rejoin;
                 ReconnectionNeeded?.Invoke(strategy, errorReason, PeerType);
             }
             catch (Exception e)
             {
+                if (SfuClient.SessionVersion != sessionVersionAtStart)
+                {
+                    Logs.InfoIfDebug($"[{PeerType}] Ignoring stale ICE restart error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                    return;
+                }
+                
                 ReconnectionNeeded?.Invoke(WebsocketReconnectStrategy.Rejoin, errorReason, PeerType);
             }
         }

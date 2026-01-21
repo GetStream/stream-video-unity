@@ -148,6 +148,12 @@ namespace StreamVideo.Core.LowLevelClient
                 Logs.InfoIfDebug($"[{PeerType}] ICE restart is already in progress");
                 return Task.CompletedTask;
             }
+            
+            if (SfuClient.CallState == CallingState.Reconnecting || SfuClient.CallState == CallingState.Joining)
+            {
+                Logs.InfoIfDebug($"[{PeerType}] Skipping ICE restart because CallState is {SfuClient.CallState}");
+                return Task.CompletedTask;
+            }
 
             return Negotiate(iceRestart: true);
         }
@@ -155,6 +161,8 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTODO: Delete RtcSession.OnPublisherNegotiationNeeded
         private async Task Negotiate(bool iceRestart = false)
         {
+            var sessionVersionAtStart = SfuClient.SessionVersion;
+            
             try
             {
                 var options = new RTCOfferAnswerOptions
@@ -190,6 +198,13 @@ namespace StreamVideo.Core.LowLevelClient
                     nameof(GeneratedAPI.SetPublisher),
                     GetCurrentCancellationTokenOrDefault(), response => response.Error);
 
+                // Check if session changed during the RPC call - if so, result is stale
+                if (SfuClient.SessionVersion != sessionVersionAtStart)
+                {
+                    Logs.InfoIfDebug($"[{PeerType}] Negotiate result is stale - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                    return;
+                }
+
 #if STREAM_DEBUG_ENABLED
                 Logs.Warning($"[Publisher] RemoteDesc (SDP Answer):\n{result.Sdp}");
 #endif
@@ -221,6 +236,12 @@ namespace StreamVideo.Core.LowLevelClient
             }
             catch (Exception e)
             {
+                if (SfuClient.SessionVersion != sessionVersionAtStart)
+                {
+                    Logs.InfoIfDebug($"[{PeerType}] Ignoring stale negotiate error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                    return;
+                }
+                
                 Logs.ExceptionIfDebug(e);
 
                 // Negotiation failed, rollback to the previous state

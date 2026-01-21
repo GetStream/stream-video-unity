@@ -227,6 +227,12 @@ namespace StreamVideo.Core.LowLevelClient
         #endregion
 
         public SessionID SessionId { get; } = new SessionID();
+        
+        /// <summary>
+        /// Current session version. Increments when session ID is regenerated (e.g., during rejoin).
+        /// Used to invalidate stale operations like pending ICE restarts.
+        /// </summary>
+        public int SessionVersion => SessionId.Version;
 
         public RtcSession(ISfuWebSocketFactory sfuWebSocketFactory, Func<IStreamCall, HttpClient> httpClientFactory,
             ILogs logs, ISerializer serializer, ITimeService timeService, StreamVideoLowLevelClient lowLevelClient,
@@ -1100,6 +1106,12 @@ namespace StreamVideo.Core.LowLevelClient
 
         private CancellationTokenSource _joinCallCts;
         private CancellationTokenSource _activeCallCts;
+        
+        /// <summary>
+        /// Flag to track if a reconnection is in progress. This prevents parallel reconnection
+        /// attempts from both Publisher and Subscriber peer connections.
+        /// </summary>
+        private bool _isReconnecting;
 
         private TaskCompletionSource<bool> _joinTaskCompletionSource;
         private int _fastReconnectDeadlineSeconds;
@@ -1677,37 +1689,48 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
+            // Ignore reconnection requests if we're already reconnecting, migrating, or joining
+            // This prevents parallel reconnection attempts from both Publisher and Subscriber
             var ignoredStates = new[]
-                { CallingState.Reconnecting, CallingState.Migrating };
+                { CallingState.Reconnecting, CallingState.Migrating, CallingState.Joining };
             if (ignoredStates.Any(s => s == CallState))
             {
                 _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request because CallState is {CallState}");
                 return;
             }
-
-            // Set state to Reconnecting immediately to prevent parallel reconnection attempts
-            //CallState = CallingState.Reconnecting;
+            
+            // Use a flag to track if we're in the process of reconnecting
+            // This protects against race conditions before CallState is updated
+            if (_isReconnecting)
+            {
+                _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request because reconnection is already in progress");
+                return;
+            }
+            
+            _isReconnecting = true;
             _logs.WarningIfDebug($"--------- Reconnection FLOW TRIGGERED ---------- strategy: {strategy}, reason: {reason}");
 
-            _reconnectStrategy = strategy;
-            _reconnectReason = reason;
-
-            var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left };
-
-            // Try to get the latest state from the server. State might have changed while we were offline
             try
             {
-                var getCallResponse
-                    = await _lowLevelClient.InternalVideoClientApi.GetCallAsync(ActiveCall.Type, ActiveCall.Id,
-                        new GetOrCreateCallRequestInternalDTO(), GetCurrentCancellationTokenOrDefault());
-                _cache.TryCreateOrUpdate(getCallResponse);
-            }
-            catch (Exception e)
-            {
-                _logs.ExceptionIfDebug(e);
-                CallState = CallingState.ReconnectingFailed;
-                throw;
-            }
+                _reconnectStrategy = strategy;
+                _reconnectReason = reason;
+
+                var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left };
+
+                // Try to get the latest state from the server. State might have changed while we were offline
+                try
+                {
+                    var getCallResponse
+                        = await _lowLevelClient.InternalVideoClientApi.GetCallAsync(ActiveCall.Type, ActiveCall.Id,
+                            new GetOrCreateCallRequestInternalDTO(), GetCurrentCancellationTokenOrDefault());
+                    _cache.TryCreateOrUpdate(getCallResponse);
+                }
+                catch (Exception e)
+                {
+                    _logs.ExceptionIfDebug(e);
+                    CallState = CallingState.ReconnectingFailed;
+                    throw;
+                }
 
             var attempt = 0;
             var reconnectStartTime = DateTime.UtcNow;
@@ -1783,7 +1806,12 @@ namespace StreamVideo.Core.LowLevelClient
 
                     //StreamTODO: handle cancellation token
                 }
-            } while (finishedStates.All(s => s != CallState));
+                } while (finishedStates.All(s => s != CallState));
+            }
+            finally
+            {
+                _isReconnecting = false;
+            }
         }
 
         private async Task ReconnectFast()

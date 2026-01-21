@@ -33,9 +33,17 @@ namespace StreamVideo.Core.LowLevelClient
                 Logs.InfoIfDebug("ICE connection is not yet established, skipping restart");
                 return;
             }
+            
+            if (SfuClient.CallState == CallingState.Reconnecting || SfuClient.CallState == CallingState.Joining)
+            {
+                Logs.InfoIfDebug($"[{PeerType}] Skipping ICE restart because CallState is {SfuClient.CallState}");
+                return;
+            }
 
             var prevIsIceRestarting = IsIceRestarting;
             IsIceRestarting = true;
+            
+            var sessionVersionAtStart = SfuClient.SessionVersion;
 
             try
             {
@@ -52,6 +60,13 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var result = await SfuClient.RpcCallAsync(request, GeneratedAPI.IceRestart, nameof(GeneratedAPI.IceRestart),
                     GetCurrentCancellationTokenOrDefault(), response => response.Error);
+                
+                if (SfuClient.SessionVersion != sessionVersionAtStart)
+                {
+                    Logs.InfoIfDebug($"[{PeerType}] ICE restart result is stale - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                    IsIceRestarting = false;
+                    return;
+                }
                 
                 if (result.Error != null)
                 {

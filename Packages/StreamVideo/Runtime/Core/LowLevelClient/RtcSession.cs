@@ -2760,32 +2760,40 @@ namespace StreamVideo.Core.LowLevelClient
             Reconnect(strategy, "SFU WS was disconnected").LogIfFailed();
         }
 
-        private void OnNetworkAvailabilityChanged(bool isNetworkAvailable)
+        private async void OnNetworkAvailabilityChanged(bool isNetworkAvailable)
         {
+            //StreamTODO: test if we're properly handling this triggered again while previous callback is still processed
             if (isNetworkAvailable)
             {
-                _logs.WarningIfDebug("Going Online");
-
-                // Close the previous SFU WS client to force a clean WS join
-                // JS always re-creates the SFU WS when getting back online
-                if (_sfuWebSocket != null)
+                try
                 {
-                    _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure,
-                        "Closing WS to reconnect after going online").LogIfFailed();
-                }
+                    _logs.WarningIfDebug("Going Online");
 
-                if (ActiveCall == null)
+                    // Close the previous SFU WS client to force a clean WS join
+                    // JS always re-creates the SFU WS when getting back online
+                    if (_sfuWebSocket != null)
+                    {
+                        await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure,
+                            "Closing WS to reconnect after going online");
+                    }
+
+                    if (ActiveCall == null)
+                    {
+                        return;
+                    }
+
+                    var offlineTime = DateTime.UtcNow - _lastTimeOffline;
+                    var strategy = offlineTime.TotalSeconds > _fastReconnectDeadlineSeconds
+                        ? WebsocketReconnectStrategy.Rejoin
+                        : WebsocketReconnectStrategy.Fast;
+
+                    _logs.WarningIfDebug($"Reconnect triggered by {nameof(OnNetworkAvailabilityChanged)}. Strategy: {strategy}, offline time: {offlineTime}");
+                    await Reconnect(strategy, "Going online");
+                }
+                catch (Exception e)
                 {
-                    return;
+                    _logs.Exception(e);
                 }
-
-                var offlineTime = DateTime.UtcNow - _lastTimeOffline;
-                var strategy = offlineTime.TotalSeconds > _fastReconnectDeadlineSeconds
-                    ? WebsocketReconnectStrategy.Rejoin
-                    : WebsocketReconnectStrategy.Fast;
-
-                _logs.WarningIfDebug($"Reconnect triggered by {nameof(OnNetworkAvailabilityChanged)}");
-                Reconnect(strategy, "Going online").LogIfFailed();
             }
             else
             {

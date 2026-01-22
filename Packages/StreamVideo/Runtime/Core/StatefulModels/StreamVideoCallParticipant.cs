@@ -247,16 +247,48 @@ namespace StreamVideo.Core.StatefulModels
                 case TrackType.Unspecified:
                     throw new NotSupportedException();
                 case TrackType.Audio:
+
+                    if (_audioTrack != null)
+                    {
+                        Logs.WarningIfDebug("Audio track was already here");
+                        //StreamTODO: trigger TrackRemoved event? Or should we handle this internally? 
+                        _audioTrack.Dispose();
+                        _audioTrack = null;
+                    }
+                    
                     streamTrack = _audioTrack = new StreamAudioTrack((AudioStreamTrack)mediaStreamTrack);
                     break;
                 case TrackType.Video:
+
+                    if (_videoTrack != null)
+                    {
+                        Logs.WarningIfDebug("Video track was already here");
+                        //StreamTODO: trigger TrackRemoved event? Or should we handle this internally? 
+                        _videoTrack.Dispose();
+                        _videoTrack = null;
+                    }
+                    
                     streamTrack = _videoTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
                     TrySetVideoTrackRotationAngle();
                     break;
                 case TrackType.ScreenShare:
+
+                    if (_screenShareTrack != null)
+                    {
+                        _screenShareTrack.Dispose();
+                        _screenShareTrack = null;
+                    }
+                    
                     streamTrack = _screenShareTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
                     break;
                 case TrackType.ScreenShareAudio:
+                    
+                    if (_screenShareAudioTrack != null)
+                    {
+                        _screenShareAudioTrack.Dispose();
+                        _screenShareAudioTrack = null;
+                    }
+                    
                     streamTrack = _screenShareAudioTrack = new StreamAudioTrack((AudioStreamTrack)mediaStreamTrack);
                     break;
                 default:

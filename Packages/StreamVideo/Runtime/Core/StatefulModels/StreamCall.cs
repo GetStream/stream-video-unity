@@ -614,11 +614,31 @@ namespace StreamVideo.Core.StatefulModels
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
             var wasBefore = IsLocalParticipantIncluded();
+            
+            // Capture existing participant session IDs before the update
+            // This is needed to fire ParticipantJoined events for new participants after rejoin
+            var existingSessionIds = new HashSet<string>();
+            foreach (var p in Session.Participants)
+            {
+                existingSessionIds.Add(p.SessionId);
+            }
 
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
             UpdateServerPins(joinResponse.CallState.Pins);
 
             var isAfter = IsLocalParticipantIncluded();
+            
+            // Fire ParticipantJoined events for any new participants that weren't in the list before
+            // This ensures the application layer is notified about new participants after a rejoin
+            foreach (var participant in Session.Participants)
+            {
+                if (!existingSessionIds.Contains(participant.SessionId))
+                {
+                    LowLevelClient.RtcSession.NotifyParticipantJoined(participant.SessionId);
+                    UpdateSortedParticipants();
+                    ParticipantJoined?.Invoke(participant);
+                }
+            }
 
             try
             {

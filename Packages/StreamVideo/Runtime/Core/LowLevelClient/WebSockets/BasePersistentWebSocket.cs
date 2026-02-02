@@ -64,6 +64,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         public void Update()
         {
+            TryProcessPendingDisconnectedStateChange();
             TryHandleWebsocketsConnectionFailed();
             TryToReconnect();
 
@@ -289,6 +290,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private float _lastHealthCheckSendTime;
 
         private TConnectRequest _lastConnectRequest;
+        private bool _pendingDisconnectedStateChange;
 
         private void TryHandleWebsocketsConnectionFailed()
         {
@@ -351,12 +353,22 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
+        // Can be called from the background thread
         private void OnDisconnected()
         {
 #if STREAM_DEBUG_ENABLED
             Logs.Warning($"[{LogsPrefix}] Websocket Disconnected. Messages left: {WebsocketClient.ReceiveQueueCount}");
 #endif
-            ConnectionState = ConnectionState.Disconnected;
+            _pendingDisconnectedStateChange = true;
+        }
+
+        private void TryProcessPendingDisconnectedStateChange()
+        {
+            if (_pendingDisconnectedStateChange)
+            {
+                _pendingDisconnectedStateChange = false;
+                ConnectionState = ConnectionState.Disconnected;
+            }
         }
 
         private void OnConnected()

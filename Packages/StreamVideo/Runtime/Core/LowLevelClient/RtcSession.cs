@@ -2757,6 +2757,7 @@ namespace StreamVideo.Core.LowLevelClient
                 ? WebsocketReconnectStrategy.Fast
                 : WebsocketReconnectStrategy.Rejoin;
 
+            _logs.WarningIfDebug($"[Reconnect] SFU WS disconnected - triggering reconnect with strategy: {strategy}");
             Reconnect(strategy, "SFU WS was disconnected").LogIfFailed();
         }
 

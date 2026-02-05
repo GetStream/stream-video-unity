@@ -300,6 +300,8 @@ namespace StreamVideo.Libs.Websockets
             }
             catch (Exception e)
             {
+                LogInfoIfDebugMode("Error HERE 111");
+
                 LogExceptionIfDebugMode(e);
             }
 
@@ -337,6 +339,7 @@ namespace StreamVideo.Libs.Websockets
             }
             catch (Exception e)
             {
+                LogInfoIfDebugMode("Error HERE 222");
                 LogExceptionIfDebugMode(e);
             }
             finally

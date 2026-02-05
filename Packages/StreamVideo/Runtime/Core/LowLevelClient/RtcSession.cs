@@ -741,7 +741,7 @@ namespace StreamVideo.Core.LowLevelClient
                     
                     
                     ActiveCall.UpdateFromSfu(joinResponse);
-                    _logs.WarningIfDebug($"{nameof(DoJoin)} - SFU Sending join response received");
+                    _logs.WarningIfDebug($"{nameof(DoJoin)} - SFU Sending join response received. startNewPeerConnections: {startNewPeerConnections}");
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
 

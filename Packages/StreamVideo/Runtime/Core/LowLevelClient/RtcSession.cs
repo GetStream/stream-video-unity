@@ -2220,7 +2220,7 @@ namespace StreamVideo.Core.LowLevelClient
         private async void OnPublisherNegotiationNeeded()
         {
 #if STREAM_DEBUG_ENABLED
-            Debug.LogWarning("OnPublisherNegotiationNeeded. IGNORED.");
+            //Debug.LogWarning("OnPublisherNegotiationNeeded. IGNORED.");
 #endif
 
             return;

@@ -141,8 +141,8 @@ namespace StreamVideo.Core.LowLevelClient
         public void AddIceCandidate(RTCIceCandidateInit iceCandidateInit)
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning(
-                $"[{PeerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
+            // Logs.Warning(
+            //     $"[{PeerType}] Add ICE Candidate, remote available: {IsRemoteDescriptionAvailable}, candidate: {iceCandidateInit.candidate}");
 #endif
             Tracer?.Trace(PeerConnectionTraceKey.AddIceCandidate, iceCandidateInit.candidate);
 
@@ -398,7 +398,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnIceGatheringStateChange(RTCIceGatheringState state)
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{PeerType}] OnIceGatheringStateChange to: " + state);
+            //Logs.Warning($"[{PeerType}] OnIceGatheringStateChange to: " + state);
 #endif
             Tracer?.Trace(PeerConnectionTraceKey.OnIceGatheringStateChange, state.ToString());
         }
@@ -406,7 +406,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnNegotiationNeeded()
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{PeerType}] OnNegotiationNeeded");
+            //Logs.Warning($"[{PeerType}] OnNegotiationNeeded");
 #endif
 
             Tracer?.Trace(PeerConnectionTraceKey.OnNegotiationNeeded, null);

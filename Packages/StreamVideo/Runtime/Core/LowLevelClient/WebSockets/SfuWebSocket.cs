@@ -471,7 +471,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             var decodedMessage = sfuEvent.ToString();
             
             // Ignoring some messages for causing too much noise in logs
-            var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
+            var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged", "IceTrickle", "changePublishQuality" };
             if(ignoredMessages.Any(m => decodedMessage.IndexOf(m, StringComparison.OrdinalIgnoreCase) != -1))
             {
                 return;

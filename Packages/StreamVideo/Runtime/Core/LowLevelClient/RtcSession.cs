@@ -748,9 +748,10 @@ namespace StreamVideo.Core.LowLevelClient
                     if (startNewPeerConnections)
                     {
                         // Only init publisher tracks for new Publisher
-                        Publisher.InitPublisherTracks();
                         TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
                         TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);
+                        Publisher.InitPublisherTracks();
+
 
                         // Handle tracks subscriptions for already present participants
                         foreach (var participant in ActiveCall.Participants)

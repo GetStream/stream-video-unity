@@ -1903,7 +1903,7 @@ namespace StreamVideo.Core.LowLevelClient
                             Muted = !isEnabled
                         }
                     }
-                }, GeneratedAPI.UpdateMuteStates, nameof(GeneratedAPI.UpdateSubscriptions), cancellationToken,
+                }, GeneratedAPI.UpdateMuteStates, nameof(GeneratedAPI.UpdateMuteStates), cancellationToken,
                 response => response.Error);
         }
 

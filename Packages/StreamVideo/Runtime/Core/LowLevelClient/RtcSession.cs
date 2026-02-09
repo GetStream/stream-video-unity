@@ -938,7 +938,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
             }
 
-            ClearSession();
+            await ClearSessionAsync();
 
             if (_sfuWebSocket != null)
             {
@@ -1126,11 +1126,14 @@ namespace StreamVideo.Core.LowLevelClient
         private DateTime _lastTimeOffline;
         private int _mainThreadId;
 
-        private void ClearSession()
+        private async Task ClearSessionAsync()
         {
             if (_sfuWebSocket != null)
             {
                 UnsubscribeFromSfuEvents(_sfuWebSocket);
+                await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Clearing current session");
+                _sfuWebSocket.Dispose();
+                _sfuWebSocket = null;
             }
 
             _pendingIceTrickleRequests.Clear();
@@ -1162,6 +1165,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             _trackSubscriptionRequested = false;
             _trackSubscriptionRequestInProgress = false;
+
+            SessionId.Clear();
         }
 
         private CancellationToken GetCurrentCancellationTokenOrDefault()
@@ -1408,6 +1413,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (Publisher?.PublisherAudioTrack == null || !UseNativeAudioBindings)
             {
+                _logs.WarningIfDebug($"RtcSession.UpdateAudioRecording -> IGNORE because publisher ({Publisher == null}) or audio track ({Publisher?.PublisherAudioTrack == null}) are null");
                 return;
             }
 
@@ -1419,12 +1425,12 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
                 //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
 
-                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Start local audio capture");
+                _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> START local audio capture");
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate);
             }
             else
             {
-                _logs.WarningIfDebug("RtcSession.TrySetAudioTrackEnabled -> Stop local audio capture");
+                _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> STOP local audio capture");
                 Publisher.PublisherAudioTrack.StopLocalAudioCapture();
             }
 #endif

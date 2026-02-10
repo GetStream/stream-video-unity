@@ -190,7 +190,8 @@ namespace StreamVideo.Core.LowLevelClient
                 var serializedRequest = "Only available in debug mode";
 #if STREAM_DEBUG_ENABLED
                 serializedRequest = Serializer.Serialize(request);
-                Logs.Warning($"[{PeerType}][{nameof(Negotiate)}] SetPublisherRequest (Tracks: {tracks.Count()}):\n{serializedRequest}");
+                Logs.Warning(
+                    $"[{PeerType}][{nameof(Negotiate)}] SetPublisherRequest (Tracks: {tracks.Count()}, SessionID: {SfuClient.SessionId}):\n{serializedRequest}");
 #endif
 
                 //StreamTODO: add cancellation token support
@@ -202,7 +203,8 @@ namespace StreamVideo.Core.LowLevelClient
                 // Check if session changed during the RPC call - if so, result is stale
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {
-                    Logs.InfoIfDebug($"[{PeerType}][{nameof(Negotiate)}] Negotiate result is stale - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                    Logs.InfoIfDebug(
+                        $"[{PeerType}][{nameof(Negotiate)}] Negotiate result is stale - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
                     return;
                 }
 
@@ -239,10 +241,11 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {
-                    Logs.InfoIfDebug($"[{PeerType}][{nameof(Negotiate)}] Ignoring stale negotiate error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                    Logs.InfoIfDebug(
+                        $"[{PeerType}][{nameof(Negotiate)}] Ignoring stale negotiate error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
                     return;
                 }
-                
+
                 Logs.ExceptionIfDebug(e);
 
                 // Negotiation failed, rollback to the previous state
@@ -284,7 +287,8 @@ namespace StreamVideo.Core.LowLevelClient
                 if (transceiver.Sender?.Track == null)
                 {
                     var isSenderNull = transceiver.Sender == null;
-                    Logs.ErrorIfDebug($"GetAnnouncedTracks skipped transceiver because track is empty. isSenderNull {isSenderNull},  ");
+                    Logs.ErrorIfDebug(
+                        $"GetAnnouncedTracks skipped transceiver because track is empty. isSenderNull {isSenderNull},  ");
                     continue;
                 }
 
@@ -309,6 +313,9 @@ namespace StreamVideo.Core.LowLevelClient
             }
             catch
             {
+#if STREAM_DEBUG_ENABLED
+                Logs.WarningIfDebug("GetAnnouncedTracksForReconnect - SDP was NULL");
+#endif
                 yield break;
             }
 

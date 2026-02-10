@@ -719,6 +719,9 @@ namespace StreamVideo.Core.LowLevelClient
                     var announcedTracks = Publisher.GetAnnouncedTracksForReconnect();
                     if (announcedTracks?.Any() ?? false)
                     {
+#if STREAM_DEBUG_ENABLED
+                        _logs.WarningIfDebug("DoJoin - announcedTracks " + string.Join(", ", announcedTracks.Select(t => t.TrackType.ToString())));
+#endif
                         reconnectDetails.AnnouncedTracks.AddRange(announcedTracks);
                     }
 
@@ -747,6 +750,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                     if (startNewPeerConnections)
                     {
+                        _logs.WarningIfDebug($"{nameof(DoJoin)} - startNewPeerConnections, _publisherAudioTrackIsEnabled: {_publisherAudioTrackIsEnabled}, _publisherVideoTrackIsEnabled: {_publisherVideoTrackIsEnabled}");
                         // Only init publisher tracks for new Publisher
                         TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
                         TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);

@@ -23,6 +23,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public static implicit operator string(SessionID s) => s?._sessionID;
 
+        public override string ToString() => string.IsNullOrEmpty(_sessionID) ? "[Empty]" : _sessionID;
+
         private string _sessionID;
     }
 }

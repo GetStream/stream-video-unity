@@ -161,7 +161,7 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTODO: Delete RtcSession.OnPublisherNegotiationNeeded
         private async Task Negotiate(bool iceRestart = false)
         {
-            Logs.WarningIfDebug($"[{PeerType}][{nameof(Negotiate)}] Started");
+            Logs.WarningIfDebug($"[{PeerType}][Negotiate] Started");
             var sessionVersionAtStart = SfuClient.SessionVersion;
             
             try
@@ -191,7 +191,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
                 serializedRequest = Serializer.Serialize(request);
                 Logs.Warning(
-                    $"[{PeerType}][{nameof(Negotiate)}] SetPublisherRequest (Tracks: {tracks.Count()}, SessionID: {SfuClient.SessionId}):\n{serializedRequest}");
+                    $"[{PeerType}][Negotiate] SetPublisherRequest (Tracks: {tracks.Count()}, SessionID: {SfuClient.SessionId}):\n{serializedRequest}");
 #endif
 
                 //StreamTODO: add cancellation token support
@@ -204,12 +204,12 @@ namespace StreamVideo.Core.LowLevelClient
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {
                     Logs.InfoIfDebug(
-                        $"[{PeerType}][{nameof(Negotiate)}] Negotiate result is stale - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                        $"[{PeerType}][Negotiate] Negotiate result is stale - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
                     return;
                 }
 
 #if STREAM_DEBUG_ENABLED
-                Logs.Warning($"[{PeerType}][{nameof(Negotiate)}] RemoteDesc (SDP Answer):\n{result.Sdp}");
+                Logs.Warning($"[{PeerType}][Negotiate] RemoteDesc (SDP Answer):\n{result.Sdp}");
 #endif
 
                 if (result.Error != null)
@@ -242,7 +242,7 @@ namespace StreamVideo.Core.LowLevelClient
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {
                     Logs.InfoIfDebug(
-                        $"[{PeerType}][{nameof(Negotiate)}] Ignoring stale negotiate error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
+                        $"[{PeerType}][Negotiate] Ignoring stale negotiate error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
                     return;
                 }
 
@@ -265,6 +265,7 @@ namespace StreamVideo.Core.LowLevelClient
             finally
             {
                 IsIceRestarting = false;
+                Logs.WarningIfDebug($"[{PeerType}][Negotiate] Ended");
             }
 
             AddTrickledIceCandidates();

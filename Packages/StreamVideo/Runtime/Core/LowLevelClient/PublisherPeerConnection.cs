@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Models;
@@ -138,6 +137,14 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
             }
+            
+            if (_negotiateRequested && !_isNegotiating)
+            {
+                var iceRestart = _negotiateRequestedWithIceRestart;
+                _negotiateRequested = false;
+                _negotiateRequestedWithIceRestart = false;
+                Negotiate(iceRestart).LogIfFailed();
+            }
         }
 
         public override Task RestartIce()
@@ -161,7 +168,19 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTODO: Delete RtcSession.OnPublisherNegotiationNeeded
         private async Task Negotiate(bool iceRestart = false)
         {
-            Logs.WarningIfDebug($"[{PeerType}][Negotiate] Started");
+            if (_isNegotiating)
+            {
+                _negotiateRequested = true;
+                _negotiateRequestedWithIceRestart = _negotiateRequestedWithIceRestart || iceRestart;
+                Logs.WarningIfDebug($"[{PeerType}][Negotiate] Already negotiating — flagged for re-negotiate after current one completes (iceRestart: {iceRestart})");
+                return;
+            }
+            
+            _isNegotiating = true;
+            _negotiateRequested = false;
+            _negotiateRequestedWithIceRestart = false;
+            
+            Logs.WarningIfDebug($"[{PeerType}][Negotiate] Started. Call state: {SfuClient.CallState}, Is PC Healthy: {IsHealthy}, PC Connection State: {PeerConnection.ConnectionState}, ICE conn state: {PeerConnection.IceConnectionState}");
             var sessionVersionAtStart = SfuClient.SessionVersion;
             
             try
@@ -265,6 +284,7 @@ namespace StreamVideo.Core.LowLevelClient
             finally
             {
                 IsIceRestarting = false;
+                _isNegotiating = false;
                 Logs.WarningIfDebug($"[{PeerType}][Negotiate] Ended");
             }
 
@@ -276,20 +296,15 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTODO: in JS this subscribes to ICE trickle. Figure out if our way is correct
         }
 
-        /// <summary>
-        ///    * Returns a list of tracks that are currently being published.
-        /// * @param sdp an optional SDP to extract the `mid` from.
-        /// </summary>
-        /// <returns></returns>
         private IEnumerable<TrackInfo> GetAnnouncedTracks(string sdp)
         {
-            foreach (var transceiver in GetTransceivers())
+            foreach (var transceiver in GetKnownTransceivers())
             {
                 if (transceiver.Sender?.Track == null)
                 {
                     var isSenderNull = transceiver.Sender == null;
                     Logs.ErrorIfDebug(
-                        $"GetAnnouncedTracks skipped transceiver because track is empty. isSenderNull {isSenderNull},  ");
+                        $"GetAnnouncedTracks skipped transceiver because track is empty. isSenderNull {isSenderNull}");
                     continue;
                 }
 
@@ -298,6 +313,30 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     yield return trackInfo;
                 }
+            }
+        }
+        
+        private IEnumerable<RTCRtpTransceiver> GetKnownTransceivers()
+        {
+            // Return in published order to maintain m-line ordering
+            foreach (var trackType in _publishedTrackOrder)
+            {
+                switch (trackType)
+                {
+                    case TrackType.Audio when _audioTransceiver != null:
+                        yield return _audioTransceiver;
+                        break;
+                    case TrackType.Video when _videoTransceiver != null:
+                        yield return _videoTransceiver;
+                        break;
+                }
+            }
+            
+            //StreamTODO: this should not happen, add log
+            if (_publishedTrackOrder.Count == 0)
+            {
+                if (_audioTransceiver != null) yield return _audioTransceiver;
+                if (_videoTransceiver != null) yield return _videoTransceiver;
             }
         }
 
@@ -582,6 +621,10 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IStreamAudioConfig _audioConfig;
 
         private readonly List<TrackType> _publishedTrackOrder = new List<TrackType>();
+        
+        private bool _isNegotiating;
+        private bool _negotiateRequested;
+        private bool _negotiateRequestedWithIceRestart;
 
         private RenderTexture _publisherVideoTrackTexture;
         private VideoStreamTrack _publisherVideoTrack;
@@ -681,7 +724,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (_audioTransceiver != null)
             {
-                throw new InvalidOperationException("");
+                throw new InvalidOperationException("No audio transceiver");
             }
 
             var audioTransceiverInit = BuildTransceiverInit(TrackKind.Audio, _publisherVideoSettings);

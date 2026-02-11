@@ -92,13 +92,13 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
-            if (reason == null)
+            if (string.IsNullOrEmpty(reason))
             {
                 reason = "reason not provided";
             }
             
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"[{LogsPrefix}] Send {nameof(LeaveCallRequest)}: sessionId: {_sessionId}, reason: {reason}");
+            Logs.Info($"[{LogsPrefix}] Send {nameof(LeaveCallRequest)}: sessionId: {_sessionId}, reason: {reason}, Send queue: {SendQueueCount}");
 #endif
             
             var sfuRequest = new SfuRequest

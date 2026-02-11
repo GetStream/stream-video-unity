@@ -2710,6 +2710,9 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
                 UnsubscribeFromSfuEvents(previousSfuWebSocket);
                 await previousSfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
+#if STREAM_DEBUG_ENABLED
+                _logs.Info($"[RtcSession] CLOSED previous SfuWebSocket: reason={reason}");
+#endif
             }
             catch (Exception e)
             {

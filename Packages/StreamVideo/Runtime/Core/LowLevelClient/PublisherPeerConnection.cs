@@ -1,3 +1,6 @@
+#if UNITY_ANDROID && !UNITY_EDITOR
+#define STREAM_NATIVE_AUDIO //Defined in multiple files
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -553,23 +556,9 @@ namespace StreamVideo.Core.LowLevelClient
                 _publisherVideoTrackTexture = null;
             }
 
-#if STREAM_NATIVE_AUDIO
-            if (PublisherAudioTrack != null)
-            {
-                //StreamTODO: call this when PublisherAudioTrack is set to null
-                PublisherAudioTrack.StopLocalAudioCapture();
-            }
-#endif
-
-            PublisherAudioTrack?.Stop();
-            PublisherVideoTrack?.Stop();
+            TryClearPublisherAudioTrack();
+            TryClearVideoTrack();
             
-            _publisherAudioTrack?.Dispose();
-            _publisherVideoTrack?.Dispose();
-            
-            PublisherAudioTrack = null;
-            PublisherVideoTrack = null;
-
             base.OnDisposing();
         }
 
@@ -773,11 +762,14 @@ namespace StreamVideo.Core.LowLevelClient
             PeerConnection.RemoveTrack(_audioTransceiver.Sender);
 
 #if STREAM_NATIVE_AUDIO
+            Logs.WarningIfDebug("Local Audio Capture - STOP");
             PublisherAudioTrack.StopLocalAudioCapture();
 #endif
             
             PublisherAudioTrack.Dispose();
             PublisherAudioTrack = null;
+            
+            Logs.WarningIfDebug("Removed Publisher Audio Track");
         }
 
         private void CreatePublisherVideoTransceiver(bool negotiate = true)
@@ -870,9 +862,12 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             track.Enabled = _mediaInputProvider.PublisherAudioTrackIsEnabled;
-            Logs.WarningIfDebug("[Audio] Created new AudioStreamTrack, enabled: " + track.Enabled);
+            Logs.WarningIfDebug($"[Audio] Created new AudioStreamTrack, enabled: {track.Enabled}, " + PrintConnectionState());
             return track;
         }
+
+        private string PrintConnectionState()
+            => $"PC Connection State: {PeerConnection.ConnectionState}, ICE Connection State: {PeerConnection.IceConnectionState}";
 
         private void TryClearVideoTrack()
         {

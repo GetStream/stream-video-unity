@@ -752,10 +752,9 @@ namespace StreamVideo.Core.LowLevelClient
                     {
                         _logs.WarningIfDebug($"{nameof(DoJoin)} - startNewPeerConnections, _publisherAudioTrackIsEnabled: {_publisherAudioTrackIsEnabled}, _publisherVideoTrackIsEnabled: {_publisherVideoTrackIsEnabled}");
                         // Only init publisher tracks for new Publisher
-                        TrySetPublisherAudioTrackEnabled(_publisherAudioTrackIsEnabled);
-                        TrySetPublisherVideoTrackEnabled(_publisherVideoTrackIsEnabled);
-                        Publisher.InitPublisherTracks();
-
+                        
+                        await Publisher.InitPublisherTracksAsync();
+                        await NotifyCurrentMuteStatesAsync();
 
                         // Handle tracks subscriptions for already present participants
                         foreach (var participant in ActiveCall.Participants)
@@ -1916,6 +1915,25 @@ namespace StreamVideo.Core.LowLevelClient
                     }
                 }, GeneratedAPI.UpdateMuteStates, nameof(GeneratedAPI.UpdateMuteStates), cancellationToken,
                 response => response.Error);
+        }
+
+        private async Task NotifyCurrentMuteStatesAsync()
+        {
+            if (ActiveCall == null)
+            {
+                return;
+            }
+
+            //StreamTODO: combine into single API call
+            if (_publisherAudioTrackIsEnabled)
+            {
+                await UpdateMuteStateAsync(TrackType.Audio, PublisherAudioTrackIsEnabled);
+            }
+
+            if (_publisherVideoTrackIsEnabled)
+            {
+                await UpdateMuteStateAsync(TrackType.Video, PublisherVideoTrackIsEnabled);
+            }
         }
 
         private void InternalExecuteSetPublisherAudioTrackEnabled(bool isEnabled)

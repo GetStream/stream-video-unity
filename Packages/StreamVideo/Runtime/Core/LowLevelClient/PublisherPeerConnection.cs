@@ -110,7 +110,7 @@ namespace StreamVideo.Core.LowLevelClient
         /// <summary>
         /// Init publisher track in a separate method so that RtcSession can subscribe to events before creating tracks
         /// </summary>
-        public void InitPublisherTracks()
+        public async Task InitPublisherTracksAsync()
         {
             // Create both transceivers WITHOUT individual negotiations to avoid concurrent negotiate calls
             // which would cause "m-lines order mismatch" errors
@@ -121,7 +121,7 @@ namespace StreamVideo.Core.LowLevelClient
             // Otherwise, SFU rejects the empty SetPublisher request with RequestValidationFailed
             if (_audioTransceiver != null || _videoTransceiver != null)
             {
-                Negotiate().LogIfFailed();
+                await Negotiate();
             }
             
             // StreamTodo: VideoSceneInput is not handled

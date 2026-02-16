@@ -143,7 +143,31 @@ namespace StreamVideo.Core.StatefulModels
         public bool Recording { get; private set; }
 
         //StreamTodo: perhaps this should be part of IStreamCall state
-        public CallSession Session { get; private set; }
+        public CallSession Session
+        {
+            get => _session;
+            private set
+            {
+                if (_session == value)
+                {
+                    return;
+                }
+
+                if (_session != null)
+                {
+                    _session.ParticipantAdded -= OnSessionParticipantAdded;
+                    _session.ParticipantRemoved -= OnSessionParticipantRemoved;
+                }
+
+                _session = value;
+
+                if (_session != null)
+                {
+                    _session.ParticipantAdded += OnSessionParticipantAdded;
+                    _session.ParticipantRemoved += OnSessionParticipantRemoved;
+                }
+            }
+        }
 
         public CallSettings Settings { get; private set; }
 
@@ -614,31 +638,11 @@ namespace StreamVideo.Core.StatefulModels
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
             var wasBefore = IsLocalParticipantIncluded();
-            
-            // Capture existing participant session IDs before the update
-            // This is needed to fire ParticipantJoined events for new participants after rejoin
-            var existingSessionIds = new HashSet<string>();
-            foreach (var p in Session.Participants)
-            {
-                existingSessionIds.Add(p.SessionId);
-            }
 
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
             UpdateServerPins(joinResponse.CallState.Pins);
 
             var isAfter = IsLocalParticipantIncluded();
-            
-            // Fire ParticipantJoined events for any new participants that weren't in the list before
-            // This ensures the application layer is notified about new participants after a rejoin
-            foreach (var participant in Session.Participants)
-            {
-                if (!existingSessionIds.Contains(participant.SessionId))
-                {
-                    LowLevelClient.RtcSession.NotifyParticipantJoined(participant.SessionId);
-                    UpdateSortedParticipants();
-                    ParticipantJoined?.Invoke(participant);
-                }
-            }
 
             try
             {
@@ -677,11 +681,7 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
         {
-            var participant = Session.UpdateFromSfu(participantJoined, cache);
-            LowLevelClient.RtcSession.NotifyParticipantJoined(participantJoined.Participant.SessionId);
-            UpdateSortedParticipants();
-
-            ParticipantJoined?.Invoke(participant);
+            Session.UpdateFromSfu(participantJoined, cache);
         }
 
         internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
@@ -700,23 +700,7 @@ namespace StreamVideo.Core.StatefulModels
                 Logs.Warning("Error when generating debug log: " + e.Message);
             }
 
-            LowLevelClient.RtcSession.NotifyParticipantLeft(participantLeft.Participant.SessionId);
-
-            var participant = Session.UpdateFromSfu(participantLeft, cache);
-
-            _localPinsSessionIds.RemoveAll(participant.sessionId);
-            _serverPinsSessionIds.RemoveAll(pin => pin == participant.sessionId);
-
-            UpdatePinnedParticipants(out var updatedSortedParticipants);
-            if (!updatedSortedParticipants)
-            {
-                UpdateSortedParticipants();
-            }
-
-            cache.CallParticipants.TryRemove(participant.sessionId);
-
-            //StreamTodo: if we delete the participant from cache we should then pass SessionId and UserId
-            ParticipantLeft?.Invoke(participant.sessionId, participant.userId);
+            Session.UpdateFromSfu(participantLeft, cache);
         }
 
         internal void UpdateFromSfu(DominantSpeakerChanged dominantSpeakerChanged, ICache cache)
@@ -753,16 +737,14 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void UpdateFromCoordinator(CallSessionParticipantJoinedEventInternalDTO eventData, ICache cache)
         {
+            // ParticipantJoined event is fired by CallSession via ParticipantAdded
             Session?.UpdateFromCoordinator(eventData, cache, Client.InternalLowLevelClient.RtcSession.CallState);
-
-            //StreamTodo: we should extract AddParticipant logic from SFU and whatever is received first (SFU or Coordinator) should handle it
         }
 
         internal void UpdateFromCoordinator(CallSessionParticipantLeftEventInternalDTO eventData, ICache cache)
         {
+            // ParticipantLeft event is fired by CallSession via ParticipantRemoved
             Session?.UpdateFromCoordinator(eventData, cache, Client.InternalLowLevelClient.RtcSession.CallState);
-
-            //StreamTodo: we should extract RemoveParticipant logic from SFU and whatever is received first (SFU or Coordinator) should handle it
         }
 
         //StreamTodo: missing TrackRemoved or perhaps we should not care whether a track was added/removed but only published/unpublished -> enabled/disabled
@@ -923,8 +905,34 @@ namespace StreamVideo.Core.StatefulModels
 
         private readonly StreamCallType _type;
 
+        private CallSession _session;
         private string _id;
         private IStreamVideoCallParticipant _dominantSpeaker;
+
+        private void OnSessionParticipantAdded(IStreamVideoCallParticipant participant)
+        {
+            LowLevelClient.RtcSession.NotifyParticipantJoined(participant.SessionId);
+            UpdateSortedParticipants();
+            ParticipantJoined?.Invoke(participant);
+        }
+
+        private void OnSessionParticipantRemoved(string sessionId, string userId)
+        {
+            LowLevelClient.RtcSession.NotifyParticipantLeft(sessionId);
+
+            _localPinsSessionIds.RemoveAll(sessionId);
+            _serverPinsSessionIds.RemoveAll(pin => pin == sessionId);
+
+            UpdatePinnedParticipants(out var updatedSortedParticipants);
+            if (!updatedSortedParticipants)
+            {
+                UpdateSortedParticipants();
+            }
+
+            Cache.CallParticipants.TryRemove(sessionId);
+
+            ParticipantLeft?.Invoke(sessionId, userId);
+        }
 
         private void UpdateServerPins(IEnumerable<Pin> pins)
         {

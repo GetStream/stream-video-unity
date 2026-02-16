@@ -6,6 +6,7 @@ using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Core.Utils;
 using SfuCallState = StreamVideo.v1.Sfu.Models.CallState;
 using SfuParticipantCount = StreamVideo.v1.Sfu.Models.ParticipantCount;
 
@@ -44,6 +45,16 @@ namespace StreamVideo.Core.Models
         public ParticipantCount ParticipantCount { get; private set; } = new ParticipantCount();
 
         #endregion
+
+        /// <summary>
+        /// Fired when a new participant is added to the <see cref="Participants"/> list.
+        /// </summary>
+        internal event Action<IStreamVideoCallParticipant> ParticipantAdded;
+
+        /// <summary>
+        /// Fired when a participant is removed from the <see cref="Participants"/> list.
+        /// </summary>
+        internal event Action<string, string> ParticipantRemoved;
 
         void IStateLoadableFrom<CallSessionResponseInternalDTO, CallSession>.LoadFromDto(
             CallSessionResponseInternalDTO dto, ICache cache)
@@ -84,16 +95,52 @@ namespace StreamVideo.Core.Models
                 StartedAt = dto.StartedAt.ToDateTimeOffset();
             }
 
-            // Treat SFU as the most updated source of truth for participants
-            _participants.Clear();
-            
-            // dto.CallState.Participants may not contain all participants
-            foreach (var dtoParticipant in dto.Participants)
+            using (new HashSetPoolScope<string>(out var tempPrevSessionIds))
+            using (new ListPoolScope<(string sessionId, string userId)>(out var tempRemovedParticipants))
+            using (new HashSetPoolScope<string>(out var tempNewSessionIds))
             {
-                var participant = cache.TryCreateOrUpdate(dtoParticipant);
-                if (!_participants.Contains(participant))
+                foreach (var p in _participants)
                 {
-                    _participants.Add(participant);
+                    tempPrevSessionIds.Add(p.SessionId);
+                }
+                
+                // Treat SFU as the most updated source of truth for participants
+                _participants.Clear();
+
+                // dto.CallState.Participants may not contain all participants
+                foreach (var dtoParticipant in dto.Participants)
+                {
+                    var participant = cache.TryCreateOrUpdate(dtoParticipant);
+                    if (tempNewSessionIds.Add(participant.SessionId))
+                    {
+                        _participants.Add(participant);
+                    }
+                }
+
+                foreach (var prevId in tempPrevSessionIds)
+                {
+                    if (!tempNewSessionIds.Contains(prevId))
+                    {
+                        // Look up userId from cache before the participant is cleaned up
+                        var userId = cache.CallParticipants.TryGet(prevId, out var removedP)
+                            ? removedP.UserId
+                            : string.Empty;
+                        tempRemovedParticipants.Add((prevId, userId));
+                        cache.CallParticipants.TryRemove(prevId);
+                    }
+                }
+
+                foreach (var (sessionId, userId) in tempRemovedParticipants)
+                {
+                    ParticipantRemoved?.Invoke(sessionId, userId);
+                }
+
+                foreach (var p in _participants)
+                {
+                    if (!tempPrevSessionIds.Contains(p.SessionId))
+                    {
+                        ParticipantAdded?.Invoke(p);
+                    }
                 }
             }
 
@@ -101,16 +148,15 @@ namespace StreamVideo.Core.Models
                 dto.ParticipantCount, cache);
         }
 
-        internal IStreamVideoCallParticipant UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
+        internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
         {
             var participant = cache.TryCreateOrUpdate(participantJoined.Participant);
 
             if (!_participants.Contains(participant))
             {
                 _participants.Add(participant);
+                ParticipantAdded?.Invoke(participant);
             }
-
-            return participant;
         }
 
         internal void UpdateFromSfu(HealthCheckResponse healthCheckResponse, ICache cache)
@@ -119,16 +165,16 @@ namespace StreamVideo.Core.Models
                 healthCheckResponse.ParticipantCount, cache);
         }
         
-        internal (string sessionId, string userId) UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
+        internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
             var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
 
-            if (!participant.IsLocalParticipant)
+            if (!participant.IsLocalParticipant && _participants.Remove(participant))
             {
-                _participants.Remove(participant);
+                ParticipantRemoved?.Invoke(participantLeft.Participant.SessionId,
+                    participantLeft.Participant.UserId);
+                cache.CallParticipants.TryRemove(participantLeft.Participant.SessionId);
             }
-            
-            return (participantLeft.Participant.SessionId, participantLeft.Participant.UserId);
         }
         
         internal void UpdateFromCoordinator(
@@ -145,8 +191,9 @@ namespace StreamVideo.Core.Models
             LowLevelClient.CallingState callingState)
         {
             var participant = cache.TryCreateOrUpdate(participantJoined.Participant);
-            
-            if (!_participants.Contains(participant))
+
+            var isNew = !_participants.Contains(participant);
+            if (isNew)
             {
                 _participants.Add(participant);
             }
@@ -163,6 +210,11 @@ namespace StreamVideo.Core.Models
             
             var anonymousCount = ParticipantCount != null ? (int)ParticipantCount.Anonymous : 0;
             UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
+
+            if (isNew)
+            {
+                ParticipantAdded?.Invoke(participant);
+            }
         }
         
         //StreamTODO: double-check this logic
@@ -171,7 +223,7 @@ namespace StreamVideo.Core.Models
             LowLevelClient.CallingState callingState)
         {
             var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
-            _participants.Remove(participant);
+            var wasRemoved = _participants.Remove(participant);
             
             var role = participantLeft.Participant.Role;
             if (_participantsCountByRole.ContainsKey(role))
@@ -186,6 +238,11 @@ namespace StreamVideo.Core.Models
             
             var anonymousCount = ParticipantCount != null ? (int)ParticipantCount.Anonymous : 0;
             UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
+
+            if (wasRemoved)
+            {
+                ParticipantRemoved?.Invoke(participant.SessionId, participant.UserId);
+            }
         }
         
         private readonly Dictionary<string, DateTimeOffset> _acceptedBy = new Dictionary<string, DateTimeOffset>();

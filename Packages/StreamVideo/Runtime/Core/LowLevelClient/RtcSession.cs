@@ -1702,7 +1702,10 @@ namespace StreamVideo.Core.LowLevelClient
             // Ignore reconnection requests if we're already reconnecting, migrating, or joining
             // This prevents parallel reconnection attempts from both Publisher and Subscriber
             var ignoredStates = new[]
-                { CallingState.Reconnecting, CallingState.Migrating, CallingState.Joining };
+            {
+                CallingState.Reconnecting, CallingState.Migrating, CallingState.Joining,
+                CallingState.Offline, CallingState.Leaving, CallingState.Left
+            };
             if (ignoredStates.Any(s => s == CallState))
             {
                 _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request because CallState is {CallState}");

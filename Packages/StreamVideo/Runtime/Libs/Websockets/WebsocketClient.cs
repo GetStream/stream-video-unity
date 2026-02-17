@@ -51,7 +51,7 @@ namespace StreamVideo.Libs.Websockets
 
             try
             {
-                await TryDisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
                     "Clean up resources before connecting");
                 cancellationToken.ThrowIfCancellationRequested();
                 _connectionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -68,14 +68,14 @@ namespace StreamVideo.Libs.Websockets
             catch (OperationCanceledException e)
             {
                 LogExceptionIfDebugMode(e);
-                await TryDisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
                     "Closing because operation was cancelled.");
                 throw;
             }
             catch (WebSocketException e)
             {
                 LogExceptionIfDebugMode(e);
-                await TryDisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
                     "Closing because of exception: " + e.Message);
                 OnConnectionFailed();
                 throw;
@@ -83,7 +83,7 @@ namespace StreamVideo.Libs.Websockets
             catch (SocketException e)
             {
                 LogExceptionIfDebugMode(e);
-                await TryDisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
                     "Closing because of exception: " + e.Message);
                 OnConnectionFailed();
                 throw;
@@ -91,7 +91,7 @@ namespace StreamVideo.Libs.Websockets
             catch (Exception e)
             {
                 LogExceptionIfDebugMode(e);
-                await TryDisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
                     "Closing because of exception: " + e.Message);
                 OnConnectionFailed();
                 throw;
@@ -144,7 +144,7 @@ namespace StreamVideo.Libs.Websockets
         public async Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
         {
             LogInfoIfDebugMode($"[{_debugTag}] Disconnect");
-            await TryDisposeResourcesAsync(closeStatus, closeMessage);
+            await DisposeResourcesAsync(closeStatus, closeMessage);
 
             _receiveQueue.Clear();
             while (_sendQueue.TryTake(out _))
@@ -202,6 +202,7 @@ namespace StreamVideo.Libs.Websockets
         private Uri _uri;
         private ClientWebSocket _internalClient;
         private CancellationTokenSource _connectionCts;
+        private int _isDisposing;
 
         private async void SendMessagesCallback(object state)
         {
@@ -284,75 +285,88 @@ namespace StreamVideo.Libs.Websockets
             }
         }
 
-        private async Task TryDisposeResourcesAsync(WebSocketCloseStatus closeStatus, string closeMessage)
+        private async Task DisposeResourcesAsync(WebSocketCloseStatus closeStatus, string closeMessage)
         {
-            try
-            {
-                if (_backgroundReceiveTimer != null)
-                {
-                    await _backgroundReceiveTimer.DisposeAsync();
-                }
-
-                if (_backgroundSendTimer != null)
-                {
-                    await _backgroundSendTimer.DisposeAsync();
-                }
-            }
-            catch (Exception e)
-            {
-                LogInfoIfDebugMode("Error HERE 111");
-
-                LogExceptionIfDebugMode(e);
-            }
-
-            try
-            {
-                if (_connectionCts != null)
-                {
-#if STREAM_DEBUG_ENABLED
-                    _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Cancel Connection Token");
-#endif
-                    _connectionCts.Cancel();
-                    _connectionCts.Dispose();
-                    _connectionCts = null;
-                }
-            }
-            catch (Exception e)
-            {
-                LogExceptionIfDebugMode(e);
-            }
-
-            if (_internalClient == null)
+            if (Interlocked.CompareExchange(ref _isDisposing, 1, 0) != 0)
             {
                 return;
             }
 
             try
             {
-                if (!_clientClosedStates.Contains(_internalClient.State))
+                try
                 {
-#if STREAM_DEBUG_ENABLED
-                    _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Close open client");
-#endif
-                    await _internalClient.CloseOutputAsync(closeStatus, closeMessage, CancellationToken.None);
+                    if (_backgroundReceiveTimer != null)
+                    {
+                        await _backgroundReceiveTimer.DisposeAsync();
+                        _backgroundReceiveTimer = null;
+                    }
+
+                    if (_backgroundSendTimer != null)
+                    {
+                        await _backgroundSendTimer.DisposeAsync();
+                        _backgroundSendTimer = null;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                LogInfoIfDebugMode("Error HERE 222");
-                LogExceptionIfDebugMode(e);
+                catch (Exception e)
+                {
+                    LogInfoIfDebugMode("Error HERE 111");
+
+                    LogExceptionIfDebugMode(e);
+                }
+
+                try
+                {
+                    if (_connectionCts != null)
+                    {
+#if STREAM_DEBUG_ENABLED
+                        _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Cancel Connection Token");
+#endif
+                        _connectionCts.Cancel();
+                        _connectionCts.Dispose();
+                        _connectionCts = null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogExceptionIfDebugMode(e);
+                }
+
+                if (_internalClient == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    if (!_clientClosedStates.Contains(_internalClient.State))
+                    {
+#if STREAM_DEBUG_ENABLED
+                        _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Close open client");
+#endif
+                        await _internalClient.CloseOutputAsync(closeStatus, closeMessage, CancellationToken.None);
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogInfoIfDebugMode("Error HERE 222");
+                    LogExceptionIfDebugMode(e);
+                }
+                finally
+                {
+                    if (_internalClient != null)
+                    {
+#if STREAM_DEBUG_ENABLED
+                        _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Dispose Client");
+#endif
+                        _internalClient.Dispose();
+                        _internalClient = null;
+                    }
+                }
             }
             finally
             {
-                //StreamTOdo: this fixes possible null ref if Dispose was called multiple times but perhaps this logic should not be called multiple times
-                if (_internalClient != null)
-                {
-#if STREAM_DEBUG_ENABLED
-                    _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Dispose Client");
-#endif
-                    _internalClient.Dispose();
-                    _internalClient = null;
-                }
+                Interlocked.Exchange(ref _isDisposing, 0);
             }
         }
 

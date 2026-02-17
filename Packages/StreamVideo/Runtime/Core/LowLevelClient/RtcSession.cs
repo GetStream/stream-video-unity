@@ -1742,80 +1742,80 @@ namespace StreamVideo.Core.LowLevelClient
                     throw;
                 }
 
-            var attempt = 0;
-            var reconnectStartTime = DateTime.UtcNow;
+                var attempt = 0;
+                var reconnectStartTime = DateTime.UtcNow;
 
-            //StreamTODO: we should handle cancellation token between each await
+                //StreamTODO: we should handle cancellation token between each await
 
-            do
-            {
-                // StreamTODO: consider give up timeout. JS has it
-
-                // Only increment attempts if the strategy is not FAST
-                if (_reconnectStrategy != WebsocketReconnectStrategy.Fast)
+                do
                 {
-                    _reconnectAttempts++;
-                }
+                    // StreamTODO: consider give up timeout. JS has it
 
-                try
-                {
-                    _logs.Info("Reconnect with strategy: " + _reconnectStrategy);
-
-                    switch (_reconnectStrategy)
+                    // Only increment attempts if the strategy is not FAST
+                    if (_reconnectStrategy != WebsocketReconnectStrategy.Fast)
                     {
-                        case WebsocketReconnectStrategy.Unspecified:
-                        case WebsocketReconnectStrategy.Disconnect:
-
-                            // Log warning
-
-                            break;
-                        case WebsocketReconnectStrategy.Fast:
-                            await ReconnectFast();
-                            break;
-                        case WebsocketReconnectStrategy.Rejoin:
-                            await ReconnectRejoin();
-                            break;
-                        case WebsocketReconnectStrategy.Migrate:
-                            await ReconnectMigrate();
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
-                catch (Exception e)
-                {
-                    _logs.ExceptionIfDebug(e);
-                    if (e is StreamApiException apiException && apiException.Unrecoverable)
-                    {
-                        _logs.Error("Can't reconnect due to coordinator unrecoverable error: " + apiException);
-                        throw;
+                        _reconnectAttempts++;
                     }
 
-                    await Task.Delay(500, GetCurrentCancellationTokenOrDefault());
+                    try
+                    {
+                        _logs.Info("Reconnect with strategy: " + _reconnectStrategy);
 
-                    var wasMigrating = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
+                        switch (_reconnectStrategy)
+                        {
+                            case WebsocketReconnectStrategy.Unspecified:
+                            case WebsocketReconnectStrategy.Disconnect:
 
-                    var fastReconnectTimeout = (DateTime.UtcNow - reconnectStartTime).TotalSeconds >
-                                               _fastReconnectDeadlineSeconds;
+                                // Log warning
 
-                    var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);
+                                break;
+                            case WebsocketReconnectStrategy.Fast:
+                                await ReconnectFast();
+                                break;
+                            case WebsocketReconnectStrategy.Rejoin:
+                                await ReconnectRejoin();
+                                break;
+                            case WebsocketReconnectStrategy.Migrate:
+                                await ReconnectMigrate();
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logs.ExceptionIfDebug(e);
+                        if (e is StreamApiException apiException && apiException.Unrecoverable)
+                        {
+                            _logs.Error("Can't reconnect due to coordinator unrecoverable error: " + apiException);
+                            throw;
+                        }
 
-                    // don't immediately switch to the REJOIN strategy, but instead attempt
-                    // to reconnect with the FAST strategy for a few times before switching.
-                    // in some cases, we immediately switch to the REJOIN strategy.
-                    var shouldRejoin = fastReconnectTimeout || wasMigrating || attempt >= CallRejoinMaxFastAttempts ||
-                                       !arePeerConnectionsHealthy;
+                        await Task.Delay(500, GetCurrentCancellationTokenOrDefault());
 
-                    attempt++;
-                    _reconnectStrategy
-                        = shouldRejoin ? WebsocketReconnectStrategy.Rejoin : WebsocketReconnectStrategy.Fast;
+                        var wasMigrating = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
 
-                    _logs.WarningIfDebug(
-                        $"Reconnect failed, attempt: {attempt}, next strategy: {_reconnectStrategy}, wasMigrating: {wasMigrating}, " +
-                        $"fastReconnectTimeout: {fastReconnectTimeout}, arePeerConnectionsHealthy: {arePeerConnectionsHealthy}");
+                        var fastReconnectTimeout = (DateTime.UtcNow - reconnectStartTime).TotalSeconds >
+                                                   _fastReconnectDeadlineSeconds;
 
-                    //StreamTODO: handle cancellation token
-                }
+                        var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);
+
+                        // don't immediately switch to the REJOIN strategy, but instead attempt
+                        // to reconnect with the FAST strategy for a few times before switching.
+                        // in some cases, we immediately switch to the REJOIN strategy.
+                        var shouldRejoin = fastReconnectTimeout || wasMigrating || attempt >= CallRejoinMaxFastAttempts ||
+                                           !arePeerConnectionsHealthy;
+
+                        attempt++;
+                        _reconnectStrategy
+                            = shouldRejoin ? WebsocketReconnectStrategy.Rejoin : WebsocketReconnectStrategy.Fast;
+
+                        _logs.WarningIfDebug(
+                            $"Reconnect failed, attempt: {attempt}, next strategy: {_reconnectStrategy}, wasMigrating: {wasMigrating}, " +
+                            $"fastReconnectTimeout: {fastReconnectTimeout}, arePeerConnectionsHealthy: {arePeerConnectionsHealthy}");
+
+                        //StreamTODO: handle cancellation token
+                    }
                 } while (finishedStates.All(s => s != CallState));
             }
             finally

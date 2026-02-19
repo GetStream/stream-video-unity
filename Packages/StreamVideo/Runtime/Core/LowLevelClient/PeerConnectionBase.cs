@@ -419,35 +419,42 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnTrack(RTCTrackEvent trackEvent)
         {
+            try
+            {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"[{PeerType}] OnTrack {trackEvent.Track.GetType().Name}, Id: {trackEvent.Track.Id}");
+                Logs.Warning($"[{PeerType}] OnTrack {trackEvent.Track.GetType().Name}, Id: {trackEvent.Track.Id}");
 #endif
 
-            var trackType = trackEvent.Track is AudioStreamTrack ? "audio" : "video";
-            var trackId = trackEvent.Track.Id;
-            var streamIds = trackEvent.Streams != null && trackEvent.Streams.Any()
-                ? string.Join(",", trackEvent.Streams.Select(s => s.Id))
-                : "";
-            var isEnabled = trackEvent.Track.Enabled;
+                var trackType = trackEvent.Track is AudioStreamTrack ? "audio" : "video";
+                var trackId = trackEvent.Track.Id;
+                var streamIds = trackEvent.Streams != null && trackEvent.Streams.Any()
+                    ? string.Join(",", trackEvent.Streams.Select(s => s.Id))
+                    : "";
+                var isEnabled = trackEvent.Track.Enabled;
 
-            if (!string.IsNullOrEmpty(streamIds))
-            {
-                Tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId} {streamIds}");
-            }
-            else
-            {
-                Tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId}");
-            }
-
-            foreach (var stream in trackEvent.Streams)
-            {
-                StreamAdded?.Invoke(stream);
-
-                //StreamTodo: taken from android sdk, check why this is needed
-                foreach (var audioTrack in stream.GetAudioTracks())
+                if (!string.IsNullOrEmpty(streamIds))
                 {
-                    audioTrack.Enabled = true;
+                    Tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId} {streamIds}");
                 }
+                else
+                {
+                    Tracer?.Trace(PeerConnectionTraceKey.OnTrack, $"{trackType}:{trackId}");
+                }
+
+                foreach (var stream in trackEvent.Streams)
+                {
+                    StreamAdded?.Invoke(stream);
+
+                    //StreamTodo: taken from android sdk, check why this is needed
+                    foreach (var audioTrack in stream.GetAudioTracks())
+                    {
+                        audioTrack.Enabled = true;
+                    }
+                }
+            }
+            catch (InvalidOperationException e)
+            {
+                Logs.Warning($"[{PeerType}] OnTrack failed, likely a stale track from a previous session: {e.Message}");
             }
         }
     }

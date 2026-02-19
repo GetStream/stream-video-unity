@@ -540,24 +540,7 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider.PublisherAudioTrackIsEnabledChanged -= OnPublisherAudioTrackIsEnabledChanged;
             _mediaInputProvider.PublisherVideoTrackIsEnabledChanged -= OnPublisherVideoTrackIsEnabledChanged;
 
-            if (_publisherVideoTrackTexture != null)
-            {
-                try
-                {
-                    // Unity gives warning when releasing an active texture
-                    if (RenderTexture.active == _publisherVideoTrackTexture)
-                    {
-                        RenderTexture.active = null;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logs.WarningIfDebug(e.Message);
-                }
-
-                _publisherVideoTrackTexture.Release();
-                _publisherVideoTrackTexture = null;
-            }
+            ReleasePublisherVideoTrackTexture();
 
             TryClearPublisherAudioTrack();
             TryClearVideoTrack();
@@ -824,6 +807,8 @@ namespace StreamVideo.Core.LowLevelClient
                     $"Can't create publisher video track because `{nameof(_mediaInputProvider.VideoInput)}` is null");
             }
 
+            ReleasePublisherVideoTrackTexture();
+
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
 
@@ -844,6 +829,8 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: CreatePublisherVideoTrackFromSceneCamera() is not used in any path
         private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()
         {
+            ReleasePublisherVideoTrackTexture();
+
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
 
@@ -871,6 +858,30 @@ namespace StreamVideo.Core.LowLevelClient
 
         private string PrintConnectionState()
             => $"PC Connection State: {PeerConnection.ConnectionState}, ICE Connection State: {PeerConnection.IceConnectionState}";
+
+        private void ReleasePublisherVideoTrackTexture()
+        {
+            if (_publisherVideoTrackTexture == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // Unity gives warning when releasing an active texture
+                if (RenderTexture.active == _publisherVideoTrackTexture)
+                {
+                    RenderTexture.active = null;
+                }
+            }
+            catch (Exception e)
+            {
+                Logs.WarningIfDebug(e.Message);
+            }
+
+            _publisherVideoTrackTexture.Release();
+            _publisherVideoTrackTexture = null;
+        }
 
         private void TryClearVideoTrack()
         {

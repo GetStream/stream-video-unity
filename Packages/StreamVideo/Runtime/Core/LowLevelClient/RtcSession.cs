@@ -658,7 +658,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var startNewPeerConnections = isRejoin || isMigration || Publisher == null || !Publisher.IsHealthy ||
                                               Subscriber == null || !Subscriber.IsHealthy;
 
-                var previousSessionId = SessionId;
+                string previousSessionId = SessionId.ToString();
 
                 // a new session_id is necessary for the REJOIN strategy.
                 // we use the previous session_id if available
@@ -705,7 +705,7 @@ namespace StreamVideo.Core.LowLevelClient
                     var subscriberOffer = await Subscriber.CreateOfferAsync(_joinCallCts.Token);
                     var publisherOffer = await Publisher.CreateOfferAsync(_joinCallCts.Token);
 
-                    _sfuWebSocket.InitNewSession(SessionId, sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
+                    _sfuWebSocket.InitNewSession(SessionId.ToString(), sfuUrl, sfuToken, subscriberOffer.sdp, publisherOffer.sdp);
 
                     var reconnectDetails = new ReconnectDetails
                     {
@@ -915,7 +915,7 @@ namespace StreamVideo.Core.LowLevelClient
                 try
                 {
                     // Trace leave call before leaving the call. Otherwise, stats are not send because SFU WS disconnects
-                    _sfuTracer?.Trace(PeerConnectionTraceKey.LeaveCall, new { SessionId = SessionId, Reason = reason });
+                    _sfuTracer?.Trace(PeerConnectionTraceKey.LeaveCall, new { SessionId = SessionId.ToString(), Reason = reason });
 
                     if (_statsSender != null) // This was null in tests
                     {
@@ -1258,7 +1258,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             var request = new UpdateSubscriptionsRequest
             {
-                SessionId = SessionId,
+                SessionId = SessionId.ToString(),
             };
             request.Tracks.AddRange(tracks);
 
@@ -1392,7 +1392,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     PeerType = streamPeerType.ToPeerType(),
                     IceCandidate = _serializer.Serialize(candidate),
-                    SessionId = SessionId,
+                    SessionId = SessionId.ToString(),
                 };
 
                 if (_callState == CallingState.Joined)
@@ -1547,7 +1547,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     PeerType = PeerType.Subscriber,
                     Sdp = answer.sdp,
-                    SessionId = SessionId
+                    SessionId = SessionId.ToString()
                 };
 
                 await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
@@ -1907,7 +1907,7 @@ namespace StreamVideo.Core.LowLevelClient
             var cancellationToken = _joinCallCts?.Token ?? default;
             await RpcCallAsync(new UpdateMuteStatesRequest
                 {
-                    SessionId = SessionId,
+                    SessionId = SessionId.ToString(),
                     MuteStates =
                     {
                         new TrackMuteState
@@ -2155,7 +2155,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 var errorMsg
                     = $"[RPC Call: {debugRequestName}] Failed - Attempted to execute RPC call but HttpClient is not yet initialized. " +
-                      $"CallState: {CallState}, ActiveCall: {ActiveCall != null}, SessionId: {SessionId ?? "null"}";
+                      $"CallState: {CallState}, ActiveCall: {ActiveCall != null}, SessionId: {SessionId}";
                 _logs.Error(errorMsg);
                 throw new InvalidOperationException(errorMsg);
             }
@@ -2325,7 +2325,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var request = new SetPublisherRequest
                 {
                     Sdp = offer.sdp,
-                    SessionId = SessionId,
+                    SessionId = SessionId.ToString(),
                 };
                 request.Tracks.AddRange(tracks);
 

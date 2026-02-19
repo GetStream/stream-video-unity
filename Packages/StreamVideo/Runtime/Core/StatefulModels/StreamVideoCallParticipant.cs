@@ -27,7 +27,7 @@ namespace StreamVideo.Core.StatefulModels
         public event Action<float> AudioLevelChanged;
         public event Action<bool> IsSpeakingChanged;
 
-        public bool IsLocalParticipant => SessionId == Client.InternalLowLevelClient.RtcSession.SessionId;
+        public bool IsLocalParticipant => SessionId == Client.InternalLowLevelClient.RtcSession.SessionId.ToString();
 
         public bool IsPinned { get; private set; }
 

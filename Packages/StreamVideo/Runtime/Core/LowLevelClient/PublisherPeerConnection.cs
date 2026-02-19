@@ -208,7 +208,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var request = new SetPublisherRequest
                 {
                     Sdp = offer.sdp,
-                    SessionId = SfuClient.SessionId,
+                    SessionId = SfuClient.SessionId.ToString(),
                 };
                 request.Tracks.AddRange(tracks);
 

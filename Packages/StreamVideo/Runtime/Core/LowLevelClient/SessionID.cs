@@ -21,9 +21,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void Clear() => _sessionID = string.Empty;
 
-        public static implicit operator string(SessionID s) => s?._sessionID;
-
-        public override string ToString() => string.IsNullOrEmpty(_sessionID) ? "[Empty]" : _sessionID;
+        public override string ToString() => _sessionID ?? string.Empty;
 
         private string _sessionID;
     }

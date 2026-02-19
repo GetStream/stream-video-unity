@@ -50,7 +50,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var request = new ICERestartRequest
                 {
                     PeerType = v1.Sfu.Models.PeerType.Subscriber,
-                    SessionId = SfuClient.SessionId,
+                    SessionId = SfuClient.SessionId.ToString(),
                 };
 
 #if STREAM_DEBUG_ENABLED

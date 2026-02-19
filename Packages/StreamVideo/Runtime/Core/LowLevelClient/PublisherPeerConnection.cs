@@ -699,7 +699,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (_audioTransceiver != null)
             {
-                throw new InvalidOperationException("No audio transceiver");
+                throw new InvalidOperationException("Audio transceiver already exists");
             }
 
             var audioTransceiverInit = BuildTransceiverInit(TrackKind.Audio, _publisherVideoSettings);
@@ -762,7 +762,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (_videoTransceiver != null)
             {
-                throw new InvalidOperationException("");
+                throw new InvalidOperationException("Video transceiver already exists");
             }
 
             var videoTransceiverInit = BuildTransceiverInit(TrackKind.Video, _publisherVideoSettings);

@@ -602,6 +602,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _joinCallCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _pendingIceTrickleRequests.Clear();
 
             try
             {
@@ -1453,12 +1454,14 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return;
+                    break;
                 }
 
                 RpcCallAsync(iceTrickle, GeneratedAPI.IceTrickle, nameof(GeneratedAPI.IceTrickle),
                     cancellationToken, response => response.Error).LogIfFailed();
             }
+            
+            _pendingIceTrickleRequests.Clear();
         }
 
         private void OnSfuIceTrickle(SfuICETrickle iceTrickle)

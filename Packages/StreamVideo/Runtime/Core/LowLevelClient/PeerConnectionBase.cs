@@ -214,6 +214,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         protected bool IsIceRestarting { get; set; }
 
+        public void ResetIceRestart() => IsIceRestarting = false;
+
         protected virtual void OnDisposing()
         {
         }

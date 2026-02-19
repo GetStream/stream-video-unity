@@ -824,6 +824,12 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 _logs.Error($"{nameof(DoJoin)} failed with exception: {e.Message}");
                 _logs.Exception(e);
+
+                if (CallState != CallingState.Offline)
+                {
+                    CallState = prevCallState;
+                }
+
                 throw;
             }
             finally

@@ -2808,6 +2808,14 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     _logs.WarningIfDebug("Going Online");
 
+                    if (CallState == CallingState.Joining || CallState == CallingState.Reconnecting ||
+                        CallState == CallingState.Migrating || _isReconnecting)
+                    {
+                        _logs.WarningIfDebug(
+                            $"{nameof(OnNetworkAvailabilityChanged)} skipped - reconnection already in progress. CallState: {CallState}");
+                        return;
+                    }
+
                     // Close the previous SFU WS client to force a clean WS join
                     // JS always re-creates the SFU WS when getting back online
                     if (_sfuWebSocket != null)

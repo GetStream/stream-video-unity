@@ -1831,6 +1831,8 @@ namespace StreamVideo.Core.LowLevelClient
                         //StreamTODO: handle cancellation token
                     }
                 } while (finishedStates.All(s => s != CallState));
+
+                _reconnectAttempts = 0;
             }
             finally
             {

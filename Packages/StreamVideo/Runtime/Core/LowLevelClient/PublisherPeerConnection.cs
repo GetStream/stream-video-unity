@@ -153,7 +153,10 @@ namespace StreamVideo.Core.LowLevelClient
         public override Task RestartIce()
         {
             Logs.InfoIfDebug($"[{PeerType}] Restarting ICE connection");
-            if (IsIceRestarting || SignalingState == RTCSignalingState.HaveLocalOffer)
+            
+            // The JS client ignores the RestartIce if SignalingState == RTCSignalingState.HaveLocalOffer
+            // But rollback doesn't work in Unity's webrtc package, so we skip the rollback and allow ICE restart despite HaveLocalOffer state
+            if (IsIceRestarting)
             {
                 Logs.InfoIfDebug($"[{PeerType}] ICE restart is already in progress");
                 return Task.CompletedTask;

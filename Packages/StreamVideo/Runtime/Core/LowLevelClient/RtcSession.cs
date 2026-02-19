@@ -695,7 +695,7 @@ namespace StreamVideo.Core.LowLevelClient
                     }
                     else
                     {
-                        _logs.WarningIfDebug($"{nameof(DoJoin)} - Don't create new Publisher and Subscriber. Are both null: {(Subscriber != null)}, {(Publisher != null)}");
+                        _logs.WarningIfDebug($"{nameof(DoJoin)} - Don't create new Publisher and Subscriber. Both exist: {(Subscriber != null)}, {(Publisher != null)}");
                     }
                     // else: FAST with unhealthy WS - keep existing Publisher/Subscriber.
                     // No need to update SfuClient reference because Publisher/Subscriber hold a reference to RtcSession

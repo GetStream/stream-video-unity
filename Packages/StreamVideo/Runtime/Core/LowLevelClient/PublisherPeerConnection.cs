@@ -171,7 +171,6 @@ namespace StreamVideo.Core.LowLevelClient
             return Negotiate(iceRestart: true);
         }
 
-        //StreamTODO: Delete RtcSession.OnPublisherNegotiationNeeded
         private async Task Negotiate(bool iceRestart = false)
         {
             if (_isNegotiating)
@@ -640,7 +639,7 @@ namespace StreamVideo.Core.LowLevelClient
                     var audioEncoding = new RTCRtpEncodingParameters
                     {
                         active = true,
-                        maxBitrate = RtcSession.MaxPublishAudioBitrate,
+                        maxBitrate = MaxPublishAudioBitrate,
                         scaleResolutionDownBy = 1.0,
                         rid = "a"
                     };
@@ -657,8 +656,7 @@ namespace StreamVideo.Core.LowLevelClient
                     var fullQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
-                        maxBitrate = RtcSession.FullPublishVideoBitrate,
-                        //minBitrate = RtcSession.FullPublishVideoBitrate / 2,
+                        maxBitrate = FullPublishVideoBitrate,
                         maxFramerate = publisherVideoSettings.FrameRate,
                         scaleResolutionDownBy = 1.0,
                         rid = "f"
@@ -666,8 +664,7 @@ namespace StreamVideo.Core.LowLevelClient
                     var halfQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
-                        maxBitrate = RtcSession.HalfPublishVideoBitrate,
-                        //minBitrate = RtcSession.HalfPublishVideoBitrate / 2,
+                        maxBitrate = HalfPublishVideoBitrate,
                         maxFramerate = publisherVideoSettings.FrameRate,
                         scaleResolutionDownBy = 2.0,
                         rid = "h"
@@ -676,8 +673,7 @@ namespace StreamVideo.Core.LowLevelClient
                     var quarterQuality = new RTCRtpEncodingParameters
                     {
                         active = true,
-                        maxBitrate = RtcSession.QuarterPublishVideoBitrate,
-                        //minBitrate = RtcSession.QuarterPublishVideoBitrate / 2,
+                        maxBitrate = QuarterPublishVideoBitrate,
                         maxFramerate = publisherVideoSettings.FrameRate,
                         scaleResolutionDownBy = 4.0,
                         rid = "q"

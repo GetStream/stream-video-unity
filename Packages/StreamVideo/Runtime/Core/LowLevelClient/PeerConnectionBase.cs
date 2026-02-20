@@ -25,8 +25,6 @@ namespace StreamVideo.Core.LowLevelClient
     internal abstract class PeerConnectionBase : IDisposable
     {
         public event Action<MediaStream> StreamAdded;
-
-        public event Action NegotiationNeeded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled; //StreamTODO: remove StreamPeerType?
 
         public event Action Disconnected;
@@ -337,18 +335,6 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
             Tracer?.Trace(PeerConnectionTraceKey.OnConnectionStateChange, state.ToString());
 
-            //StreamTODO: trace getstats:
-            /*
-             *    if (this.tracer && (state === 'connected' || state === 'failed')) {
-      try {
-        const stats = await this.stats.get();
-        this.tracer.trace('getstats', stats.delta);
-      } catch (err) {
-        this.tracer.trace('getstatsOnFailure', (err as Error).toString());
-      }
-    }
-             *
-             */
 
             //StreamTODO: probably remove this after reconnection flow is completed.
             // We don't want SDK integrator trying to reconnect on his own
@@ -370,7 +356,6 @@ namespace StreamVideo.Core.LowLevelClient
 
             return;
 
-            //StreamTODO: get rid of this. HandleConnectionStateUpdate() should depend on abstract state
             RTCIceConnectionState ToIceState(RTCPeerConnectionState connectionState)
             {
                 switch (connectionState)
@@ -407,16 +392,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnNegotiationNeeded()
         {
-#if STREAM_DEBUG_ENABLED
-            //Logs.Warning($"[{PeerType}] OnNegotiationNeeded");
-#endif
-
             Tracer?.Trace(PeerConnectionTraceKey.OnNegotiationNeeded, null);
-
-            //StreamTodo: take into account race conditions https://blog.mozilla.org/webrtc/perfect-negotiation-in-webrtc/
-            //We want to set the local description if signalingState is stable - we need to check it because state could change during async operations
-
-            NegotiationNeeded?.Invoke();
         }
 
         private void OnTrack(RTCTrackEvent trackEvent)

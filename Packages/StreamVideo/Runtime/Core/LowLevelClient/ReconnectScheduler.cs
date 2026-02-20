@@ -242,12 +242,6 @@ namespace StreamVideo.Core.LowLevelClient
             NextReconnectTime = _timeService.Time;
         }
 
-        //StreamTodo: Unused "OnReconnecting"
-        // private void OnReconnecting()
-        // {
-        //     _reconnectAttempts++;
-        // }
-
         private void OnConnected()
         {
             _reconnectAttempts = 0;

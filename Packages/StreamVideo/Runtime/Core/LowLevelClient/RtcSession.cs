@@ -1974,10 +1974,16 @@ namespace StreamVideo.Core.LowLevelClient
             // StreamTODO: Implement OnSfuWebSocketOnParticipantMigrationComplete
         }
 
-        private void OnSfuWebSocketOnParticipantUpdated(ParticipantUpdated obj)
+        private void OnSfuWebSocketOnParticipantUpdated(ParticipantUpdated participantUpdated)
         {
-            _sfuTracer?.Trace("participantUpdated", obj);
-            // StreamTODO: Implement OnSfuWebSocketOnParticipantUpdated
+            _sfuTracer?.Trace("participantUpdated", participantUpdated);
+
+            if (participantUpdated.Participant == null)
+            {
+                return;
+            }
+
+            _cache.TryCreateOrUpdate(participantUpdated.Participant);
         }
 
         private void OnSfuWebSocketOnCallEnded()

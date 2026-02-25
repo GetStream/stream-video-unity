@@ -225,7 +225,7 @@ namespace StreamVideo.Core.LowLevelClient
         public abstract Task RestartIce();
 
         // On JS this is intentionally not an async method
-        protected async Task TryRestartIce()
+        internal async Task TryRestartIce()
         {
             const string errorReason = "restartICE() failed, initiating reconnect";
             

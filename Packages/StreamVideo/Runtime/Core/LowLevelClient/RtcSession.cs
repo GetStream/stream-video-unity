@@ -1924,7 +1924,9 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuGoAway(GoAway goAway)
         {
             _sfuTracer?.Trace(PeerConnectionTraceKey.GoAway, goAway);
-            // StreamTODO: Implement OnSfuGoAway
+            
+            _logs.WarningIfDebug($"Reconnect triggered by {nameof(OnSfuGoAway)}, reason: {goAway.Reason}");
+            Reconnect(WebsocketReconnectStrategy.Migrate, "goAway").LogIfFailed();
         }
 
         private void OnSfuCallGrantsUpdated(CallGrantsUpdated callGrantsUpdated)

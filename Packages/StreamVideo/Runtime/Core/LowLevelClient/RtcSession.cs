@@ -1911,7 +1911,14 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuIceRestart(ICERestart iceRestart)
         {
             _sfuTracer?.Trace("iceRestart", iceRestart);
-            // StreamTODO: Implement OnSfuIceRestart
+
+            if (iceRestart.PeerType != PeerType.PublisherUnspecified)
+            {
+                // We ignore Subscriber PeerType because the SFU controls the Subscriber PR and can restart ICE if needed
+                return;
+            }
+
+            Publisher?.TryRestartIce().LogIfFailed();
         }
 
         private void OnSfuGoAway(GoAway goAway)

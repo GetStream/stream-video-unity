@@ -303,5 +303,19 @@ namespace StreamVideo.Core.Models
                 }
             }
         }
+
+        internal void UpdateFromSfu(ConnectionQualityChanged connectionQualityChanged)
+        {
+            foreach (var update in connectionQualityChanged.ConnectionQualityUpdates)
+            {
+                for (int i = 0; i < _participants.Count; i++)
+                {
+                    if (_participants[i].SessionId == update.SessionId)
+                    {
+                        _participants[i].UpdateFromSfu(update);
+                    }
+                }
+            }
+        }
     }
 }

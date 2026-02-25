@@ -1929,8 +1929,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuCallGrantsUpdated(CallGrantsUpdated callGrantsUpdated)
         {
-            _sfuTracer?.Trace(PeerConnectionTraceKey.CallEnded, callGrantsUpdated);
-            // StreamTODO: Implement OnSfuCallGrantsUpdated
+            _sfuTracer?.Trace("callGrantsUpdated", callGrantsUpdated);
+            ActiveCall?.UpdateFromSfu(callGrantsUpdated);
         }
 
         private void OnSfuChangePublishQuality(ChangePublishQuality changePublishQuality)
@@ -1942,7 +1942,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuConnectionQualityChanged(ConnectionQualityChanged connectionQualityChanged)
         {
             _sfuTracer?.Trace("connectionQualityChanged", connectionQualityChanged);
-            // StreamTODO: Implement OnSfuConnectionQualityChanged
+            ActiveCall?.UpdateFromSfu(connectionQualityChanged);
         }
 
         private void OnSfuAudioLevelChanged(AudioLevelChanged audioLevelChanged)

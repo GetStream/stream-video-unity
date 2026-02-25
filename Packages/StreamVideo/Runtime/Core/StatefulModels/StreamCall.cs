@@ -730,6 +730,11 @@ namespace StreamVideo.Core.StatefulModels
             Session?.UpdateFromSfu(audioLevelChanged);
         }
 
+        internal void UpdateFromSfu(ConnectionQualityChanged connectionQualityChanged)
+        {
+            Session?.UpdateFromSfu(connectionQualityChanged);
+        }
+
         internal void UpdateFromCoordinator(CallSessionParticipantCountsUpdatedEventInternalDTO eventData)
         {
             Session?.UpdateFromCoordinator(eventData, Client.InternalLowLevelClient.RtcSession.CallState);
@@ -809,8 +814,37 @@ namespace StreamVideo.Core.StatefulModels
             }
 
             _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(updatedCallPermissionsEvent.OwnCapabilities);
+        }
+
+        /// <summary>
+        /// Update own capabilities based on SFU call grants.
+        /// Grants take precedence over coordinator-provided capabilities.
+        /// </summary>
+        internal void UpdateFromSfu(CallGrantsUpdated callGrantsUpdated)
+        {
+            var grants = callGrantsUpdated.CurrentGrants;
+            if (grants == null)
+            {
+                return;
+            }
+
+            void SetCapability(OwnCapability capability, bool allowed)
+            {
+                var index = _ownCapabilities.IndexOf(capability);
+                if (allowed && index < 0)
+                {
+                    _ownCapabilities.Add(capability);
+                }
+                else if (!allowed && index >= 0)
+                {
+                    _ownCapabilities.RemoveAt(index);
+                }
+            }
 
             //StreamTodo: we should probably expose an event OwnCapabilitiesChanged
+            SetCapability(OwnCapability.SendAudio, grants.CanPublishAudio);
+            SetCapability(OwnCapability.SendVideo, grants.CanPublishVideo);
+            SetCapability(OwnCapability.ScreenShare, grants.CanScreenshare);
         }
 
         internal void InternalHandleCallRecordingStartedEvent(CallReactionEventInternalDTO callReactionEvent)

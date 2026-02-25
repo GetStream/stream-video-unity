@@ -217,6 +217,11 @@ namespace StreamVideo.Core.StatefulModels
             AudioLevel = audioLevel.Level;
         }
 
+        internal void UpdateFromSfu(ConnectionQualityInfo connectionQualityInfo)
+        {
+            ConnectionQuality = connectionQualityInfo.ConnectionQuality.ToPublicEnum();
+        }
+
         internal void Update()
         {
             _audioTrack?.Update();

@@ -518,10 +518,10 @@ namespace StreamVideo.Core
             try
             {
                 var callState = InternalLowLevelClient.RtcSession.CallState;
-                if (callState == CallingState.Leaving || callState == CallingState.Offline)
+                if (callState == CallingState.Leaving || callState == CallingState.Left)
                 {
                     _logs.Warning(
-                        $"{nameof(LeaveCallAsync)}: Call is already leaving or offline, skipping leave operation.");
+                        $"{nameof(LeaveCallAsync)}: Call is already leaving or left, skipping leave operation.");
                     return;
                 }
 
@@ -531,8 +531,6 @@ namespace StreamVideo.Core
             {
                 _logs.Exception(e);
             }
-
-            CallEnded?.Invoke(call);
         }
 
         private StreamVideoClient(IWebsocketClient coordinatorWebSocket, Func<IWebsocketClient> webSocketFactory,
@@ -602,11 +600,7 @@ namespace StreamVideo.Core
             lowLevelClient.SfuDisconnected += OnLowLevelClientSfuDisconnected;
             lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession
                 += OnRtcPeerConnectionDisconnectedDuringSession;
-        }
-
-        private void OnRtcPeerConnectionDisconnectedDuringSession()
-        {
-            Disconnected?.Invoke(DisconnectReason.VideoServerDisconnected);
+            lowLevelClient.RtcSession.CallStateChanged += OnRtcCallStateChanged;
         }
 
         private void UnsubscribeFrom(StreamVideoLowLevelClient lowLevelClient)
@@ -648,6 +642,7 @@ namespace StreamVideo.Core
 
             lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession
                 -= OnRtcPeerConnectionDisconnectedDuringSession;
+            lowLevelClient.RtcSession.CallStateChanged -= OnRtcCallStateChanged;
         }
 
         private void InternalLowLevelClientOnConnected()
@@ -893,6 +888,19 @@ namespace StreamVideo.Core
             loadable.LoadFromDto(eventData, _cache);
 
             activeCall.NotifyCallEventReceived(callEvent);
+        }
+
+        private void OnRtcPeerConnectionDisconnectedDuringSession()
+        {
+            Disconnected?.Invoke(DisconnectReason.VideoServerDisconnected);
+        }
+
+        private void OnRtcCallStateChanged(CallingState previousState, CallingState newState)
+        {
+            if (newState == CallingState.Left)
+            {
+                CallEnded?.Invoke(ActiveCall);
+            }
         }
 
         private void OnLowLevelClientSfuDisconnected() => Disconnected?.Invoke(DisconnectReason.SfuWsDisconnected);

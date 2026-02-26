@@ -46,6 +46,8 @@ namespace StreamVideo.Core.LowLevelClient
 
     public delegate void ParticipantLeftHandler(string sessionId, string userId);
 
+    public delegate void CallingStateChangedHandler(CallingState previousState, CallingState currentState);
+
     //StreamTodo: Implement GeneratedApi.UpdateMuteStates
     //StreamTodo: Implement GeneratedApi.RestartIce
     //StreamTodo: Rename GeneratedAPI to SfuRpcApi
@@ -89,6 +91,8 @@ namespace StreamVideo.Core.LowLevelClient
         /// This is NOT fired when the disconnect is intentional (e.g., leaving a call).
         /// </summary>
         public event Action SfuDisconnected;
+        
+        public event CallingStateChangedHandler CallStateChanged;
 
         public bool PublisherAudioTrackIsEnabled
         {
@@ -136,6 +140,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var prevState = _callState;
                 _callState = value;
                 _logs.Info($"Call state changed from: `{prevState}` to: `{value}`");
+                CallStateChanged?.Invoke(prevState, value);
             }
         }
 
@@ -725,7 +730,7 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
             }
 
-            if (CallState == CallingState.Leaving || CallState == CallingState.Offline)
+            if (CallState == CallingState.Leaving || CallState == CallingState.Left)
             {
                 _logs.WarningIfDebug($"{nameof(StopAsync)} ignored because call is in state: " + CallState);
                 //StreamTODO: should this return a task of the ongoing stop?
@@ -742,64 +747,71 @@ namespace StreamVideo.Core.LowLevelClient
             CallState = CallingState.Leaving;
             _logs.InfoIfDebug("Leaving the call - cleanup session");
 
-            if (_joinCallCts != null)
+            try
             {
-                _joinCallCts.Cancel();
-            }
-
-            if (_activeCallCts != null)
-            {
-                _activeCallCts.Cancel();
-            }
-
-            if (ActiveCall != null)
-            {
-                _logs.Info("Leaving active call with Cid: " + ActiveCall.Cid);
-                try
+                if (_joinCallCts != null)
                 {
-                    // Trace leave call before leaving the call. Otherwise, stats are not send because SFU WS disconnects
-                    _sfuTracer?.Trace(PeerConnectionTraceKey.LeaveCall, new { SessionId = SessionId.ToString(), Reason = reason });
+                    _joinCallCts.Cancel();
+                }
 
-                    if (_statsSender != null) // This was null in tests
+                if (_activeCallCts != null)
+                {
+                    _activeCallCts.Cancel();
+                }
+
+                if (ActiveCall != null)
+                {
+                    _logs.Info("Leaving active call with Cid: " + ActiveCall.Cid);
+                    try
                     {
-                        var sendStatsCancellationToken = new CancellationTokenSource();
-                        sendStatsCancellationToken.CancelAfter(800);
-                        using (new TimeLogScope("Sending final stats on leave", _logs.Info))
+                        // Trace leave call before leaving the call. Otherwise, stats are not send because SFU WS disconnects
+                        _sfuTracer?.Trace(PeerConnectionTraceKey.LeaveCall, new { SessionId = SessionId.ToString(), Reason = reason });
+
+                        if (_statsSender != null) // This was null in tests
                         {
-                            await _statsSender.SendFinalStatsAsync(sendStatsCancellationToken.Token);
+                            var sendStatsCancellationToken = new CancellationTokenSource();
+                            sendStatsCancellationToken.CancelAfter(800);
+                            using (new TimeLogScope("Sending final stats on leave", _logs.Info))
+                            {
+                                await _statsSender.SendFinalStatsAsync(sendStatsCancellationToken.Token);
+                            }
                         }
                     }
+                    catch (HttpRequestException httpEx)
+                    {
+                        _logs.Info($"Network unavailable during final stats send: {httpEx.Message}");
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logs.Info("Final stats send timed out.");
+                    }
+                    catch (Exception e)
+                    {
+                        _logs.Warning($"Failed to send final stats on leave: {e.Message}");
+                    }
                 }
-                catch (HttpRequestException httpEx)
-                {
-                    _logs.Info($"Network unavailable during final stats send: {httpEx.Message}");
-                }
-                catch (OperationCanceledException)
-                {
-                    _logs.Info("Final stats send timed out.");
-                }
-                catch (Exception e)
-                {
-                    _logs.Warning($"Failed to send final stats on leave: {e.Message}");
-                }
-            }
 
-            await ClearSessionAsync();
+                await ClearSessionAsync();
 
-            if (_sfuWebSocket != null)
-            {
-                using (new TimeLogScope("Sending leave call request & disconnect", _logs.Info))
+                if (_sfuWebSocket != null)
                 {
-                    await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
+                    using (new TimeLogScope("Sending leave call request & disconnect", _logs.Info))
+                    {
+                        await _sfuWebSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, reason);
+                    }
                 }
-            }
-
-            //StreamTodo: check with js definition of "offline" 
-            CallState = CallingState.Offline;
 
 #if STREAM_DEBUG_ENABLED
-            _videoAudioSyncBenchmark?.Finish();
+                _videoAudioSyncBenchmark?.Finish();
 #endif
+            }
+            finally
+            {
+                // Set Left before clearing ActiveCall so that CallStateChanged subscribers
+                // can still access the call reference
+                CallState = CallingState.Left;
+                ActiveCall = null;
+            }
         }
 
         public void UpdateRequestedVideoResolution(string participantSessionId, VideoResolution videoResolution)
@@ -993,8 +1005,6 @@ namespace StreamVideo.Core.LowLevelClient
             Publisher?.Dispose();
             Publisher = null;
 
-            ActiveCall = null;
-            CallState = CallingState.Unknown;
             _httpClient = null;
 
             if (_joinCallCts != null)
@@ -1874,9 +1884,8 @@ namespace StreamVideo.Core.LowLevelClient
                 case WebsocketReconnectStrategy.Unspecified:
                     break;
                 case WebsocketReconnectStrategy.Disconnect:
-
-                    //StreamTODO: leve the call
-
+                    _logs.WarningIfDebug("SFU instructed to disconnect");
+                    StopAsync("SFU instructed to disconnect").LogIfFailed();
                     break;
                 case WebsocketReconnectStrategy.Fast:
                 case WebsocketReconnectStrategy.Rejoin:
@@ -1991,7 +2000,14 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuWebSocketOnCallEnded()
         {
             _sfuTracer?.Trace(PeerConnectionTraceKey.CallEnded, null);
-            // StreamTODO: Implement OnSfuWebSocketOnCallEnded
+
+            if (CallState == CallingState.Left)
+            {
+                return;
+            }
+
+            _logs.WarningIfDebug("Call ended by SFU, leaving call");
+            StopAsync("Call ended by SFU").LogIfFailed();
         }
 
         private Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
@@ -2393,6 +2409,11 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 _logs.WarningIfDebug("Going Offline");
                 _lastTimeOffline = DateTime.UtcNow;
+
+                if (ActiveCall != null)
+                {
+                    CallState = CallingState.Offline;
+                }
             }
         }
 

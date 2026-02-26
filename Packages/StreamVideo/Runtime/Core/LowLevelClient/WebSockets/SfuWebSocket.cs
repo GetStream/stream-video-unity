@@ -207,7 +207,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 //StreamTODO: implement timeout
                 return await _joinEventReceivedCompletionSource.Task;
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException)
             {
                 Logs.WarningIfDebug("[SFU] Connect - Cancelled");
                 throw;

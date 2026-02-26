@@ -73,7 +73,7 @@ namespace StreamVideo.Core.LowLevelClient
                     throw new NegotiationException(result.Error.Code);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 IsIceRestarting = prevIsIceRestarting;
                 throw;

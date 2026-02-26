@@ -385,7 +385,7 @@ namespace StreamVideo.Core.LowLevelClient
                     return;
                     //TODO: joinData.ClearMigrationData
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     _logs.Warning($"Failed to join call `{joinCallData.Id}`, attempt: {attempt}");
 

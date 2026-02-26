@@ -167,67 +167,6 @@ namespace StreamVideo.Core
 
         //StreamTodo: if ring and notify can't be both true then perhaps enum NotifyMode.Ring, NotifyMode.Notify?
         //StreamTodo: add CreateCallOptions
-        // public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
-        //     bool notify, CancellationToken cancellationToken)
-        // {
-        //     var callState = InternalLowLevelClient.RtcSession.CallState;
-        //     if (callState == CallingState.Joined || callState == CallingState.Joining)
-        //     {
-        //         throw new StreamCallInProgressException("Cannot join a call while another call is active or joining.");
-        //     }
-        //
-        //     IStreamCall call;
-        //     if (!create)
-        //     {
-        //         //StreamTodo: check android SDK if the flow is the same
-        //         call = await GetCallAsync(callType, callId, cancellationToken);
-        //         if (call == null)
-        //         {
-        //             throw new StreamCallNotFoundException(
-        //                 $"Call with type: `{callType}`, and ID: `{callId}` was not found. Both type and ID are required to identify a call.");
-        //         }
-        //     }
-        //     else
-        //     {
-        //         call = await GetOrCreateCallAsync(callType, callId, cancellationToken);
-        //     }
-        //
-        //     // StreamTodo: check state if we don't have an active session already
-        //     var locationHint = await InternalLowLevelClient.GetLocationHintAsync(cancellationToken);
-        //
-        //     //StreamTodo: move this logic to call.Join, this way user can create call object and join later on 
-        //
-        //     // StreamTodo: expose params
-        //     var joinCallRequest = new JoinCallRequestInternalDTO
-        //     {
-        //         Create = create,
-        //         Data = new CallRequestInternalDTO
-        //         {
-        //             Custom = null,
-        //             Members = null,
-        //             SettingsOverride = null,
-        //
-        //             //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
-        //             StartsAt = DateTimeOffset.Now,
-        //             Team = null
-        //         },
-        //         Location = locationHint,
-        //         MembersLimit = 0,
-        //         MigratingFrom = null,
-        //         Notify = notify,
-        //         Ring = ring
-        //     };
-        //
-        //     var joinCallResponse
-        //         = await InternalLowLevelClient.InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
-        //     _cache.TryCreateOrUpdate(joinCallResponse);
-        //
-        //     await InternalLowLevelClient.StartCallSessionAsync((StreamCall)call, cancellationToken);
-        //
-        //     CallStarted?.Invoke(call);
-        //     return call;
-        // }
-
         public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify, CancellationToken cancellationToken)
         {

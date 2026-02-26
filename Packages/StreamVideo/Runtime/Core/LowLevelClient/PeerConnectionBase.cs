@@ -247,7 +247,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var strategy = isSignalLostError ? WebsocketReconnectStrategy.Fast : WebsocketReconnectStrategy.Rejoin;
                 ReconnectionNeeded?.Invoke(strategy, errorReason, PeerType);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {

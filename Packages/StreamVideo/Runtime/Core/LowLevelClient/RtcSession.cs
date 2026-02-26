@@ -1561,7 +1561,7 @@ namespace StreamVideo.Core.LowLevelClient
             var ignoredStates = new[]
             {
                 CallingState.Reconnecting, CallingState.Migrating, CallingState.Joining,
-                CallingState.Offline, CallingState.Leaving, CallingState.Left
+                CallingState.Offline, CallingState.Leaving, CallingState.Left, CallingState.ReconnectingFailed
             };
             if (ignoredStates.Any(s => s == CallState))
             {
@@ -1585,7 +1585,7 @@ namespace StreamVideo.Core.LowLevelClient
                 _reconnectStrategy = strategy;
                 _reconnectReason = reason;
 
-                var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left };
+                var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left, CallingState.Offline };
 
                 // Try to get the latest state from the server. State might have changed while we were offline
                 try

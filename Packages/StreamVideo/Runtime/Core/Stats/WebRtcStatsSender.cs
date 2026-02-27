@@ -20,6 +20,11 @@ namespace StreamVideo.Core.Stats
                 return;
             }
 
+            if (_rtcSession.CallState != CallingState.Joined)
+            {
+                return;
+            }
+
             if (_timeService.Time > _lastTimeSent + SendInterval && _currentSendTask == null)
             {
                 _periodicStatsCts = new CancellationTokenSource();

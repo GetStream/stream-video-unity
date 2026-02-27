@@ -1587,21 +1587,6 @@ namespace StreamVideo.Core.LowLevelClient
 
                 var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left, CallingState.Offline };
 
-                // Try to get the latest state from the server. State might have changed while we were offline
-                try
-                {
-                    var getCallResponse
-                        = await _lowLevelClient.InternalVideoClientApi.GetCallAsync(ActiveCall.Type, ActiveCall.Id,
-                            new GetOrCreateCallRequestInternalDTO(), GetCurrentCancellationTokenOrDefault());
-                    _cache.TryCreateOrUpdate(getCallResponse);
-                }
-                catch (Exception e)
-                {
-                    _logs.ExceptionIfDebug(e);
-                    CallState = CallingState.ReconnectingFailed;
-                    throw;
-                }
-
                 var attempt = 0;
                 var reconnectStartTime = DateTime.UtcNow;
 
@@ -1645,9 +1630,17 @@ namespace StreamVideo.Core.LowLevelClient
                     catch (Exception e)
                     {
                         _logs.ExceptionIfDebug(e);
+                        
+                        if (CallState == CallingState.Offline)
+                        {
+                            _logs.WarningIfDebug("[Reconnect] Can't reconnect while offline, stopping reconnection attempts");
+                            break;
+                        }
+                        
                         if (e is StreamApiException apiException && apiException.Unrecoverable)
                         {
                             _logs.Error("Can't reconnect due to coordinator unrecoverable error: " + apiException);
+                            CallState = CallingState.ReconnectingFailed;
                             throw;
                         }
 

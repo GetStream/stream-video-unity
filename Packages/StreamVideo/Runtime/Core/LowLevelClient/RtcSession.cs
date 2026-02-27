@@ -359,6 +359,12 @@ namespace StreamVideo.Core.LowLevelClient
 
         public async Task Join(JoinCallData joinCallData, CancellationToken cancellationToken)
         {
+            if (CallState == CallingState.Leaving)
+            {
+                _logs.WarningIfDebug($"{nameof(Join)} called while call is leaving. Waiting for leave to complete...");
+                await StopAsync();
+            }
+
             if (CallState == CallingState.Joined)
             {
                 throw new InvalidOperationException(
@@ -721,7 +727,7 @@ namespace StreamVideo.Core.LowLevelClient
             return streamCall;
         }
 
-        public async Task StopAsync(string reason = "")
+        public Task StopAsync(string reason = "")
         {
             if (UseNativeAudioBindings)
             {
@@ -733,8 +739,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (CallState == CallingState.Leaving || CallState == CallingState.Left)
             {
                 _logs.WarningIfDebug($"{nameof(StopAsync)} ignored because call is in state: " + CallState);
-                //StreamTODO: should this return a task of the ongoing stop?
-                return;
+                return _ongoingStopTask ?? Task.CompletedTask;
             }
 
             //StreamTODO: revise this. Right now StopAsync is always called on disconnect, perhaps we can leave it this way
@@ -747,6 +752,12 @@ namespace StreamVideo.Core.LowLevelClient
             CallState = CallingState.Leaving;
             _logs.InfoIfDebug("Leaving the call - cleanup session");
 
+            _ongoingStopTask = StopInternalAsync(reason);
+            return _ongoingStopTask;
+        }
+
+        private async Task StopInternalAsync(string reason)
+        {
             try
             {
                 if (_joinCallCts != null)
@@ -974,6 +985,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private TaskCompletionSource<bool> _joinTaskCompletionSource;
         private int _fastReconnectDeadlineSeconds;
+        private Task _ongoingStopTask;
 
         private WebsocketReconnectStrategy _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
         private string _reconnectReason;

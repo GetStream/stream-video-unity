@@ -460,7 +460,8 @@ namespace StreamVideo.Core
                 if (callState == CallingState.Leaving || callState == CallingState.Left)
                 {
                     _logs.Warning(
-                        $"{nameof(LeaveCallAsync)}: Call is already leaving or left, skipping leave operation.");
+                        $"{nameof(LeaveCallAsync)}: Call is already leaving or left, awaiting completion.");
+                    await InternalLowLevelClient.RtcSession.StopAsync();
                     return;
                 }
 

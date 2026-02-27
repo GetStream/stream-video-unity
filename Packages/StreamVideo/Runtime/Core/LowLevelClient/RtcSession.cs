@@ -1561,7 +1561,7 @@ namespace StreamVideo.Core.LowLevelClient
             var ignoredStates = new[]
             {
                 CallingState.Reconnecting, CallingState.Migrating, CallingState.Joining,
-                CallingState.Offline, CallingState.Leaving, CallingState.Left, CallingState.ReconnectingFailed
+                CallingState.Leaving, CallingState.Left, CallingState.ReconnectingFailed
             };
             if (ignoredStates.Any(s => s == CallState))
             {

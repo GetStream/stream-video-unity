@@ -1419,6 +1419,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
                     GetCurrentCancellationTokenOrDefault(), response => response.Error, preLog: true);
+                Subscriber.ThrowDisposedDuringOperationIfNull();
 
                 Subscriber.ResetIceRestart();
             }

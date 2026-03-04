@@ -6,6 +6,7 @@ using Google.Protobuf;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.Core.Auth;
+using StreamVideo.Core.Utils;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Logs;
@@ -18,8 +19,13 @@ using ICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
-    internal class SfuWebSocket : BasePersistentWebSocket
+    internal class SfuWebSocket : BasePersistentWebSocket<SfuWebSocket.ConnectRequest, JoinResponse>
     {
+        public struct ConnectRequest
+        {
+            public ReconnectDetails ReconnectDetails;
+        }
+        
         public event Action<SubscriberOffer> SubscriberOffer;
         public event Action<PublisherAnswer> PublisherAnswer;
         public event Action<ConnectionQualityChanged> ConnectionQualityChanged;
@@ -46,6 +52,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         
         public int SendQueueCount => WebsocketClient.SendQueueCount;
 
+        public bool IsHealthy => JoinReceived && ConnectionState == ConnectionState.Connected;
+        
+        public bool JoinReceived { get; private set; }
+        
         public SfuWebSocket(IWebsocketClient websocketClient, IReconnectScheduler reconnectScheduler,
             IAuthProvider authProvider,
             IRequestUriFactory requestUriFactory, ISerializer serializer, ITimeService timeService, ILogs logs,
@@ -54,19 +64,26 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             _applicationInfo = applicationInfo;
             _sdkVersion = sdkVersion;
+            
+            logs.WarningIfDebug("SFU instance created");
         }
 
-        public void SetSessionData(string sessionId, string sdpOffer, string sfuUrl, string sfuToken)
+        public void InitNewSession(string sessionId, string sfuUrl, string sfuToken, string subscriberOfferSdp, string publisherOfferSdp)
         {
             _sfuToken = sfuToken;
             _sfuUrl = sfuUrl;
-            _sdpOffer = sdpOffer;
+            _subscriberOfferSdp = subscriberOfferSdp;
+            _publisherOfferSdp = publisherOfferSdp;
             _sessionId = sessionId;
             
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"[SFU WS] SetSessionData: sessionId: {_sessionId}, sdpOffer: {_sdpOffer}, sfuUrl: {_sfuUrl}, sfuToken: {_sfuToken}");
+            Logs.Info($"[SFU WS] SetSessionData: sessionId: {_sessionId}, sdpOffer: {_subscriberOfferSdp}, sfuUrl: {_sfuUrl}, sfuToken: {_sfuToken}");
 #endif
+
+            JoinReceived = false;
         }
+
+        public void DebugMarkAsOld() => LogsPrefix = "[Old SFU WS]";
 
         public void SendLeaveCallRequest(string reason = "")
         {
@@ -75,13 +92,13 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
-            if (reason == null)
+            if (string.IsNullOrEmpty(reason))
             {
                 reason = "reason not provided";
             }
             
 #if STREAM_DEBUG_ENABLED
-            Logs.Info($"[SFU WS] Send {nameof(LeaveCallRequest)}: sessionId: {_sessionId}, reason: {reason}");
+            Logs.Info($"[{LogsPrefix}] Send {nameof(LeaveCallRequest)}: sessionId: {_sessionId}, reason: {reason}, Send queue: {SendQueueCount}");
 #endif
             
             var sfuRequest = new SfuRequest
@@ -118,12 +135,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             WebsocketClient.Send(sfuRequestByteArray);
         }
 
-        protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
+        protected override async Task<JoinResponse> ExecuteConnectAsync(ConnectRequest request, CancellationToken cancellationToken = default)
         {
             if (ConnectionState == ConnectionState.Disconnecting || ConnectionState == ConnectionState.Closing)
             {
-                Logs.Error($"Tried to connect to the {nameof(SfuWebSocket)} while disconnecting or closing. Aborting.");
-                return;
+                throw new Exception($"Tried to connect to the {nameof(SfuWebSocket)} in `{ConnectionState}` state. Aborting.");
             }
             //StreamTodo: validate session data
 
@@ -132,16 +148,18 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 throw new ArgumentException($"{nameof(_sfuToken)} is null or empty");
             }
 
-            _connectUserTaskSource = new TaskCompletionSource<bool>(cancellationToken);
+            _joinEventReceivedCompletionSource = new TaskCompletionSource<JoinResponse>(cancellationToken);
 
             try
             {
-                //StreamTOdo: implement missing fields: PublisherSdp, ReconnectDetails
+                JoinReceived = false;
+
                 var joinRequest = new JoinRequest
                 {
                     Token = _sfuToken,
                     SessionId = _sessionId,
-                    SubscriberSdp = _sdpOffer,
+                    SubscriberSdp = _subscriberOfferSdp,
+                    PublisherSdp = _publisherOfferSdp,
                     ClientDetails = new ClientDetails
                     {
                         Sdk = new Sdk
@@ -163,6 +181,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                             Version = _applicationInfo.DeviceModel
                         }
                     },
+                    ReconnectDetails = request.ReconnectDetails,
+                    Source = ParticipantSource.WebrtcUnspecified,
                 };
 
                 var sfuJoinRequest = new SfuRequest
@@ -180,20 +200,24 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuUri = UriFactory.CreateSfuConnectionUri(_sfuUrl);
 
                 await WebsocketClient.ConnectAsync(sfuUri, cancellationToken);
-
-                //StreamTodo: review when is the actual "connected state" - perhaps not the WS connection itself but receiving an appropriate event should set the flag
-                //e.g. are we able to send any data as soon as the connection is established?
-
                 WebsocketClient.Send(sfuJoinRequestEncoded);
 
-                await _connectUserTaskSource.Task;
+                //StreamTODO: implement timeout
+                return await _joinEventReceivedCompletionSource.Task;
+            }
+            catch (OperationCanceledException)
+            {
+                Logs.WarningIfDebug("[SFU] Connect - Cancelled");
+                throw;
             }
             catch (Exception e)
             {
-                if (!_connectUserTaskSource.TrySetException(e))
+                if (!_joinEventReceivedCompletionSource.TrySetException(e))
                 {
-                    Logs.Error($"Failed set exception in {nameof(_connectUserTaskSource)}. Exception:" + e.Message);
+                    Logs.Error($"[SFU] Connect - Failed set exception in {nameof(_joinEventReceivedCompletionSource)}. Exception:" + e.Message);
                 }
+
+                JoinReceived = false;
 
                 throw;
             }
@@ -245,7 +269,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                         break;
                     case SfuEvent.EventPayloadOneofCase.HealthCheckResponse:
                         HealthCheck?.Invoke(sfuEvent.HealthCheckResponse);
-                        OnHealthCheckReceived();
+                        OnHealthCheckReceived("SFU undefined");
                         break;
                     case SfuEvent.EventPayloadOneofCase.TrackPublished:
                         TrackPublished?.Invoke(sfuEvent.TrackPublished);
@@ -292,7 +316,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override async Task OnDisconnectingAsync(string closeMessage)
         {
-            _connectUserTaskSource?.TrySetCanceled();
+            _joinEventReceivedCompletionSource?.TrySetCanceled();
+            JoinReceived = false;
             
             WebsocketClient.ClearSendQueue();
             
@@ -312,7 +337,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 }
                 catch (Exception e)
                 {
-                    Logs.Warning("Failed to send LeaveCallRequest during disconnect: " + e.Message);
+                    Logs.Warning($"[{LogsPrefix}] Failed to send LeaveCallRequest during disconnect: " + e.Message);
                 }
             }
 
@@ -321,7 +346,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void OnDisposing()
         {
-            _connectUserTaskSource?.TrySetCanceled();
+            Logs.WarningIfDebug($"[{LogsPrefix}] Disposing SFU instance");
+            _joinEventReceivedCompletionSource?.TrySetCanceled();
 
             base.OnDisposing();
         }
@@ -330,18 +356,20 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private readonly IApplicationInfo _applicationInfo;
 
         private string _sessionId;
-        private string _sdpOffer;
+        private string _subscriberOfferSdp;
+        private string _publisherOfferSdp;
         private string _sfuUrl;
         private string _sfuToken;
 
-        private TaskCompletionSource<bool> _connectUserTaskSource;
+        private TaskCompletionSource<JoinResponse> _joinEventReceivedCompletionSource;
 
         private void OnHandleJoinResponse(JoinResponse joinResponse)
         {
             ConnectionState = ConnectionState.Connected;
 
-            _connectUserTaskSource.TrySetResult(true);
-            _connectUserTaskSource = null;
+            _joinEventReceivedCompletionSource.TrySetResult(joinResponse);
+            _joinEventReceivedCompletionSource = null;
+            JoinReceived = true;
 
             JoinResponse?.Invoke(joinResponse);
         }
@@ -441,7 +469,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             var decodedMessage = sfuEvent.ToString();
             
             // Ignoring some messages for causing too much noise in logs
-            var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged" };
+            var ignoredMessages = new[] { "health.check", "audioLevelChanged", "connectionQualityChanged", "IceTrickle", "changePublishQuality" };
             if(ignoredMessages.Any(m => decodedMessage.IndexOf(m, StringComparison.OrdinalIgnoreCase) != -1))
             {
                 return;

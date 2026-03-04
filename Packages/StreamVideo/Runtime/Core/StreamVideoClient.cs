@@ -33,7 +33,6 @@ using StreamVideo.Libs.Websockets;
 using Unity.WebRTC;
 using UnityEngine;
 using Cache = StreamVideo.Core.State.Caches.Cache;
-using AndroidAudioUsageMode = StreamVideo.Core.AndroidAudioUsageMode;
 
 namespace StreamVideo.Core
 {
@@ -48,10 +47,10 @@ namespace StreamVideo.Core
         /// 
         /// </summary>
         CoordinatorWsDisconnected,
-        
+
         VideoServerDisconnected,
     }
-    
+
     /// <summary>
     /// Android audio usage modes for Oboe audio streams.
     /// </summary>
@@ -106,21 +105,23 @@ namespace StreamVideo.Core
             var logs = factory.CreateLogger(config.LogLevel.ToLogLevel());
             var applicationInfo = factory.CreateApplicationInfo();
             var coordinatorWebSocket
-                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
-            var sfuWebSocket
-                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled());
+                = factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled(), "Coordinator");
+
             var httpClient = factory.CreateHttpClient();
             var serializer = factory.CreateSerializer();
             var timeService = factory.CreateTimeService();
             var networkMonitor = factory.CreateNetworkMonitor();
             var gameObjectRunner = factory.CreateClientRunner();
 
-            var client = new StreamVideoClient(coordinatorWebSocket, sfuWebSocket, httpClient,
+            var client = new StreamVideoClient(coordinatorWebSocket, SfuWebSocketFactory, httpClient,
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
 
             gameObjectRunner?.RunClientInstance(client);
 
             return client;
+
+            IWebsocketClient SfuWebSocketFactory()
+                => factory.CreateWebsocketClient(logs, isDebugMode: config.LogLevel.IsDebugEnabled(), "SFU");
         }
 
         /// <inheritdoc cref="StreamVideoLowLevelClient.CreateDeveloperAuthToken"/>
@@ -146,9 +147,10 @@ namespace StreamVideo.Core
 
         public Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId)
             => GetOrCreateCallAsync(callType, callId, CancellationToken.None);
-        
+
         //StreamTodo: add more params (same as in JoinCallAsync) + add to interface
-        public async Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId, CancellationToken cancellationToken)
+        public async Task<IStreamCall> GetOrCreateCallAsync(StreamCallType callType, string callId,
+            CancellationToken cancellationToken)
         {
             //StreamTodo: validate input
 
@@ -168,62 +170,10 @@ namespace StreamVideo.Core
         public async Task<IStreamCall> JoinCallAsync(StreamCallType callType, string callId, bool create, bool ring,
             bool notify, CancellationToken cancellationToken)
         {
-            var callState = InternalLowLevelClient.RtcSession.CallState;
-            if (callState == CallingState.Joined || callState == CallingState.Joining)
-            {
-                throw new StreamCallInProgressException("Cannot join a call while another call is active or joining.");
-            }
-
-            IStreamCall call;
-            if (!create)
-            {
-                //StreamTodo: check android SDK if the flow is the same
-                call = await GetCallAsync(callType, callId, cancellationToken);
-                if (call == null)
-                {
-                    throw new StreamCallNotFoundException(
-                        $"Call with type: `{callType}`, and ID: `{callId}` was not found. Both type and ID are required to identify a call.");
-                }
-            }
-            else
-            {
-                call = await GetOrCreateCallAsync(callType, callId, cancellationToken);
-            }
-
-            // StreamTodo: check state if we don't have an active session already
-            var locationHint = await InternalLowLevelClient.GetLocationHintAsync(cancellationToken);
-
-            //StreamTodo: move this logic to call.Join, this way user can create call object and join later on 
-
-            // StreamTodo: expose params
-            var joinCallRequest = new JoinCallRequestInternalDTO
-            {
-                Create = create,
-                Data = new CallRequestInternalDTO
-                {
-                    Custom = null,
-                    Members = null,
-                    SettingsOverride = null,
-
-                    //StreamTODO: check this, if we're just joining another call perhaps we shouldn't set this?
-                    StartsAt = DateTimeOffset.Now,
-                    Team = null
-                },
-                Location = locationHint,
-                MembersLimit = 0,
-                MigratingFrom = null,
-                Notify = notify,
-                Ring = ring
-            };
-
-            var joinCallResponse
-                = await InternalLowLevelClient.InternalVideoClientApi.JoinCallAsync(callType, callId, joinCallRequest);
-            _cache.TryCreateOrUpdate(joinCallResponse);
-
-            await InternalLowLevelClient.StartCallSessionAsync((StreamCall)call, cancellationToken);
-
-            CallStarted?.Invoke(call);
-            return call;
+            var joinCallData = new JoinCallData(callType, callId, create, ring, notify);
+            await InternalLowLevelClient.StartCallSessionAsync(joinCallData, cancellationToken);
+            CallStarted?.Invoke(ActiveCall);
+            return ActiveCall;
         }
 
         public void Dispose()
@@ -244,8 +194,9 @@ namespace StreamVideo.Core
 
         public Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials)
             => ConnectUserAsync(credentials, CancellationToken.None);
-        
-        public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials, CancellationToken cancellationToken)
+
+        public async Task<IStreamVideoUser> ConnectUserAsync(AuthCredentials credentials,
+            CancellationToken cancellationToken)
         {
             await InternalLowLevelClient.ConnectUserAsync(credentials, cancellationToken);
 
@@ -506,10 +457,11 @@ namespace StreamVideo.Core
             try
             {
                 var callState = InternalLowLevelClient.RtcSession.CallState;
-                if (callState == CallingState.Leaving || callState == CallingState.Offline)
+                if (callState == CallingState.Leaving || callState == CallingState.Left)
                 {
                     _logs.Warning(
-                        $"{nameof(LeaveCallAsync)}: Call is already leaving or offline, skipping leave operation.");
+                        $"{nameof(LeaveCallAsync)}: Call is already leaving or left, awaiting completion.");
+                    await InternalLowLevelClient.RtcSession.StopAsync();
                     return;
                 }
 
@@ -519,17 +471,15 @@ namespace StreamVideo.Core
             {
                 _logs.Exception(e);
             }
-
-            CallEnded?.Invoke(call);
         }
 
-        private StreamVideoClient(IWebsocketClient coordinatorWebSocket, IWebsocketClient sfuWebSocket,
+        private StreamVideoClient(IWebsocketClient coordinatorWebSocket, Func<IWebsocketClient> webSocketFactory,
             IHttpClient httpClient, ISerializer serializer, ITimeService timeService, INetworkMonitor networkMonitor,
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
 
-            InternalLowLevelClient = new StreamVideoLowLevelClient(coordinatorWebSocket, sfuWebSocket, httpClient,
+            InternalLowLevelClient = new StreamVideoLowLevelClient(coordinatorWebSocket, webSocketFactory, httpClient,
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);
 
             _cache = new Cache(this, serializer, _logs);
@@ -588,12 +538,9 @@ namespace StreamVideo.Core
 
             lowLevelClient.Disconnected += OnLowLevelClientDisconnected;
             lowLevelClient.SfuDisconnected += OnLowLevelClientSfuDisconnected;
-            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession += OnRtcPeerConnectionDisconnectedDuringSession;
-        }
-
-        private void OnRtcPeerConnectionDisconnectedDuringSession()
-        {
-            Disconnected?.Invoke(DisconnectReason.VideoServerDisconnected);
+            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession
+                += OnRtcPeerConnectionDisconnectedDuringSession;
+            lowLevelClient.RtcSession.CallStateChanged += OnRtcCallStateChanged;
         }
 
         private void UnsubscribeFrom(StreamVideoLowLevelClient lowLevelClient)
@@ -632,8 +579,10 @@ namespace StreamVideo.Core
 
             lowLevelClient.Disconnected -= OnLowLevelClientDisconnected;
             lowLevelClient.SfuDisconnected -= OnLowLevelClientSfuDisconnected;
-            
-            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession -= OnRtcPeerConnectionDisconnectedDuringSession;
+
+            lowLevelClient.RtcSession.PeerConnectionDisconnectedDuringSession
+                -= OnRtcPeerConnectionDisconnectedDuringSession;
+            lowLevelClient.RtcSession.CallStateChanged -= OnRtcCallStateChanged;
         }
 
         private void InternalLowLevelClientOnConnected()
@@ -879,6 +828,19 @@ namespace StreamVideo.Core
             loadable.LoadFromDto(eventData, _cache);
 
             activeCall.NotifyCallEventReceived(callEvent);
+        }
+
+        private void OnRtcPeerConnectionDisconnectedDuringSession()
+        {
+            Disconnected?.Invoke(DisconnectReason.VideoServerDisconnected);
+        }
+
+        private void OnRtcCallStateChanged(CallingState previousState, CallingState newState)
+        {
+            if (newState == CallingState.Left)
+            {
+                CallEnded?.Invoke(ActiveCall);
+            }
         }
 
         private void OnLowLevelClientSfuDisconnected() => Disconnected?.Invoke(DisconnectReason.SfuWsDisconnected);

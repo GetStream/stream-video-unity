@@ -158,8 +158,9 @@ namespace StreamVideo.ExampleProject
             {
                 return;
             }
+
             _isUserMutedLocally.Remove(participant.UserId);
-            
+
             if (participant.AudioTrack != null && participant.AudioTrack is StreamAudioTrack streamAudioTrack)
             {
                 streamAudioTrack.UnmuteLocally();
@@ -378,8 +379,15 @@ namespace StreamVideo.ExampleProject
                 }
 
                 var callId = _activeCall.Id;
-                var localParticipant = _activeCall.Participants.First(p => p.IsLocalParticipant);
-                Client.SendDebugLogs(call.Id, localParticipant.SessionId);
+                var localParticipant = _activeCall.Participants.FirstOrDefault(p => p.IsLocalParticipant);
+                if (localParticipant != null)
+                {
+                    Client.SendDebugLogs(call.Id, localParticipant.SessionId);
+                }
+                else
+                {
+                    Debug.LogWarning("[Debug] Failed to find local participant in active call to send debug stats.");
+                }
             }
             catch (Exception e)
             {

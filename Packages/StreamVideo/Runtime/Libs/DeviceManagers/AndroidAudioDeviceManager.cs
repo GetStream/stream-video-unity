@@ -29,7 +29,7 @@ namespace StreamVideo.Libs.DeviceManagers
         {
             var routeId = CallStatic<int>("getAudioRoute");
             var routeName = GetRouteName(routeId);
-            Debug.Log($"[AndroidAudioDeviceManager] Current audio route: {routeName} (ID: {routeId})");
+            //Debug.Log($"[AndroidAudioDeviceManager] Current audio route: {routeName} (ID: {routeId})");
         }
         
         private static string GetRouteName(int routeId)

@@ -22,11 +22,6 @@ namespace StreamVideo.ExampleProject.UI
             }
 
             Participant = participant ?? throw new ArgumentNullException(nameof(participant));
-
-            foreach (var track in Participant.GetTracks())
-            {
-                OnParticipantTrackAdded(Participant, track);
-            }
             
             OnIsSpeakingChanged(Participant.IsSpeaking);
             OnAudioLevelChanged(Participant.AudioLevel);
@@ -167,10 +162,9 @@ namespace StreamVideo.ExampleProject.UI
                 case StreamAudioTrack streamAudioTrack:
                     if (_audioSource != null)
                     {
-                        //StreamTodo: debug why we're sometimes getting multiple audio tracks despite publishing a single audio track
-                        //StreamTodo: handle multiple audio tracks. This is a valid use case
-                        Debug.LogError("Multiple audio track!");
-                        return;
+                        // A new track for the same participant can be received after reconnecting
+                        Destroy(_audioSource);
+                        _audioSource = null;
                     }
 
                     _audioSource = gameObject.AddComponent<AudioSource>();

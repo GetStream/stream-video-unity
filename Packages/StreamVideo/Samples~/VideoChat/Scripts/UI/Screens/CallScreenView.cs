@@ -196,6 +196,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         private void AddParticipant(IStreamVideoCallParticipant participant, bool sortParticipantViews)
         {
+            Debug.Log("Participant Joined. SessionID: " + participant.SessionId);
             var parent = GetParticipantViewParent(participant);
             var view = Instantiate(_participantViewPrefab, parent);
             view.Init(participant, VideoManager);
@@ -217,6 +218,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         private void RemoveParticipant(string sessionId, string userId, bool sortParticipantViews)
         {
+            Debug.Log("Participant Left. SessionID: " + sessionId);
             if (!_participantSessionIdToView.TryGetValue(sessionId, out var view))
             {
                 Debug.LogError("Failed to find view for removed participant with sessionId: " + sessionId);

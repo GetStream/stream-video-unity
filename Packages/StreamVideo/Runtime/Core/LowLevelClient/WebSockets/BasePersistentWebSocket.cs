@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.Auth;
 using StreamVideo.Core.Exceptions;
+using StreamVideo.Core.Utils;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
@@ -16,13 +17,16 @@ using UnityEngine;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
-    internal abstract class BasePersistentWebSocket : IPersistentWebSocket, IReconnectTarget
+    internal abstract class BasePersistentWebSocket<TConnectRequest, TConnectResponse> : IPersistentWebSocket<TConnectRequest, TConnectResponse>, IReconnectTarget
     {
         public event ConnectionStateChangeHandler ConnectionStateChanged;
         public event Action Connected;
         public event Action Disconnected;
 
         public const int ConnectTimeoutMs = 1000;
+        
+        public bool IsLeaving { get; private set; }
+        public bool IsClosingClean { get; private set; }
 
         public ConnectionState ConnectionState
         {
@@ -36,11 +40,16 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
                 var previous = _connectionState;
                 _connectionState = value;
+                
+                if (value == ConnectionState.Connected)
+                {
+                    OnConnected();
+                }
+                
                 ConnectionStateChanged?.Invoke(previous, _connectionState);
 
                 if (value == ConnectionState.Connected)
                 {
-                    OnConnected();
                     Connected?.Invoke();
                 }
                 else if (value == ConnectionState.Disconnected)
@@ -54,6 +63,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         public void Update()
         {
+            TryProcessPendingDisconnectedStateChange();
             TryHandleWebsocketsConnectionFailed();
             TryToReconnect();
 
@@ -76,22 +86,39 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 return;
             }
 
-#if STREAM_DEBUG_ENABLED
-            Logs.Info($"{GetType()} TryToReconnect");
-#endif
+            // StreamTODO: revise this. The wrapper state should be perfectly in sync with the inner WebSocket
+            // Most likely this class should fully rely on WS state and not maintain it's own state
+            // This check should be handled already by the ConnectionState.IsValidToConnect() above
+            if (WebsocketClient != null && (WebsocketClient.IsConnecting || WebsocketClient.IsConnected))
+            {
+                return;
+            }
 
+            if (GetType() == typeof(SfuWebSocket))
+            {
+                // RtcSession controls SFU WS reconnections
+                return;
+            }
+
+#if STREAM_DEBUG_ENABLED
+            Logs.Info($"{LogsPrefix} TryToReconnect");
+#endif
+            
+            // StreamTODO: this is not handling the original Cancellation Token passed from the user
             var cts = new CancellationTokenSource();
-            cts.CancelAfter(ConnectTimeoutMs);
-            ConnectAsync(cts.Token).LogIfFailed();
+            ConnectAsync(_lastConnectRequest, cts.Token).LogIfFailed();
         }
 
-        public Task ConnectAsync(CancellationToken cancellationToken = default)
+        public Task<TConnectResponse> ConnectAsync(TConnectRequest request, CancellationToken cancellationToken = default)
         {
+            _lastConnectRequest = request;
             //StreamTodo: TryCancelWaitingForUserConnection()
             ConnectionState = ConnectionState.Connecting;
             try
             {
-                return ExecuteConnectAsync(cancellationToken);
+                IsLeaving = false;
+                IsClosingClean = false;
+                return ExecuteConnectAsync(request, cancellationToken);
             }
             catch (Exception)
             {
@@ -109,6 +136,14 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
 
             ConnectionState = ConnectionState.Disconnecting;
+            IsLeaving = true;
+
+            if (closeStatus == WebSocketCloseStatus.NormalClosure)
+            {
+                IsClosingClean = true;
+            }
+
+            _reconnectScheduler.Stop();
 
             await OnDisconnectingAsync(closeMessage);
 
@@ -217,13 +252,13 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected abstract void SendHealthCheck();
 
-        protected abstract Task ExecuteConnectAsync(CancellationToken cancellationToken = default);
+        protected abstract Task<TConnectResponse> ExecuteConnectAsync(TConnectRequest request, CancellationToken cancellationToken = default);
 
-        protected void OnHealthCheckReceived()
+        protected void OnHealthCheckReceived(string connectionId)
         {
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_HEALTH_EVENTS
             var timeSinceLast = Mathf.Round(TimeService.Time - _lastHealthCheckReceivedTime);
-            //Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds");
+            Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds. Connection: {connectionId}. Current: " + TimeService.Time);
 #endif
             _lastHealthCheckReceivedTime = TimeService.Time;
         }
@@ -250,6 +285,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private bool _websocketConnectionFailed;
         private float _lastHealthCheckReceivedTime;
         private float _lastHealthCheckSendTime;
+
+        private TConnectRequest _lastConnectRequest;
+        private bool _pendingDisconnectedStateChange;
 
         private void TryHandleWebsocketsConnectionFailed()
         {
@@ -284,7 +322,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 _lastHealthCheckSendTime = TimeService.Time;
 
 #if STREAM_DEBUG_ENABLED
-                //Logs.Info($"{LogsPrefix} Health check SENT. Time since last: {Mathf.Round(timeSinceLastHealthCheckSent)} seconds");
+                //Logs.Info($"{LogsPrefix} Health check SENT. Time since last: {Mathf.Round(timeSinceLastHealthCheckSent)} seconds. Current: {TimeService.Time}");
 #endif
             }
 
@@ -292,7 +330,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             if (timeSinceLastHealthCheck > HealthCheckMaxWaitingTime)
             {
                 Logs.Warning(
-                    $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}, reset connection");
+                    $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}, reset connection. Last: {_lastHealthCheckReceivedTime}, Current: {TimeService.Time}");
                 WebsocketClient
                     .DisconnectAsync(WebSocketCloseStatus.InternalServerError,
                         $"{LogsPrefix} Health check was not received since: {timeSinceLastHealthCheck}")
@@ -312,17 +350,28 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
+        // Can be called from the background thread
         private void OnDisconnected()
         {
 #if STREAM_DEBUG_ENABLED
-            Logs.Warning($"{LogsPrefix} Websocket Disconnected. Messages left: {WebsocketClient.ReceiveQueueCount}");
+            Logs.Warning($"[{LogsPrefix}] Websocket Disconnected. Messages left: {WebsocketClient.ReceiveQueueCount}");
 #endif
-            ConnectionState = ConnectionState.Disconnected;
+            _pendingDisconnectedStateChange = true;
+        }
+
+        private void TryProcessPendingDisconnectedStateChange()
+        {
+            if (_pendingDisconnectedStateChange)
+            {
+                _pendingDisconnectedStateChange = false;
+                ConnectionState = ConnectionState.Disconnected;
+            }
         }
 
         private void OnConnected()
         {
             _lastHealthCheckReceivedTime = TimeService.Time;
+            Logs.WarningIfDebug($"[{LogsPrefix}] OnConnected - Reset _lastHealthCheckReceivedTime to " + TimeService.Time);
         }
 
         private TEvent DeserializeEvent<TDto, TEvent>(string content, out TDto dto)
@@ -353,6 +402,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             ConnectionState = ConnectionState.WaitToReconnect;
             var timeLeft = NextReconnectTime.Value - TimeService.Time;
 
+            _logSb.Append("[");
+            _logSb.Append(LogsPrefix);
+            _logSb.Append("] ");
             _logSb.Append("Reconnect scheduled to time: <b>");
             _logSb.Append(Math.Round(NextReconnectTime.Value));
             _logSb.Append(" seconds</b>, current time: <b>");

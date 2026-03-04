@@ -20,18 +20,29 @@ namespace StreamVideo.Core.Stats
                 return;
             }
 
+            if (_rtcSession.CallState != CallingState.Joined)
+            {
+                return;
+            }
+
             if (_timeService.Time > _lastTimeSent + SendInterval && _currentSendTask == null)
             {
-                //StreamTODO: consider adding cancellation token support here -> leaving the call should cancel any ongoing operations
-                _currentSendTask = CollectAndSend(CancellationToken.None).ContinueWith(t =>
+                _periodicStatsCts = new CancellationTokenSource();
+                var cts = _periodicStatsCts;
+                _currentSendTask = CollectAndSend(cts.Token).ContinueWith(t =>
                 {
                     _currentSendTask = null;
-                    
+                    cts.Dispose();
+                    if (ReferenceEquals(_periodicStatsCts, cts))
+                    {
+                        _periodicStatsCts = null;
+                    }
+
                     if (_rtcSession.CallState == CallingState.Joining)
                     {
                         t.LogIfFailed();
                     }
-                });
+                }, TaskScheduler.FromCurrentSynchronizationContext());
                 _lastTimeSent = _timeService.Time;
             }
         }
@@ -49,7 +60,15 @@ namespace StreamVideo.Core.Stats
 
             if (_currentSendTask != null)
             {
-                await _currentSendTask;
+                var maxWaitForCurrentSend = Task.Delay(500, cancellationToken);
+                var completedFirst = await Task.WhenAny(_currentSendTask, maxWaitForCurrentSend);
+                if (completedFirst != _currentSendTask)
+                {
+                    _periodicStatsCts?.Cancel();
+                    await Task.WhenAny(_currentSendTask, Task.Delay(Timeout.Infinite, cancellationToken));
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
             await CollectAndSend(cancellationToken);
@@ -79,6 +98,7 @@ namespace StreamVideo.Core.Stats
 
         private float _lastTimeSent;
         private Task _currentSendTask;
+        private CancellationTokenSource _periodicStatsCts;
 
         private async Task CollectAndSend(CancellationToken cancellationToken)
         {
@@ -107,7 +127,7 @@ namespace StreamVideo.Core.Stats
 
             var request = new SendStatsRequest
             {
-                SessionId = _rtcSession.SessionId,
+                SessionId = _rtcSession.SessionId.ToString(),
                 UnifiedSessionId = _rtcSession.ActiveCall.UnifiedSessionId,
                 SubscriberStats = subscriberStatsJson,
                 PublisherStats = publisherStatsJson,

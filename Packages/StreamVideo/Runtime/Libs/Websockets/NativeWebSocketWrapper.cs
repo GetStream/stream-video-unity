@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NativeWebSocket;
@@ -23,6 +22,8 @@ namespace StreamVideo.Libs.Websockets
         
         public int ReceiveQueueCount => _messages.Count;
         public int SendQueueCount => throw new NotImplementedException();
+        public bool IsConnected => _webSocket.State == WebSocketState.Open;
+        public bool IsConnecting => _webSocket.State == WebSocketState.Connecting;
 
         public NativeWebSocketWrapper(ILogs logs, bool isDebugMode)
         {

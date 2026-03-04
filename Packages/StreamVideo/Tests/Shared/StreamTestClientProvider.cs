@@ -163,6 +163,7 @@ namespace StreamVideo.Tests.Shared
         {
             Debug.LogWarning("TryStopUpdateTask");
             _updateTaskCts?.Cancel();
+            _updateTask = null;
         }
 
         private async Task UpdateTaskAsync()

@@ -183,7 +183,19 @@ namespace StreamVideo.Core.DeviceManagers
 
             if (_targetAudioSourceContainer != null)
             {
+#if UNITY_EDITOR
+                if (Application.isPlaying)
+                {
+                    UnityEngine.Object.Destroy(_targetAudioSourceContainer);
+                }
+                else
+                {
+                    UnityEngine.Object.DestroyImmediate(_targetAudioSourceContainer);
+                }
+#else
                 UnityEngine.Object.Destroy(_targetAudioSourceContainer);
+#endif
+                _targetAudioSourceContainer = null;
             }
 
             base.OnDisposing();

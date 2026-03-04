@@ -29,11 +29,12 @@ namespace StreamVideo.Libs.Websockets
         public int SendQueueCount => _sendQueue.Count;
 
         /// <param name="isDebugMode">Additional logs will be printed</param>
-        public WebsocketClient(ILogs logs, Encoding encoding = default, bool isDebugMode = false)
+        public WebsocketClient(ILogs logs, Encoding encoding = default, bool isDebugMode = false, string debugTag = "")
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _encoding = encoding ?? DefaultEncoding;
             _isDebugMode = isDebugMode;
+            _debugTag = debugTag;
         }
 
         public bool TryDequeueMessage(out byte[] message) => _receiveQueue.TryDequeue(out message);
@@ -50,10 +51,14 @@ namespace StreamVideo.Libs.Websockets
 
             try
             {
-                await TryDisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
                     "Clean up resources before connecting");
                 cancellationToken.ThrowIfCancellationRequested();
                 _connectionCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning($"[{_debugTag}] {nameof(ConnectAsync)} to `{serverUri}`");
+#endif
 
                 _internalClient = new ClientWebSocket();
                 _internalClient.Options.SetRequestHeader("User-Agent", "unity-video-sdk-ws-client");
@@ -63,23 +68,31 @@ namespace StreamVideo.Libs.Websockets
             catch (OperationCanceledException e)
             {
                 LogExceptionIfDebugMode(e);
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                    "Closing because operation was cancelled.");
                 throw;
             }
             catch (WebSocketException e)
             {
                 LogExceptionIfDebugMode(e);
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                    "Closing because of exception: " + e.Message);
                 OnConnectionFailed();
                 throw;
             }
             catch (SocketException e)
             {
                 LogExceptionIfDebugMode(e);
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                    "Closing because of exception: " + e.Message);
                 OnConnectionFailed();
                 throw;
             }
             catch (Exception e)
             {
                 LogExceptionIfDebugMode(e);
+                await DisposeResourcesAsync(WebSocketCloseStatus.NormalClosure,
+                    "Closing because of exception: " + e.Message);
                 OnConnectionFailed();
                 throw;
             }
@@ -130,8 +143,8 @@ namespace StreamVideo.Libs.Websockets
 
         public async Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage)
         {
-            LogInfoIfDebugMode("Disconnect");
-            await TryDisposeResourcesAsync(closeStatus, closeMessage);
+            LogInfoIfDebugMode($"[{_debugTag}] Disconnect");
+            await DisposeResourcesAsync(closeStatus, closeMessage);
 
             _receiveQueue.Clear();
             while (_sendQueue.TryTake(out _))
@@ -150,7 +163,7 @@ namespace StreamVideo.Libs.Websockets
 
         public void Dispose()
         {
-            LogInfoIfDebugMode("Dispose");
+            LogInfoIfDebugMode($"[{_debugTag}] Dispose");
             DisconnectAsync(WebSocketCloseStatus.NormalClosure, "WebSocket client is disposed")
                 .ContinueWith(_ => LogExceptionIfDebugMode(_.Exception), TaskContinuationOptions.OnlyOnFaulted);
         }
@@ -178,6 +191,7 @@ namespace StreamVideo.Libs.Websockets
         private readonly ILogs _logs;
         private readonly Encoding _encoding;
         private readonly bool _isDebugMode;
+        private readonly string _debugTag;
 
         private readonly SemaphoreSlim _backgroundSendSemaphore = new SemaphoreSlim(1);
         private readonly SemaphoreSlim _backgroundReceiveSemaphore = new SemaphoreSlim(1);
@@ -188,6 +202,7 @@ namespace StreamVideo.Libs.Websockets
         private Uri _uri;
         private ClientWebSocket _internalClient;
         private CancellationTokenSource _connectionCts;
+        private int _isDisposing;
 
         private async void SendMessagesCallback(object state)
         {
@@ -270,63 +285,85 @@ namespace StreamVideo.Libs.Websockets
             }
         }
 
-        private async Task TryDisposeResourcesAsync(WebSocketCloseStatus closeStatus, string closeMessage)
+        private async Task DisposeResourcesAsync(WebSocketCloseStatus closeStatus, string closeMessage)
         {
-            try
-            {
-                if (_backgroundReceiveTimer != null)
-                {
-                    await _backgroundReceiveTimer.DisposeAsync();
-                }
-
-                if (_backgroundSendTimer != null)
-                {
-                    await _backgroundSendTimer.DisposeAsync();
-                }
-            }
-            catch (Exception e)
-            {
-                LogExceptionIfDebugMode(e);
-            }
-
-            try
-            {
-                if (_connectionCts != null)
-                {
-                    _connectionCts.Cancel();
-                    _connectionCts.Dispose();
-                    _connectionCts = null;
-                }
-            }
-            catch (Exception e)
-            {
-                LogExceptionIfDebugMode(e);
-            }
-
-            if (_internalClient == null)
+            if (Interlocked.CompareExchange(ref _isDisposing, 1, 0) != 0)
             {
                 return;
             }
 
             try
             {
-                if (!_clientClosedStates.Contains(_internalClient.State))
+                try
                 {
-                    await _internalClient.CloseOutputAsync(closeStatus, closeMessage, CancellationToken.None);
+                    if (_backgroundReceiveTimer != null)
+                    {
+                        await _backgroundReceiveTimer.DisposeAsync();
+                        _backgroundReceiveTimer = null;
+                    }
+
+                    if (_backgroundSendTimer != null)
+                    {
+                        await _backgroundSendTimer.DisposeAsync();
+                        _backgroundSendTimer = null;
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                LogExceptionIfDebugMode(e);
+                catch (Exception e)
+                {
+                    LogExceptionIfDebugMode(e);
+                }
+
+                try
+                {
+                    if (_connectionCts != null)
+                    {
+#if STREAM_DEBUG_ENABLED
+                        _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Cancel Connection Token");
+#endif
+                        _connectionCts.Cancel();
+                        _connectionCts.Dispose();
+                        _connectionCts = null;
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogExceptionIfDebugMode(e);
+                }
+
+                if (_internalClient == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    if (!_clientClosedStates.Contains(_internalClient.State))
+                    {
+#if STREAM_DEBUG_ENABLED
+                        _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Close open client");
+#endif
+                        await _internalClient.CloseOutputAsync(closeStatus, closeMessage, CancellationToken.None);
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogExceptionIfDebugMode(e);
+                }
+                finally
+                {
+                    if (_internalClient != null)
+                    {
+#if STREAM_DEBUG_ENABLED
+                        _logs.Warning($"[{_debugTag}] TryDisposeResourcesAsync - Dispose Client");
+#endif
+                        _internalClient.Dispose();
+                        _internalClient = null;
+                    }
+                }
             }
             finally
             {
-                //StreamTOdo: this fixes possible null ref if Dispose was called multiple times but perhaps this logic should not be called multiple times
-                if (_internalClient == null)
-                {
-                    _internalClient.Dispose();
-                    _internalClient = null;
-                }
+                Interlocked.Exchange(ref _isDisposing, 0);
             }
         }
 

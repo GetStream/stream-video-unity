@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -8,6 +9,7 @@ using StreamVideo.Core.InternalDTO.Models;
 using StreamVideo.Core.InternalDTO.Requests;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.Models;
+using StreamVideo.Core.Utils;
 using StreamVideo.Core.Web;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
@@ -22,8 +24,18 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
     /// Connected state is set after we receive the `connection.ok` event from the WS.
     /// So OnConnectAsync is not only establishing a WS connection but also waiting for the event
     /// </summary>
-    internal class CoordinatorWebSocket : BasePersistentWebSocket
+    internal class CoordinatorWebSocket : BasePersistentWebSocket<CoordinatorWebSocket.ConnectRequest, CoordinatorWebSocket.ConnectResponse>
     {
+        public struct ConnectRequest
+        {
+            
+        }
+
+        public struct ConnectResponse
+        {
+            
+        }
+        
         public string ConnectionId { get; private set; }
         public OwnUserResponseInternalDTO LocalUserDto { get; private set; }
 
@@ -37,6 +49,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
             RegisterEventType<ConnectedEventInternalDTO>(CoordinatorEventType.ConnectionOk,
                 HandleConnectedEvent);
+            
+            logs.WarningIfDebug("Coordinator instance created");
         }
 
         protected override string LogsPrefix { get; set; } = "Coordinator";
@@ -62,7 +76,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             }
         }
 
-        protected override async Task ExecuteConnectAsync(CancellationToken cancellationToken = default)
+        protected override async Task<ConnectResponse> ExecuteConnectAsync(ConnectRequest request, CancellationToken cancellationToken = default)
         {
             //StreamTodo: 2. timeout
             //StreamTodo: 3. multiple attempts (should be covered by reconnect scheduler)
@@ -101,6 +115,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             WebsocketClient.Send(serializedAuthMsg);
 
             await _connectUserTaskSource.Task;
+            return default;
         }
 
         protected override async Task OnDisconnectingAsync(string closeMessage)
@@ -112,6 +127,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void OnDisposing()
         {
+            Logs.WarningIfDebug("Disposing coordinator instance");
             _connectUserTaskSource?.TrySetCanceled();
             
             base.OnDisposing();
@@ -119,13 +135,23 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected override void SendHealthCheck()
         {
-            WebsocketClient.Send(Serializer.Serialize(new HealthCheckEventInternalDTO()));
+            try
+            {
+                WebsocketClient.Send(Serializer.Serialize(new HealthCheckEventInternalDTO()
+                {
+                    ConnectionId = ConnectionId
+                }));
+            }
+            catch (Exception e)
+            {
+                Logs.ErrorIfDebug($"[{GetType().Name}] Failed to send health check. Error: " + e.Message);
+            }
         }
 
         private readonly StringBuilder _errorSb = new StringBuilder();
         private TaskCompletionSource<bool> _connectUserTaskSource;
 
-        private void HandleHealthCheckEvent(HealthCheckEventInternalDTO healthCheckEvent) => OnHealthCheckReceived();
+        private void HandleHealthCheckEvent(HealthCheckEventInternalDTO healthCheckEvent) => OnHealthCheckReceived(healthCheckEvent.ConnectionId);
 
         private void HandleConnectedEvent(ConnectedEventInternalDTO connectedEvent)
         {
@@ -139,7 +165,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _connectUserTaskSource = null;
 
 #if STREAM_DEBUG_ENABLED
-            Logs.Info("Connected to the coordinator. Connection id: " + ConnectionId);
+            Logs.Info($"[{TimeService.Time}] Connected to the coordinator. Connection id: " + ConnectionId);
 #endif
         }
 

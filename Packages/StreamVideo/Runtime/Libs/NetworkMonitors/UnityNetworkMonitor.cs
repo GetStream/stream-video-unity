@@ -30,7 +30,7 @@ namespace StreamVideo.Libs.NetworkMonitors
                 return;
             }
 
-            var wasReachable = IsReachable(_lastState.Value);
+            var wasReachable = IsReachable(prevLastState.Value);
 
             if (wasReachable && !isReachable)
             {

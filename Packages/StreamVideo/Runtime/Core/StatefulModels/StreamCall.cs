@@ -63,7 +63,7 @@ namespace StreamVideo.Core.StatefulModels
         //StreamTodo: Maybe add OtherParticipants -> All participants except for the local participant?
         public IReadOnlyList<IStreamVideoCallParticipant> Participants => Session?.Participants;
 
-        public ParticipantCount ParticipantCount => Session.ParticipantCount;
+        public ParticipantCount ParticipantCount => Session?.ParticipantCount;
 
         public bool IsLocalUserOwner
         {
@@ -143,7 +143,31 @@ namespace StreamVideo.Core.StatefulModels
         public bool Recording { get; private set; }
 
         //StreamTodo: perhaps this should be part of IStreamCall state
-        public CallSession Session { get; private set; }
+        public CallSession Session
+        {
+            get => _session;
+            private set
+            {
+                if (_session == value)
+                {
+                    return;
+                }
+
+                if (_session != null)
+                {
+                    _session.ParticipantAdded -= OnSessionParticipantAdded;
+                    _session.ParticipantRemoved -= OnSessionParticipantRemoved;
+                }
+
+                _session = value;
+
+                if (_session != null)
+                {
+                    _session.ParticipantAdded += OnSessionParticipantAdded;
+                    _session.ParticipantRemoved += OnSessionParticipantRemoved;
+                }
+            }
+        }
 
         public CallSettings Settings { get; private set; }
 
@@ -657,11 +681,7 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
         {
-            var participant = Session.UpdateFromSfu(participantJoined, cache);
-            LowLevelClient.RtcSession.NotifyParticipantJoined(participantJoined.Participant.SessionId);
-            UpdateSortedParticipants();
-
-            ParticipantJoined?.Invoke(participant);
+            Session.UpdateFromSfu(participantJoined, cache);
         }
 
         internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
@@ -680,23 +700,7 @@ namespace StreamVideo.Core.StatefulModels
                 Logs.Warning("Error when generating debug log: " + e.Message);
             }
 
-            LowLevelClient.RtcSession.NotifyParticipantLeft(participantLeft.Participant.SessionId);
-
-            var participant = Session.UpdateFromSfu(participantLeft, cache);
-
-            _localPinsSessionIds.RemoveAll(participant.sessionId);
-            _serverPinsSessionIds.RemoveAll(pin => pin == participant.sessionId);
-
-            UpdatePinnedParticipants(out var updatedSortedParticipants);
-            if (!updatedSortedParticipants)
-            {
-                UpdateSortedParticipants();
-            }
-
-            cache.CallParticipants.TryRemove(participant.sessionId);
-
-            //StreamTodo: if we delete the participant from cache we should then pass SessionId and UserId
-            ParticipantLeft?.Invoke(participant.sessionId, participant.userId);
+            Session.UpdateFromSfu(participantLeft, cache);
         }
 
         internal void UpdateFromSfu(DominantSpeakerChanged dominantSpeakerChanged, ICache cache)
@@ -726,6 +730,11 @@ namespace StreamVideo.Core.StatefulModels
             Session?.UpdateFromSfu(audioLevelChanged);
         }
 
+        internal void UpdateFromSfu(ConnectionQualityChanged connectionQualityChanged)
+        {
+            Session?.UpdateFromSfu(connectionQualityChanged);
+        }
+
         internal void UpdateFromCoordinator(CallSessionParticipantCountsUpdatedEventInternalDTO eventData)
         {
             Session?.UpdateFromCoordinator(eventData, Client.InternalLowLevelClient.RtcSession.CallState);
@@ -733,16 +742,14 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void UpdateFromCoordinator(CallSessionParticipantJoinedEventInternalDTO eventData, ICache cache)
         {
+            // ParticipantJoined event is fired by CallSession via ParticipantAdded
             Session?.UpdateFromCoordinator(eventData, cache, Client.InternalLowLevelClient.RtcSession.CallState);
-
-            //StreamTodo: we should extract AddParticipant logic from SFU and whatever is received first (SFU or Coordinator) should handle it
         }
 
         internal void UpdateFromCoordinator(CallSessionParticipantLeftEventInternalDTO eventData, ICache cache)
         {
+            // ParticipantLeft event is fired by CallSession via ParticipantRemoved
             Session?.UpdateFromCoordinator(eventData, cache, Client.InternalLowLevelClient.RtcSession.CallState);
-
-            //StreamTodo: we should extract RemoveParticipant logic from SFU and whatever is received first (SFU or Coordinator) should handle it
         }
 
         //StreamTodo: missing TrackRemoved or perhaps we should not care whether a track was added/removed but only published/unpublished -> enabled/disabled
@@ -807,8 +814,37 @@ namespace StreamVideo.Core.StatefulModels
             }
 
             _ownCapabilities.TryReplaceEnumStructsFromDtoCollection(updatedCallPermissionsEvent.OwnCapabilities);
+        }
+
+        /// <summary>
+        /// Update own capabilities based on SFU call grants.
+        /// Grants take precedence over coordinator-provided capabilities.
+        /// </summary>
+        internal void UpdateFromSfu(CallGrantsUpdated callGrantsUpdated)
+        {
+            var grants = callGrantsUpdated.CurrentGrants;
+            if (grants == null)
+            {
+                return;
+            }
+
+            void SetCapability(OwnCapability capability, bool allowed)
+            {
+                var index = _ownCapabilities.IndexOf(capability);
+                if (allowed && index < 0)
+                {
+                    _ownCapabilities.Add(capability);
+                }
+                else if (!allowed && index >= 0)
+                {
+                    _ownCapabilities.RemoveAt(index);
+                }
+            }
 
             //StreamTodo: we should probably expose an event OwnCapabilitiesChanged
+            SetCapability(OwnCapability.SendAudio, grants.CanPublishAudio);
+            SetCapability(OwnCapability.SendVideo, grants.CanPublishVideo);
+            SetCapability(OwnCapability.ScreenShare, grants.CanScreenshare);
         }
 
         internal void InternalHandleCallRecordingStartedEvent(CallReactionEventInternalDTO callReactionEvent)
@@ -903,8 +939,34 @@ namespace StreamVideo.Core.StatefulModels
 
         private readonly StreamCallType _type;
 
+        private CallSession _session;
         private string _id;
         private IStreamVideoCallParticipant _dominantSpeaker;
+
+        private void OnSessionParticipantAdded(IStreamVideoCallParticipant participant)
+        {
+            LowLevelClient.RtcSession.NotifyParticipantJoined(participant.SessionId);
+            UpdateSortedParticipants();
+            ParticipantJoined?.Invoke(participant);
+        }
+
+        private void OnSessionParticipantRemoved(string sessionId, string userId)
+        {
+            LowLevelClient.RtcSession.NotifyParticipantLeft(sessionId);
+
+            _localPinsSessionIds.RemoveAll(sessionId);
+            _serverPinsSessionIds.RemoveAll(pin => pin == sessionId);
+
+            UpdatePinnedParticipants(out var updatedSortedParticipants);
+            if (!updatedSortedParticipants)
+            {
+                UpdateSortedParticipants();
+            }
+
+            Cache.CallParticipants.TryRemove(sessionId);
+
+            ParticipantLeft?.Invoke(sessionId, userId);
+        }
 
         private void UpdateServerPins(IEnumerable<Pin> pins)
         {

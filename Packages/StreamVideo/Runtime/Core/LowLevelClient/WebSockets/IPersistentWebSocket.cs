@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
-    internal interface IPersistentWebSocket : IDisposable
+    internal interface IPersistentWebSocket<TConnectRequest, TConnectResponse> : IDisposable
     {
         event Action Connected;
         event ConnectionStateChangeHandler ConnectionStateChanged;
@@ -14,7 +14,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         void Update();
 
-        Task ConnectAsync(CancellationToken cancellationToken = default);
+        Task<TConnectResponse> ConnectAsync(TConnectRequest request, CancellationToken cancellationToken = default);
 
         Task DisconnectAsync(WebSocketCloseStatus closeStatus, string closeMessage);
 

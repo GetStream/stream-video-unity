@@ -41,7 +41,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var previous = _connectionState;
                 _connectionState = value;
                 
-                // Apply state changes before raising any events so that event responders have the latest state
                 if (value == ConnectionState.Connected)
                 {
                     OnConnected();
@@ -105,10 +104,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             Logs.Info($"{LogsPrefix} TryToReconnect");
 #endif
             
-
             // StreamTODO: this is not handling the original Cancellation Token passed from the user
             var cts = new CancellationTokenSource();
-            //cts.CancelAfter(ConnectTimeoutMs);
             ConnectAsync(_lastConnectRequest, cts.Token).LogIfFailed();
         }
 
@@ -259,9 +256,9 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         protected void OnHealthCheckReceived(string connectionId)
         {
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_HEALTH_EVENTS
             var timeSinceLast = Mathf.Round(TimeService.Time - _lastHealthCheckReceivedTime);
-            //Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds. Connection: {connectionId}. Current: " + TimeService.Time);
+            Logs.Info($"{LogsPrefix} Health check RECEIVED. Time since last: {timeSinceLast} seconds. Connection: {connectionId}. Current: " + TimeService.Time);
 #endif
             _lastHealthCheckReceivedTime = TimeService.Time;
         }

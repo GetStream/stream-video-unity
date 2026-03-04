@@ -13,8 +13,6 @@
         /// </summary>
         public readonly string MigratingFromSfu;
 
-        //StreamTODO: map all CallRequestInternalDTO fields here and create helper method like ToInternalCallRequest
-
         public JoinCallData(StreamCallType type, string id, bool create, bool ring, bool notify)
         {
             Type = type;

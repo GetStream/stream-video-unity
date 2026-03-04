@@ -139,8 +139,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         {
             if (ConnectionState == ConnectionState.Disconnecting || ConnectionState == ConnectionState.Closing)
             {
-                Logs.Error($"Tried to connect to the {nameof(SfuWebSocket)} while disconnecting or closing. Aborting.");
-                throw new Exception();
+                throw new Exception($"Tried to connect to the {nameof(SfuWebSocket)} in `{ConnectionState}` state. Aborting.");
             }
             //StreamTodo: validate session data
 
@@ -155,7 +154,6 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             {
                 JoinReceived = false;
 
-                //StreamTOdo: implement missing fields: PublisherSdp, ReconnectDetails
                 var joinRequest = new JoinRequest
                 {
                     Token = _sfuToken,

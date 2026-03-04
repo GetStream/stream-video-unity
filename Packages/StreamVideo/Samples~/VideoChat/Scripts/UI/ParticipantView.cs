@@ -162,9 +162,8 @@ namespace StreamVideo.ExampleProject.UI
                 case StreamAudioTrack streamAudioTrack:
                     if (_audioSource != null)
                     {
-                        // This can happen after reconnecting.
-                        // We might receive a new track for the same participant after reconnecting
-                        GameObject.Destroy(_audioSource);
+                        // A new track for the same participant can be received after reconnecting
+                        Destroy(_audioSource);
                         _audioSource = null;
                     }
 

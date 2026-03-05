@@ -1,3 +1,29 @@
+0.9.0:
+
+### Reconnection Flow
+
+- The SDK now automatically handles reconnection when the connection to the video server is lost during an active call. The reconnection uses a multi-strategy approach:
+  - **Fast Reconnect** — attempts to quickly re-establish the connection while preserving the existing WebRTC connections. This minimizes disruption and allows the call to resume almost instantly with audio and video tracks automatically restored.
+  - **Full Rejoin** — if Fast Reconnect fails (after multiple attempts or a timeout deadline), the SDK falls back to a full rejoin — creating new WebRTC connections and re-publishing all tracks automatically.
+  - The SDK starts with Fast Reconnect and automatically escalates to Full Rejoin when needed. Previously published tracks and subscriptions are restored automatically after a successful reconnect.
+- When the device goes back online (e.g., after toggling airplane mode or losing Wi-Fi), the SDK automatically initiates reconnection if a call was active.
+
+### Improvements
+
+- Call capabilities are now updated in real-time when changed server-side
+- Participant connection quality is now tracked and updated from the server
+- Participant state changes are now properly reflected when updated server-side
+- Trigger connection restart if requested by the server
+- The call is now properly closed when the server signals that the call has ended
+- WebSocket `Disconnected` event is now always fired from the Unity main thread, preventing potential threading issues in event handlers
+
+### Bug Fixes
+
+- Fixed `RenderTexture` leak — creating `RenderTexture` multiple times during a single session was not releasing the old ones
+- Fixed `LeaveCallAsync` getting stuck on the stats collection task
+- Fixed a race condition when attempting to connect while the underlying WebSocket is already connecting
+- Fixed editor errors when destroying audio containers in edit mode
+
 0.8.22:
 
 - Added `participant.IsSpeakingChanged` and `participant.AudioLevelChanged` events to notify when the participant starts/stops speaking or when the volume changes

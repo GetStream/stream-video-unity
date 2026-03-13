@@ -53,31 +53,21 @@ This is a master kill-switch that prevents test code from compiling in productio
 
 ## Test Method Naming
 
-### Runtime / integration tests
-
-Use the **`When_<condition>_expect_<outcome>`** pattern with underscores:
+**All tests** (editor and runtime) use the same pattern: **`When_<condition>_expect_<outcome>`** with underscores:
 
 ```
+When_new_instance_expect_empty
+When_regenerate_expect_version_increments
+When_clear_expect_version_unchanged
 When_two_clients_join_same_call_expect_no_errors
 When_setting_call_custom_data_expect_custom_data_set
 When_participant_pinned_expect_pinned_participants_changed_event_fired
 ```
 
-The private async companion uses the same name with an `_Async` suffix:
+For runtime tests that use the async bridge, the private async companion uses the same name with an `_Async` suffix:
 
 ```
 When_two_clients_join_same_call_expect_no_errors_Async
-```
-
-### Editor / unit tests
-
-Use **`<Method>_<Scenario>_<Expected>`** or a descriptive phrase:
-
-```
-NewInstance_IsEmpty
-Regenerate_IncrementsVersion
-Clear_DoesNotResetVersion
-Regenerate_AfterClear_RestoresNonEmptyStateAndIncrementsVersion
 ```
 
 ## Writing an Editor Test (no client connection)
@@ -109,7 +99,7 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
-        public void SomeProperty_DefaultValue_IsExpected()
+        public void When_default_state_expect_some_property_has_expected_value()
         {
             Assert.That(_myFeature.SomeProperty, Is.EqualTo(expectedValue),
                 "Descriptive failure message explaining what went wrong.");
@@ -225,7 +215,7 @@ These constants are defined in `TestsBase`.
 1. **Always** wrap files in `#if STREAM_TESTS_ENABLED` / `#endif`.
 2. **Never** create a new `.asmdef` — use the existing `Tests/Editor/` or `Tests/Runtime/` folder.
 3. **Inherit `TestsBase`** for runtime tests; **don't** for pure-logic editor tests.
-4. **Follow the naming patterns**: `When_<condition>_expect_<outcome>` for runtime; `<Method>_<Scenario>_<Expected>` for unit tests.
+4. **Follow the naming pattern**: `When_<condition>_expect_<outcome>` for all tests (editor and runtime).
 5. **Use the async-bridge pattern**: public `[UnityTest]` → `IEnumerator` → `ConnectAndExecute` → private `async Task` with `_Async` suffix.
 6. **Add descriptive assertion messages** to every assertion.
 7. **Don't manage client lifecycle manually** — let `TestsBase` and `StreamTestClientProvider` handle it.

@@ -1,4 +1,4 @@
-﻿#if STREAM_TESTS_ENABLED
+#if STREAM_TESTS_ENABLED
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace StreamVideo.Tests.Editor
     public class PackageXmlInstallerTests
     {
         [Test]
-        public void All_package_xml_installer_inheritors_should_have_valid_link_xml_asset()
+        public void When_package_xml_installer_inheritors_expect_valid_link_xml_asset()
         {
             var inheritorTypes = FindAllPackageXmlInstallerBaseInheritors();
 
@@ -81,14 +81,14 @@ namespace StreamVideo.Tests.Editor
 
 
         [Test]
-        public void Package_xml_installer_base_should_exist()
+        public void When_looking_for_package_xml_installer_base_expect_type_exists()
         {
             var baseType = typeof(PackageXmlInstallerBase);
             Assert.IsNotNull(baseType, nameof(PackageXmlInstallerBase) + " type should exist");
         }
 
         [Test]
-        public void All_package_xml_installer_inheritors_should_be_instantiable()
+        public void When_package_xml_installer_inheritors_expect_all_instantiable()
         {
             var inheritorTypes = FindAllPackageXmlInstallerBaseInheritors();
             var nonInstantiableTypes = new List<string>();

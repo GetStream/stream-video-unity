@@ -1,4 +1,4 @@
-﻿namespace StreamVideo.Libs.Time
+namespace StreamVideo.Libs.Time
 {
     /// <summary>
     /// <see cref="ITimeService"/> based on <see cref="UnityEngine.Time"/>
@@ -7,5 +7,6 @@
     {
         public float Time => UnityEngine.Time.time;
         public float DeltaTime => UnityEngine.Time.deltaTime;
+        public System.DateTime UtcNow => System.DateTime.UtcNow;
     }
 }

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.v1.Sfu.Events;
@@ -55,7 +54,7 @@ namespace StreamVideo.Core.LowLevelClient
     //StreamTodo: reconnect flow needs to send `UpdateSubscription` https://getstream.slack.com/archives/C022N8JNQGZ/p1691139853890859?thread_ts=1691139571.281779&cid=C022N8JNQGZ
 
     //StreamTodo: decide lifetime, if the obj persists across session maybe it should be named differently and only return struct handle to a session
-    internal sealed class RtcSession : IMediaInputProvider, ISfuClient, IDisposable
+    internal class RtcSession : IMediaInputProvider, ISfuClient, IDisposable
     {
         // Static session counter to track the number of sessions created
         private static int _sessionCounter = 0;
@@ -130,7 +129,7 @@ namespace StreamVideo.Core.LowLevelClient
         public CallingState CallState
         {
             get => _callState;
-            private set
+            internal set
             {
                 if (_callState == value)
                 {
@@ -144,7 +143,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        public StreamCall ActiveCall { get; private set; }
+        public StreamCall ActiveCall { get; internal set; }
 
         public SubscriberPeerConnection Subscriber { get; private set; }
         public PublisherPeerConnection Publisher { get; private set; }
@@ -579,7 +578,7 @@ namespace StreamVideo.Core.LowLevelClient
                         reconnectDetails.Subscriptions.AddRange(desiredTracks);
                     }
 
-                    var joinRequest = new SfuWebSocket.ConnectRequest
+                    var joinRequest = new SfuConnectRequest
                     {
                         ReconnectDetails = reconnectDetails
                     };
@@ -922,12 +921,139 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         public void TrySetPublisherVideoTrackEnabled(bool isEnabled) => PublisherVideoTrackIsEnabled = isEnabled;
 
+        protected virtual bool ArePeerConnectionsHealthy()
+            => (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);
+
+        protected virtual bool IsOfflineTimeWithinFastReconnectDeadline()
+        {
+            var offlineTime = _timeService.UtcNow - _lastTimeOffline;
+            return offlineTime.TotalSeconds <= _fastReconnectDeadlineSeconds;
+        }
+
+        //StreamTODO: add triggering from SFU WS closed.
+        // In JS -> Call.ts -> onSignalClose -> handleSfuSignalClose -> reconnect
+        //StreamTODO: add triggering from network changed -> js Call.ts "network.changed"
+        protected virtual async Task Reconnect(WebsocketReconnectStrategy strategy, string reason)
+        {
+            if (!AssertMainThread())
+            {
+                _pendingReconnectRequest = new ValueTuple<WebsocketReconnectStrategy, string>(strategy, reason);
+                return;
+            }
+
+            if (!_reconnectGuard.TryBeginReconnection(CallState))
+            {
+                _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request. CallState: {CallState}, IsReconnecting: {_reconnectGuard.IsReconnecting}");
+                return;
+            }
+
+            _logs.WarningIfDebug($"--------- Reconnection FLOW TRIGGERED ---------- strategy: {strategy}, reason: {reason}");
+
+            try
+            {
+                _reconnectStrategy = strategy;
+                _reconnectReason = reason;
+
+                var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left, CallingState.Offline };
+
+                var attempt = 0;
+                var reconnectStartTime = DateTime.UtcNow;
+
+                //StreamTODO: we should handle cancellation token between each await
+
+                do
+                {
+                    // StreamTODO: consider give up timeout. JS has it
+
+                    // Only increment attempts if the strategy is not FAST
+                    if (_reconnectStrategy != WebsocketReconnectStrategy.Fast)
+                    {
+                        _reconnectAttempts++;
+                    }
+
+                    try
+                    {
+                        _logs.Info("Reconnect with strategy: " + _reconnectStrategy);
+
+                        switch (_reconnectStrategy)
+                        {
+                            case WebsocketReconnectStrategy.Unspecified:
+                            case WebsocketReconnectStrategy.Disconnect:
+
+                                // Log warning
+
+                                break;
+                            case WebsocketReconnectStrategy.Fast:
+                                await ReconnectFast();
+                                break;
+                            case WebsocketReconnectStrategy.Rejoin:
+                                await ReconnectRejoin();
+                                break;
+                            case WebsocketReconnectStrategy.Migrate:
+                                await ReconnectMigrate();
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logs.ExceptionIfDebug(e);
+                        
+                        if (CallState == CallingState.Offline)
+                        {
+                            _logs.WarningIfDebug("[Reconnect] Can't reconnect while offline, stopping reconnection attempts");
+                            break;
+                        }
+                        
+                        if (e is StreamApiException apiException && apiException.Unrecoverable)
+                        {
+                            _logs.Error("Can't reconnect due to coordinator unrecoverable error: " + apiException);
+                            CallState = CallingState.ReconnectingFailed;
+                            throw;
+                        }
+
+                        await Task.Delay(500, GetCurrentCancellationTokenOrDefault());
+
+                        var wasMigrating = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
+
+                        var fastReconnectTimeout = (DateTime.UtcNow - reconnectStartTime).TotalSeconds >
+                                                   _fastReconnectDeadlineSeconds;
+
+                        var peerConnectionsHealthy = ArePeerConnectionsHealthy();
+
+                        // don't immediately switch to the REJOIN strategy, but instead attempt
+                        // to reconnect with the FAST strategy for a few times before switching.
+                        // in some cases, we immediately switch to the REJOIN strategy.
+                        var shouldRejoin = fastReconnectTimeout || wasMigrating || attempt >= CallRejoinMaxFastAttempts ||
+                                           !peerConnectionsHealthy;
+
+                        attempt++;
+                        _reconnectStrategy
+                            = shouldRejoin ? WebsocketReconnectStrategy.Rejoin : WebsocketReconnectStrategy.Fast;
+
+                        _logs.WarningIfDebug(
+                            $"Reconnect failed, attempt: {attempt}, next strategy: {_reconnectStrategy}, wasMigrating: {wasMigrating}, " +
+                            $"fastReconnectTimeout: {fastReconnectTimeout}, arePeerConnectionsHealthy: {peerConnectionsHealthy}");
+
+                        //StreamTODO: handle cancellation token
+                    }
+                } while (finishedStates.All(s => s != CallState));
+
+                _reconnectAttempts = 0;
+            }
+            finally
+            {
+                _reconnectGuard.EndReconnection();
+            }
+        }
+
         private const float TrackSubscriptionDebounceTime = 0.1f;
         private const int CallJoinMaxRetries = 3;
         private const int CallRejoinMaxFastAttempts = 3;
 
         private readonly ISfuWebSocketFactory _sfuWebSocketFactory;
-        private SfuWebSocket _sfuWebSocket;
+        private ISfuWebSocket _sfuWebSocket;
         private readonly ISerializer _serializer;
         private readonly ILogs _logs;
         private readonly ITimeService _timeService;
@@ -980,7 +1106,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly ReconnectGuard _reconnectGuard = new ReconnectGuard();
 
         private TaskCompletionSource<bool> _joinTaskCompletionSource;
-        private int _fastReconnectDeadlineSeconds;
+        internal int _fastReconnectDeadlineSeconds;
         private Task _ongoingStopTask;
 
         private WebsocketReconnectStrategy _reconnectStrategy = WebsocketReconnectStrategy.Unspecified;
@@ -1554,124 +1680,6 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        //StreamTODO: add triggering from SFU WS closed.
-        // In JS -> Call.ts -> onSignalClose -> handleSfuSignalClose -> reconnect
-        //StreamTODO: add triggering from network changed -> js Call.ts "network.changed"
-        private async Task Reconnect(WebsocketReconnectStrategy strategy, string reason)
-        {
-            if (!AssertMainThread())
-            {
-                _pendingReconnectRequest = new ValueTuple<WebsocketReconnectStrategy, string>(strategy, reason);
-                return;
-            }
-
-            if (!_reconnectGuard.TryBeginReconnection(CallState))
-            {
-                _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request. CallState: {CallState}, IsReconnecting: {_reconnectGuard.IsReconnecting}");
-                return;
-            }
-
-            _logs.WarningIfDebug($"--------- Reconnection FLOW TRIGGERED ---------- strategy: {strategy}, reason: {reason}");
-
-            try
-            {
-                _reconnectStrategy = strategy;
-                _reconnectReason = reason;
-
-                var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left, CallingState.Offline };
-
-                var attempt = 0;
-                var reconnectStartTime = DateTime.UtcNow;
-
-                //StreamTODO: we should handle cancellation token between each await
-
-                do
-                {
-                    // StreamTODO: consider give up timeout. JS has it
-
-                    // Only increment attempts if the strategy is not FAST
-                    if (_reconnectStrategy != WebsocketReconnectStrategy.Fast)
-                    {
-                        _reconnectAttempts++;
-                    }
-
-                    try
-                    {
-                        _logs.Info("Reconnect with strategy: " + _reconnectStrategy);
-
-                        switch (_reconnectStrategy)
-                        {
-                            case WebsocketReconnectStrategy.Unspecified:
-                            case WebsocketReconnectStrategy.Disconnect:
-
-                                // Log warning
-
-                                break;
-                            case WebsocketReconnectStrategy.Fast:
-                                await ReconnectFast();
-                                break;
-                            case WebsocketReconnectStrategy.Rejoin:
-                                await ReconnectRejoin();
-                                break;
-                            case WebsocketReconnectStrategy.Migrate:
-                                await ReconnectMigrate();
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        _logs.ExceptionIfDebug(e);
-                        
-                        if (CallState == CallingState.Offline)
-                        {
-                            _logs.WarningIfDebug("[Reconnect] Can't reconnect while offline, stopping reconnection attempts");
-                            break;
-                        }
-                        
-                        if (e is StreamApiException apiException && apiException.Unrecoverable)
-                        {
-                            _logs.Error("Can't reconnect due to coordinator unrecoverable error: " + apiException);
-                            CallState = CallingState.ReconnectingFailed;
-                            throw;
-                        }
-
-                        await Task.Delay(500, GetCurrentCancellationTokenOrDefault());
-
-                        var wasMigrating = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
-
-                        var fastReconnectTimeout = (DateTime.UtcNow - reconnectStartTime).TotalSeconds >
-                                                   _fastReconnectDeadlineSeconds;
-
-                        var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);
-
-                        // don't immediately switch to the REJOIN strategy, but instead attempt
-                        // to reconnect with the FAST strategy for a few times before switching.
-                        // in some cases, we immediately switch to the REJOIN strategy.
-                        var shouldRejoin = fastReconnectTimeout || wasMigrating || attempt >= CallRejoinMaxFastAttempts ||
-                                           !arePeerConnectionsHealthy;
-
-                        attempt++;
-                        _reconnectStrategy
-                            = shouldRejoin ? WebsocketReconnectStrategy.Rejoin : WebsocketReconnectStrategy.Fast;
-
-                        _logs.WarningIfDebug(
-                            $"Reconnect failed, attempt: {attempt}, next strategy: {_reconnectStrategy}, wasMigrating: {wasMigrating}, " +
-                            $"fastReconnectTimeout: {fastReconnectTimeout}, arePeerConnectionsHealthy: {arePeerConnectionsHealthy}");
-
-                        //StreamTODO: handle cancellation token
-                    }
-                } while (finishedStates.All(s => s != CallState));
-
-                _reconnectAttempts = 0;
-            }
-            finally
-            {
-                _reconnectGuard.EndReconnection();
-            }
-        }
-
         private async Task ReconnectFast()
         {
             _reconnectStrategy = WebsocketReconnectStrategy.Fast;
@@ -2215,9 +2223,9 @@ namespace StreamVideo.Core.LowLevelClient
         /// Creates a new SfuWebSocket instance using the factory.
         /// Disposes the previous instance if one exists.
         /// </summary>
-        /// <param name="previousSfuWebSocket">Returns the previous SfuWebSocket instance (if any) for cleanup after transition.</param>
-        /// <returns>The newly created SfuWebSocket instance.</returns>
-        private SfuWebSocket CreateNewSfuWebSocket(out SfuWebSocket previousSfuWebSocket)
+        /// <param name="previousSfuWebSocket">Returns the previous ISfuWebSocket instance (if any) for cleanup after transition.</param>
+        /// <returns>The newly created ISfuWebSocket instance.</returns>
+        internal ISfuWebSocket CreateNewSfuWebSocket(out ISfuWebSocket previousSfuWebSocket)
         {
             previousSfuWebSocket = _sfuWebSocket;
             previousSfuWebSocket?.DebugMarkAsOld();
@@ -2251,7 +2259,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private async Task ClosePreviousSfuWebSocketAsync(SfuWebSocket previousSfuWebSocket, string reason)
+        private async Task ClosePreviousSfuWebSocketAsync(ISfuWebSocket previousSfuWebSocket, string reason)
         {
             if (previousSfuWebSocket == null)
             {
@@ -2339,8 +2347,8 @@ namespace StreamVideo.Core.LowLevelClient
                 SfuDisconnected?.Invoke();
             }
 
-            var arePeerConnectionsHealthy = (Publisher?.IsHealthy ?? false) && (Subscriber?.IsHealthy ?? false);
-            var strategy = arePeerConnectionsHealthy
+            var peerConnectionsHealthy = ArePeerConnectionsHealthy();
+            var strategy = peerConnectionsHealthy
                 ? WebsocketReconnectStrategy.Fast
                 : WebsocketReconnectStrategy.Rejoin;
 
@@ -2378,12 +2386,11 @@ namespace StreamVideo.Core.LowLevelClient
                         return;
                     }
 
-                    var offlineTime = DateTime.UtcNow - _lastTimeOffline;
-                    var strategy = offlineTime.TotalSeconds > _fastReconnectDeadlineSeconds
-                        ? WebsocketReconnectStrategy.Rejoin
-                        : WebsocketReconnectStrategy.Fast;
+                    var strategy = IsOfflineTimeWithinFastReconnectDeadline()
+                        ? WebsocketReconnectStrategy.Fast
+                        : WebsocketReconnectStrategy.Rejoin;
 
-                    _logs.WarningIfDebug($"Reconnect triggered by {nameof(OnNetworkAvailabilityChanged)}. Strategy: {strategy}, offline time: {offlineTime}");
+                    _logs.WarningIfDebug($"Reconnect triggered by {nameof(OnNetworkAvailabilityChanged)}. Strategy: {strategy}");
                     await Reconnect(strategy, "Going online");
                 }
                 catch (Exception e)
@@ -2394,7 +2401,7 @@ namespace StreamVideo.Core.LowLevelClient
             else
             {
                 _logs.WarningIfDebug("Going Offline");
-                _lastTimeOffline = DateTime.UtcNow;
+                _lastTimeOffline = _timeService.UtcNow;
 
                 if (ActiveCall != null)
                 {
@@ -2417,7 +2424,7 @@ namespace StreamVideo.Core.LowLevelClient
             return true;
         }
 
-        private void SubscribeToSfuEvents(SfuWebSocket sfuWebSocket)
+        private void SubscribeToSfuEvents(ISfuWebSocket sfuWebSocket)
         {
             sfuWebSocket.SubscriberOffer += OnSfuSubscriberOffer;
             sfuWebSocket.PublisherAnswer += OnSfuPublisherAnswer;
@@ -2446,7 +2453,7 @@ namespace StreamVideo.Core.LowLevelClient
             sfuWebSocket.Disconnected += OnSfuWebSocketDisconnected;
         }
 
-        private void UnsubscribeFromSfuEvents(SfuWebSocket sfuWebSocket)
+        private void UnsubscribeFromSfuEvents(ISfuWebSocket sfuWebSocket)
         {
             sfuWebSocket.SubscriberOffer -= OnSfuSubscriberOffer;
             sfuWebSocket.PublisherAnswer -= OnSfuPublisherAnswer;

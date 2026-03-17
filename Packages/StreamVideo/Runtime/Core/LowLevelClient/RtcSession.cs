@@ -957,7 +957,7 @@ namespace StreamVideo.Core.LowLevelClient
                 var finishedStates = new[] { CallingState.Joined, CallingState.ReconnectingFailed, CallingState.Left, CallingState.Offline };
 
                 var attempt = 0;
-                var reconnectStartTime = DateTime.UtcNow;
+                var reconnectStartTime = _timeService.UtcNow;
 
                 //StreamTODO: we should handle cancellation token between each await
 
@@ -1013,11 +1013,11 @@ namespace StreamVideo.Core.LowLevelClient
                             throw;
                         }
 
-                        await Task.Delay(500, GetCurrentCancellationTokenOrDefault());
+                        await ReconnectRetryDelay();
 
                         var wasMigrating = _reconnectStrategy == WebsocketReconnectStrategy.Migrate;
 
-                        var fastReconnectTimeout = (DateTime.UtcNow - reconnectStartTime).TotalSeconds >
+                        var fastReconnectTimeout = (_timeService.UtcNow - reconnectStartTime).TotalSeconds >
                                                    _fastReconnectDeadlineSeconds;
 
                         var peerConnectionsHealthy = ArePeerConnectionsHealthy();
@@ -1703,6 +1703,9 @@ namespace StreamVideo.Core.LowLevelClient
             RestorePublishedTracks();
             RestoreSubscribedTracks();
         }
+
+        protected virtual Task ReconnectRetryDelay()
+            => Task.Delay(500, GetCurrentCancellationTokenOrDefault());
 
         private Task ReconnectMigrate()
         {

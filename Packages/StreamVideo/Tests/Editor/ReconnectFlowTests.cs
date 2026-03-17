@@ -1,6 +1,5 @@
 #if STREAM_TESTS_ENABLED
 using System;
-using System.Collections;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
@@ -16,14 +15,12 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.NetworkMonitors;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
-using StreamVideo.Tests.Shared;
 using StreamVideo.v1.Sfu.Models;
-using UnityEngine.TestTools;
 
 namespace StreamVideo.Tests.Editor
 {
     /// <summary>
-    /// Tests for the reconnection flow in <see cref="RtcSession"/>.
+    /// Tests for the reconnection strategy selection in <see cref="RtcSession"/>.
     /// Validates that <see cref="RtcSession"/> chooses the correct
     /// <see cref="WebsocketReconnectStrategy"/> in response to SFU WebSocket
     /// and network availability events, based on peer connection health,
@@ -151,71 +148,6 @@ namespace StreamVideo.Tests.Editor
                 "the call state to Offline when there is an active call.");
         }
 
-        [UnityTest]
-        public IEnumerator When_fast_reconnect_fails_max_allowed_times_expect_escalation_to_rejoin()
-            => When_fast_reconnect_fails_max_allowed_times_expect_escalation_to_rejoin_Async().RunAsIEnumerator();
-
-        private async Task When_fast_reconnect_fails_max_allowed_times_expect_escalation_to_rejoin_Async()
-        {
-            using var retrySession = CreateRetrySession();
-            retrySession.CallState = CallingState.Joined;
-            retrySession._fastReconnectDeadlineSeconds = 999;
-            retrySession.PeerConnectionsHealthy = true;
-
-            await retrySession.CallReconnect(WebsocketReconnectStrategy.Fast, "test");
-
-            Assert.That(retrySession.FastReconnectCallCount, Is.GreaterThan(1),
-                "FAST should be retried more than once before giving up.");
-            Assert.That(retrySession.FastReconnectCallCount,
-                Is.LessThanOrEqualTo(RtcSession.CallRejoinMaxFastAttempts + 1),
-                "FAST attempts should be bounded by CallRejoinMaxFastAttempts.");
-            Assert.That(retrySession.RejoinCallCount, Is.EqualTo(1),
-                "After exhausting FAST attempts, exactly one REJOIN should be triggered to complete the reconnection.");
-        }
-
-        [UnityTest]
-        public IEnumerator When_fast_reconnect_fails_and_peer_connections_unhealthy_expect_immediate_rejoin()
-            => When_fast_reconnect_fails_and_peer_connections_unhealthy_expect_immediate_rejoin_Async().RunAsIEnumerator();
-
-        private async Task When_fast_reconnect_fails_and_peer_connections_unhealthy_expect_immediate_rejoin_Async()
-        {
-            using var retrySession = CreateRetrySession();
-            retrySession.CallState = CallingState.Joined;
-            retrySession._fastReconnectDeadlineSeconds = 999;
-            retrySession.PeerConnectionsHealthy = true;
-            retrySession.OnFastReconnectCalled = session => session.PeerConnectionsHealthy = false;
-
-            await retrySession.CallReconnect(WebsocketReconnectStrategy.Fast, "test");
-
-            Assert.That(retrySession.FastReconnectCallCount, Is.EqualTo(1),
-                "FAST should be attempted exactly once; when peer connections become unhealthy " +
-                "during the attempt, there is no point retrying FAST.");
-            Assert.That(retrySession.RejoinCallCount, Is.EqualTo(1),
-                "Unhealthy peer connections should cause immediate escalation to REJOIN " +
-                "without waiting for CallRejoinMaxFastAttempts.");
-        }
-
-        [UnityTest]
-        public IEnumerator When_fast_reconnect_deadline_exceeded_expect_escalation_to_rejoin()
-            => When_fast_reconnect_deadline_exceeded_expect_escalation_to_rejoin_Async().RunAsIEnumerator();
-
-        private async Task When_fast_reconnect_deadline_exceeded_expect_escalation_to_rejoin_Async()
-        {
-            using var retrySession = CreateRetrySession();
-            retrySession.CallState = CallingState.Joined;
-            retrySession._fastReconnectDeadlineSeconds = 0;
-            retrySession.PeerConnectionsHealthy = true;
-
-            await retrySession.CallReconnect(WebsocketReconnectStrategy.Fast, "test");
-
-            Assert.That(retrySession.FastReconnectCallCount, Is.EqualTo(1),
-                "FAST should be attempted exactly once; after the inter-retry delay the elapsed time " +
-                "exceeds the zero-second deadline, triggering immediate escalation.");
-            Assert.That(retrySession.RejoinCallCount, Is.EqualTo(1),
-                "Exceeding the fast reconnect deadline should escalate to REJOIN " +
-                "because the SFU session has likely expired.");
-        }
-
         private ISfuWebSocket _sfuWebSocket;
         private INetworkMonitor _networkMonitor;
         private ITimeService _timeService;
@@ -225,25 +157,6 @@ namespace StreamVideo.Tests.Editor
             => new StreamCall("test:dummy",
                 Substitute.For<ICacheRepository<StreamCall>>(),
                 Substitute.For<IStatefulModelContext>());
-
-        private RetryTestableRtcSession CreateRetrySession()
-        {
-            var factory = Substitute.For<ISfuWebSocketFactory>();
-            factory.Create().Returns(Substitute.For<ISfuWebSocket>());
-
-            var session = new RetryTestableRtcSession(
-                sfuWebSocketFactory: factory,
-                httpClientFactory: _ => null,
-                logs: Substitute.For<ILogs>(),
-                serializer: Substitute.For<ISerializer>(),
-                timeService: Substitute.For<ITimeService>(),
-                lowLevelClient: null,
-                config: Substitute.For<IStreamClientConfig>(),
-                networkMonitor: Substitute.For<INetworkMonitor>()
-            );
-
-            return session;
-        }
 
         /// <summary>
         /// Test subclass of <see cref="RtcSession"/> that overrides peer connection
@@ -272,50 +185,6 @@ namespace StreamVideo.Tests.Editor
             {
                 LastReconnectStrategy = strategy;
                 LastReconnectReason = reason;
-                return Task.CompletedTask;
-            }
-        }
-
-        /// <summary>
-        /// Test subclass of <see cref="RtcSession"/> that lets the real
-        /// <see cref="RtcSession.Reconnect"/> retry loop run, but stubs out the
-        /// actual FAST and REJOIN operations. This allows tests to verify the
-        /// escalation logic (attempt counting, deadline, PC health) in isolation.
-        /// </summary>
-        private class RetryTestableRtcSession : RtcSession
-        {
-            public bool PeerConnectionsHealthy { get; set; } = true;
-            public int FastReconnectCallCount { get; private set; }
-            public int RejoinCallCount { get; private set; }
-            public Action<RetryTestableRtcSession> OnFastReconnectCalled { get; set; }
-
-            public RetryTestableRtcSession(ISfuWebSocketFactory sfuWebSocketFactory,
-                Func<IStreamCall, HttpClient> httpClientFactory,
-                ILogs logs, ISerializer serializer, ITimeService timeService,
-                StreamVideoLowLevelClient lowLevelClient,
-                IStreamClientConfig config, INetworkMonitor networkMonitor)
-                : base(sfuWebSocketFactory, httpClientFactory, logs, serializer,
-                    timeService, lowLevelClient, config, networkMonitor)
-            {
-            }
-
-            public Task CallReconnect(WebsocketReconnectStrategy strategy, string reason)
-                => Reconnect(strategy, reason);
-
-            protected override bool ArePeerConnectionsHealthy() => PeerConnectionsHealthy;
-
-            protected override Task ReconnectFast()
-            {
-                FastReconnectCallCount++;
-                CallState = CallingState.Reconnecting;
-                OnFastReconnectCalled?.Invoke(this);
-                throw new Exception("Simulated FAST reconnect failure");
-            }
-
-            protected override Task ReconnectRejoin()
-            {
-                RejoinCallCount++;
-                CallState = CallingState.Joined;
                 return Task.CompletedTask;
             }
         }

@@ -977,11 +977,7 @@ namespace StreamVideo.Core.LowLevelClient
         private CancellationTokenSource _joinCallCts;
         private CancellationTokenSource _activeCallCts;
         
-        /// <summary>
-        /// Flag to track if a reconnection is in progress. This prevents parallel reconnection
-        /// attempts from both Publisher and Subscriber peer connections.
-        /// </summary>
-        private bool _isReconnecting;
+        private readonly ReconnectGuard _reconnectGuard = new ReconnectGuard();
 
         private TaskCompletionSource<bool> _joinTaskCompletionSource;
         private int _fastReconnectDeadlineSeconds;
@@ -1569,28 +1565,12 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            // Ignore reconnection requests if we're already reconnecting, migrating, or joining
-            // This prevents parallel reconnection attempts from both Publisher and Subscriber
-            var ignoredStates = new[]
+            if (!_reconnectGuard.TryBeginReconnection(CallState))
             {
-                CallingState.Reconnecting, CallingState.Migrating, CallingState.Joining,
-                CallingState.Leaving, CallingState.Left, CallingState.ReconnectingFailed
-            };
-            if (ignoredStates.Any(s => s == CallState))
-            {
-                _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request because CallState is {CallState}");
+                _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request. CallState: {CallState}, IsReconnecting: {_reconnectGuard.IsReconnecting}");
                 return;
             }
-            
-            // Use a flag to track if we're in the process of reconnecting
-            // This protects against race conditions before CallState is updated
-            if (_isReconnecting)
-            {
-                _logs.WarningIfDebug($"[Reconnect] Ignoring reconnect request because reconnection is already in progress");
-                return;
-            }
-            
-            _isReconnecting = true;
+
             _logs.WarningIfDebug($"--------- Reconnection FLOW TRIGGERED ---------- strategy: {strategy}, reason: {reason}");
 
             try
@@ -1688,7 +1668,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
             finally
             {
-                _isReconnecting = false;
+                _reconnectGuard.EndReconnection();
             }
         }
 
@@ -2378,7 +2358,7 @@ namespace StreamVideo.Core.LowLevelClient
                     _logs.WarningIfDebug("Going Online");
 
                     if (CallState == CallingState.Joining || CallState == CallingState.Reconnecting ||
-                        CallState == CallingState.Migrating || _isReconnecting)
+                        CallState == CallingState.Migrating || _reconnectGuard.IsReconnecting)
                     {
                         _logs.WarningIfDebug(
                             $"{nameof(OnNetworkAvailabilityChanged)} skipped - reconnection already in progress. CallState: {CallState}");

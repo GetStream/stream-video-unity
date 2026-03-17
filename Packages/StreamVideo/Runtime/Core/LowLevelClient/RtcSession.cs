@@ -1050,7 +1050,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
         private const int CallJoinMaxRetries = 3;
-        private const int CallRejoinMaxFastAttempts = 3;
+        internal const int CallRejoinMaxFastAttempts = 3;
 
         private readonly ISfuWebSocketFactory _sfuWebSocketFactory;
         private ISfuWebSocket _sfuWebSocket;
@@ -1680,7 +1680,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private async Task ReconnectFast()
+        protected virtual async Task ReconnectFast()
         {
             _reconnectStrategy = WebsocketReconnectStrategy.Fast;
             CallState = CallingState.Reconnecting;
@@ -1694,7 +1694,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         }
 
-        private async Task ReconnectRejoin()
+        protected virtual async Task ReconnectRejoin()
         {
             _reconnectStrategy = WebsocketReconnectStrategy.Rejoin;
             CallState = CallingState.Reconnecting;

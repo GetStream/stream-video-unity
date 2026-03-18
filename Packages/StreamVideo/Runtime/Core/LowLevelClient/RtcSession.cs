@@ -1000,9 +1000,10 @@ namespace StreamVideo.Core.LowLevelClient
                     {
                         _logs.ExceptionIfDebug(e);
                         
-                        if (CallState == CallingState.Offline)
+                        // We don't check for Offline CallState here because the call will remain Offline until connecting back again, even if network is back online
+                        if (!_networkMonitor.IsNetworkAvailable)
                         {
-                            _logs.WarningIfDebug("[Reconnect] Can't reconnect while offline, stopping reconnection attempts");
+                            _logs.WarningIfDebug("[Reconnect] Can't reconnect while network is down, stopping reconnection attempts");
                             break;
                         }
                         

@@ -18,15 +18,32 @@ namespace StreamVideo.Tests.Editor
             _guard = new ReconnectGuard();
         }
 
-        [Test]
-        public void When_reconnect_triggered_in_joined_state_expect_state_transitions_to_reconnecting()
+        [TestCase(CallingState.Joined)]
+        [TestCase(CallingState.Offline)]
+        public void When_reconnect_triggered_in_allowed_state_expect_request_approved(CallingState state)
         {
-            var result = _guard.TryBeginReconnection(CallingState.Joined);
+            var result = _guard.TryBeginReconnection(state);
 
             Assert.That(result, Is.True,
-                "Reconnection should be approved when CallingState is Joined.");
+                $"Reconnection should be approved when CallingState is {state}.");
             Assert.That(_guard.IsReconnecting, Is.True,
                 "IsReconnecting should be true after an approved request.");
+        }
+
+        [TestCase(CallingState.Left)]
+        [TestCase(CallingState.Joining)]
+        [TestCase(CallingState.Leaving)]
+        [TestCase(CallingState.Reconnecting)]
+        [TestCase(CallingState.Migrating)]
+        [TestCase(CallingState.ReconnectingFailed)]
+        public void When_reconnect_triggered_in_ignored_state_expect_request_rejected(CallingState state)
+        {
+            var result = _guard.TryBeginReconnection(state);
+
+            Assert.That(result, Is.False,
+                $"Reconnection should be rejected when CallingState is {state}.");
+            Assert.That(_guard.IsReconnecting, Is.False,
+                "IsReconnecting should remain false when the request is rejected.");
         }
 
         [Test]
@@ -43,36 +60,23 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
-        public void When_reconnect_triggered_in_left_state_expect_request_ignored()
+        public void When_end_reconnection_called_expect_is_reconnecting_resets_and_new_attempt_allowed()
         {
-            var result = _guard.TryBeginReconnection(CallingState.Left);
+            _guard.TryBeginReconnection(CallingState.Joined);
+            Assert.That(_guard.IsReconnecting, Is.True,
+                "Precondition: IsReconnecting should be true after a successful begin.");
 
-            Assert.That(result, Is.False,
-                "Reconnection should be rejected when CallingState is Left.");
+            _guard.EndReconnection();
+
             Assert.That(_guard.IsReconnecting, Is.False,
-                "IsReconnecting should remain false when the request is rejected.");
-        }
+                "EndReconnection should reset IsReconnecting to false.");
 
-        [Test]
-        public void When_reconnect_triggered_while_joining_expect_request_ignored()
-        {
-            var result = _guard.TryBeginReconnection(CallingState.Joining);
+            var secondResult = _guard.TryBeginReconnection(CallingState.Joined);
 
-            Assert.That(result, Is.False,
-                "Reconnection should be rejected when CallingState is Joining.");
-            Assert.That(_guard.IsReconnecting, Is.False,
-                "IsReconnecting should remain false when the request is rejected.");
-        }
-
-        [Test]
-        public void When_reconnect_triggered_while_leaving_expect_request_ignored()
-        {
-            var result = _guard.TryBeginReconnection(CallingState.Leaving);
-
-            Assert.That(result, Is.False,
-                "Reconnection should be rejected when CallingState is Leaving.");
-            Assert.That(_guard.IsReconnecting, Is.False,
-                "IsReconnecting should remain false when the request is rejected.");
+            Assert.That(secondResult, Is.True,
+                "After EndReconnection, a new reconnection request should be approved.");
+            Assert.That(_guard.IsReconnecting, Is.True,
+                "IsReconnecting should be true again after the second approved request.");
         }
 
         private ReconnectGuard _guard;

@@ -1,12 +1,11 @@
-﻿#if STREAM_TESTS_ENABLED
+#if STREAM_TESTS_ENABLED
 using System;
 using System.Diagnostics;
-using System.Net.Http;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
+using StreamVideo.Libs;
 using StreamVideo.Libs.Auth;
-using StreamVideo.Libs.Serialization;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -52,7 +51,10 @@ namespace StreamVideo.Tests.Shared
             var timer = new Stopwatch();
             timer.Start();
 
-            var getCredentialsTask = GetStreamDemoCredentialsAsync();
+            var factory = new StreamDependenciesFactory();
+            var provider = factory.CreateDemoCredentialsProvider();
+
+            var getCredentialsTask = provider.GetDemoCredentialsAsync("DemoUser", StreamEnvironment.Demo);
             while (!getCredentialsTask.IsCompleted)
             {
                 await Task.Delay(1);
@@ -64,9 +66,7 @@ namespace StreamVideo.Tests.Shared
                 }
             }
 
-            var demoCredentials = getCredentialsTask.Result;
-            var credentials
-                = new AuthCredentials(demoCredentials.APIKey, demoCredentials.UserId, demoCredentials.Token);
+            var credentials = getCredentialsTask.Result;
 
             var connectTask = Client.ConnectUserAsync(credentials);
 
@@ -89,45 +89,6 @@ namespace StreamVideo.Tests.Shared
             Debug.Log($"Client connected in {timer.Elapsed.TotalSeconds:F2} seconds");
         }
 
-        private class DemoCredentialsApiResponse
-        {
-            public string UserId;
-            public string Token;
-            public string APIKey;
-        }
-
-        private class DemoCredentialsApiError
-        {
-            public string Error;
-        }
-
-        private static async Task<DemoCredentialsApiResponse> GetStreamDemoCredentialsAsync()
-        {
-            Debug.Log("Get demo credentials " + Time.time);
-            var serializer = new NewtonsoftJsonSerializer();
-            var httpClient = new HttpClient();
-            var uriBuilder = new UriBuilder
-            {
-                Host = "pronto.getstream.io",
-                Path = "/api/auth/create-token",
-                Query = $"user_id=DemoUser",
-                Scheme = "https",
-            };
-
-            var uri = uriBuilder.Uri;
-            var response = await httpClient.GetAsync(uri);
-            var result = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
-            {
-                var apiError = serializer.Deserialize<DemoCredentialsApiError>(result);
-                throw new Exception(
-                    $"Failed to get demo credentials. Error status code: `{response.StatusCode}`, Error message: `{apiError.Error}`");
-            }
-
-            Debug.Log("Demo credentials received: " + Time.time);
-
-            return serializer.Deserialize<DemoCredentialsApiResponse>(result);
-        }
     }
 }
 #endif

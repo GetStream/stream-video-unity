@@ -235,11 +235,15 @@ namespace StreamVideo.Core.LowLevelClient
                     changed = true;
                 }
 
-                if (matchingLayer.ScaleResolutionDownBy >= 1f
-                    && encoding.scaleResolutionDownBy != (double)matchingLayer.ScaleResolutionDownBy)
+                if (matchingLayer.ScaleResolutionDownBy >= 1f)
                 {
-                    encoding.scaleResolutionDownBy = (double)matchingLayer.ScaleResolutionDownBy;
-                    changed = true;
+                    var targetScale = (double)matchingLayer.ScaleResolutionDownBy;
+                    if (encoding.scaleResolutionDownBy == null
+                        || Math.Abs(encoding.scaleResolutionDownBy.Value - targetScale) > 0.001)
+                    {
+                        encoding.scaleResolutionDownBy = targetScale;
+                        changed = true;
+                    }
                 }
 
                 if (matchingLayer.MaxFramerate > 0 && encoding.maxFramerate != matchingLayer.MaxFramerate)

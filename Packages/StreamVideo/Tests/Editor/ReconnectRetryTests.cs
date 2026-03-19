@@ -36,6 +36,9 @@ namespace StreamVideo.Tests.Editor
             _timeService = Substitute.For<ITimeService>();
             _timeService.UtcNow.Returns(new DateTime(2025, 1, 1, 12, 0, 0, DateTimeKind.Utc));
 
+            _networkMonitor = Substitute.For<INetworkMonitor>();
+            _networkMonitor.IsNetworkAvailable.Returns(true);
+
             var factory = Substitute.For<ISfuWebSocketFactory>();
             factory.Create().Returns(Substitute.For<ISfuWebSocket>());
 
@@ -47,7 +50,7 @@ namespace StreamVideo.Tests.Editor
                 timeService: _timeService,
                 lowLevelClient: null,
                 config: Substitute.For<IStreamClientConfig>(),
-                networkMonitor: Substitute.For<INetworkMonitor>()
+                networkMonitor: _networkMonitor
             );
         }
 
@@ -131,16 +134,33 @@ namespace StreamVideo.Tests.Editor
         {
             _session.CallState = CallingState.Joined;
             _session._fastReconnectDeadlineSeconds = 999;
-            _session.OnFastReconnectCalled = session => session.CallState = CallingState.Offline;
+            _session.OnFastReconnectCalled = _ => _networkMonitor.IsNetworkAvailable.Returns(false);
 
             await _session.CallReconnect(WebsocketReconnectStrategy.Fast, "test");
 
-            Assert.That(_session.CallState, Is.EqualTo(CallingState.Offline),
-                "When the device goes offline during a reconnect attempt, the state should remain Offline.");
             Assert.That(_session.FastReconnectCallCount, Is.EqualTo(1),
-                "Reconnection should stop after detecting offline state without additional retry attempts.");
+                "Reconnection should stop after detecting network is down without additional retry attempts.");
             Assert.That(_session.RejoinCallCount, Is.EqualTo(0),
                 "Going offline should stop the reconnection loop entirely, not escalate to REJOIN.");
+        }
+
+        [UnityTest]
+        public IEnumerator When_migrate_reconnect_fails_expect_immediate_escalation_to_rejoin()
+            => When_migrate_reconnect_fails_expect_immediate_escalation_to_rejoin_Async().RunAsIEnumerator();
+
+        private async Task When_migrate_reconnect_fails_expect_immediate_escalation_to_rejoin_Async()
+        {
+            _session.CallState = CallingState.Joined;
+            _session._fastReconnectDeadlineSeconds = 999;
+            _session.PeerConnectionsHealthy = true;
+
+            await _session.CallReconnect(WebsocketReconnectStrategy.Migrate, "test");
+
+            Assert.That(_session.FastReconnectCallCount, Is.EqualTo(0),
+                "Migration failure should escalate directly to REJOIN, never to FAST.");
+            Assert.That(_session.RejoinCallCount, Is.EqualTo(1),
+                "When Migrate reconnect fails (NotImplementedException), wasMigrating=true " +
+                "should cause immediate escalation to REJOIN.");
         }
 
         [UnityTest]
@@ -172,6 +192,7 @@ namespace StreamVideo.Tests.Editor
         }
 
         private ITimeService _timeService;
+        private INetworkMonitor _networkMonitor;
         private RetryTestableRtcSession _session;
 
         /// <summary>
@@ -186,6 +207,7 @@ namespace StreamVideo.Tests.Editor
             public bool PeerConnectionsHealthy { get; set; } = true;
             public int FastReconnectCallCount { get; private set; }
             public int RejoinCallCount { get; private set; }
+            public int MigrateCallCount { get; private set; }
             public Action<RetryTestableRtcSession> OnFastReconnectCalled { get; set; }
             public Exception FastReconnectException { get; set; } = new Exception("Simulated FAST reconnect failure");
 
@@ -219,6 +241,13 @@ namespace StreamVideo.Tests.Editor
                 RejoinCallCount++;
                 CallState = CallingState.Joined;
                 return Task.CompletedTask;
+            }
+
+            protected override Task ReconnectMigrate()
+            {
+                MigrateCallCount++;
+                CallState = CallingState.Migrating;
+                throw new NotImplementedException("Simulated Migrate failure");
             }
         }
     }

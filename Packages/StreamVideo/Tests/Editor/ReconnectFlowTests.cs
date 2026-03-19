@@ -15,7 +15,9 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.NetworkMonitors;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
+using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
+using SfuErrorEvent = StreamVideo.v1.Sfu.Events.Error;
 
 namespace StreamVideo.Tests.Editor
 {
@@ -148,6 +150,142 @@ namespace StreamVideo.Tests.Editor
                 "the call state to Offline when there is an active call.");
         }
 
+        [Test]
+        public void When_sfu_error_with_unspecified_strategy_expect_no_reconnect_and_no_stop()
+        {
+            _session.CallState = CallingState.Joined;
+
+            _sfuWebSocket.Error += Raise.Event<Action<SfuErrorEvent>>(
+                CreateSfuError(WebsocketReconnectStrategy.Unspecified));
+
+            Assert.That(_session.LastReconnectStrategy, Is.Null,
+                "Unspecified reconnect strategy should not trigger any reconnection attempt.");
+            Assert.That(_session.CallState, Is.EqualTo(CallingState.Joined),
+                "Unspecified strategy should not call StopAsync — " +
+                "the call state should remain Joined.");
+        }
+
+        [Test]
+        public void When_sfu_error_with_disconnect_strategy_expect_stop_instead_of_reconnect()
+        {
+            _session.CallState = CallingState.Joined;
+
+            _sfuWebSocket.Error += Raise.Event<Action<SfuErrorEvent>>(
+                CreateSfuError(WebsocketReconnectStrategy.Disconnect));
+
+            Assert.That(_session.LastReconnectStrategy, Is.Null,
+                "Disconnect strategy should not trigger Reconnect.");
+            Assert.That(_session.CallState,
+                Is.EqualTo(CallingState.Leaving).Or.EqualTo(CallingState.Left),
+                "Disconnect strategy should call StopAsync, which transitions " +
+                "the call state to Leaving or Left.");
+        }
+
+        [TestCase(WebsocketReconnectStrategy.Fast)]
+        [TestCase(WebsocketReconnectStrategy.Rejoin)]
+        [TestCase(WebsocketReconnectStrategy.Migrate)]
+        public void When_sfu_error_with_reconnectable_strategy_expect_reconnect_with_matching_strategy(
+            WebsocketReconnectStrategy strategy)
+        {
+            _session.CallState = CallingState.Joined;
+
+            _sfuWebSocket.Error += Raise.Event<Action<SfuErrorEvent>>(CreateSfuError(strategy));
+
+            Assert.That(_session.LastReconnectStrategy, Is.EqualTo(strategy),
+                $"SFU error with {strategy} strategy should trigger Reconnect " +
+                "using the same strategy the SFU instructed.");
+        }
+
+        [Test]
+        public void When_sfu_go_away_received_expect_migrate_reconnect()
+        {
+            _session.CallState = CallingState.Joined;
+
+            _sfuWebSocket.GoAway += Raise.Event<Action<GoAway>>(
+                new GoAway { Reason = GoAwayReason.ShuttingDown });
+
+            Assert.That(_session.LastReconnectStrategy,
+                Is.EqualTo(WebsocketReconnectStrategy.Migrate),
+                "GoAway from the SFU should trigger a Migrate reconnect " +
+                "so the client moves to a different SFU instance.");
+        }
+
+        [TestCase(CallingState.Joining)]
+        [TestCase(CallingState.Idle)]
+        [TestCase(CallingState.Left)]
+        [TestCase(CallingState.Reconnecting)]
+        public void When_sfu_websocket_disconnects_in_guarded_state_expect_no_reconnect(CallingState state)
+        {
+            _session.CallState = state;
+            _session.PeerConnectionsHealthy = true;
+
+            _sfuWebSocket.Disconnected += Raise.Event<Action>();
+
+            Assert.That(_session.LastReconnectStrategy, Is.Null,
+                $"SFU WS disconnect should be ignored when CallState is {state} " +
+                "because reconnection is either unsafe or redundant in this state.");
+        }
+
+        [Test]
+        public void When_sfu_websocket_disconnects_while_leaving_expect_no_reconnect()
+        {
+            _session.CallState = CallingState.Joined;
+            _session.PeerConnectionsHealthy = true;
+            _sfuWebSocket.IsLeaving.Returns(true);
+
+            _sfuWebSocket.Disconnected += Raise.Event<Action>();
+
+            Assert.That(_session.LastReconnectStrategy, Is.Null,
+                "SFU WS disconnect should be ignored when the client is intentionally " +
+                "leaving the call (IsLeaving=true).");
+        }
+
+        [Test]
+        public void When_sfu_websocket_disconnects_while_closing_clean_expect_no_reconnect()
+        {
+            _session.CallState = CallingState.Joined;
+            _session.PeerConnectionsHealthy = true;
+            _sfuWebSocket.IsClosingClean.Returns(true);
+
+            _sfuWebSocket.Disconnected += Raise.Event<Action>();
+
+            Assert.That(_session.LastReconnectStrategy, Is.Null,
+                "SFU WS disconnect should be ignored when the WebSocket is being " +
+                "closed cleanly (IsClosingClean=true), e.g. during a planned reconnection.");
+        }
+
+        [TestCase(CallingState.Joining)]
+        [TestCase(CallingState.Reconnecting)]
+        [TestCase(CallingState.Migrating)]
+        public void When_network_comes_back_online_in_guarded_state_expect_no_reconnect(CallingState state)
+        {
+            _session.CallState = state;
+            _session.ActiveCall = CreateDummyCall();
+
+            _networkMonitor.NetworkAvailabilityChanged
+                += Raise.Event<NetworkAvailabilityChangedEventHandler>(true);
+
+            Assert.That(_session.LastReconnectStrategy, Is.Null,
+                $"Going online should not trigger reconnection when CallState is {state} " +
+                "because a connection attempt is already in progress.");
+        }
+
+        [Test]
+        public void When_network_comes_back_online_after_call_ended_expect_no_reconnect()
+        {
+            _session.CallState = CallingState.Left;
+            _session.ActiveCall = null;
+            _session._fastReconnectDeadlineSeconds = 30;
+            _timeService.UtcNow.Returns(DateTime.UtcNow);
+
+            _networkMonitor.NetworkAvailabilityChanged
+                += Raise.Event<NetworkAvailabilityChangedEventHandler>(true);
+
+            Assert.That(_session.LastReconnectStrategy, Is.Null,
+                "Going online should not trigger reconnection when the call has already ended " +
+                "because there is nothing to reconnect to.");
+        }
+
         private ISfuWebSocket _sfuWebSocket;
         private INetworkMonitor _networkMonitor;
         private ITimeService _timeService;
@@ -157,6 +295,17 @@ namespace StreamVideo.Tests.Editor
             => new StreamCall("test:dummy",
                 Substitute.For<ICacheRepository<StreamCall>>(),
                 Substitute.For<IStatefulModelContext>());
+
+        private static SfuErrorEvent CreateSfuError(WebsocketReconnectStrategy strategy)
+            => new SfuErrorEvent
+            {
+                Error_ = new StreamVideo.v1.Sfu.Models.Error
+                {
+                    Message = "test error",
+                    ShouldRetry = true,
+                },
+                ReconnectStrategy = strategy,
+            };
 
         /// <summary>
         /// Test subclass of <see cref="RtcSession"/> that overrides peer connection

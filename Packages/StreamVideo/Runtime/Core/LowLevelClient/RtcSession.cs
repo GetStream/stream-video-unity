@@ -1705,10 +1705,11 @@ namespace StreamVideo.Core.LowLevelClient
             RestoreSubscribedTracks();
         }
 
+        // Separated to skip in tests. StreamTODO: better change to configurable delay
         protected virtual Task ReconnectRetryDelay()
             => Task.Delay(500, GetCurrentCancellationTokenOrDefault());
 
-        private Task ReconnectMigrate()
+        protected virtual Task ReconnectMigrate()
         {
             throw new NotImplementedException("Sfu migration is not yet implemented.");
         }

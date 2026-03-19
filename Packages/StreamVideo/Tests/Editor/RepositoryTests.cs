@@ -1,4 +1,4 @@
-﻿#if STREAM_TESTS_ENABLED
+#if STREAM_TESTS_ENABLED
 using System;
 using System.Collections;
 using System.IO;
@@ -17,10 +17,10 @@ namespace StreamVideo.Tests.Editor
     internal class RepositoryTests
     {
         [UnityTest]
-        public IEnumerator Imported_samples_match_package_source_samples()
-            => Imported_samples_match_package_source_samples_Async().RunAsIEnumerator();
+        public IEnumerator When_imported_samples_expect_match_package_source_samples()
+            => When_imported_samples_expect_match_package_source_samples_Async().RunAsIEnumerator();
 
-        public async Task Imported_samples_match_package_source_samples_Async()
+        private async Task When_imported_samples_expect_match_package_source_samples_Async()
         {
             var fileComparer = new SimpleFileCompare();
 
@@ -90,10 +90,10 @@ namespace StreamVideo.Tests.Editor
         }
 
         [UnityTest]
-        public IEnumerator Dtos_do_not_contain_json_required_always_flag()
-            => Dtos_do_not_contain_json_required_always_flag_Async().RunAsIEnumerator();
+        public IEnumerator When_dtos_checked_expect_no_json_required_always_flag()
+            => When_dtos_checked_expect_no_json_required_always_flag_Async().RunAsIEnumerator();
 
-        private async Task Dtos_do_not_contain_json_required_always_flag_Async()
+        private async Task When_dtos_checked_expect_no_json_required_always_flag_Async()
         {
             var streamVideoUnityPackage = await TestUtils.GetStreamVideoPackageInfo();
             var packageSourcePath = streamVideoUnityPackage.resolvedPath;

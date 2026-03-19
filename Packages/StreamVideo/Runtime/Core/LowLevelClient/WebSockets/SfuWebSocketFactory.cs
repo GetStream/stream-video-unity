@@ -32,7 +32,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         }
 
         /// <inheritdoc/>
-        public SfuWebSocket Create()
+        public ISfuWebSocket Create()
         {
             var websocketClient = _websocketClientFactory();
 

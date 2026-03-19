@@ -1,4 +1,4 @@
-﻿#if STREAM_TESTS_ENABLED
+#if STREAM_TESTS_ENABLED
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,7 +127,7 @@ namespace StreamVideo.Tests.Shared
 
         private async Task DisposeStateClientsAsync()
         {
-            TryStopUpdateTask();
+            await TryStopUpdateTaskAsync();
 
             var tasks = new List<Task>();
             tasks.AddRange(_spawnedClients.Select(async c =>
@@ -159,11 +159,23 @@ namespace StreamVideo.Tests.Shared
             });
         }
 
-        private void TryStopUpdateTask()
+        private async Task TryStopUpdateTaskAsync()
         {
             Debug.LogWarning("TryStopUpdateTask");
+            var updateTask = _updateTask;
             _updateTaskCts?.Cancel();
             _updateTask = null;
+
+            if (updateTask != null)
+            {
+                try
+                {
+                    await updateTask;
+                }
+                catch (OperationCanceledException)
+                {
+                }
+            }
         }
 
         private async Task UpdateTaskAsync()

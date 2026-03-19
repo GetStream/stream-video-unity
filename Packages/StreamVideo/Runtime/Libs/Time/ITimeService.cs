@@ -1,4 +1,4 @@
-﻿namespace StreamVideo.Libs.Time
+namespace StreamVideo.Libs.Time
 {
     /// <summary>
     /// Provides time information
@@ -7,5 +7,6 @@
     {
         float Time { get; }
         float DeltaTime { get; }
+        System.DateTime UtcNow { get; }
     }
 }

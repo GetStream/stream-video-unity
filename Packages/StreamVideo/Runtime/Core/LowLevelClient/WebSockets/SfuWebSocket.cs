@@ -19,13 +19,8 @@ using ICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 
 namespace StreamVideo.Core.LowLevelClient.WebSockets
 {
-    internal class SfuWebSocket : BasePersistentWebSocket<SfuWebSocket.ConnectRequest, JoinResponse>
+    internal class SfuWebSocket : BasePersistentWebSocket<SfuConnectRequest, JoinResponse>, ISfuWebSocket
     {
-        public struct ConnectRequest
-        {
-            public ReconnectDetails ReconnectDetails;
-        }
-        
         public event Action<SubscriberOffer> SubscriberOffer;
         public event Action<PublisherAnswer> PublisherAnswer;
         public event Action<ConnectionQualityChanged> ConnectionQualityChanged;
@@ -135,7 +130,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             WebsocketClient.Send(sfuRequestByteArray);
         }
 
-        protected override async Task<JoinResponse> ExecuteConnectAsync(ConnectRequest request, CancellationToken cancellationToken = default)
+        protected override async Task<JoinResponse> ExecuteConnectAsync(SfuConnectRequest request, CancellationToken cancellationToken = default)
         {
             if (ConnectionState == ConnectionState.Disconnecting || ConnectionState == ConnectionState.Closing)
             {

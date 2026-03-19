@@ -1945,7 +1945,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSfuChangePublishQuality(ChangePublishQuality changePublishQuality)
         {
-            _logs.WarningIfDebug("---------- ChangePublishQuality -----------");
             _sfuTracer?.Trace(PeerConnectionTraceKey.ChangePublishQuality, changePublishQuality);
 
             if (Publisher == null)

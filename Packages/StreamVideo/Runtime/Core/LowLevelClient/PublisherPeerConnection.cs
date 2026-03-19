@@ -181,23 +181,25 @@ namespace StreamVideo.Core.LowLevelClient
             if (videoSenderSettings.TrackType != TrackType.Video)
             {
                 Logs.WarningIfDebug(
-                    $"[{PeerType}] ChangePublishQuality: Ignoring unsupported track type: {videoSenderSettings.TrackType}");
+                    $"[{PeerType}] ChangePublishQuality: Ignoring track type: {videoSenderSettings.TrackType}");
                 return;
             }
 
             if (VideoSender == null)
             {
-                Logs.WarningIfDebug($"[{PeerType}] ChangePublishQuality: VideoSender is null, skipping");
+                Logs.WarningIfDebug($"[{PeerType}] ChangePublishQuality: VideoSender null, skip");
                 return;
             }
 
             var parameters = VideoSender.GetParameters();
             if (parameters.encodings == null || parameters.encodings.Length == 0)
             {
-                Logs.WarningIfDebug(
-                    $"[{PeerType}] ChangePublishQuality: No encodings found on video sender");
+                Logs.WarningIfDebug($"[{PeerType}] ChangePublishQuality: No encodings on sender");
                 return;
             }
+
+            PublishQualityDebugLogger.LogSfuRequest(Logs, PeerType.ToString(), videoSenderSettings);
+            PublishQualityDebugLogger.LogStateBefore(Logs, PeerType.ToString(), parameters);
 
             var changed = false;
 
@@ -249,20 +251,18 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (!changed)
             {
-                Logs.InfoIfDebug($"[{PeerType}] ChangePublishQuality: No encoding changes needed");
+                Logs.InfoIfDebug($"[{PeerType}] ChangePublishQuality: No changes needed");
                 return;
             }
 
             var error = VideoSender.SetParameters(parameters);
             if (error.errorType != RTCErrorType.None)
             {
-                Logs.Error(
-                    $"[{PeerType}] ChangePublishQuality: Failed to set parameters: {error.errorType}");
+                Logs.Error($"[{PeerType}] ChangePublishQuality: SetParameters FAILED: {error.errorType}");
             }
             else
             {
-                Logs.InfoIfDebug(
-                    $"[{PeerType}] ChangePublishQuality: Successfully updated encoding parameters");
+                PublishQualityDebugLogger.LogStateAfter(Logs, PeerType.ToString(), parameters);
             }
         }
 

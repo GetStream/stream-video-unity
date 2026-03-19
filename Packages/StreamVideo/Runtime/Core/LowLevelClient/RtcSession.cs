@@ -1946,7 +1946,17 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnSfuChangePublishQuality(ChangePublishQuality changePublishQuality)
         {
             _sfuTracer?.Trace(PeerConnectionTraceKey.ChangePublishQuality, changePublishQuality);
-            // StreamTODO: Implement OnSfuChangePublishQuality
+
+            if (Publisher == null)
+            {
+                _logs.WarningIfDebug("Received ChangePublishQuality but Publisher is null");
+                return;
+            }
+
+            foreach (var videoSender in changePublishQuality.VideoSenders)
+            {
+                Publisher.ChangePublishQuality(videoSender);
+            }
         }
 
         private void OnSfuConnectionQualityChanged(ConnectionQualityChanged connectionQualityChanged)

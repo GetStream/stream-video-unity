@@ -16,6 +16,7 @@ using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
+using SfuEvents = StreamVideo.v1.Sfu.Events;
 using Unity.WebRTC;
 using UnityEngine;
 using TrackType = StreamVideo.v1.Sfu.Models.TrackType;
@@ -169,6 +170,100 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             return Negotiate(iceRestart: true);
+        }
+
+        /// <summary>
+        /// Apply quality changes requested by the SFU. Enables/disables simulcast layers and updates
+        /// encoding parameters (bitrate, framerate, resolution scale) to match current subscriber demands.
+        /// </summary>
+        public void ChangePublishQuality(SfuEvents.VideoSender videoSenderSettings)
+        {
+            if (videoSenderSettings.TrackType != TrackType.Video)
+            {
+                Logs.WarningIfDebug(
+                    $"[{PeerType}] ChangePublishQuality: Ignoring unsupported track type: {videoSenderSettings.TrackType}");
+                return;
+            }
+
+            if (VideoSender == null)
+            {
+                Logs.WarningIfDebug($"[{PeerType}] ChangePublishQuality: VideoSender is null, skipping");
+                return;
+            }
+
+            var parameters = VideoSender.GetParameters();
+            if (parameters.encodings == null || parameters.encodings.Length == 0)
+            {
+                Logs.WarningIfDebug(
+                    $"[{PeerType}] ChangePublishQuality: No encodings found on video sender");
+                return;
+            }
+
+            var changed = false;
+
+            foreach (var encoding in parameters.encodings)
+            {
+                var rid = string.IsNullOrEmpty(encoding.rid) ? "f" : encoding.rid;
+
+                SfuEvents.VideoLayerSetting matchingLayer = null;
+                foreach (var layer in videoSenderSettings.Layers)
+                {
+                    if (layer.Name == rid)
+                    {
+                        matchingLayer = layer;
+                        break;
+                    }
+                }
+
+                var shouldBeActive = matchingLayer?.Active ?? false;
+                if (encoding.active != shouldBeActive)
+                {
+                    encoding.active = shouldBeActive;
+                    changed = true;
+                }
+
+                if (matchingLayer == null || !matchingLayer.Active)
+                {
+                    continue;
+                }
+
+                if (matchingLayer.MaxBitrate > 0 && encoding.maxBitrate != (ulong)matchingLayer.MaxBitrate)
+                {
+                    encoding.maxBitrate = (ulong)matchingLayer.MaxBitrate;
+                    changed = true;
+                }
+
+                if (matchingLayer.ScaleResolutionDownBy >= 1f
+                    && encoding.scaleResolutionDownBy != (double)matchingLayer.ScaleResolutionDownBy)
+                {
+                    encoding.scaleResolutionDownBy = (double)matchingLayer.ScaleResolutionDownBy;
+                    changed = true;
+                }
+
+                if (matchingLayer.MaxFramerate > 0 && encoding.maxFramerate != matchingLayer.MaxFramerate)
+                {
+                    encoding.maxFramerate = matchingLayer.MaxFramerate;
+                    changed = true;
+                }
+            }
+
+            if (!changed)
+            {
+                Logs.InfoIfDebug($"[{PeerType}] ChangePublishQuality: No encoding changes needed");
+                return;
+            }
+
+            var error = VideoSender.SetParameters(parameters);
+            if (error.errorType != RTCErrorType.None)
+            {
+                Logs.Error(
+                    $"[{PeerType}] ChangePublishQuality: Failed to set parameters: {error.errorType}");
+            }
+            else
+            {
+                Logs.InfoIfDebug(
+                    $"[{PeerType}] ChangePublishQuality: Successfully updated encoding parameters");
+            }
         }
 
         private async Task Negotiate(bool iceRestart = false)

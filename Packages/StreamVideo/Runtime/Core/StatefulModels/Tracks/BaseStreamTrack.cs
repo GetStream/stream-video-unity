@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Unity.WebRTC;
 
 namespace StreamVideo.Core.StatefulModels.Tracks
@@ -12,36 +12,39 @@ namespace StreamVideo.Core.StatefulModels.Tracks
     {
         public event StreamTrackStateChangeHandler EnabledChanged;
 
-        public bool IsEnabled
-        {
-            get => _isEnabled;
-            private set
-            {
-                if(value == _isEnabled)
-                {
-                    return;
-                }
-                
-                _isEnabled = value;
-                EnabledChanged?.Invoke(_isEnabled);
-            }
-        }
+        /// <summary>
+        /// Effective enabled state: true only when the publisher has the track enabled
+        /// AND the Stream Server (SFU) has not paused it.
+        /// </summary>
+        public bool IsEnabled => _publisherEnabled && !_serverPaused;
+
+        /// <summary>
+        /// Whether the Stream Server (SFU) has paused this inbound track (e.g. due to insufficient bandwidth).
+        /// </summary>
+        public bool IsPausedByServer => _serverPaused;
 
         public void Dispose() => OnDisposing();
 
         internal BaseStreamTrack(MediaStreamTrack track)
         {
             InternalTrack = track ?? throw new ArgumentNullException(nameof(track));
-            _isEnabled = track.Enabled;
+            _publisherEnabled = track.Enabled;
         }
         
         internal virtual void Update()
         {
         }
 
-        internal void SetEnabled(bool enabled)
+        internal void SetPublisherEnabled(bool enabled)
         {
-            IsEnabled = enabled;
+            if (_publisherEnabled == enabled)
+            {
+                return;
+            }
+
+            var wasEnabled = IsEnabled;
+            _publisherEnabled = enabled;
+            NotifyIfEffectiveStateChanged(wasEnabled);
             
             //StreamTodo: investigate this. In theory we should disable track whenever the remote user disabled it.
             //But there's and edge case where:
@@ -53,14 +56,35 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             // InternalTrack.Enabled = enabled;
         }
 
+        internal void SetServerPaused(bool paused)
+        {
+            if (_serverPaused == paused)
+            {
+                return;
+            }
+
+            var wasEnabled = IsEnabled;
+            _serverPaused = paused;
+            NotifyIfEffectiveStateChanged(wasEnabled);
+        }
+
         protected MediaStreamTrack InternalTrack { get; set; }
 
         protected virtual void OnDisposing()
         {
             
         }
-        
-        private bool _isEnabled;
+
+        private bool _publisherEnabled;
+        private bool _serverPaused;
+
+        private void NotifyIfEffectiveStateChanged(bool wasEnabled)
+        {
+            if (IsEnabled != wasEnabled)
+            {
+                EnabledChanged?.Invoke(IsEnabled);
+            }
+        }
     }
 
     public abstract class BaseStreamTrack<TTrack> : BaseStreamTrack

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StreamVideo.Core.InternalDTO.Responses;
@@ -300,6 +300,11 @@ namespace StreamVideo.Core.StatefulModels
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
 
+            if (_pausedTracks.Contains(type))
+            {
+                ((BaseStreamTrack)streamTrack).SetServerPaused(true);
+            }
+
             TrackAdded?.Invoke(this, streamTrack);
         }
 
@@ -323,10 +328,36 @@ namespace StreamVideo.Core.StatefulModels
             // Join call by host and watcher
             // Disable track on host -> this causes watcher to disable the track as well
             // Leave the call as host and re-join -> the track is re-enabled on host side but watcher still has it disabled
-            streamTrack.SetEnabled(enabled);
+            streamTrack.SetPublisherEnabled(enabled);
 
             //StreamTodo: we should trigger some event that track status changed
             TrackIsEnabledChanged?.Invoke(this, streamTrack);
+        }
+
+        internal void SetTrackPausedByServer(TrackType trackType, bool paused)
+        {
+            bool changed;
+            if (paused)
+            {
+                changed = _pausedTracks.Add(trackType);
+            }
+            else
+            {
+                changed = _pausedTracks.Remove(trackType);
+            }
+
+            if (changed)
+            {
+                GetStreamTrack(trackType)?.SetServerPaused(paused);
+            }
+        }
+
+        internal void ClearTrackPausedByServer(TrackType trackType)
+        {
+            if (_pausedTracks.Remove(trackType))
+            {
+                GetStreamTrack(trackType)?.SetServerPaused(false);
+            }
         }
 
         internal void SetIsPinned(bool isPinned) => IsPinned = isPinned;
@@ -356,6 +387,7 @@ namespace StreamVideo.Core.StatefulModels
         #region Sfu State
 
         private readonly List<TrackType> _publishedTracks = new List<TrackType>();
+        private readonly HashSet<TrackType> _pausedTracks = new HashSet<TrackType>();
         private readonly List<string> _roles = new List<string>();
         private float _audioLevel;
         private bool _isSpeaking;

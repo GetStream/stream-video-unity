@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
+using StreamVideo.Libs;
 using StreamVideo.Libs.Auth;
-using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
 #if STREAM_DEBUG_ENABLED
@@ -244,24 +243,6 @@ namespace StreamVideo.ExampleProject
         }
 #endif
 
-        /// <summary>
-        /// API success response template when using Stream's Demo Credentials
-        /// </summary>
-        private class DemoCredentialsApiResponse
-        {
-            public string UserId;
-            public string Token;
-            public string APIKey;
-        }
-
-        /// <summary>
-        /// API error response template when using Stream's Demo Credentials
-        /// </summary>
-        private class DemoCredentialsApiError
-        {
-            public string Error;
-        }
-
 #pragma warning disable CS0414 //Disable warning that _info is unused. It's purpose is to display info box in the Unity Inspector only
 
         [SerializeField]
@@ -280,6 +261,10 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private string _userToken = "";
+
+        [Header("Demo Credentials")]
+        [SerializeField]
+        private StreamEnvironment _environment = StreamEnvironment.Demo;
 
         [Header("Background Music in a call")]
         [SerializeField]
@@ -312,44 +297,14 @@ namespace StreamVideo.ExampleProject
 
             if (credentialsEmpty)
             {
-                // If custom credentials are not defined - use Stream's Demo Credentials
                 Debug.Log("Authorization credentials were not provided. Using Stream's Demo Credentials.");
 
-                var demoCredentials = await GetStreamDemoTokenAsync();
-                credentials = new AuthCredentials(demoCredentials.APIKey, demoCredentials.UserId,
-                    demoCredentials.Token);
+                var factory = new StreamDependenciesFactory();
+                var provider = factory.CreateDemoCredentialsProvider();
+                credentials = await provider.GetDemoCredentialsAsync("DemoUser", _environment);
             }
 
             await Client.ConnectUserAsync(credentials);
-        }
-
-        /// <summary>
-        /// This method will fetch Stream's demo credentials. These credentials are not usable in a real production due to limited rates.
-        /// Customer accounts do have a FREE tier so please register at https://getstream.io/ to get your own app ID and credentials.
-        /// </summary>
-        private static async Task<DemoCredentialsApiResponse> GetStreamDemoTokenAsync()
-        {
-            var serializer = new NewtonsoftJsonSerializer();
-            var httpClient = new HttpClient();
-            var uriBuilder = new UriBuilder
-            {
-                Host = "pronto.getstream.io",
-                Path = "/api/auth/create-token",
-                Query = $"user_id=DemoUser",
-                Scheme = "https",
-            };
-
-            var uri = uriBuilder.Uri;
-            var response = await httpClient.GetAsync(uri);
-            var result = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
-            {
-                var apiError = serializer.Deserialize<DemoCredentialsApiError>(result);
-                throw new Exception(
-                    $"Failed to get demo credentials. Error status code: `{response.StatusCode}`, Error message: `{apiError.Error}`");
-            }
-
-            return serializer.Deserialize<DemoCredentialsApiResponse>(result);
         }
 
         private void OnCallStarted(IStreamCall call)

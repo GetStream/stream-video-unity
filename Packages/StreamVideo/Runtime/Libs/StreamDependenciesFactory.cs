@@ -1,4 +1,4 @@
-﻿using StreamVideo.Libs.AppInfo;
+using StreamVideo.Libs.AppInfo;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.VideoClientInstanceRunner;
 using StreamVideo.Libs.Http;
@@ -47,6 +47,9 @@ namespace StreamVideo.Libs
         public virtual IApplicationInfo CreateApplicationInfo() => new UnityApplicationInfo();
         
         public virtual ITokenProvider CreateTokenProvider(TokenProvider.TokenUriHandler urlFactory) => new TokenProvider(CreateHttpClient(), urlFactory);
+
+        public virtual StreamDemoCredentialsProvider CreateDemoCredentialsProvider()
+            => new StreamDemoCredentialsProvider(CreateHttpClient(), CreateSerializer());
 
         public virtual IStreamVideoClientRunner CreateClientRunner()
         {

@@ -180,6 +180,8 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                     Source = ParticipantSource.WebrtcUnspecified,
                 };
 
+                joinRequest.Capabilities.Add(ClientCapability.SubscriberVideoPause);
+
                 var sfuJoinRequest = new SfuRequest
                 {
                     JoinRequest = joinRequest,

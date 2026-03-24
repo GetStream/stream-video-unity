@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -20,10 +20,9 @@ namespace StreamVideo.Core.Stats
         private Dictionary<string, StatSnapshot> _previousPublisherStats = new Dictionary<string, StatSnapshot>();
         private Dictionary<string, StatSnapshot> _previousSubscriberStats = new Dictionary<string, StatSnapshot>();
 
-        // Track frame time and FPS history for performance stats
         private readonly Dictionary<string, Queue<double>> _frameTimeHistory = new Dictionary<string, Queue<double>>();
         private readonly Dictionary<string, Queue<double>> _fpsHistory = new Dictionary<string, Queue<double>>();
-        private const int HistorySize = 2; // Keep last 2 values like Android
+        private const int HistorySize = 2;
 
         /// <summary>
         /// Snapshot of RTCStats data to avoid holding references to native objects that may be freed
@@ -35,64 +34,68 @@ namespace StreamVideo.Core.Stats
             public Dictionary<string, object> Dict { get; set; }
         }
 
-        public async Task<string> GetPublisherStatsJsonAsync(CancellationToken cancellationToken)
+        private static readonly IReadOnlyList<PerformanceStats> EmptyPerformanceStats = new List<PerformanceStats>();
+        private const string EmptyJsonArray = "[]";
+
+        public async Task<StatsCollectionResult> CollectAsync(CancellationToken cancellationToken)
         {
-            if (_rtcSession.Publisher == null)
+            var publisherStats = _rtcSession.Publisher != null
+                ? (await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken)).Stats
+                : null;
+
+            var subscriberStats = _rtcSession.Subscriber != null
+                ? (await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken)).Stats
+                : null;
+
+            var publisherStatsJson = ConvertStatsToJson(publisherStats);
+            var subscriberStatsJson = ConvertStatsToJson(subscriberStats);
+
+            // Performance stats MUST be computed before updating _previous*Stats
+            // so that deltas span across cycles (seconds apart), not within the same cycle
+            var encodeStats = ComputeEncodeStats(publisherStats);
+            var decodeStats = ComputeDecodeStats(subscriberStats);
+
+            string rtcStatsJson;
+            if (publisherStats != null && subscriberStats != null)
             {
-                return ConvertStatsToJson(new Dictionary<string, RTCStats>());
-            }
-            
-            var report = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
-            return ConvertStatsToJson(report.Stats);
-        }
+                var publisherDelta = ComputeDeltaCompression(_previousPublisherStats, publisherStats);
+                var subscriberDelta = ComputeDeltaCompression(_previousSubscriberStats, subscriberStats);
 
-        public async Task<string> GetSubscriberStatsJsonAsync(CancellationToken cancellationToken)
-        {
-            if (_rtcSession.Subscriber == null)
-            {
-                return ConvertStatsToJson(new Dictionary<string, RTCStats>());
-            }
-            
-            var report = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
-            return ConvertStatsToJson(report.Stats);
-        }
+                //StreamTodo: check later if we can use fixed buffer e.g. list from pool
+                var allTraces = new List<object[]>();
 
-        public async Task<string> GetRtcStatsJsonAsync(CancellationToken cancellationToken)
-        {
-            if (_rtcSession.Publisher == null || _rtcSession.Subscriber == null)
-            {
-                var emptyTraces = new List<object[]>();
-                return _serializer.Serialize(emptyTraces, _serializationOptions);
-            }
-            
-            var publisherReport = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
-            var subscriberReport = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
-
-            var publisherDelta = ComputeDeltaCompression(_previousPublisherStats, publisherReport.Stats);
-            var subscriberDelta = ComputeDeltaCompression(_previousSubscriberStats, subscriberReport.Stats);
-
-            _previousPublisherStats = CreateStatsSnapshot(publisherReport.Stats);
-            _previousSubscriberStats = CreateStatsSnapshot(subscriberReport.Stats);
-
-            //StreamTodo: check later if we can use fixed buffer e.g. list from pool
-            var allTraces = new List<object[]>();
-            
-            foreach (var tracer in _tracerManager.GetTracers())
-            {
-                var slice = tracer.Take();
-                foreach (var record in slice.Snapshot)
+                foreach (var tracer in _tracerManager.GetTracers())
                 {
-                    // Serialize each trace record as [tag, id, data, timestamp]
-                    allTraces.Add(new object[] { record.Tag, record.Id, record.Data, record.Timestamp });
+                    var slice = tracer.Take();
+                    foreach (var record in slice.Snapshot)
+                    {
+                        allTraces.Add(new object[] { record.Tag, record.Id, record.Data, record.Timestamp });
+                    }
                 }
+
+                var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                allTraces.Add(new object[] { "getstats", "pub", publisherDelta, timestamp });
+                allTraces.Add(new object[] { "getstats", "sub", subscriberDelta, timestamp });
+
+                rtcStatsJson = _serializer.Serialize(allTraces, _serializationOptions);
+            }
+            else
+            {
+                rtcStatsJson = EmptyJsonArray;
             }
 
-            // Add the getstats traces for publisher and subscriber
-            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            allTraces.Add(new object[] { "getstats", "pub", publisherDelta, timestamp });
-            allTraces.Add(new object[] { "getstats", "sub", subscriberDelta, timestamp });
+            // Update previous stats AFTER all computations that depend on them
+            _previousPublisherStats = CreateStatsSnapshot(publisherStats);
+            _previousSubscriberStats = CreateStatsSnapshot(subscriberStats);
 
-            return _serializer.Serialize(allTraces, _serializationOptions);
+            return new StatsCollectionResult
+            {
+                PublisherStatsJson = publisherStatsJson,
+                SubscriberStatsJson = subscriberStatsJson,
+                RtcStatsJson = rtcStatsJson,
+                EncodeStats = encodeStats,
+                DecodeStats = decodeStats,
+            };
         }
 
         internal UnityWebRtcStatsCollector(RtcSession rtcSession, ISerializer serializer, TracerManager tracerManager)
@@ -119,6 +122,11 @@ namespace StreamVideo.Core.Stats
         /// </summary>
         private string ConvertStatsToJson(IDictionary<string, RTCStats> statsDict)
         {
+            if (statsDict == null)
+            {
+                return EmptyJsonArray;
+            }
+
             var statsArray = new List<Dictionary<string, object>>();
 
             foreach (var statEntry in statsDict)
@@ -167,6 +175,11 @@ namespace StreamVideo.Core.Stats
         /// </summary>
         private Dictionary<string, StatSnapshot> CreateStatsSnapshot(IDictionary<string, RTCStats> stats)
         {
+            if (stats == null)
+            {
+                return new Dictionary<string, StatSnapshot>();
+            }
+
             var snapshot = new Dictionary<string, StatSnapshot>();
             foreach (var entry in stats)
             {
@@ -252,48 +265,28 @@ namespace StreamVideo.Core.Stats
             return result;
         }
 
-        public async Task<IReadOnlyList<PerformanceStats>> GetEncodeStatsAsync(CancellationToken cancellationToken)
-        {
-            if (_rtcSession.Publisher == null)
-            {
-                return new List<PerformanceStats>();
-            }
-            
-            var report = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
-            return ComputeEncodeStats(report.Stats);
-        }
-
-        public async Task<IReadOnlyList<PerformanceStats>> GetDecodeStatsAsync(CancellationToken cancellationToken)
-        {
-            if (_rtcSession.Subscriber == null)
-            {
-                return new List<PerformanceStats>();
-            }
-            
-            var report = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
-            return ComputeDecodeStats(report.Stats);
-        }
-
         /// <summary>
         /// Computes encoder performance stats from publisher WebRTC stats, matching Android implementation.
         /// </summary>
         private List<PerformanceStats> ComputeEncodeStats(IDictionary<string, RTCStats> currentStats)
         {
+            if (currentStats == null)
+            {
+                return new List<PerformanceStats>();
+            }
+
             var result = new List<PerformanceStats>();
 
-            // Find all outbound-rtp video stats
             foreach (var entry in currentStats)
             {
                 var stat = entry.Value;
                 if (GetEnumStringValue(stat.Type) != "outbound-rtp") continue;
                 if (!GetStringValue(stat.Dict, "kind").Equals("video")) continue;
 
-                // Skip if we don't have previous stats for this stat
                 if (!_previousPublisherStats.ContainsKey(entry.Key)) continue;
 
                 var prevStat = _previousPublisherStats[entry.Key];
 
-                // Calculate frame time: dtEncode / dfSent
                 var totalEncodeTime = GetDoubleValue(stat.Dict, "totalEncodeTime");
                 var prevTotalEncodeTime = GetDoubleValue(prevStat.Dict, "totalEncodeTime");
                 var framesSent = GetLongValue(stat.Dict, "framesSent");
@@ -302,9 +295,8 @@ namespace StreamVideo.Core.Stats
                 var dtEncode = totalEncodeTime - prevTotalEncodeTime;
                 var dfSent = framesSent - prevFramesSent;
 
-                var frameTime = dfSent > 0 ? (dtEncode / dfSent) * 1000 : 0.0; // ms/frame
+                var frameTime = dfSent > 0 ? (dtEncode / dfSent) * 1000 : 0.0;
 
-                // Update history
                 var statId = entry.Key;
                 if (!_frameTimeHistory.ContainsKey(statId))
                 {
@@ -321,17 +313,15 @@ namespace StreamVideo.Core.Stats
                 if (_fpsHistory[statId].Count > HistorySize)
                     _fpsHistory[statId].Dequeue();
 
-                // Calculate averages
                 var avgFrameTime = _frameTimeHistory[statId].Average();
                 var avgFps = _fpsHistory[statId].Average();
 
-                // Extract codec info
                 var codecId = GetStringValue(stat.Dict, "codecId");
                 var codec = ExtractCodec(currentStats, codecId);
 
                 var perfStat = new PerformanceStats
                 {
-                    TrackType = TrackType.Video, // Video track
+                    TrackType = TrackType.Video,
                     Codec = codec,
                     AvgFrameTimeMs = (float)avgFrameTime,
                     AvgFps = (float)avgFps,
@@ -354,9 +344,13 @@ namespace StreamVideo.Core.Stats
         /// </summary>
         private List<PerformanceStats> ComputeDecodeStats(IDictionary<string, RTCStats> currentStats)
         {
+            if (currentStats == null)
+            {
+                return new List<PerformanceStats>();
+            }
+
             var result = new List<PerformanceStats>();
 
-            // Find the largest inbound-rtp video stat (the active track)
             RTCStats largestStat = null;
             string largestStatId = null;
             int largestArea = 0;
@@ -384,7 +378,6 @@ namespace StreamVideo.Core.Stats
 
             var prevStat = _previousSubscriberStats[largestStatId];
 
-            // Calculate frame time: dtDecode / dfDecoded
             var totalDecodeTime = GetDoubleValue(largestStat.Dict, "totalDecodeTime");
             var prevTotalDecodeTime = GetDoubleValue(prevStat.Dict, "totalDecodeTime");
             var framesDecoded = GetLongValue(largestStat.Dict, "framesDecoded");
@@ -393,9 +386,8 @@ namespace StreamVideo.Core.Stats
             var dtDecode = totalDecodeTime - prevTotalDecodeTime;
             var dfDecoded = framesDecoded - prevFramesDecoded;
 
-            var frameTime = dfDecoded > 0 ? (dtDecode / dfDecoded) * 1000 : 0.0; // ms/frame
+            var frameTime = dfDecoded > 0 ? (dtDecode / dfDecoded) * 1000 : 0.0;
 
-            // Update history
             var statId = largestStatId;
             if (!_frameTimeHistory.ContainsKey(statId))
             {
@@ -412,17 +404,15 @@ namespace StreamVideo.Core.Stats
             if (_fpsHistory[statId].Count > HistorySize)
                 _fpsHistory[statId].Dequeue();
 
-            // Calculate averages
             var avgFrameTime = _frameTimeHistory[statId].Average();
             var avgFps = _fpsHistory[statId].Average();
 
-            // Extract codec info
             var codecId = GetStringValue(largestStat.Dict, "codecId");
             var codec = ExtractCodec(currentStats, codecId);
 
             var perfStat = new PerformanceStats
             {
-                TrackType = TrackType.Video, // Video track
+                TrackType = TrackType.Video,
                 Codec = codec,
                 AvgFrameTimeMs = (float)avgFrameTime,
                 AvgFps = (float)avgFps,
@@ -461,7 +451,6 @@ namespace StreamVideo.Core.Stats
             };
         }
 
-        // Helper methods to safely extract values from Dict
         private static string GetStringValue(IDictionary<string, object> dict, string key)
         {
             return dict.TryGetValue(key, out var value) && value != null ? value.ToString() : string.Empty;

@@ -1580,6 +1580,11 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, updateLocalParticipantState,
                 out var participant);
 
+            if (participant != null)
+            {
+                participant.ClearTrackPausedByServer(type);
+            }
+
             if (participantSfuDto != null && participant != null)
             {
                 participant.UpdateFromSfu(participantSfuDto);
@@ -1982,10 +1987,25 @@ namespace StreamVideo.Core.LowLevelClient
             // StreamTODO: Implement OnSfuWebSocketOnChangePublishOptions
         }
 
-        private void OnSfuInboundStateNotification(InboundStateNotification obj)
+        private void OnSfuInboundStateNotification(InboundStateNotification inboundStateNotification)
         {
-            _sfuTracer?.Trace("inboundStateNotification", obj);
-            //StreamTODO: implement
+            _sfuTracer?.Trace("inboundStateNotification", inboundStateNotification);
+
+            foreach (var state in inboundStateNotification.InboundVideoStates)
+            {
+                var trackType = state.TrackType.ToPublicEnum();
+                var participant = (StreamVideoCallParticipant)ActiveCall?.Participants
+                    .FirstOrDefault(p => p.SessionId == state.SessionId);
+
+                if (participant == null)
+                {
+                    _logs.WarningIfDebug(
+                        $"[InboundState] Received pause notification for unknown session: {state.SessionId}");
+                    continue;
+                }
+
+                participant.SetTrackPausedByServer(trackType, state.Paused);
+            }
         }
 
         private void OnSfuWebSocketOnParticipantMigrationComplete()

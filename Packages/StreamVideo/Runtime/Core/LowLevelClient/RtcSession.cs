@@ -2116,17 +2116,11 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         /// <summary>
-        /// Converts RPC method name to trace-friendly format (e.g., "SetPublisher" -> "setPublisher")
+        /// Returns the RPC method name as-is in PascalCase to match JS SDK trace naming.
         /// </summary>
         private string GetRpcTraceName(string debugRequestName)
         {
-            if (string.IsNullOrEmpty(debugRequestName))
-            {
-                return debugRequestName;
-            }
-
-            // Convert from PascalCase to camelCase to match Android SDK trace naming
-            return char.ToLowerInvariant(debugRequestName[0]) + debugRequestName.Substring(1);
+            return debugRequestName;
         }
 
         //StreamTodo: subscribe to changes in capabilities. This can potentially change during the call

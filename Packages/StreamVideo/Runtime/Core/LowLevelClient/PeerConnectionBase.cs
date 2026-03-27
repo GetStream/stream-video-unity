@@ -1,4 +1,4 @@
-﻿//StreamTodo: duplicated declaration of STREAM_NATIVE_AUDIO (also in RtcSession.cs) easy to get out of sync.
+//StreamTodo: duplicated declaration of STREAM_NATIVE_AUDIO (also in RtcSession.cs) easy to get out of sync.
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
@@ -319,12 +319,17 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (candidate == null)
             {
-                // Null candidate signals that ICE gathering is complete
-                Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, "null (ICE gathering complete)");
+                Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate);
                 return;
             }
 
-            Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, candidate.ToString());
+            Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, new Dictionary<string, object>
+            {
+                { "candidate", candidate.Candidate },
+                { "sdpMid", candidate.SdpMid },
+                { "sdpMLineIndex", candidate.SdpMLineIndex },
+                { "usernameFragment", candidate.UserNameFragment }
+            });
             IceTrickled?.Invoke(candidate, PeerType);
         }
 

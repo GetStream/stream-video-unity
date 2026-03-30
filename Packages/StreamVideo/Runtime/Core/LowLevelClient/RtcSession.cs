@@ -230,6 +230,11 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         public int SessionVersion => SessionId.Version;
 
+        /// <summary>
+        /// SFU hostname extracted from the full URL (scheme and path stripped).
+        /// </summary>
+        internal string SfuHost { get; private set; } = string.Empty;
+
         public RtcSession(ISfuWebSocketFactory sfuWebSocketFactory, Func<IStreamCall, HttpClient> httpClientFactory,
             ILogs logs, ISerializer serializer, ITimeService timeService, StreamVideoLowLevelClient lowLevelClient,
             IStreamClientConfig config, INetworkMonitor networkMonitor)
@@ -524,10 +529,10 @@ namespace StreamVideo.Core.LowLevelClient
                     var sfuToken = call.Credentials.Token;
                     var iceServers = call.Credentials.IceServers;
 
-                    // Initialize tracers with the correct ID format - separate tracers for SFU, Publisher, and Subscriber
-                    var sfuUrlForId = sfuUrl.Replace("https://", "").Replace("/twirp", "");
+                    SfuHost = sfuUrl.Replace("https://", "").Replace("/twirp", "");
                     var sessionNumber = _sessionCounter + 1;
-                    _sfuTracer = _tracerManager.GetTracer($"{sessionNumber}-{sfuUrlForId}");
+                    _sfuTracer = _tracerManager.GetTracer($"{sessionNumber}-{SfuHost}");
+                    _sfuWebSocket.SetTracer(_sfuTracer);
                     _publisherTracer = _tracerManager.GetTracer($"{sessionNumber}-pub");
                     _subscriberTracer = _tracerManager.GetTracer($"{sessionNumber}-sub");
                     _sessionCounter++;
@@ -1158,6 +1163,7 @@ namespace StreamVideo.Core.LowLevelClient
             _trackSubscriptionRequestInProgress = false;
 
             SessionId.Clear();
+            SfuHost = string.Empty;
         }
 
         private CancellationToken GetCurrentCancellationTokenOrDefault()
@@ -2089,6 +2095,11 @@ namespace StreamVideo.Core.LowLevelClient
                 if (error != null)
                 {
                     _sfuTracer?.Trace($"{GetRpcTraceName(debugRequestName)}-error", error.Message);
+                }
+
+                if (debugRequestName == nameof(GeneratedAPI.SetPublisher))
+                {
+                    _sfuTracer?.Trace($"{GetRpcTraceName(debugRequestName)}Response", response);
                 }
             }
 

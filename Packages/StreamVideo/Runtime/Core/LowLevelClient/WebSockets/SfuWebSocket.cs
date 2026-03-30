@@ -13,6 +13,7 @@ using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
+using StreamVideo.Core.Trace;
 using StreamVideo.Libs.Websockets;
 using Error = StreamVideo.v1.Sfu.Events.Error;
 using ICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
@@ -61,6 +62,11 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
             _sdkVersion = sdkVersion;
             
             logs.WarningIfDebug("SFU instance created");
+        }
+
+        public void SetTracer(Tracer tracer)
+        {
+            _tracer = tracer ?? throw new ArgumentException(nameof(tracer));
         }
 
         public void InitNewSession(string sessionId, string sfuUrl, string sfuToken, string subscriberOfferSdp, string publisherOfferSdp)
@@ -197,6 +203,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
                 var sfuUri = UriFactory.CreateSfuConnectionUri(_sfuUrl);
 
                 await WebsocketClient.ConnectAsync(sfuUri, cancellationToken);
+                _tracer?.Trace(PeerConnectionTraceKey.SignalWsOpen, null);
                 WebsocketClient.Send(sfuJoinRequestEncoded);
 
                 //StreamTODO: implement timeout
@@ -357,6 +364,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private string _publisherOfferSdp;
         private string _sfuUrl;
         private string _sfuToken;
+        private Tracer _tracer;
 
         private TaskCompletionSource<JoinResponse> _joinEventReceivedCompletionSource;
 

@@ -39,6 +39,9 @@ namespace StreamVideo.Core.Trace
         // ICE and reconnect traces
         public const string IceRestartError = "iceRestart-error";
         public const string FastReconnect = "fastReconnect";
+        
+        // SFU WebSocket traces
+        public const string SignalWsOpen = "signal.ws.open";
     }
 }
 

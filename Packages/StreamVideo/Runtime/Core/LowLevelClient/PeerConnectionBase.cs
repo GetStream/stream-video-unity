@@ -93,9 +93,19 @@ namespace StreamVideo.Core.LowLevelClient
             PeerConnection.OnConnectionStateChange += OnConnectionStateChange;
             PeerConnection.OnTrack += OnTrack;
 
-            //StreamTODO: add tracer "create"
-
-            //StreamTODO: review missing trace events
+            var sfuHost = sfuClient.SfuHost;
+            Tracer?.Trace(PeerConnectionTraceKey.Create, new Dictionary<string, object>
+            {
+                { "url", sfuHost },
+                { "iceServers", iceServers.Select(ice => new Dictionary<string, object>
+                    {
+                        { "urls", ice.Urls.ToArray() },
+                        { "username", ice.Username },
+                        { "credential", ice.Password }
+                    }).ToArray()
+                },
+                { "iceTransportPolicy", "all" },
+            });
         }
 
         public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer,

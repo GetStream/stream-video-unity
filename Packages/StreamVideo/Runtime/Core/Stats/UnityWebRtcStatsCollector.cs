@@ -444,11 +444,20 @@ namespace StreamVideo.Core.Stats
 
             return new Codec
             {
-                Name = mimeType,
+                Name = StripMimeTypePrefix(mimeType),
                 ClockRate = clockRate,
                 PayloadType = payloadType,
                 Fmtp = sdpFmtpLine
             };
+        }
+
+        /// <summary>
+        /// Extracts the codec name from a MIME type string (e.g. "video/av1" -> "av1").
+        /// </summary>
+        private static string StripMimeTypePrefix(string mimeType)
+        {
+            var lastSlash = mimeType.LastIndexOf('/');
+            return lastSlash >= 0 ? mimeType.Substring(lastSlash + 1) : mimeType;
         }
 
         private static string GetStringValue(IDictionary<string, object> dict, string key)

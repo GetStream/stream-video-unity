@@ -233,7 +233,7 @@ namespace StreamVideo.Core.LowLevelClient
         /// <summary>
         /// SFU hostname extracted from the full URL (scheme and path stripped).
         /// </summary>
-        internal string SfuHost { get; private set; } = string.Empty;
+        public string SfuHost { get; private set; } = string.Empty;
 
         public RtcSession(ISfuWebSocketFactory sfuWebSocketFactory, Func<IStreamCall, HttpClient> httpClientFactory,
             ILogs logs, ISerializer serializer, ITimeService timeService, StreamVideoLowLevelClient lowLevelClient,

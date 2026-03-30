@@ -319,9 +319,11 @@ namespace StreamVideo.Core.Stats
                 var codecId = GetStringValue(stat.Dict, "codecId");
                 var codec = ExtractCodec(currentStats, codecId);
 
+                var trackType = ResolvePublisherTrackType(currentStats, stat);
+
                 var perfStat = new PerformanceStats
                 {
-                    TrackType = TrackType.Video,
+                    TrackType = trackType,
                     Codec = codec,
                     AvgFrameTimeMs = (float)avgFrameTime,
                     AvgFps = (float)avgFps,
@@ -337,6 +339,44 @@ namespace StreamVideo.Core.Stats
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Resolves the SFU track type for an outbound-rtp stat by looking up its media source's
+        /// track identifier against the publisher's known tracks.
+        /// </summary>
+        private TrackType ResolvePublisherTrackType(IDictionary<string, RTCStats> allStats, RTCStats outboundRtpStat)
+        {
+            var mediaSourceId = GetStringValue(outboundRtpStat.Dict, "mediaSourceId");
+            if (!string.IsNullOrEmpty(mediaSourceId) && allStats.TryGetValue(mediaSourceId, out var mediaSourceStat))
+            {
+                var trackIdentifier = GetStringValue(mediaSourceStat.Dict, "trackIdentifier");
+                if (!string.IsNullOrEmpty(trackIdentifier))
+                {
+                    var resolved = _rtcSession.Publisher?.GetTrackTypeForIdentifier(trackIdentifier);
+
+#if STREAM_DEBUG_ENABLED
+                    if (RtcSession.LogWebRTCStats)
+                    {
+                        UnityEngine.Debug.Log(
+                            $"[Stats] ResolvePublisherTrackType: mediaSourceId={mediaSourceId}, trackIdentifier={trackIdentifier}, resolved={resolved?.ToString() ?? "null"}");
+                    }
+#endif
+
+                    if (resolved.HasValue)
+                        return resolved.Value;
+                }
+            }
+
+#if STREAM_DEBUG_ENABLED
+            if (RtcSession.LogWebRTCStats)
+            {
+                UnityEngine.Debug.LogWarning(
+                    $"[Stats] ResolvePublisherTrackType: failed to resolve, mediaSourceId={mediaSourceId}, falling back to Video");
+            }
+#endif
+
+            return TrackType.Video;
         }
 
         /// <summary>

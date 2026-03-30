@@ -74,6 +74,18 @@ namespace StreamVideo.Core.LowLevelClient
 
         public RTCRtpSender VideoSender { get; private set; }
 
+        /// <summary>
+        /// Returns the SFU track type for a given WebRTC track identifier, or null if not recognized.
+        /// </summary>
+        public TrackType? GetTrackTypeForIdentifier(string trackIdentifier)
+        {
+            if (PublisherVideoTrack != null && PublisherVideoTrack.Id == trackIdentifier)
+                return TrackType.Video;
+            if (PublisherAudioTrack != null && PublisherAudioTrack.Id == trackIdentifier)
+                return TrackType.Audio;
+            return null;
+        }
+
         public IEnumerable<TrackType> PublishedTrackOrder => _publishedTrackOrder;
 
         // Full: 704×576  -> half: 352×288 -> quarter: 176×144 <- We want the smallest resolution to be above 96x96

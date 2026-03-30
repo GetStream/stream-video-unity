@@ -337,6 +337,8 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (result.Error != null)
                 {
+                    Tracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetPublisher,
+                        $"{result.Error.Code}: {result.Error.Message}");
                     //StreamTODO: create custom exception
                     throw new Exception(
                         $"{nameof(GeneratedAPI.SetPublisher)} request failed with: {result.Error.Code}, {result.Error.Message}.\nRequest:\n{serializedRequest}");

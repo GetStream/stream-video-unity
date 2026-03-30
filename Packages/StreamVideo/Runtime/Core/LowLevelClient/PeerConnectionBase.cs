@@ -247,6 +247,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
             catch (NegotiationException negotiationException)
             {
+                Tracer?.Trace(PeerConnectionTraceKey.IceRestartError, negotiationException.Message ?? "unknown");
+                
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {
                     Logs.InfoIfDebug($"[{PeerType}] Ignoring stale ICE restart error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
@@ -257,8 +259,10 @@ namespace StreamVideo.Core.LowLevelClient
                 var strategy = isSignalLostError ? WebsocketReconnectStrategy.Fast : WebsocketReconnectStrategy.Rejoin;
                 ReconnectionNeeded?.Invoke(strategy, errorReason, PeerType);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Tracer?.Trace(PeerConnectionTraceKey.IceRestartError, e.Message ?? "unknown");
+                
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {
                     Logs.InfoIfDebug($"[{PeerType}] Ignoring stale ICE restart error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");

@@ -1694,6 +1694,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         protected virtual async Task ReconnectFast()
         {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.FastReconnect, new { Reason = _reconnectReason });
             _reconnectStrategy = WebsocketReconnectStrategy.Fast;
             CallState = CallingState.Reconnecting;
             await DoJoin(_joinCallData, GetCurrentCancellationTokenOrDefault());

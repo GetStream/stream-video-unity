@@ -134,8 +134,8 @@ namespace StreamVideo.Core.Stats
                 var stat = statEntry.Value;
                 var statObject = new Dictionary<string, object>();
 
-                // Add required fields: timestamp (in microseconds), id, and type
-                statObject["timestamp"] = stat.Timestamp;
+                // Unity WebRTC returns timestamps in microseconds; convert to milliseconds to match the browser API
+                statObject["timestamp"] = stat.Timestamp / 1000;
                 statObject["id"] = stat.Id;
                 
                 // Convert the enum to its string representation using the StringValueAttribute
@@ -232,11 +232,12 @@ namespace StreamVideo.Core.Stats
                     }
                 }
 
-                // Add timestamp (in microseconds) for later normalization
-                diff["timestamp"] = newStat.Timestamp;
-                if (newStat.Timestamp > latestTimestamp)
+                // Unity WebRTC returns timestamps in microseconds; convert to milliseconds to match the browser API
+                var timestampMs = newStat.Timestamp / 1000;
+                diff["timestamp"] = timestampMs;
+                if (timestampMs > latestTimestamp)
                 {
-                    latestTimestamp = newStat.Timestamp;
+                    latestTimestamp = timestampMs;
                 }
 
                 delta[id] = diff;
@@ -254,13 +255,12 @@ namespace StreamVideo.Core.Stats
                 }
             }
 
-            // Create result with delta and top-level timestamp (in milliseconds)
             var result = new Dictionary<string, object>();
             foreach (var entry in delta)
             {
                 result[entry.Key] = entry.Value;
             }
-            result["timestamp"] = latestTimestamp / 1000; // Convert microseconds to milliseconds
+            result["timestamp"] = latestTimestamp;
 
             return result;
         }

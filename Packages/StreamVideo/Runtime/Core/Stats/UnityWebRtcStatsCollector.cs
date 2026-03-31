@@ -356,7 +356,7 @@ namespace StreamVideo.Core.Stats
                     var resolved = _rtcSession.Publisher?.GetTrackTypeForIdentifier(trackIdentifier);
 
 #if STREAM_DEBUG_ENABLED
-                    if (RtcSession.LogWebRTCStats)
+                    //if (RtcSession.LogWebRTCStats)
                     {
                         UnityEngine.Debug.Log(
                             $"[Stats] ResolvePublisherTrackType: mediaSourceId={mediaSourceId}, trackIdentifier={trackIdentifier}, resolved={resolved?.ToString() ?? "null"}");
@@ -369,7 +369,7 @@ namespace StreamVideo.Core.Stats
             }
 
 #if STREAM_DEBUG_ENABLED
-            if (RtcSession.LogWebRTCStats)
+            //if (RtcSession.LogWebRTCStats)
             {
                 UnityEngine.Debug.LogWarning(
                     $"[Stats] ResolvePublisherTrackType: failed to resolve, mediaSourceId={mediaSourceId}, falling back to Video");

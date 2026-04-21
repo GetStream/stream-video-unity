@@ -9,12 +9,12 @@ namespace StreamVideo.Core.Trace
         public const string JoinRequest = "joinRequest";
         public const string OnIceCandidate = "onicecandidate";
         public const string OnTrack = "ontrack";
-        public const string OnSignalingStateChange = "onsignalingstatechange";
-        public const string OnIceConnectionStateChange = "oniceconnectionstatechange";
-        public const string OnIceGatheringStateChange = "onicegatheringstatechange";
-        public const string OnConnectionStateChange = "onconnectionstatechange";
-        public const string OnNegotiationNeeded = "onnegotiationneeded";
-        public const string OnDataChannel = "ondatachannel";
+        public const string OnSignalingStateChange = "signalingstatechange";
+        public const string OnIceConnectionStateChange = "iceconnectionstatechange";
+        public const string OnIceGatheringStateChange = "icegatheringstatechange";
+        public const string OnConnectionStateChange = "connectionstatechange";
+        public const string OnNegotiationNeeded = "negotiationneeded";
+        public const string OnDataChannel = "datachannel";
         public const string Close = "close";
         public const string CreateOffer = "createOffer";
         public const string CreateAnswer = "createAnswer";
@@ -39,6 +39,9 @@ namespace StreamVideo.Core.Trace
         // ICE and reconnect traces
         public const string IceRestartError = "iceRestart-error";
         public const string FastReconnect = "fastReconnect";
+        
+        // SFU WebSocket traces
+        public const string SignalWsOpen = "signal.ws.open";
     }
 }
 

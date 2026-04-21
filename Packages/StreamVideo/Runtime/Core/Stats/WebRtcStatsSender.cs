@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf.Collections;
@@ -113,36 +113,32 @@ namespace StreamVideo.Core.Stats
                 return;
             }
             
-            var subscriberStatsJson = await _webRtcStatsCollector.GetSubscriberStatsJsonAsync(cancellationToken);
-            var publisherStatsJson = await _webRtcStatsCollector.GetPublisherStatsJsonAsync(cancellationToken);
-            var rtcStatsJson = await _webRtcStatsCollector.GetRtcStatsJsonAsync(cancellationToken);
-            var encodeStats = await _webRtcStatsCollector.GetEncodeStatsAsync(cancellationToken);
-            var decodeStats = await _webRtcStatsCollector.GetDecodeStatsAsync(cancellationToken);
+            var stats = await _webRtcStatsCollector.CollectAsync(cancellationToken);
 
-            if (subscriberStatsJson == null || publisherStatsJson == null || rtcStatsJson == null)
+            if (stats.SubscriberStatsJson == null || stats.PublisherStatsJson == null || stats.RtcStatsJson == null)
             {
                 throw new InvalidOperationException(
-                    $"{nameof(subscriberStatsJson)}: {subscriberStatsJson}, {nameof(publisherStatsJson)}: {publisherStatsJson}, {nameof(rtcStatsJson)}: {rtcStatsJson}");
+                    $"SubscriberStatsJson: {stats.SubscriberStatsJson}, PublisherStatsJson: {stats.PublisherStatsJson}, RtcStatsJson: {stats.RtcStatsJson}");
             }
 
             var request = new SendStatsRequest
             {
                 SessionId = _rtcSession.SessionId.ToString(),
                 UnifiedSessionId = _rtcSession.ActiveCall.UnifiedSessionId,
-                SubscriberStats = subscriberStatsJson,
-                PublisherStats = publisherStatsJson,
-                RtcStats = rtcStatsJson,
+                SubscriberStats = stats.SubscriberStatsJson,
+                PublisherStats = stats.PublisherStatsJson,
+                RtcStats = stats.RtcStatsJson,
                 WebrtcVersion = WebRTCVersion,
                 Sdk = UnitySdkName,
                 SdkVersion = StreamVideoLowLevelClient.SDKVersion.ToString(),
             };
 
-            foreach (var stat in encodeStats)
+            foreach (var stat in stats.EncodeStats)
             {
                 request.EncodeStats.Add(stat);
             }
             
-            foreach (var stat in decodeStats)
+            foreach (var stat in stats.DecodeStats)
             {
                 request.DecodeStats.Add(stat);
             }
@@ -152,10 +148,10 @@ namespace StreamVideo.Core.Stats
             if (RtcSession.LogWebRTCStats)
             {
                 _logs.Info("-----------WebRTC STATS DUMP -> 1. publisher, 2. subscriber, 3. rtc_stats------");
-                _logs.Info(publisherStatsJson);
-                _logs.Info(subscriberStatsJson);
-                _logs.Info(rtcStatsJson);
-                _logs.Info($"Encode stats count: {encodeStats.Count}, Decode stats count: {decodeStats.Count}");
+                _logs.Info(stats.PublisherStatsJson);
+                _logs.Info(stats.SubscriberStatsJson);
+                _logs.Info(stats.RtcStatsJson);
+                _logs.Info($"Encode stats count: {stats.EncodeStats.Count}, Decode stats count: {stats.DecodeStats.Count}");
                 _logs.Info(request.ToString());
                 _logs.Info("-----------END WebRTC STATS DUMP END------");
             }

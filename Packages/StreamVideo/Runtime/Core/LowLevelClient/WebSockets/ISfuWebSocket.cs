@@ -2,6 +2,7 @@ using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using StreamVideo.Core.Trace;
 using StreamVideo.v1.Sfu.Events;
 using ICETrickle = StreamVideo.v1.Sfu.Models.ICETrickle;
 using Error = StreamVideo.v1.Sfu.Events.Error;
@@ -47,6 +48,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         bool IsHealthy { get; }
 
         void Update();
+        void SetTracer(Tracer tracer);
         void InitNewSession(string sessionId, string sfuUrl, string sfuToken,
             string subscriberOfferSdp, string publisherOfferSdp);
         Task<JoinResponse> ConnectAsync(SfuConnectRequest request, CancellationToken cancellationToken = default);

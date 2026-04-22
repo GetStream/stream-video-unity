@@ -1,4 +1,4 @@
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
 #endif
 using System;
@@ -1418,6 +1418,13 @@ namespace StreamVideo.Core.LowLevelClient
 
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> START local audio capture");
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate);
+
+#if UNITY_IOS && !UNITY_EDITOR
+                // Configure iOS audio session after native capture starts.
+                // Miniaudio sets category/mode (VoiceChat); we add speaker routing + gain.
+                _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> Configuring iOS audio session");
+                Libs.iOSAudioManagers.IOSAudioManager.ConfigureForWebRTC();
+#endif
             }
             else
             {

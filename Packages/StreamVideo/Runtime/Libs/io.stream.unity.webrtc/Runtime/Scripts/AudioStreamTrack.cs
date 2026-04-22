@@ -290,7 +290,7 @@ namespace Unity.WebRTC
                 GetSelfOrThrow(), renderer.self);
         }
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
         /// <summary>
         ///     Mutes this audio track locally without affecting other users.
         /// </summary>
@@ -542,7 +542,7 @@ namespace Unity.WebRTC
                 _streamRenderer.onReceived -= value;
             }
         }
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 
         public void StartLocalAudioCapture(int deviceId, int sampleRate)
         {

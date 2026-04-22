@@ -31,6 +31,15 @@ namespace StreamVideo.Core.DeviceManagers
             {
             }
 
+#if UNITY_IOS && !UNITY_EDITOR
+            // On iOS the native audio pipeline handles capture via miniaudio.
+            // Device enumeration uses Unity's Microphone API since iOS typically
+            // exposes a single input device and doesn't use Android's routing model.
+            foreach (var deviceName in Microphone.devices)
+            {
+                yield return new MicrophoneDeviceInfo(deviceName);
+            }
+#elif UNITY_ANDROID && !UNITY_EDITOR
             if (RtcSession.UseNativeAudioBindings)
             {
                 NativeAudioDeviceManager.GetAudioInputDevices(ref _inputDevicesBuffer);
@@ -51,6 +60,12 @@ namespace StreamVideo.Core.DeviceManagers
                     yield return new MicrophoneDeviceInfo(deviceName);
                 }
             }
+#else
+            foreach (var deviceName in Microphone.devices)
+            {
+                yield return new MicrophoneDeviceInfo(deviceName);
+            }
+#endif
         }
 
         protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msTimeout)
@@ -129,10 +144,12 @@ namespace StreamVideo.Core.DeviceManagers
 
             IsEnabled = enable;
 
+#if UNITY_ANDROID && !UNITY_EDITOR
             if (RtcSession.UseNativeAudioBindings)
             {
                 SetAudioRoutingAsync((NativeAudioDeviceManager.AudioRouting)SelectedDevice.IntId.Value).LogIfFailed();
             }
+#endif
         }
 
         //StreamTodo: https://docs.unity3d.com/ScriptReference/AudioSource-ignoreListenerPause.html perhaps this should be enabled so that AudioListener doesn't affect recorded audio

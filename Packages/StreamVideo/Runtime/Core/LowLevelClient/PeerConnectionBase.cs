@@ -1,6 +1,6 @@
 ﻿//StreamTodo: duplicated declaration of STREAM_NATIVE_AUDIO (also in RtcSession.cs) easy to get out of sync.
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
 #endif
 using System;

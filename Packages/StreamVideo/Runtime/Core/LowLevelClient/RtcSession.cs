@@ -1,4 +1,4 @@
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
 #endif
 using System;
@@ -893,26 +893,35 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
-        public void PauseAndroidAudioPlayback()
+        /// <summary>
+        /// Pauses audio playback coming from the StreamVideo SDK. Intended to be called from app lifecycle
+        /// events (e.g. <c>OnApplicationPause(true)</c>) without the caller having to branch on the runtime platform.
+        /// On Android this completely suspends native audio playback. iOS support is not yet implemented.
+        /// On other platforms this is a no-op because there is no equivalent app-backgrounding concept.
+        /// </summary>
+        public void PauseAudioPlayback()
         {
-#if STREAM_NATIVE_AUDIO
+#if UNITY_ANDROID && !UNITY_EDITOR && STREAM_NATIVE_AUDIO
             WebRTC.MuteAndroidAudioPlayback();
             _logs.Warning("Audio Playback is paused. This stops all audio coming from StreamVideo SDK on Android platform.");
-#else
-            throw new NotSupportedException(
-                $"{nameof(PauseAndroidAudioPlayback)} is only supported on Android platform.");
+#elif UNITY_IOS && !UNITY_EDITOR
+            //StreamTODO: implement iOS audio playback pause
 #endif
         }
 
         //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
-        public void ResumeAndroidAudioPlayback()
+        /// <summary>
+        /// Resumes audio playback previously paused via <see cref="PauseAudioPlayback"/>.
+        /// On Android this resumes native audio playback. iOS support is not yet implemented.
+        /// On other platforms this is a no-op.
+        /// </summary>
+        public void ResumeAudioPlayback()
         {
-#if STREAM_NATIVE_AUDIO
+#if UNITY_ANDROID && !UNITY_EDITOR && STREAM_NATIVE_AUDIO
             WebRTC.UnmuteAndroidAudioPlayback();
             _logs.Warning("Audio Playback is resumed. This resumes audio coming from StreamVideo SDK on Android platform.");
-#else
-            throw new NotSupportedException(
-                $"{nameof(ResumeAndroidAudioPlayback)} is only supported on Android platform.");
+#elif UNITY_IOS && !UNITY_EDITOR
+            //StreamTODO: implement iOS audio playback resume
 #endif
         }
 

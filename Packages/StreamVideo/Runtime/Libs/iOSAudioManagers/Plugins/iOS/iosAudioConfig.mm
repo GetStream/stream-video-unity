@@ -29,6 +29,21 @@
 // native recorder is started, so the VoiceProcessingIO audio unit opens
 // with the right session in place, and calls _StreamDeconfigureAudioSession
 // when capture stops so other apps can resume their normal audio.
+//
+// Resilience:
+//   _StreamConfigureAudioSessionForWebRTC also installs (once) NSNotification
+//   observers for AVAudioSessionInterruptionNotification and
+//   AVAudioSessionMediaServicesWereResetNotification. While the SDK
+//   currently wants the session up (s_streamSessionConfigured == YES),
+//   those observers reapply the category/mode and reactivate the session.
+//   This handles the race where a phone-call interruption or a system
+//   audio-server reset deactivates us mid-call and the next StartAudioPlayback
+//   would otherwise fail with '!rec'.
+
+// Tracks whether the SDK currently wants the session up. Set YES on
+// Configure, NO on Deconfigure. The interruption/reset observers consult
+// this so they don't reapply after the SDK explicitly tore the session down.
+static BOOL s_streamSessionConfigured = NO;
 
 extern "C" {
 
@@ -102,23 +117,119 @@ static BOOL StreamApplyVideoChatCategory() {
 }
 
 // Activate the audio session. Safe to call multiple times.
-static void StreamActivateAudioSession() {
+// Returns YES on success, NO on failure.
+static BOOL StreamActivateAudioSession() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
-    if (![audioSession setActive:YES error:&error]) {
+    BOOL ok = [audioSession setActive:YES error:&error];
+    if (!ok) {
         NSLog(@"[StreamVideo iOS Audio] Failed to activate audio session: %@", error);
     }
+    return ok;
 }
 
-void _StreamConfigureAudioSessionForWebRTC() {
+// Reapply our category/mode and reactivate the session. Used by both the
+// public Configure entry point and the interruption/reset observers below.
+// Returns YES iff both setCategory and setActive succeeded AND the resulting
+// state is the one VPIO needs (PlayAndRecord + VideoChat/VoiceChat).
+static BOOL StreamReapplySession() {
+    BOOL categoryOk = StreamApplyVideoChatCategory();
+    BOOL activateOk = StreamActivateAudioSession();
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    BOOL playAndRecord = [audioSession.category isEqualToString:AVAudioSessionCategoryPlayAndRecord];
+    BOOL voiceProcessing = [audioSession.mode isEqualToString:AVAudioSessionModeVideoChat] ||
+                           [audioSession.mode isEqualToString:AVAudioSessionModeVoiceChat];
+    return categoryOk && activateOk && playAndRecord && voiceProcessing;
+}
+
+// Install (once) observers that reapply our session if the system tears it
+// down (interruption ended, audio services reset). Intentionally never
+// removed: registration cost is one notification block per app lifetime.
+static void StreamEnsureNotificationObserversInstalled() {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+
+        // Phone calls, Siri, etc. can interrupt the session. iOS sends:
+        //   Began -> our session goes inactive (we don't need to do anything)
+        //   Ended -> we should reactivate (and ideally re-set category in case
+        //            something snuck a setCategory call in while we were
+        //            inactive, e.g. another plugin reacting to the same event)
+        [center addObserverForName:AVAudioSessionInterruptionNotification
+                            object:nil
+                             queue:[NSOperationQueue mainQueue]
+                        usingBlock:^(NSNotification * _Nonnull note) {
+            NSNumber *typeValue = note.userInfo[AVAudioSessionInterruptionTypeKey];
+            if (typeValue == nil) return;
+            AVAudioSessionInterruptionType type = (AVAudioSessionInterruptionType)typeValue.unsignedIntegerValue;
+
+            if (type == AVAudioSessionInterruptionTypeBegan) {
+                NSLog(@"[StreamVideo iOS Audio] Interruption BEGAN (sessionConfigured=%@)",
+                      s_streamSessionConfigured ? @"YES" : @"NO");
+                return;
+            }
+
+            if (type == AVAudioSessionInterruptionTypeEnded) {
+                NSNumber *opts = note.userInfo[AVAudioSessionInterruptionOptionKey];
+                BOOL shouldResume = opts != nil &&
+                                    ((AVAudioSessionInterruptionOptions)opts.unsignedIntegerValue
+                                     & AVAudioSessionInterruptionOptionShouldResume);
+                NSLog(@"[StreamVideo iOS Audio] Interruption ENDED (shouldResume=%@, sessionConfigured=%@)",
+                      shouldResume ? @"YES" : @"NO",
+                      s_streamSessionConfigured ? @"YES" : @"NO");
+
+                if (s_streamSessionConfigured) {
+                    BOOL ok = StreamReapplySession();
+                    NSLog(@"[StreamVideo iOS Audio] Reapplied session after interruption: %@",
+                          ok ? @"OK" : @"FAILED");
+                }
+            }
+        }];
+
+        // The audio server (mediaserverd) can be reset by iOS, which puts
+        // every audio session back to its defaults. Apple recommends apps
+        // listen for this and reconfigure from scratch.
+        //
+        // NOTE: a media-services reset also tears down every CoreAudio
+        // graph (including miniaudio's ma_device / AURemoteIO). Reapplying
+        // the AVAudioSession here is necessary but not sufficient to
+        // recover audio - the C# side would also need to call
+        // RtcSession.TryRestartAudioPlayback / TryRestartAudioRecording.
+        // This is logged but not surfaced to C# yet; if recovery becomes a
+        // requirement, add a callback from this observer up to C#.
+        [center addObserverForName:AVAudioSessionMediaServicesWereResetNotification
+                            object:nil
+                             queue:[NSOperationQueue mainQueue]
+                        usingBlock:^(NSNotification * _Nonnull note) {
+            NSLog(@"[StreamVideo iOS Audio] mediaServicesWereReset (sessionConfigured=%@)",
+                  s_streamSessionConfigured ? @"YES" : @"NO");
+            if (s_streamSessionConfigured) {
+                BOOL ok = StreamReapplySession();
+                NSLog(@"[StreamVideo iOS Audio] Reapplied session after media services reset: %@",
+                      ok ? @"OK" : @"FAILED");
+            }
+        }];
+
+        NSLog(@"[StreamVideo iOS Audio] Installed AVAudioSession interruption + reset observers");
+    });
+}
+
+// Returns 1 on success (session is in PlayAndRecord + VideoChat/VoiceChat,
+// active), 0 on failure. Errors are logged via NSLog.
+int _StreamConfigureAudioSessionForWebRTC() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
 
     NSLog(@"[StreamVideo iOS Audio] ConfigureAudioSessionForWebRTC");
 
+    StreamEnsureNotificationObserversInstalled();
+
+    // Mark intent BEFORE applying so the observers (if they fire mid-apply
+    // due to a concurrent system event) reapply rather than do nothing.
+    s_streamSessionConfigured = YES;
+
     // Reapply category/mode in case something else (Unity, another plugin)
     // changed it after miniaudio's context init.
-    StreamApplyVideoChatCategory();
-    StreamActivateAudioSession();
+    BOOL ok = StreamReapplySession();
 
     BOOL voiceProcessing = [audioSession.mode isEqualToString:AVAudioSessionModeVideoChat] ||
                            [audioSession.mode isEqualToString:AVAudioSessionModeVoiceChat];
@@ -147,6 +258,8 @@ void _StreamConfigureAudioSessionForWebRTC() {
     // If you want a hard "speakerphone" override, call _StreamForceOutputToSpeaker
     // explicitly from the C# layer.
     _StreamMaximizeInputGain();
+
+    return ok ? 1 : 0;
 }
 
 // Tear down the session we put up. Called when the call ends or capture
@@ -155,6 +268,10 @@ void _StreamConfigureAudioSessionForWebRTC() {
 void _StreamDeconfigureAudioSession() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
+
+    // Clear intent first so the interruption/reset observers (if any
+    // notification arrives during teardown) do not reapply the session.
+    s_streamSessionConfigured = NO;
 
     BOOL ok = [audioSession setActive:NO
                           withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation

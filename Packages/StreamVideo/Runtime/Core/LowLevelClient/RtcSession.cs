@@ -660,6 +660,15 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
 #if STREAM_NATIVE_AUDIO
+                    // On iOS the same MiniaudioDuplexDevice services both capture
+                    // and playback through one VoiceProcessingIO audio unit.
+                    // VPIO requires AVAudioSession.category == PlayAndRecord, so the
+                    // session MUST be configured before StartAudioPlayback opens the
+                    // ma_device - otherwise AURemoteIO_StartIO fails with '!rec'
+                    // (kAudioUnitErr_CannotDoInCurrentContext) and playback never
+                    // recovers because there is no automatic retry.
+                    EnsureIOSAudioSessionReadyForVPIO($"{nameof(DoJoin)} StartAudioPlayback");
+
                     WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
 #endif
                 }
@@ -886,6 +895,9 @@ namespace StreamVideo.Core.LowLevelClient
             {
 #if STREAM_NATIVE_AUDIO
                 WebRTC.StopAudioPlayback();
+                // See DoJoin: VPIO requires PlayAndRecord before the duplex device
+                // is opened. Re-asserting the session is idempotent.
+                EnsureIOSAudioSessionReadyForVPIO(nameof(TryRestartAudioPlayback));
                 WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
 #endif
             }
@@ -1424,15 +1436,12 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
                 //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
 
-#if UNITY_IOS && !UNITY_EDITOR
                 // Configure AVAudioSession BEFORE starting native capture so the
                 // VoiceProcessingIO audio unit opens with the right session
                 // category/mode and hardware AEC/NS/AGC is active from sample 0.
                 // The .mm plugin is the single source of truth - miniaudio is
                 // explicitly told not to touch the session.
-                _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> Configuring iOS audio session");
-                Libs.iOSAudioManagers.IOSAudioManager.ConfigureForWebRTC();
-#endif
+                EnsureIOSAudioSessionReadyForVPIO($"{nameof(UpdateAudioRecording)} StartLocalAudioCapture");
 
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> START local audio capture");
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate);
@@ -1462,6 +1471,55 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> Deconfiguring iOS audio session");
                 Libs.iOSAudioManagers.IOSAudioManager.DeconfigureAudioSession();
 #endif
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Make sure the iOS AVAudioSession is in <c>PlayAndRecord</c> +
+        /// <c>VideoChat</c>/<c>VoiceChat</c> right now, before we open the
+        /// duplex VoiceProcessingIO audio unit. This is the precondition for
+        /// <c>WebRTC.StartAudioPlayback</c> and
+        /// <c>StartLocalAudioCapture</c> on iOS - if it's not satisfied,
+        /// <c>AURemoteIO_StartIO</c> fails with <c>'!rec'</c> and the duplex
+        /// device is rolled back without retry.
+        ///
+        /// Belt-and-braces: we call <c>ConfigureForWebRTC</c>, then verify
+        /// the session actually ended up in the VPIO-compatible state, and
+        /// retry exactly once if not. The verify step catches the rare race
+        /// where another component (a different Unity plugin, a system
+        /// notification handler) flipped the session in the microsecond
+        /// window between our setCategory call and the next StartAudio call.
+        /// No-op on non-iOS targets.
+        /// </summary>
+        private void EnsureIOSAudioSessionReadyForVPIO(string callerContext)
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            _logs.WarningIfDebug(
+                $"RtcSession.{nameof(EnsureIOSAudioSessionReadyForVPIO)} ({callerContext}) -> Configuring iOS audio session");
+            var configureOk = Libs.iOSAudioManagers.IOSAudioManager.ConfigureForWebRTC();
+            var ready = configureOk && Libs.iOSAudioManagers.IOSAudioManager.IsHardwareNoiseCancellationActive;
+            if (ready)
+            {
+                return;
+            }
+
+            _logs.Warning(
+                $"RtcSession.{nameof(EnsureIOSAudioSessionReadyForVPIO)} ({callerContext}) -> "
+                + $"Session not VPIO-ready after first attempt (configureOk={configureOk}, "
+                + $"isHardwareNoiseCancellationActive={Libs.iOSAudioManagers.IOSAudioManager.IsHardwareNoiseCancellationActive}). "
+                + "Retrying once.");
+
+            configureOk = Libs.iOSAudioManagers.IOSAudioManager.ConfigureForWebRTC();
+            ready = configureOk && Libs.iOSAudioManagers.IOSAudioManager.IsHardwareNoiseCancellationActive;
+            if (!ready)
+            {
+                _logs.Error(
+                    $"RtcSession.{nameof(EnsureIOSAudioSessionReadyForVPIO)} ({callerContext}) -> "
+                    + $"Session STILL not VPIO-ready after retry (configureOk={configureOk}, "
+                    + $"isHardwareNoiseCancellationActive={Libs.iOSAudioManagers.IOSAudioManager.IsHardwareNoiseCancellationActive}). "
+                    + "Continuing anyway - the next StartAudio call may fail with '!rec'. "
+                    + "Check the iOS device log under [StreamVideo iOS Audio] for the underlying NSError.");
             }
 #endif
         }

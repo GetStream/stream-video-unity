@@ -21,6 +21,15 @@ namespace StreamVideo.Libs.iOSAudioManagers
     /// The session is configured by the native miniaudio backend at context
     /// creation; <see cref="ConfigureForWebRTC"/> reasserts it after the native
     /// recorder is started in case Unity or another plugin changed it.
+    ///
+    /// <para>
+    /// All non-property members of this class are <b>iOS-only</b>. On any other
+    /// build target (Editor, Standalone, Android, WebGL, ...) they throw
+    /// <see cref="PlatformNotSupportedException"/>. This is deliberate: silently
+    /// no-oping would let calling code believe the configuration succeeded
+    /// when nothing actually happened. Use <see cref="IsSupported"/> if you
+    /// need a runtime gate without <c>#if</c> directives.
+    /// </para>
     /// </summary>
     public static class IOSAudioManager
     {
@@ -35,7 +44,7 @@ namespace StreamVideo.Libs.iOSAudioManagers
         private static extern void _StreamMaximizeInputGain();
 
         [DllImport("__Internal")]
-        private static extern void _StreamConfigureAudioSessionForWebRTC();
+        private static extern int _StreamConfigureAudioSessionForWebRTC();
 
         [DllImport("__Internal")]
         private static extern void _StreamDeconfigureAudioSession();
@@ -48,21 +57,67 @@ namespace StreamVideo.Libs.iOSAudioManagers
 #endif
 
         /// <summary>
+        /// <c>true</c> when the current build target is iOS device (i.e. the
+        /// underlying AVAudioSession native plugin is reachable). On every
+        /// other target this returns <c>false</c> and every other member of
+        /// this class will throw <see cref="PlatformNotSupportedException"/>.
+        ///
+        /// Use this to gate calls without <c>#if UNITY_IOS</c> directives, e.g.
+        /// <code>
+        /// if (IOSAudioManager.IsSupported)
+        /// {
+        ///     IOSAudioManager.ConfigureForWebRTC();
+        /// }
+        /// </code>
+        /// </summary>
+        public static bool IsSupported
+        {
+            get
+            {
+#if UNITY_IOS && !UNITY_EDITOR
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
+        /// <summary>
         /// Configure AVAudioSession for a WebRTC call. This is the single source
         /// of truth for the iOS audio session - it sets
         /// <c>category = PlayAndRecord</c>, <c>mode = VideoChat</c>, the standard
         /// option set (<c>DefaultToSpeaker | AllowBluetooth | AllowBluetoothA2DP |
-        /// AllowAirPlay</c>) and activates the session.
+        /// AllowAirPlay</c>) and activates the session. It also installs (once)
+        /// AVAudioSession interruption and media-services-reset observers
+        /// that re-apply the configuration if the system tears it down while
+        /// the SDK still wants it up.
         ///
-        /// Must be called BEFORE the native audio recorder is started (the SDK
-        /// does this automatically in <c>RtcSession.UpdateAudioRecording</c>) so
-        /// that the VoiceProcessingIO audio unit opens with the right mode in
-        /// place.
+        /// Must be called BEFORE the native audio engine opens the
+        /// VoiceProcessingIO audio unit. On iOS the same MiniaudioDuplexDevice
+        /// services both capture and playback through one VPIO unit, so the
+        /// session has to be in PlayAndRecord BEFORE either
+        /// <c>WebRTC.StartAudioPlayback</c> (called from <c>RtcSession.DoJoin</c>)
+        /// or <c>StartLocalAudioCapture</c> (called from
+        /// <c>RtcSession.UpdateAudioRecording</c>). The SDK does this
+        /// automatically in both call sites; the call is idempotent so
+        /// re-asserting it does no harm.
         /// </summary>
-        public static void ConfigureForWebRTC()
+        /// <returns>
+        /// <c>true</c> when the session ended up in
+        /// <c>PlayAndRecord</c> + <c>VideoChat</c>/<c>VoiceChat</c> and was
+        /// successfully activated; <c>false</c> if any step failed (details
+        /// are written to the iOS device log under
+        /// <c>[StreamVideo iOS Audio]</c>).
+        /// </returns>
+        /// <exception cref="PlatformNotSupportedException">
+        /// Thrown on any non-iOS build target.
+        /// </exception>
+        public static bool ConfigureForWebRTC()
         {
 #if UNITY_IOS && !UNITY_EDITOR
-            _StreamConfigureAudioSessionForWebRTC();
+            return _StreamConfigureAudioSessionForWebRTC() == 1;
+#else
+            throw NotSupported(nameof(ConfigureForWebRTC));
 #endif
         }
 
@@ -71,10 +126,15 @@ namespace StreamVideo.Libs.iOSAudioManagers
         /// and notify other apps so background music / navigation can resume.
         /// Called by the SDK when local audio capture stops.
         /// </summary>
+        /// <exception cref="PlatformNotSupportedException">
+        /// Thrown on any non-iOS build target.
+        /// </exception>
         public static void DeconfigureAudioSession()
         {
 #if UNITY_IOS && !UNITY_EDITOR
             _StreamDeconfigureAudioSession();
+#else
+            throw NotSupported(nameof(DeconfigureAudioSession));
 #endif
         }
 
@@ -87,10 +147,15 @@ namespace StreamVideo.Libs.iOSAudioManagers
         /// take over when connected.
         /// Call <see cref="ClearOutputOverride"/> to undo.
         /// </summary>
+        /// <exception cref="PlatformNotSupportedException">
+        /// Thrown on any non-iOS build target.
+        /// </exception>
         public static void ForceLoudspeaker()
         {
 #if UNITY_IOS && !UNITY_EDITOR
             _StreamForceOutputToSpeaker();
+#else
+            throw NotSupported(nameof(ForceLoudspeaker));
 #endif
         }
 
@@ -100,20 +165,30 @@ namespace StreamVideo.Libs.iOSAudioManagers
         /// route iOS would normally pick: headphones if connected, otherwise
         /// the built-in loudspeaker.
         /// </summary>
+        /// <exception cref="PlatformNotSupportedException">
+        /// Thrown on any non-iOS build target.
+        /// </exception>
         public static void ClearOutputOverride()
         {
 #if UNITY_IOS && !UNITY_EDITOR
             _StreamClearOutputOverride();
+#else
+            throw NotSupported(nameof(ClearOutputOverride));
 #endif
         }
 
         /// <summary>
         /// Maximize microphone input gain.
         /// </summary>
+        /// <exception cref="PlatformNotSupportedException">
+        /// Thrown on any non-iOS build target.
+        /// </exception>
         public static void MaximizeInputGain()
         {
 #if UNITY_IOS && !UNITY_EDITOR
             _StreamMaximizeInputGain();
+#else
+            throw NotSupported(nameof(MaximizeInputGain));
 #endif
         }
 
@@ -128,6 +203,9 @@ namespace StreamVideo.Libs.iOSAudioManagers
         /// <c>AVAudioSession.category == PlayAndRecord</c> and
         /// <c>AVAudioSession.mode == VoiceChat</c> (or VideoChat).
         /// </remarks>
+        /// <exception cref="PlatformNotSupportedException">
+        /// Thrown on any non-iOS build target.
+        /// </exception>
         public static bool IsHardwareNoiseCancellationActive
         {
             get
@@ -135,7 +213,7 @@ namespace StreamVideo.Libs.iOSAudioManagers
 #if UNITY_IOS && !UNITY_EDITOR
                 return _StreamIsHardwareNoiseCancellationActive() == 1;
 #else
-                return false;
+                throw NotSupported(nameof(IsHardwareNoiseCancellationActive));
 #endif
             }
         }
@@ -144,6 +222,9 @@ namespace StreamVideo.Libs.iOSAudioManagers
         /// Returns a human-readable string describing the current iOS audio session state.
         /// Useful for diagnostics.
         /// </summary>
+        /// <exception cref="PlatformNotSupportedException">
+        /// Thrown on any non-iOS build target.
+        /// </exception>
         public static string GetCurrentSettings()
         {
 #if UNITY_IOS && !UNITY_EDITOR
@@ -162,8 +243,16 @@ namespace StreamVideo.Libs.iOSAudioManagers
                 return $"Error getting audio info: {e.Message}";
             }
 #else
-            return "iOS audio session info is only available on iOS devices.";
+            throw NotSupported(nameof(GetCurrentSettings));
 #endif
         }
+
+#if !(UNITY_IOS && !UNITY_EDITOR)
+        private static PlatformNotSupportedException NotSupported(string member)
+            => new PlatformNotSupportedException(
+                $"{nameof(IOSAudioManager)}.{member} is only available on iOS device builds. "
+                + $"Gate the call with `if ({nameof(IOSAudioManager)}.{nameof(IsSupported)})` "
+                + "or `#if UNITY_IOS && !UNITY_EDITOR`.");
+#endif
     }
 }

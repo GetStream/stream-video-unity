@@ -216,7 +216,7 @@ namespace StreamVideo.ExampleProject
             if (pauseStatus)
             {
                 // App is going to background
-                Client.PauseAudioPlayback();
+                Client.PauseAndroidAudioPlayback();
                 _wasAudioPublishEnabledOnPause = Client.AudioDeviceManager.IsEnabled;
                 _wasVideoPublishEnabledOnPause = Client.VideoDeviceManager.IsEnabled;
 
@@ -226,7 +226,7 @@ namespace StreamVideo.ExampleProject
             else
             {
                 // App is coming to foreground
-                Client.ResumeAudioPlayback();
+                Client.ResumeAndroidAudioPlayback();
 
                 if (_wasAudioPublishEnabledOnPause)
                 {

@@ -1,4 +1,4 @@
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
 #endif
 using System;
@@ -301,9 +301,9 @@ namespace StreamVideo.Core
 #endif
         }
 
-        public void PauseAudioPlayback() => InternalLowLevelClient.RtcSession.PauseAudioPlayback();
+        public void PauseAndroidAudioPlayback() => InternalLowLevelClient.RtcSession.PauseAndroidAudioPlayback();
 
-        public void ResumeAudioPlayback() => InternalLowLevelClient.RtcSession.ResumeAudioPlayback();
+        public void ResumeAndroidAudioPlayback() => InternalLowLevelClient.RtcSession.ResumeAndroidAudioPlayback();
 
         public void SetAndroidAudioUsageMode(AndroidAudioUsageMode usageMode)
         {

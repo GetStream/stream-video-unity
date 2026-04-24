@@ -882,14 +882,13 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void TryRestartAudioPlayback()
         {
-            if (!UseNativeAudioBindings)
+            if (UseNativeAudioBindings)
             {
-                return;
-            }
 #if STREAM_NATIVE_AUDIO
-            WebRTC.StopAudioPlayback();
-            WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+                WebRTC.StopAudioPlayback();
+                WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
 #endif
+            }
         }
 
         //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
@@ -1425,20 +1424,44 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
                 //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
 
+#if UNITY_IOS && !UNITY_EDITOR
+                // Configure AVAudioSession BEFORE starting native capture so the
+                // VoiceProcessingIO audio unit opens with the right session
+                // category/mode and hardware AEC/NS/AGC is active from sample 0.
+                // The .mm plugin is the single source of truth - miniaudio is
+                // explicitly told not to touch the session.
+                _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> Configuring iOS audio session");
+                Libs.iOSAudioManagers.IOSAudioManager.ConfigureForWebRTC();
+#endif
+
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> START local audio capture");
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate);
 
 #if UNITY_IOS && !UNITY_EDITOR
-                // Configure iOS audio session after native capture starts.
-                // Miniaudio sets category/mode (VoiceChat); we add speaker routing + gain.
-                _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> Configuring iOS audio session");
-                Libs.iOSAudioManagers.IOSAudioManager.ConfigureForWebRTC();
+                if (Libs.iOSAudioManagers.IOSAudioManager.IsHardwareNoiseCancellationActive)
+                {
+                    _logs.WarningIfDebug(
+                        "RtcSession.UpdateAudioRecording -> iOS hardware noise cancellation (VoiceProcessingIO) ACTIVE");
+                }
+                else
+                {
+                    _logs.Warning(
+                        "RtcSession.UpdateAudioRecording -> iOS hardware noise cancellation (VoiceProcessingIO) NOT active. "
+                        + "AEC/NS/AGC will not be applied. Make sure no other plugin is overriding AVAudioSession mode.");
+                }
 #endif
             }
             else
             {
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> STOP local audio capture");
                 Publisher.PublisherAudioTrack.StopLocalAudioCapture();
+
+#if UNITY_IOS && !UNITY_EDITOR
+                // Release the AVAudioSession so other apps (music, nav, etc.)
+                // can resume playing at normal volume.
+                _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> Deconfiguring iOS audio session");
+                Libs.iOSAudioManagers.IOSAudioManager.DeconfigureAudioSession();
+#endif
             }
 #endif
         }

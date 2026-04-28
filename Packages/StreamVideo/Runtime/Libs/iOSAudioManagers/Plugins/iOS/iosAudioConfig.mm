@@ -128,13 +128,51 @@ static BOOL StreamActivateAudioSession() {
     return ok;
 }
 
-// Reapply our category/mode and reactivate the session. Used by both the
-// public Configure entry point and the interruption/reset observers below.
+// Apply our preferred low-latency I/O parameters. VPIO's hardware echo
+// canceller is tuned for ~5-10 ms slices; if the AVAudioSession's
+// IOBufferDuration is much larger (e.g. Unity's default is ~42 ms / 2048
+// frames at 48 kHz) the AEC adaptive filter has a 4x larger reference
+// latency than it expects and effectively does not converge. The user
+// then hears their own voice echoed back from the remote participant.
+//
+// We ask for 10 ms here. iOS may still snap to the closest hardware-
+// supported duration (especially when another component in the same app
+// has already locked a larger buffer); the result is read back below and
+// logged so a regression can be diagnosed without rebuilding.
+//
+// Sample rate is pinned to 48 kHz to match Opus / WebRTC's internal rate
+// and avoid an expensive resample on the iOS audio unit boundary.
+static const double kStreamPreferredIOBufferDuration = 0.010;  // 10 ms
+static const double kStreamPreferredSampleRate       = 48000.0;
+
+static void StreamApplyPreferredIOParams() {
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    NSError *error = nil;
+
+    if (![audioSession setPreferredSampleRate:kStreamPreferredSampleRate error:&error]) {
+        NSLog(@"[StreamVideo iOS Audio] setPreferredSampleRate(%.0f) failed: %@",
+              kStreamPreferredSampleRate, error);
+    }
+
+    error = nil;
+    if (![audioSession setPreferredIOBufferDuration:kStreamPreferredIOBufferDuration error:&error]) {
+        NSLog(@"[StreamVideo iOS Audio] setPreferredIOBufferDuration(%.3f) failed: %@",
+              kStreamPreferredIOBufferDuration, error);
+    }
+}
+
+// Reapply our category/mode, reactivate the session, and reapply preferred
+// low-latency I/O parameters. Used by both the public Configure entry
+// point and the interruption/reset observers below.
 // Returns YES iff both setCategory and setActive succeeded AND the resulting
 // state is the one VPIO needs (PlayAndRecord + VideoChat/VoiceChat).
 static BOOL StreamReapplySession() {
     BOOL categoryOk = StreamApplyVideoChatCategory();
     BOOL activateOk = StreamActivateAudioSession();
+    // Preferred I/O params must be set AFTER the session is active in our
+    // category - otherwise iOS treats them as advisory against the wrong
+    // hardware route and silently drops them.
+    StreamApplyPreferredIOParams();
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     BOOL playAndRecord = [audioSession.category isEqualToString:AVAudioSessionCategoryPlayAndRecord];
     BOOL voiceProcessing = [audioSession.mode isEqualToString:AVAudioSessionModeVideoChat] ||
@@ -234,9 +272,15 @@ int _StreamConfigureAudioSessionForWebRTC() {
     BOOL voiceProcessing = [audioSession.mode isEqualToString:AVAudioSessionModeVideoChat] ||
                            [audioSession.mode isEqualToString:AVAudioSessionModeVoiceChat];
 
+    double ioBufferMs = audioSession.IOBufferDuration * 1000.0;
+    double preferredIoBufferMs = kStreamPreferredIOBufferDuration * 1000.0;
+    BOOL ioBufferOk = ioBufferMs <= preferredIoBufferMs * 2.0; // tolerate up to ~20 ms
+
     NSLog(@"[StreamVideo iOS Audio]   Category: %@, Mode: %@", audioSession.category, audioSession.mode);
-    NSLog(@"[StreamVideo iOS Audio]   Sample Rate: %.0f Hz, IO Buffer: %.1f ms",
-          audioSession.sampleRate, audioSession.IOBufferDuration * 1000.0);
+    NSLog(@"[StreamVideo iOS Audio]   Sample Rate: %.0f Hz (preferred %.0f), IO Buffer: %.1f ms (preferred %.1f) %@",
+          audioSession.sampleRate, kStreamPreferredSampleRate,
+          ioBufferMs, preferredIoBufferMs,
+          ioBufferOk ? @"OK" : @"TOO LARGE - VPIO AEC will be ineffective");
     NSLog(@"[StreamVideo iOS Audio]   Hardware AEC/NS/AGC (VoiceProcessingIO): %@",
           voiceProcessing ? @"ENABLED" : @"DISABLED (mode is not VideoChat/VoiceChat!)");
 
@@ -250,6 +294,24 @@ int _StreamConfigureAudioSessionForWebRTC() {
     if (!voiceProcessing) {
         NSLog(@"[StreamVideo iOS Audio] WARNING: hardware noise cancellation is NOT active. "
               "AVAudioSession.mode must be VideoChat or VoiceChat. Current mode=%@", audioSession.mode);
+    }
+
+    if (!ioBufferOk) {
+        // VPIO's hardware AEC depends on a small (~10 ms) IO buffer. If it's
+        // much larger, the user will hear their own voice echoed back from
+        // the remote side. Most common cause on Unity: the engine claimed the
+        // AVAudioSession with a 2048-frame buffer (Project Settings -> Audio ->
+        // DSP Buffer Size) before the call started, and iOS won't shrink it
+        // for our secondary client. Fix in Unity Project Settings ("Best
+        // Latency" or "Good Latency"), or set
+        // AudioSettings.GetConfiguration().dspBufferSize accordingly before
+        // initialising audio.
+        NSLog(@"[StreamVideo iOS Audio] WARNING: IOBufferDuration is %.1f ms, exceeds the %.1f ms "
+              "preferred for VPIO AEC. Hardware echo cancellation will likely be ineffective. "
+              "Most common cause: Unity's audio DSP buffer size locked the AVAudioSession at a "
+              "larger value before the call started. Try setting Project Settings -> Audio -> "
+              "DSP Buffer Size to 'Best Latency' or 'Good Latency'.",
+              ioBufferMs, preferredIoBufferMs);
     }
 
     // Note: we deliberately do NOT call overrideOutputAudioPort:Speaker here.

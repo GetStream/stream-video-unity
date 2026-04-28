@@ -740,7 +740,23 @@ namespace StreamVideo.Core.LowLevelClient
             if (UseNativeAudioBindings)
             {
 #if STREAM_NATIVE_AUDIO
+                // Order matters on iOS: stop both playback and capture FIRST so
+                // the duplex VPIO audio unit is fully torn down, then deactivate
+                // the AVAudioSession. If we deactivate while VPIO is still
+                // running we either fail or leave it orphaned. StopLocalAudioCapture
+                // is also called via UpdateAudioRecording teardown elsewhere; calling
+                // it here is the belt-and-braces cleanup for the leave path.
                 WebRTC.StopAudioPlayback();
+
+#if UNITY_IOS && !UNITY_EDITOR
+                if (Publisher?.PublisherAudioTrack != null)
+                {
+                    Publisher.PublisherAudioTrack.StopLocalAudioCapture();
+                }
+
+                _logs.WarningIfDebug($"{nameof(StopAsync)} -> Deconfiguring iOS audio session (call ending)");
+                Libs.iOSAudioManagers.IOSAudioManager.DeconfigureAudioSession();
+#endif
 #endif
             }
 
@@ -1465,15 +1481,48 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> STOP local audio capture");
                 Publisher.PublisherAudioTrack.StopLocalAudioCapture();
 
+                // NOTE: do NOT call IOSAudioManager.DeconfigureAudioSession() here.
+                // On iOS the duplex VPIO audio unit is shared between capture
+                // and playback - StopLocalAudioCapture only flips the capture
+                // flag, the ma_device stays open because playback is still
+                // running. Deactivating the AVAudioSession would yank it from
+                // under the still-active VPIO unit and stop ALL audio (the user
+                // would no longer hear remote participants either). The session
+                // is deactivated in StopAsync after both directions are stopped.
+
 #if UNITY_IOS && !UNITY_EDITOR
-                // Release the AVAudioSession so other apps (music, nav, etc.)
-                // can resume playing at normal volume.
-                _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> Deconfiguring iOS audio session");
-                Libs.iOSAudioManagers.IOSAudioManager.DeconfigureAudioSession();
+                // [TEMP TRACE] Dump the AVAudioSession state ~3 s after mute.
+                // If "playback stops on mute" is reported, this tells us
+                // whether the session is still alive (PlayAndRecord +
+                // VideoChat/VoiceChat) and on the expected output route at
+                // the moment the user notices silence. Combined with the
+                // throttled native traces in MiniaudioDuplexDevice and
+                // AudioTrackSinkAdapter, it isolates AVAudioSession-side
+                // regressions from the playback callback / mixer side.
+                // Search "[TEMP TRACE]" to find/remove.
+                LogIOSAudioSessionAfterMuteAsync().LogIfFailed();
 #endif
             }
 #endif
         }
+
+#if UNITY_IOS && !UNITY_EDITOR
+        private async Task LogIOSAudioSessionAfterMuteAsync()
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                var info = Libs.iOSAudioManagers.IOSAudioManager.GetCurrentSettings();
+                _logs.Warning(
+                    "[TEMP TRACE] AVAudioSession state ~3s after mute (UpdateAudioRecording else branch):\n"
+                    + info);
+            }
+            catch (Exception e)
+            {
+                _logs.Exception(e);
+            }
+        }
+#endif
 
         /// <summary>
         /// Make sure the iOS AVAudioSession is in <c>PlayAndRecord</c> +

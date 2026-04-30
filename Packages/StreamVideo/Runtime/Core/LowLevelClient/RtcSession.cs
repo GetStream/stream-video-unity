@@ -588,7 +588,16 @@ namespace StreamVideo.Core.LowLevelClient
                     
                     //StreamTODO: if we try to rejoin a call with no other participants we'll get error from SFU not call FOUND
                     // What should we do then?
-                    
+
+                    if (ActiveCall == null)
+                    {
+                        throw new Exception("ActiveCall should never be null here.");
+                    }
+
+                    if (joinResponse == null)
+                    {
+                        throw new Exception("joinResponse was null");
+                    }
                     
                     ActiveCall.UpdateFromSfu(joinResponse);
                     _logs.WarningIfDebug($"{nameof(DoJoin)} - SFU Sending join response received. startNewPeerConnections: {startNewPeerConnections}");

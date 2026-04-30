@@ -639,8 +639,33 @@ namespace StreamVideo.Core.StatefulModels
         {
             var wasBefore = IsLocalParticipantIncluded();
 
+            if (joinResponse == null || joinResponse.CallState == null || Cache == null ||
+                joinResponse.CallState.Pins == null)
+            {
+                using (new StringBuilderPoolScope(out var tempSb))
+                {
+                    tempSb.Append("StreamCall.UpdateFromSfu(JoinResponse) had precondition null: ");
+                    tempSb.Append("joinResponse: ");
+                    tempSb.Append(joinResponse != null);
+                    if (joinResponse != null)
+                    {
+                        tempSb.Append("joinResponse.CallState: ");
+                        tempSb.Append(joinResponse.CallState != null);
+
+                        if (joinResponse.CallState != null)
+                        {
+                            tempSb.Append("joinResponse.CallState.Pins: ");
+                            tempSb.Append(joinResponse.CallState.Pins != null);
+                        }
+                    }
+
+                    tempSb.Append("Cache: ");
+                    tempSb.Append(Cache != null);
+                }
+            }
+
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
-            UpdateServerPins(joinResponse.CallState.Pins);
+            UpdateServerPins(joinResponse.CallState?.Pins);
 
             var isAfter = IsLocalParticipantIncluded();
 
@@ -971,6 +996,11 @@ namespace StreamVideo.Core.StatefulModels
         private void UpdateServerPins(IEnumerable<Pin> pins)
         {
             _serverPinsSessionIds.Clear();
+
+            if (pins == null)
+            {
+                return;
+            }
 
             foreach (var pin in pins)
             {

@@ -1,4 +1,6 @@
 #import <AVFoundation/AVFoundation.h>
+#import <objc/runtime.h>
+#import <execinfo.h>
 
 // This plugin is THE single source of truth for AVAudioSession on iOS.
 //
@@ -39,6 +41,163 @@
 //   This handles the race where a phone-call interruption or a system
 //   audio-server reset deactivates us mid-call and the next StartAudioPlayback
 //   would otherwise fail with '!rec'.
+
+// =====================================================================
+// [STREAM SESSION SPY] AVAudioSession method swizzle for diagnostics.
+//
+// Problem: iOS only tells us THAT the audio session category/mode changed
+// (via AVAudioSessionRouteChangeNotification with reason ==
+// CategoryChange) and what the new state is. It does NOT tell us WHO
+// called setCategory: / setMode: / setActive: / overrideOutputAudioPort:.
+// During VPIO AEC investigation, we observed an unexpected "CategoryChange"
+// route notification firing right after our init - one of WebRTC's voice
+// engine, Unity, or another plugin reasserts the session under us, and
+// every reassertion resets VPIO's adaptive AEC filter.
+//
+// Solution: swizzle (swap implementations of) every AVAudioSession setter
+// we care about with a wrapper that NSLogs the args + a symbolicated
+// caller backtrace, then forwards to the original implementation. After
+// the swap, calling the original selector goes through our wrapper, and
+// our wrapper calls the renamed-but-actually-original implementation.
+//
+// Catches every Objective-C call site in the process: WebRTC, Unity, our
+// own iosAudioConfig.mm, miniaudio (if it touched the session - it doesn't,
+// because we tell it not to), and any other plugin loaded into the app.
+//
+// Output format in the device log:
+//   [STREAM SESSION SPY] -[AVAudioSession setCategory:mode:options:error:]
+//                         category=AVAudioSessionCategoryPlayAndRecord
+//                         mode=AVAudioSessionModeVideoChat options=0x71
+//     caller chain (top frames after Foundation):
+//       3   StreamVideoIOSPlugin   0x0000... StreamApplyVideoChatCategory + 84
+//       4   StreamVideoIOSPlugin   0x0000... _StreamConfigureAudioSessionForWebRTC + 96
+//       ...
+//
+// Search "[STREAM SESSION SPY]" in the device log to find every call
+// chronologically. The "Installed" line confirms swizzle came up; if you
+// don't see it, no spy is active for that run.
+// =====================================================================
+
+@interface AVAudioSession (StreamSessionSpy)
+- (BOOL)stream_setCategory:(NSString*)category error:(NSError**)outError;
+- (BOOL)stream_setCategory:(NSString*)category withOptions:(AVAudioSessionCategoryOptions)options error:(NSError**)outError;
+- (BOOL)stream_setCategory:(NSString*)category mode:(NSString*)mode options:(AVAudioSessionCategoryOptions)options error:(NSError**)outError;
+- (BOOL)stream_setMode:(NSString*)mode error:(NSError**)outError;
+- (BOOL)stream_setActive:(BOOL)active error:(NSError**)outError;
+- (BOOL)stream_setActive:(BOOL)active withOptions:(AVAudioSessionSetActiveOptions)options error:(NSError**)outError;
+- (BOOL)stream_overrideOutputAudioPort:(AVAudioSessionPortOverride)portOverride error:(NSError**)outError;
+@end
+
+// Returns a compact, multi-line string of the top N user-relevant
+// stack frames. Skips the first 2 frames (this helper + the swizzled
+// wrapper itself) and clips at 8 user frames so logs stay readable.
+static NSString* StreamSpyCallerChain(void) {
+    NSArray<NSString*>* frames = [NSThread callStackSymbols];
+    NSUInteger startFrame = 2; // skip helper + swizzled wrapper
+    NSUInteger maxFrames  = 8;
+    NSUInteger lastFrame  = MIN(frames.count, startFrame + maxFrames);
+    if (frames.count <= startFrame) {
+        return @"(no frames)";
+    }
+    NSMutableString* s = [NSMutableString stringWithString:@"\n  caller chain (top frames):"];
+    for (NSUInteger i = startFrame; i < lastFrame; ++i) {
+        [s appendFormat:@"\n    %@", frames[i]];
+    }
+    return s;
+}
+
+@implementation AVAudioSession (StreamSessionSpy)
+
+- (BOOL)stream_setCategory:(NSString*)category error:(NSError**)outError {
+    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setCategory:error:] category=%@%@",
+          category, StreamSpyCallerChain());
+    return [self stream_setCategory:category error:outError]; // calls original after swap
+}
+
+- (BOOL)stream_setCategory:(NSString*)category withOptions:(AVAudioSessionCategoryOptions)options error:(NSError**)outError {
+    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setCategory:withOptions:error:] category=%@ options=0x%lx%@",
+          category, (unsigned long)options, StreamSpyCallerChain());
+    return [self stream_setCategory:category withOptions:options error:outError];
+}
+
+- (BOOL)stream_setCategory:(NSString*)category mode:(NSString*)mode options:(AVAudioSessionCategoryOptions)options error:(NSError**)outError {
+    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setCategory:mode:options:error:] category=%@ mode=%@ options=0x%lx%@",
+          category, mode, (unsigned long)options, StreamSpyCallerChain());
+    return [self stream_setCategory:category mode:mode options:options error:outError];
+}
+
+- (BOOL)stream_setMode:(NSString*)mode error:(NSError**)outError {
+    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setMode:error:] mode=%@%@",
+          mode, StreamSpyCallerChain());
+    return [self stream_setMode:mode error:outError];
+}
+
+- (BOOL)stream_setActive:(BOOL)active error:(NSError**)outError {
+    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setActive:error:] active=%@%@",
+          active ? @"YES" : @"NO", StreamSpyCallerChain());
+    return [self stream_setActive:active error:outError];
+}
+
+- (BOOL)stream_setActive:(BOOL)active withOptions:(AVAudioSessionSetActiveOptions)options error:(NSError**)outError {
+    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setActive:withOptions:error:] active=%@ options=0x%lx%@",
+          active ? @"YES" : @"NO", (unsigned long)options, StreamSpyCallerChain());
+    return [self stream_setActive:active withOptions:options error:outError];
+}
+
+- (BOOL)stream_overrideOutputAudioPort:(AVAudioSessionPortOverride)portOverride error:(NSError**)outError {
+    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession overrideOutputAudioPort:error:] port=%lu%@",
+          (unsigned long)portOverride, StreamSpyCallerChain());
+    return [self stream_overrideOutputAudioPort:portOverride error:outError];
+}
+
+@end
+
+static void StreamSwizzleOne(Class cls, SEL origSel, SEL spySel) {
+    Method orig = class_getInstanceMethod(cls, origSel);
+    Method spy  = class_getInstanceMethod(cls, spySel);
+    if (orig != NULL && spy != NULL) {
+        method_exchangeImplementations(orig, spy);
+        NSLog(@"[STREAM SESSION SPY]   swizzled -[AVAudioSession %@]", NSStringFromSelector(origSel));
+    } else {
+        NSLog(@"[STREAM SESSION SPY]   FAILED to swizzle -[AVAudioSession %@] (orig=%p spy=%p)",
+              NSStringFromSelector(origSel), orig, spy);
+    }
+}
+
+// Installs the spy on first call. Idempotent. Safe to call many times.
+// We install it from _StreamConfigureAudioSessionForWebRTC (below) so it
+// is up before any of OUR session calls run; it is also safe to call
+// before that (e.g. from a +load) but lazy install means it doesn't run
+// at all on builds that never engage the call SDK.
+static void StreamInstallAVAudioSessionSpy(void) {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        Class cls = [AVAudioSession class];
+        NSLog(@"[STREAM SESSION SPY] installing AVAudioSession spy on %@", cls);
+        StreamSwizzleOne(cls,
+            @selector(setCategory:error:),
+            @selector(stream_setCategory:error:));
+        StreamSwizzleOne(cls,
+            @selector(setCategory:withOptions:error:),
+            @selector(stream_setCategory:withOptions:error:));
+        StreamSwizzleOne(cls,
+            @selector(setCategory:mode:options:error:),
+            @selector(stream_setCategory:mode:options:error:));
+        StreamSwizzleOne(cls,
+            @selector(setMode:error:),
+            @selector(stream_setMode:error:));
+        StreamSwizzleOne(cls,
+            @selector(setActive:error:),
+            @selector(stream_setActive:error:));
+        StreamSwizzleOne(cls,
+            @selector(setActive:withOptions:error:),
+            @selector(stream_setActive:withOptions:error:));
+        StreamSwizzleOne(cls,
+            @selector(overrideOutputAudioPort:error:),
+            @selector(stream_overrideOutputAudioPort:error:));
+        NSLog(@"[STREAM SESSION SPY] Installed");
+    });
+}
 
 // Tracks whether the SDK currently wants the session up. Set YES on
 // Configure, NO on Deconfigure. The interruption/reset observers consult
@@ -258,6 +417,10 @@ int _StreamConfigureAudioSessionForWebRTC() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
 
     NSLog(@"[StreamVideo iOS Audio] ConfigureAudioSessionForWebRTC");
+
+    // Install the AVAudioSession spy first so we capture every setter call
+    // from this point onward, including our own. Idempotent.
+    StreamInstallAVAudioSessionSpy();
 
     StreamEnsureNotificationObserversInstalled();
 

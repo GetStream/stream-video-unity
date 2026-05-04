@@ -693,6 +693,15 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     CallState = prevCallState;
                 }
+                
+                try
+                {
+                    await ClearSessionAsync();
+                }
+                catch (Exception cleanupEx)
+                {
+                    _logs.Warning($"{nameof(DoJoin)} session cleanup after failure encountered an error: {cleanupEx.Message}");
+                }
 
                 throw;
             }

@@ -66,7 +66,7 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
 
         public void SetTracer(Tracer tracer)
         {
-            _tracer = tracer ?? throw new ArgumentException(nameof(tracer));
+            _tracer = tracer ?? throw new ArgumentNullException(nameof(tracer));
         }
 
         public void InitNewSession(string sessionId, string sfuUrl, string sfuToken, string subscriberOfferSdp, string publisherOfferSdp)

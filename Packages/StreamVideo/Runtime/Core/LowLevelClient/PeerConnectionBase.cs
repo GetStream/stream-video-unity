@@ -104,7 +104,7 @@ namespace StreamVideo.Core.LowLevelClient
                         { "credential", ice.Password }
                     }).ToArray()
                 },
-                { "iceTransportPolicy", "all" },
+                { "iceTransportPolicy", conf.iceTransportPolicy?.ToString().ToLowerInvariant() ?? "all" },
             });
         }
 

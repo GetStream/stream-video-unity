@@ -43,7 +43,7 @@ namespace StreamVideo.ExampleProject
         {
             try
             {
-                var call = await Client.GetCallAsync(StreamCallType.Default, callId);
+                var call = await Client.GetCallAsync(CallType, callId);
                 return call == null;
             }
             catch (StreamApiException streamApiException)
@@ -66,7 +66,7 @@ namespace StreamVideo.ExampleProject
             }
 
             Debug.Log($"Join call, create: {create}, callId: {callId}");
-            await Client.JoinCallAsync(StreamCallType.Default, callId, create, ring: true, notify: false);
+            await Client.JoinCallAsync(CallType, callId, create, ring: true, notify: false);
 
             if (_autoEnableMicrophone)
             {
@@ -282,6 +282,10 @@ namespace StreamVideo.ExampleProject
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
+
+        private StreamCallType CallType => _environment == StreamEnvironment.Pronto
+            ? StreamCallType.Custom("default-no-recording")
+            : StreamCallType.Default;
 
         private bool _wasAudioPublishEnabledOnPause;
         private bool _wasVideoPublishEnabledOnPause;

@@ -1,4 +1,4 @@
-﻿//StreamTodo: duplicated declaration of STREAM_NATIVE_AUDIO (also in RtcSession.cs) easy to get out of sync.
+//StreamTodo: duplicated declaration of STREAM_NATIVE_AUDIO (also in RtcSession.cs) easy to get out of sync.
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
@@ -93,9 +93,19 @@ namespace StreamVideo.Core.LowLevelClient
             PeerConnection.OnConnectionStateChange += OnConnectionStateChange;
             PeerConnection.OnTrack += OnTrack;
 
-            //StreamTODO: add tracer "create"
-
-            //StreamTODO: review missing trace events
+            var sfuHost = sfuClient.SfuHost;
+            Tracer?.Trace(PeerConnectionTraceKey.Create, new Dictionary<string, object>
+            {
+                { "url", sfuHost },
+                { "iceServers", iceServers.Select(ice => new Dictionary<string, object>
+                    {
+                        { "urls", ice.Urls.ToArray() },
+                        { "username", ice.Username },
+                        { "credential", ice.Password }
+                    }).ToArray()
+                },
+                { "iceTransportPolicy", conf.iceTransportPolicy?.ToString().ToLowerInvariant() ?? "all" },
+            });
         }
 
         public Task SetLocalDescriptionAsync(ref RTCSessionDescription offer,
@@ -237,6 +247,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
             catch (NegotiationException negotiationException)
             {
+                Tracer?.Trace(PeerConnectionTraceKey.IceRestartError, negotiationException.Message ?? "unknown");
+                
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {
                     Logs.InfoIfDebug($"[{PeerType}] Ignoring stale ICE restart error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
@@ -247,8 +259,10 @@ namespace StreamVideo.Core.LowLevelClient
                 var strategy = isSignalLostError ? WebsocketReconnectStrategy.Fast : WebsocketReconnectStrategy.Rejoin;
                 ReconnectionNeeded?.Invoke(strategy, errorReason, PeerType);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Tracer?.Trace(PeerConnectionTraceKey.IceRestartError, e.Message ?? "unknown");
+                
                 if (SfuClient.SessionVersion != sessionVersionAtStart)
                 {
                     Logs.InfoIfDebug($"[{PeerType}] Ignoring stale ICE restart error - session version changed from {sessionVersionAtStart} to {SfuClient.SessionVersion}");
@@ -319,12 +333,17 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (candidate == null)
             {
-                // Null candidate signals that ICE gathering is complete
-                Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, "null (ICE gathering complete)");
+                Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate);
                 return;
             }
 
-            Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, candidate.ToString());
+            Tracer?.Trace(PeerConnectionTraceKey.OnIceCandidate, new Dictionary<string, object>
+            {
+                { "candidate", candidate.Candidate },
+                { "sdpMid", candidate.SdpMid },
+                { "sdpMLineIndex", candidate.SdpMLineIndex },
+                { "usernameFragment", candidate.UserNameFragment }
+            });
             IceTrickled?.Invoke(candidate, PeerType);
         }
 

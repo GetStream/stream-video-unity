@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +15,11 @@ namespace StreamVideo.Core.LowLevelClient
         /// Returns the current session version. Used to ignore errors for outdated SFU WS
         /// </summary>
         int SessionVersion { get; }
+
+        /// <summary>
+        /// SFU hostname extracted from the full URL (scheme and path stripped).
+        /// </summary>
+        string SfuHost { get; }
 
         Task<TResponse> RpcCallAsync<TRequest, TResponse>(TRequest request,
             Func<HttpClient, TRequest, CancellationToken, Task<TResponse>> rpcCallAsync, string debugRequestName,

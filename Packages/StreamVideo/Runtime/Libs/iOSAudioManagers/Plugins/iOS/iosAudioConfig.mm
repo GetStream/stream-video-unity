@@ -1,247 +1,51 @@
 #import <AVFoundation/AVFoundation.h>
-#import <objc/runtime.h>
-#import <execinfo.h>
 
-// This plugin is THE single source of truth for AVAudioSession on iOS.
+// Single source of truth for AVAudioSession on iOS. The native WebRTC plugin
+// (miniaudio) is told NOT to touch the session - everything below is owned
+// here so there is exactly one place to change behavior.
 //
-// The native WebRTC plugin (miniaudio) is explicitly told NOT to touch the
-// AVAudioSession (sessionCategory = none, noAudioSessionActivate = true,
-// noAudioSessionDeactivate = true). Everything below - category, mode,
-// options, activation, deactivation, route overrides - is owned here so that
-// there is exactly one place to change if behavior needs to change.
+// Configuration applied when a call starts:
+//   category = AVAudioSessionCategoryPlayAndRecord
+//   mode     = AVAudioSessionModeVideoChat (engages VoiceProcessingIO -> HW
+//              AEC/NS/AGC, media-volume scope, loudspeaker default - same as
+//              Zoom/Meet/Teams)
+//   options  = DefaultToSpeaker | AllowBluetooth | AllowBluetoothA2DP | AllowAirPlay
+//   active   = YES
 //
-// Configuration we apply when a call starts:
-//   - category = AVAudioSessionCategoryPlayAndRecord
-//   - mode     = AVAudioSessionModeVideoChat
-//   - options  = DefaultToSpeaker | AllowBluetooth | AllowBluetoothA2DP | AllowAirPlay
-//   - active   = YES
-//
-// Why VideoChat (not VoiceChat)?
-//   Both modes engage CoreAudio's VoiceProcessingIO audio unit, which is
-//   what gives us hardware AEC, noise suppression and automatic gain control.
-//   The difference:
-//     - VoiceChat is a "phone call" mode: ringer-volume scope, defaults to
-//       the receiver/earpiece. That produces a quiet "hold it to your ear"
-//       experience, which is not what we want for a video call.
-//     - VideoChat is the mode used by Zoom, Google Meet and Teams: media-
-//       volume scope, defaults to the loudspeaker, and still lets wired or
-//       Bluetooth headphones take over automatically when connected.
-//
-// The C# layer calls _StreamConfigureAudioSessionForWebRTC BEFORE the
-// native recorder is started, so the VoiceProcessingIO audio unit opens
-// with the right session in place, and calls _StreamDeconfigureAudioSession
-// when capture stops so other apps can resume their normal audio.
-//
-// Resilience:
-//   _StreamConfigureAudioSessionForWebRTC also installs (once) NSNotification
-//   observers for AVAudioSessionInterruptionNotification and
-//   AVAudioSessionMediaServicesWereResetNotification. While the SDK
-//   currently wants the session up (s_streamSessionConfigured == YES),
-//   those observers reapply the category/mode and reactivate the session.
-//   This handles the race where a phone-call interruption or a system
-//   audio-server reset deactivates us mid-call and the next StartAudioPlayback
-//   would otherwise fail with '!rec'.
+// _StreamConfigureAudioSessionForWebRTC also installs (once) NSNotification
+// observers for AVAudioSessionInterruptionNotification (phone calls, Siri) and
+// AVAudioSessionMediaServicesWereResetNotification that reapply the session
+// while the SDK still wants it up.
 
-// =====================================================================
-// [STREAM SESSION SPY] AVAudioSession method swizzle for diagnostics.
-//
-// Problem: iOS only tells us THAT the audio session category/mode changed
-// (via AVAudioSessionRouteChangeNotification with reason ==
-// CategoryChange) and what the new state is. It does NOT tell us WHO
-// called setCategory: / setMode: / setActive: / overrideOutputAudioPort:.
-// During VPIO AEC investigation, we observed an unexpected "CategoryChange"
-// route notification firing right after our init - one of WebRTC's voice
-// engine, Unity, or another plugin reasserts the session under us, and
-// every reassertion resets VPIO's adaptive AEC filter.
-//
-// Solution: swizzle (swap implementations of) every AVAudioSession setter
-// we care about with a wrapper that NSLogs the args + a symbolicated
-// caller backtrace, then forwards to the original implementation. After
-// the swap, calling the original selector goes through our wrapper, and
-// our wrapper calls the renamed-but-actually-original implementation.
-//
-// Catches every Objective-C call site in the process: WebRTC, Unity, our
-// own iosAudioConfig.mm, miniaudio (if it touched the session - it doesn't,
-// because we tell it not to), and any other plugin loaded into the app.
-//
-// Output format in the device log:
-//   [STREAM SESSION SPY] -[AVAudioSession setCategory:mode:options:error:]
-//                         category=AVAudioSessionCategoryPlayAndRecord
-//                         mode=AVAudioSessionModeVideoChat options=0x71
-//     caller chain (top frames after Foundation):
-//       3   StreamVideoIOSPlugin   0x0000... StreamApplyVideoChatCategory + 84
-//       4   StreamVideoIOSPlugin   0x0000... _StreamConfigureAudioSessionForWebRTC + 96
-//       ...
-//
-// Search "[STREAM SESSION SPY]" in the device log to find every call
-// chronologically. The "Installed" line confirms swizzle came up; if you
-// don't see it, no spy is active for that run.
-// =====================================================================
-
-@interface AVAudioSession (StreamSessionSpy)
-- (BOOL)stream_setCategory:(NSString*)category error:(NSError**)outError;
-- (BOOL)stream_setCategory:(NSString*)category withOptions:(AVAudioSessionCategoryOptions)options error:(NSError**)outError;
-- (BOOL)stream_setCategory:(NSString*)category mode:(NSString*)mode options:(AVAudioSessionCategoryOptions)options error:(NSError**)outError;
-- (BOOL)stream_setMode:(NSString*)mode error:(NSError**)outError;
-- (BOOL)stream_setActive:(BOOL)active error:(NSError**)outError;
-- (BOOL)stream_setActive:(BOOL)active withOptions:(AVAudioSessionSetActiveOptions)options error:(NSError**)outError;
-- (BOOL)stream_overrideOutputAudioPort:(AVAudioSessionPortOverride)portOverride error:(NSError**)outError;
-@end
-
-// Returns a compact, multi-line string of the top N user-relevant
-// stack frames. Skips the first 2 frames (this helper + the swizzled
-// wrapper itself) and clips at 8 user frames so logs stay readable.
-static NSString* StreamSpyCallerChain(void) {
-    NSArray<NSString*>* frames = [NSThread callStackSymbols];
-    NSUInteger startFrame = 2; // skip helper + swizzled wrapper
-    NSUInteger maxFrames  = 8;
-    NSUInteger lastFrame  = MIN(frames.count, startFrame + maxFrames);
-    if (frames.count <= startFrame) {
-        return @"(no frames)";
-    }
-    NSMutableString* s = [NSMutableString stringWithString:@"\n  caller chain (top frames):"];
-    for (NSUInteger i = startFrame; i < lastFrame; ++i) {
-        [s appendFormat:@"\n    %@", frames[i]];
-    }
-    return s;
-}
-
-@implementation AVAudioSession (StreamSessionSpy)
-
-- (BOOL)stream_setCategory:(NSString*)category error:(NSError**)outError {
-    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setCategory:error:] category=%@%@",
-          category, StreamSpyCallerChain());
-    return [self stream_setCategory:category error:outError]; // calls original after swap
-}
-
-- (BOOL)stream_setCategory:(NSString*)category withOptions:(AVAudioSessionCategoryOptions)options error:(NSError**)outError {
-    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setCategory:withOptions:error:] category=%@ options=0x%lx%@",
-          category, (unsigned long)options, StreamSpyCallerChain());
-    return [self stream_setCategory:category withOptions:options error:outError];
-}
-
-- (BOOL)stream_setCategory:(NSString*)category mode:(NSString*)mode options:(AVAudioSessionCategoryOptions)options error:(NSError**)outError {
-    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setCategory:mode:options:error:] category=%@ mode=%@ options=0x%lx%@",
-          category, mode, (unsigned long)options, StreamSpyCallerChain());
-    return [self stream_setCategory:category mode:mode options:options error:outError];
-}
-
-- (BOOL)stream_setMode:(NSString*)mode error:(NSError**)outError {
-    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setMode:error:] mode=%@%@",
-          mode, StreamSpyCallerChain());
-    return [self stream_setMode:mode error:outError];
-}
-
-- (BOOL)stream_setActive:(BOOL)active error:(NSError**)outError {
-    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setActive:error:] active=%@%@",
-          active ? @"YES" : @"NO", StreamSpyCallerChain());
-    return [self stream_setActive:active error:outError];
-}
-
-- (BOOL)stream_setActive:(BOOL)active withOptions:(AVAudioSessionSetActiveOptions)options error:(NSError**)outError {
-    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession setActive:withOptions:error:] active=%@ options=0x%lx%@",
-          active ? @"YES" : @"NO", (unsigned long)options, StreamSpyCallerChain());
-    return [self stream_setActive:active withOptions:options error:outError];
-}
-
-- (BOOL)stream_overrideOutputAudioPort:(AVAudioSessionPortOverride)portOverride error:(NSError**)outError {
-    NSLog(@"[STREAM SESSION SPY] -[AVAudioSession overrideOutputAudioPort:error:] port=%lu%@",
-          (unsigned long)portOverride, StreamSpyCallerChain());
-    return [self stream_overrideOutputAudioPort:portOverride error:outError];
-}
-
-@end
-
-static void StreamSwizzleOne(Class cls, SEL origSel, SEL spySel) {
-    Method orig = class_getInstanceMethod(cls, origSel);
-    Method spy  = class_getInstanceMethod(cls, spySel);
-    if (orig != NULL && spy != NULL) {
-        method_exchangeImplementations(orig, spy);
-        NSLog(@"[STREAM SESSION SPY]   swizzled -[AVAudioSession %@]", NSStringFromSelector(origSel));
-    } else {
-        NSLog(@"[STREAM SESSION SPY]   FAILED to swizzle -[AVAudioSession %@] (orig=%p spy=%p)",
-              NSStringFromSelector(origSel), orig, spy);
-    }
-}
-
-// Installs the spy on first call. Idempotent. Safe to call many times.
-// We install it from _StreamConfigureAudioSessionForWebRTC (below) so it
-// is up before any of OUR session calls run; it is also safe to call
-// before that (e.g. from a +load) but lazy install means it doesn't run
-// at all on builds that never engage the call SDK.
-static void StreamInstallAVAudioSessionSpy(void) {
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        Class cls = [AVAudioSession class];
-        NSLog(@"[STREAM SESSION SPY] installing AVAudioSession spy on %@", cls);
-        StreamSwizzleOne(cls,
-            @selector(setCategory:error:),
-            @selector(stream_setCategory:error:));
-        StreamSwizzleOne(cls,
-            @selector(setCategory:withOptions:error:),
-            @selector(stream_setCategory:withOptions:error:));
-        StreamSwizzleOne(cls,
-            @selector(setCategory:mode:options:error:),
-            @selector(stream_setCategory:mode:options:error:));
-        StreamSwizzleOne(cls,
-            @selector(setMode:error:),
-            @selector(stream_setMode:error:));
-        StreamSwizzleOne(cls,
-            @selector(setActive:error:),
-            @selector(stream_setActive:error:));
-        StreamSwizzleOne(cls,
-            @selector(setActive:withOptions:error:),
-            @selector(stream_setActive:withOptions:error:));
-        StreamSwizzleOne(cls,
-            @selector(overrideOutputAudioPort:error:),
-            @selector(stream_overrideOutputAudioPort:error:));
-        NSLog(@"[STREAM SESSION SPY] Installed");
-    });
-}
-
-// Tracks whether the SDK currently wants the session up. Set YES on
-// Configure, NO on Deconfigure. The interruption/reset observers consult
-// this so they don't reapply after the SDK explicitly tore the session down.
 static BOOL s_streamSessionConfigured = NO;
 
 extern "C" {
 
 void _StreamForceOutputToSpeaker() {
-    // Optional: hard-override the output route to the built-in loudspeaker,
-    // even if a wired/Bluetooth headset is connected. This is intentionally
-    // NOT called from _StreamConfigureAudioSessionForWebRTC so headphone
-    // users keep their headphones - call it explicitly only when you want
-    // to force the speaker (e.g. a "speakerphone" toggle button).
+    // Hard-override the output to the built-in loudspeaker even if a
+    // wired/Bluetooth headset is connected. Not called from
+    // _StreamConfigureAudioSessionForWebRTC; invoke explicitly for
+    // "speakerphone" toggles.
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
-
     BOOL success = [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
-
-    if (error || !success) {
+    if (!success || error) {
         NSLog(@"[StreamVideo iOS Audio] Error forcing speaker: success=%d, error=%@", success, error);
-    } else {
-        NSLog(@"[StreamVideo iOS Audio] Speaker override applied (forced built-in speaker)");
     }
 }
 
 void _StreamClearOutputOverride() {
-    // Removes any previously applied output port override so the session
-    // falls back to the route iOS would normally choose (headphones if
-    // connected, otherwise loudspeaker because of DefaultToSpeaker).
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
     BOOL success = [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&error];
-    if (error || !success) {
+    if (!success || error) {
         NSLog(@"[StreamVideo iOS Audio] Failed to clear speaker override: success=%d, error=%@", success, error);
-    } else {
-        NSLog(@"[StreamVideo iOS Audio] Cleared speaker override (using default route)");
     }
 }
 
 void _StreamMaximizeInputGain() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
-
     if (audioSession.isInputGainSettable) {
         [audioSession setInputGain:1.0 error:&error];
         if (error) {
@@ -250,10 +54,6 @@ void _StreamMaximizeInputGain() {
     }
 }
 
-// Reassert PlayAndRecord + VideoChat mode so iOS routes capture/playback
-// through the VoiceProcessingIO audio unit (hardware AEC/NS/AGC) and
-// defaults the output to the loudspeaker at media volume.
-// Returns YES on success, NO on failure (does not throw).
 static BOOL StreamApplyVideoChatCategory() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
@@ -275,8 +75,6 @@ static BOOL StreamApplyVideoChatCategory() {
     return YES;
 }
 
-// Activate the audio session. Safe to call multiple times.
-// Returns YES on success, NO on failure.
 static BOOL StreamActivateAudioSession() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
@@ -287,21 +85,13 @@ static BOOL StreamActivateAudioSession() {
     return ok;
 }
 
-// Apply our preferred low-latency I/O parameters. VPIO's hardware echo
-// canceller is tuned for ~5-10 ms slices; if the AVAudioSession's
-// IOBufferDuration is much larger (e.g. Unity's default is ~42 ms / 2048
-// frames at 48 kHz) the AEC adaptive filter has a 4x larger reference
-// latency than it expects and effectively does not converge. The user
-// then hears their own voice echoed back from the remote participant.
-//
-// We ask for 10 ms here. iOS may still snap to the closest hardware-
-// supported duration (especially when another component in the same app
-// has already locked a larger buffer); the result is read back below and
-// logged so a regression can be diagnosed without rebuilding.
-//
-// Sample rate is pinned to 48 kHz to match Opus / WebRTC's internal rate
-// and avoid an expensive resample on the iOS audio unit boundary.
-static const double kStreamPreferredIOBufferDuration = 0.010;  // 10 ms
+// VPIO HW AEC is tuned for ~5-10 ms slices; if iOS's IOBufferDuration is
+// much larger (e.g. Unity's default 2048 frames @ 48 kHz = ~42 ms) the AEC
+// adaptive filter has 4x the expected reference latency and effectively
+// does not converge. iOS only honors these as preferences and may snap to
+// the closest hardware-supported value when another component already
+// locked a larger buffer.
+static const double kStreamPreferredIOBufferDuration = 0.010;
 static const double kStreamPreferredSampleRate       = 48000.0;
 
 static void StreamApplyPreferredIOParams() {
@@ -320,11 +110,8 @@ static void StreamApplyPreferredIOParams() {
     }
 }
 
-// Reapply our category/mode, reactivate the session, and reapply preferred
-// low-latency I/O parameters. Used by both the public Configure entry
-// point and the interruption/reset observers below.
-// Returns YES iff both setCategory and setActive succeeded AND the resulting
-// state is the one VPIO needs (PlayAndRecord + VideoChat/VoiceChat).
+// Returns YES iff the session ended up VPIO-compatible
+// (PlayAndRecord + VideoChat/VoiceChat).
 static BOOL StreamReapplySession() {
     BOOL categoryOk = StreamApplyVideoChatCategory();
     BOOL activateOk = StreamActivateAudioSession();
@@ -340,18 +127,16 @@ static BOOL StreamReapplySession() {
 }
 
 // Install (once) observers that reapply our session if the system tears it
-// down (interruption ended, audio services reset). Intentionally never
-// removed: registration cost is one notification block per app lifetime.
+// down (interruption ended, audio services reset). A media-services reset
+// also tears down miniaudio's ma_device / AURemoteIO. Reapplying the
+// AVAudioSession is necessary but not sufficient to recover audio - the C#
+// side would need to call RtcSession.TryRestartAudioPlayback /
+// TryRestartAudioRecording.
 static void StreamEnsureNotificationObserversInstalled() {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
 
-        // Phone calls, Siri, etc. can interrupt the session. iOS sends:
-        //   Began -> our session goes inactive (we don't need to do anything)
-        //   Ended -> we should reactivate (and ideally re-set category in case
-        //            something snuck a setCategory call in while we were
-        //            inactive, e.g. another plugin reacting to the same event)
         [center addObserverForName:AVAudioSessionInterruptionNotification
                             object:nil
                              queue:[NSOperationQueue mainQueue]
@@ -360,40 +145,14 @@ static void StreamEnsureNotificationObserversInstalled() {
             if (typeValue == nil) return;
             AVAudioSessionInterruptionType type = (AVAudioSessionInterruptionType)typeValue.unsignedIntegerValue;
 
-            if (type == AVAudioSessionInterruptionTypeBegan) {
-                NSLog(@"[StreamVideo iOS Audio] Interruption BEGAN (sessionConfigured=%@)",
-                      s_streamSessionConfigured ? @"YES" : @"NO");
-                return;
-            }
-
-            if (type == AVAudioSessionInterruptionTypeEnded) {
-                NSNumber *opts = note.userInfo[AVAudioSessionInterruptionOptionKey];
-                BOOL shouldResume = opts != nil &&
-                                    ((AVAudioSessionInterruptionOptions)opts.unsignedIntegerValue
-                                     & AVAudioSessionInterruptionOptionShouldResume);
-                NSLog(@"[StreamVideo iOS Audio] Interruption ENDED (shouldResume=%@, sessionConfigured=%@)",
-                      shouldResume ? @"YES" : @"NO",
-                      s_streamSessionConfigured ? @"YES" : @"NO");
-
-                if (s_streamSessionConfigured) {
-                    BOOL ok = StreamReapplySession();
-                    NSLog(@"[StreamVideo iOS Audio] Reapplied session after interruption: %@",
-                          ok ? @"OK" : @"FAILED");
+            if (type == AVAudioSessionInterruptionTypeEnded && s_streamSessionConfigured) {
+                BOOL ok = StreamReapplySession();
+                if (!ok) {
+                    NSLog(@"[StreamVideo iOS Audio] Failed to reapply session after interruption");
                 }
             }
         }];
 
-        // The audio server (mediaserverd) can be reset by iOS, which puts
-        // every audio session back to its defaults. Apple recommends apps
-        // listen for this and reconfigure from scratch.
-        //
-        // NOTE: a media-services reset also tears down every CoreAudio
-        // graph (including miniaudio's ma_device / AURemoteIO). Reapplying
-        // the AVAudioSession here is necessary but not sufficient to
-        // recover audio - the C# side would also need to call
-        // RtcSession.TryRestartAudioPlayback / TryRestartAudioRecording.
-        // This is logged but not surfaced to C# yet; if recovery becomes a
-        // requirement, add a callback from this observer up to C#.
         [center addObserverForName:AVAudioSessionMediaServicesWereResetNotification
                             object:nil
                              queue:[NSOperationQueue mainQueue]
@@ -402,25 +161,19 @@ static void StreamEnsureNotificationObserversInstalled() {
                   s_streamSessionConfigured ? @"YES" : @"NO");
             if (s_streamSessionConfigured) {
                 BOOL ok = StreamReapplySession();
-                NSLog(@"[StreamVideo iOS Audio] Reapplied session after media services reset: %@",
-                      ok ? @"OK" : @"FAILED");
+                if (!ok) {
+                    NSLog(@"[StreamVideo iOS Audio] Failed to reapply session after media services reset");
+                }
             }
         }];
-
-        NSLog(@"[StreamVideo iOS Audio] Installed AVAudioSession interruption + reset observers");
     });
 }
 
 // Returns 1 on success (session is in PlayAndRecord + VideoChat/VoiceChat,
-// active), 0 on failure. Errors are logged via NSLog.
+// active), 0 on failure. Errors are logged via NSLog under
+// "[StreamVideo iOS Audio]".
 int _StreamConfigureAudioSessionForWebRTC() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-
-    NSLog(@"[StreamVideo iOS Audio] ConfigureAudioSessionForWebRTC");
-
-    // Install the AVAudioSession spy first so we capture every setter call
-    // from this point onward, including our own. Idempotent.
-    StreamInstallAVAudioSessionSpy();
 
     StreamEnsureNotificationObserversInstalled();
 
@@ -428,8 +181,6 @@ int _StreamConfigureAudioSessionForWebRTC() {
     // due to a concurrent system event) reapply rather than do nothing.
     s_streamSessionConfigured = YES;
 
-    // Reapply category/mode in case something else (Unity, another plugin)
-    // changed it after miniaudio's context init.
     BOOL ok = StreamReapplySession();
 
     BOOL voiceProcessing = [audioSession.mode isEqualToString:AVAudioSessionModeVideoChat] ||
@@ -437,22 +188,13 @@ int _StreamConfigureAudioSessionForWebRTC() {
 
     double ioBufferMs = audioSession.IOBufferDuration * 1000.0;
     double preferredIoBufferMs = kStreamPreferredIOBufferDuration * 1000.0;
-    BOOL ioBufferOk = ioBufferMs <= preferredIoBufferMs * 2.0; // tolerate up to ~20 ms
+    BOOL ioBufferOk = ioBufferMs <= preferredIoBufferMs * 2.0;
 
-    NSLog(@"[StreamVideo iOS Audio]   Category: %@, Mode: %@", audioSession.category, audioSession.mode);
-    NSLog(@"[StreamVideo iOS Audio]   Sample Rate: %.0f Hz (preferred %.0f), IO Buffer: %.1f ms (preferred %.1f) %@",
-          audioSession.sampleRate, kStreamPreferredSampleRate,
+    NSLog(@"[StreamVideo iOS Audio] Configured: category=%@ mode=%@ sampleRate=%.0f IOBuffer=%.1fms (preferred %.1fms) %@",
+          audioSession.category, audioSession.mode,
+          audioSession.sampleRate,
           ioBufferMs, preferredIoBufferMs,
           ioBufferOk ? @"OK" : @"TOO LARGE - VPIO AEC will be ineffective");
-    NSLog(@"[StreamVideo iOS Audio]   Hardware AEC/NS/AGC (VoiceProcessingIO): %@",
-          voiceProcessing ? @"ENABLED" : @"DISABLED (mode is not VideoChat/VoiceChat!)");
-
-    // Log the resolved output route so it's obvious whether we ended up on
-    // the loudspeaker, AirPods, wired headphones, etc.
-    AVAudioSessionRouteDescription *route = audioSession.currentRoute;
-    for (AVAudioSessionPortDescription *output in route.outputs) {
-        NSLog(@"[StreamVideo iOS Audio]   Output route: %@ (%@)", output.portName, output.portType);
-    }
 
     if (!voiceProcessing) {
         NSLog(@"[StreamVideo iOS Audio] WARNING: hardware noise cancellation is NOT active. "
@@ -460,36 +202,27 @@ int _StreamConfigureAudioSessionForWebRTC() {
     }
 
     if (!ioBufferOk) {
-        // VPIO's hardware AEC depends on a small (~10 ms) IO buffer. If it's
-        // much larger, the user will hear their own voice echoed back from
-        // the remote side. Most common cause on Unity: the engine claimed the
-        // AVAudioSession with a 2048-frame buffer (Project Settings -> Audio ->
-        // DSP Buffer Size) before the call started, and iOS won't shrink it
-        // for our secondary client. Fix in Unity Project Settings ("Best
-        // Latency" or "Good Latency"), or set
-        // AudioSettings.GetConfiguration().dspBufferSize accordingly before
-        // initialising audio.
+        // Most common cause on Unity: the engine claimed the AVAudioSession
+        // with a 2048-frame buffer (Project Settings -> Audio -> DSP Buffer
+        // Size) before the call started, and iOS won't shrink it for our
+        // secondary client.
         NSLog(@"[StreamVideo iOS Audio] WARNING: IOBufferDuration is %.1f ms, exceeds the %.1f ms "
               "preferred for VPIO AEC. Hardware echo cancellation will likely be ineffective. "
-              "Most common cause: Unity's audio DSP buffer size locked the AVAudioSession at a "
-              "larger value before the call started. Try setting Project Settings -> Audio -> "
-              "DSP Buffer Size to 'Best Latency' or 'Good Latency'.",
+              "Try Unity Project Settings -> Audio -> DSP Buffer Size = 'Best Latency' or 'Good Latency'.",
               ioBufferMs, preferredIoBufferMs);
     }
 
-    // Note: we deliberately do NOT call overrideOutputAudioPort:Speaker here.
-    // VideoChat + DefaultToSpeaker already gives us the Zoom/Meet behavior:
-    // loudspeaker by default, headphones/Bluetooth take over automatically.
-    // If you want a hard "speakerphone" override, call _StreamForceOutputToSpeaker
-    // explicitly from the C# layer.
+    // VideoChat + DefaultToSpeaker already gives us the Zoom/Meet behavior
+    // (loudspeaker default, headphones/Bluetooth take over automatically).
+    // For a hard speakerphone override, callers invoke _StreamForceOutputToSpeaker.
     _StreamMaximizeInputGain();
 
     return ok ? 1 : 0;
 }
 
-// Tear down the session we put up. Called when the call ends or capture
-// stops so other apps (music, navigation, etc.) can resume their audio at
-// normal volume. Safe to call when no session was configured.
+// Tear down the session we put up so other apps (music, navigation) can
+// resume their audio at normal volume. Safe to call when no session was
+// configured.
 void _StreamDeconfigureAudioSession() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
@@ -503,12 +236,13 @@ void _StreamDeconfigureAudioSession() {
                                 error:&error];
     if (!ok || error) {
         NSLog(@"[StreamVideo iOS Audio] Failed to deactivate audio session: %@", error);
-    } else {
-        NSLog(@"[StreamVideo iOS Audio] Audio session deactivated (notified other apps)");
     }
 }
 
-// Returns 1 if hardware AEC/NS/AGC (VoiceProcessingIO) is currently active, 0 otherwise.
+// Returns 1 if the session is currently configured for VoiceProcessingIO
+// (PlayAndRecord + VideoChat/VoiceChat), 0 otherwise. Note: this checks
+// configuration only, not whether the IO buffer duration is small enough
+// for VPIO AEC to actually converge.
 int _StreamIsHardwareNoiseCancellationActive() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     BOOL voiceProcessing = [audioSession.mode isEqualToString:AVAudioSessionModeVideoChat] ||

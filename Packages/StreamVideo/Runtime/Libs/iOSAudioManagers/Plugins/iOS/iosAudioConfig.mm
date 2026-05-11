@@ -1,31 +1,19 @@
 #import <AVFoundation/AVFoundation.h>
 
-// Single source of truth for AVAudioSession on iOS. The native WebRTC plugin
-// (miniaudio) is told NOT to touch the session - everything below is owned
-// here so there is exactly one place to change behavior.
-//
-// Configuration applied when a call starts:
-//   category = AVAudioSessionCategoryPlayAndRecord
-//   mode     = AVAudioSessionModeVideoChat (engages VoiceProcessingIO -> HW
-//              AEC/NS/AGC, media-volume scope, loudspeaker default - same as
-//              Zoom/Meet/Teams)
-//   options  = DefaultToSpeaker | AllowBluetooth | AllowBluetoothA2DP | AllowAirPlay
-//   active   = YES
-//
-// _StreamConfigureAudioSessionForWebRTC also installs (once) NSNotification
-// observers for AVAudioSessionInterruptionNotification (phone calls, Siri) and
-// AVAudioSessionMediaServicesWereResetNotification that reapply the session
-// while the SDK still wants it up.
+// Single source of truth for AVAudioSession. The native WebRTC plugin (miniaudio)
+// is told not to touch the session. Configures PlayAndRecord + VideoChat (-> VPIO
+// HW AEC/NS/AGC, loudspeaker default) on call start; deactivates on call end.
+// Also installs (once) observers for interruption-ended and media-services-reset
+// to reapply the session while a call is still in progress.
 
 static BOOL s_streamSessionConfigured = NO;
 
 extern "C" {
 
+// Hard-override the output to the built-in loudspeaker even if a wired/Bluetooth
+// headset is connected. Not called from Configure; invoke explicitly for an
+// explicit speakerphone toggle.
 void _StreamForceOutputToSpeaker() {
-    // Hard-override the output to the built-in loudspeaker even if a
-    // wired/Bluetooth headset is connected. Not called from
-    // _StreamConfigureAudioSessionForWebRTC; invoke explicitly for
-    // "speakerphone" toggles.
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
     BOOL success = [audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
@@ -85,12 +73,8 @@ static BOOL StreamActivateAudioSession() {
     return ok;
 }
 
-// VPIO HW AEC is tuned for ~5-10 ms slices; if iOS's IOBufferDuration is
-// much larger (e.g. Unity's default 2048 frames @ 48 kHz = ~42 ms) the AEC
-// adaptive filter has 4x the expected reference latency and effectively
-// does not converge. iOS only honors these as preferences and may snap to
-// the closest hardware-supported value when another component already
-// locked a larger buffer.
+// VPIO HW AEC needs ~5-10 ms IO buffers to converge. iOS may snap to a larger
+// value if another component locked the session first (see Configure log line).
 static const double kStreamPreferredIOBufferDuration = 0.010;
 static const double kStreamPreferredSampleRate       = 48000.0;
 
@@ -110,14 +94,12 @@ static void StreamApplyPreferredIOParams() {
     }
 }
 
-// Returns YES iff the session ended up VPIO-compatible
-// (PlayAndRecord + VideoChat/VoiceChat).
+// Returns YES iff the session ended up VPIO-compatible (PlayAndRecord + VideoChat/VoiceChat).
 static BOOL StreamReapplySession() {
     BOOL categoryOk = StreamApplyVideoChatCategory();
     BOOL activateOk = StreamActivateAudioSession();
-    // Preferred I/O params must be set AFTER the session is active in our
-    // category - otherwise iOS treats them as advisory against the wrong
-    // hardware route and silently drops them.
+    // Apply preferred I/O params AFTER activation; otherwise iOS evaluates them
+    // against the wrong hardware route and silently drops them.
     StreamApplyPreferredIOParams();
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     BOOL playAndRecord = [audioSession.category isEqualToString:AVAudioSessionCategoryPlayAndRecord];
@@ -126,12 +108,10 @@ static BOOL StreamReapplySession() {
     return categoryOk && activateOk && playAndRecord && voiceProcessing;
 }
 
-// Install (once) observers that reapply our session if the system tears it
-// down (interruption ended, audio services reset). A media-services reset
-// also tears down miniaudio's ma_device / AURemoteIO. Reapplying the
-// AVAudioSession is necessary but not sufficient to recover audio - the C#
-// side would need to call RtcSession.TryRestartAudioPlayback /
-// TryRestartAudioRecording.
+// Reapply the session after system events (interruption-ended, media-services-reset).
+// Note: media-services-reset also tears down miniaudio's ma_device; recovering audio
+// fully would require RtcSession.TryRestartAudioPlayback / TryRestartAudioRecording
+// from C#. Today this only reapplies the session.
 static void StreamEnsureNotificationObserversInstalled() {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -169,16 +149,14 @@ static void StreamEnsureNotificationObserversInstalled() {
     });
 }
 
-// Returns 1 on success (session is in PlayAndRecord + VideoChat/VoiceChat,
-// active), 0 on failure. Errors are logged via NSLog under
-// "[StreamVideo iOS Audio]".
+// Returns 1 on success (PlayAndRecord + VideoChat/VoiceChat, active), 0 on failure.
 int _StreamConfigureAudioSessionForWebRTC() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
 
     StreamEnsureNotificationObserversInstalled();
 
-    // Mark intent BEFORE applying so the observers (if they fire mid-apply
-    // due to a concurrent system event) reapply rather than do nothing.
+    // Mark intent BEFORE applying so observers triggered by a concurrent system
+    // event reapply rather than skip.
     s_streamSessionConfigured = YES;
 
     BOOL ok = StreamReapplySession();
@@ -202,33 +180,26 @@ int _StreamConfigureAudioSessionForWebRTC() {
     }
 
     if (!ioBufferOk) {
-        // Most common cause on Unity: the engine claimed the AVAudioSession
-        // with a 2048-frame buffer (Project Settings -> Audio -> DSP Buffer
-        // Size) before the call started, and iOS won't shrink it for our
-        // secondary client.
+        // Most common cause on Unity: the engine locked the session with a 2048-frame
+        // buffer before the call started; iOS won't shrink it for our secondary client.
         NSLog(@"[StreamVideo iOS Audio] WARNING: IOBufferDuration is %.1f ms, exceeds the %.1f ms "
               "preferred for VPIO AEC. Hardware echo cancellation will likely be ineffective. "
               "Try Unity Project Settings -> Audio -> DSP Buffer Size = 'Best Latency' or 'Good Latency'.",
               ioBufferMs, preferredIoBufferMs);
     }
 
-    // VideoChat + DefaultToSpeaker already gives us the Zoom/Meet behavior
-    // (loudspeaker default, headphones/Bluetooth take over automatically).
-    // For a hard speakerphone override, callers invoke _StreamForceOutputToSpeaker.
     _StreamMaximizeInputGain();
 
     return ok ? 1 : 0;
 }
 
-// Tear down the session we put up so other apps (music, navigation) can
-// resume their audio at normal volume. Safe to call when no session was
-// configured.
+// Tear down the session so other apps can resume audio. Safe to call when no
+// session was configured.
 void _StreamDeconfigureAudioSession() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     NSError *error = nil;
 
-    // Clear intent first so the interruption/reset observers (if any
-    // notification arrives during teardown) do not reapply the session.
+    // Clear intent first so observers don't reapply during teardown.
     s_streamSessionConfigured = NO;
 
     BOOL ok = [audioSession setActive:NO
@@ -239,10 +210,9 @@ void _StreamDeconfigureAudioSession() {
     }
 }
 
-// Returns 1 if the session is currently configured for VoiceProcessingIO
-// (PlayAndRecord + VideoChat/VoiceChat), 0 otherwise. Note: this checks
-// configuration only, not whether the IO buffer duration is small enough
-// for VPIO AEC to actually converge.
+// Returns 1 if the session is configured for VoiceProcessingIO
+// (PlayAndRecord + VideoChat/VoiceChat), 0 otherwise. Configuration only;
+// does not verify IOBufferDuration is small enough for AEC to converge.
 int _StreamIsHardwareNoiseCancellationActive() {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     BOOL voiceProcessing = [audioSession.mode isEqualToString:AVAudioSessionModeVideoChat] ||

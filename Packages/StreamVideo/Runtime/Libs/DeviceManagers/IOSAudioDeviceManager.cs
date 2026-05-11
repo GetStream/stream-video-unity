@@ -3,22 +3,12 @@ using Libs.DeviceManagers;
 namespace StreamVideo.Libs.DeviceManagers
 {
     /// <summary>
-    /// iOS-specific audio device manager.
+    /// iOS audio input device manager. Exposes a single synthetic "Default Microphone"
+    /// entry; the actual mic is picked by the system based on the AVAudioSession route.
+    /// The synthetic id is not consumed by the native plugin (miniaudio uses the OS-default device).
+    /// StreamTODO: expose real routing options (Built-in / Bluetooth / Wired / AirPods)
+    /// by querying <c>AVAudioSession.availableInputs</c> and applying via <c>setPreferredInput:</c>.
     /// </summary>
-    /// <remarks>
-    /// On iOS, the OS does not expose individual physical microphone devices the same way Android does.
-    /// Audio input is implicitly tied to the active <c>AVAudioSession</c> route which is controlled by the system
-    /// (with optional hints via <c>setPreferredInput</c> / <c>overrideOutputAudioPort</c>).
-    ///
-    /// For the first iteration we expose a single synthetic "Default Microphone" entry so that the SDK's device
-    /// selection flow runs and ultimately triggers <c>StartLocalAudioCapture</c> on the publisher track. The
-    /// underlying native miniaudio implementation uses the OS-default device, so the synthetic id is not consumed
-    /// by the native plugin.
-    ///
-    /// StreamTODO: expose real iOS audio routing options (Built-in Mic, Bluetooth, Wired Headset, Speaker override,
-    /// AirPods, etc.) by querying <c>AVAudioSession.availableInputs</c> from a native bridge and applying the
-    /// chosen one via <c>setPreferredInput:</c>.
-    /// </remarks>
     internal static class IOSAudioDeviceManager
     {
         private const int DefaultMicrophoneId = 0;

@@ -301,9 +301,9 @@ namespace StreamVideo.Core
 #endif
         }
 
-        public void PauseAudioPlayback() => InternalLowLevelClient.RtcSession.PauseAudioPlayback();
+        public void PauseMobileAudioPlayback() => InternalLowLevelClient.RtcSession.PauseMobileAudioPlayback();
 
-        public void ResumeAudioPlayback() => InternalLowLevelClient.RtcSession.ResumeAudioPlayback();
+        public void ResumeMobileAudioPlayback() => InternalLowLevelClient.RtcSession.ResumeMobileAudioPlayback();
 
         public void SetAndroidAudioUsageMode(AndroidAudioUsageMode usageMode)
         {

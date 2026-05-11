@@ -1,34 +1,20 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine;
 
 namespace StreamVideo.Libs.iOSAudioManagers
 {
     /// <summary>
     /// Manages iOS AVAudioSession configuration for WebRTC calls.
-    ///
-    /// On iOS the SDK uses the same AVAudioSession setup that Zoom / Google Meet /
-    /// Microsoft Teams use:
-    /// <c>category = PlayAndRecord</c>, <c>mode = VideoChat</c>, options
-    /// <c>DefaultToSpeaker | AllowBluetooth | AllowBluetoothA2DP | AllowAirPlay</c>.
-    ///
-    /// This combination engages the <b>VoiceProcessingIO</b> audio unit, which
-    /// gives us hardware echo cancellation, noise suppression and automatic gain
-    /// control, and at the same time treats the session as a media-volume session
-    /// that defaults to the loudspeaker (not the receiver/earpiece). Wired and
-    /// Bluetooth headphones automatically take over when connected.
-    ///
-    /// The session is configured by the native miniaudio backend at context
-    /// creation; <see cref="ConfigureForWebRTC"/> reasserts it after the native
-    /// recorder is started in case Unity or another plugin changed it.
+    /// Sets <c>category = PlayAndRecord</c> and <c>mode = VideoChat</c> with options
+    /// <c>DefaultToSpeaker | AllowBluetooth | AllowBluetoothA2DP | AllowAirPlay</c>,
+    /// which engages the <b>VoiceProcessingIO</b> audio unit (hardware AEC, NS, AGC)
+    /// and the same media-volume / loudspeaker-default routing used by Zoom, Meet
+    /// and Teams.
     ///
     /// <para>
-    /// All non-property members of this class are <b>iOS-only</b>. On any other
-    /// build target (Editor, Standalone, Android, WebGL, ...) they throw
-    /// <see cref="PlatformNotSupportedException"/>. This is deliberate: silently
-    /// no-oping would let calling code believe the configuration succeeded
-    /// when nothing actually happened. Use <see cref="IsSupported"/> if you
-    /// need a runtime gate without <c>#if</c> directives.
+    /// All members except <see cref="IsSupported"/> are <b>iOS-only</b> and throw
+    /// <see cref="PlatformNotSupportedException"/> on every other build target.
+    /// Use <see cref="IsSupported"/> to gate calls without <c>#if</c> directives.
     /// </para>
     /// </summary>
     public static class IOSAudioManager
@@ -57,18 +43,8 @@ namespace StreamVideo.Libs.iOSAudioManagers
 #endif
 
         /// <summary>
-        /// <c>true</c> when the current build target is iOS device (i.e. the
-        /// underlying AVAudioSession native plugin is reachable). On every
-        /// other target this returns <c>false</c> and every other member of
-        /// this class will throw <see cref="PlatformNotSupportedException"/>.
-        ///
-        /// Use this to gate calls without <c>#if UNITY_IOS</c> directives, e.g.
-        /// <code>
-        /// if (IOSAudioManager.IsSupported)
-        /// {
-        ///     IOSAudioManager.ConfigureForWebRTC();
-        /// }
-        /// </code>
+        /// <c>true</c> on iOS device builds (the underlying native plugin is reachable);
+        /// <c>false</c> elsewhere. When <c>false</c>, every other member throws.
         /// </summary>
         public static bool IsSupported
         {
@@ -83,35 +59,17 @@ namespace StreamVideo.Libs.iOSAudioManagers
         }
 
         /// <summary>
-        /// Configure AVAudioSession for a WebRTC call. This is the single source
-        /// of truth for the iOS audio session - it sets
-        /// <c>category = PlayAndRecord</c>, <c>mode = VideoChat</c>, the standard
-        /// option set (<c>DefaultToSpeaker | AllowBluetooth | AllowBluetoothA2DP |
-        /// AllowAirPlay</c>) and activates the session. It also installs (once)
-        /// AVAudioSession interruption and media-services-reset observers
-        /// that re-apply the configuration if the system tears it down while
-        /// the SDK still wants it up.
-        ///
-        /// Must be called BEFORE the native audio engine opens the
-        /// VoiceProcessingIO audio unit. On iOS the same MiniaudioDuplexDevice
-        /// services both capture and playback through one VPIO unit, so the
-        /// session has to be in PlayAndRecord BEFORE either
-        /// <c>WebRTC.StartAudioPlayback</c> (called from <c>RtcSession.DoJoin</c>)
-        /// or <c>StartLocalAudioCapture</c> (called from
-        /// <c>RtcSession.UpdateAudioRecording</c>). The SDK does this
-        /// automatically in both call sites; the call is idempotent so
-        /// re-asserting it does no harm.
+        /// Configure AVAudioSession for a WebRTC call (PlayAndRecord + VideoChat,
+        /// with interruption / media-services-reset observers). Idempotent. Must be
+        /// called before the native audio engine opens the VoiceProcessingIO audio
+        /// unit; the SDK handles this automatically at the relevant call sites.
         /// </summary>
         /// <returns>
-        /// <c>true</c> when the session ended up in
-        /// <c>PlayAndRecord</c> + <c>VideoChat</c>/<c>VoiceChat</c> and was
-        /// successfully activated; <c>false</c> if any step failed (details
-        /// are written to the iOS device log under
-        /// <c>[StreamVideo iOS Audio]</c>).
+        /// <c>true</c> when the session ended up VPIO-compatible and was activated;
+        /// <c>false</c> otherwise (details under <c>[StreamVideo iOS Audio]</c> in the
+        /// device log).
         /// </returns>
-        /// <exception cref="PlatformNotSupportedException">
-        /// Thrown on any non-iOS build target.
-        /// </exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown on non-iOS targets.</exception>
         public static bool ConfigureForWebRTC()
         {
 #if UNITY_IOS && !UNITY_EDITOR
@@ -122,13 +80,10 @@ namespace StreamVideo.Libs.iOSAudioManagers
         }
 
         /// <summary>
-        /// Deactivate the AVAudioSession set up by <see cref="ConfigureForWebRTC"/>
-        /// and notify other apps so background music / navigation can resume.
-        /// Called by the SDK when local audio capture stops.
+        /// Deactivate the AVAudioSession set up by <see cref="ConfigureForWebRTC"/> and
+        /// notify other apps so background music / navigation can resume.
         /// </summary>
-        /// <exception cref="PlatformNotSupportedException">
-        /// Thrown on any non-iOS build target.
-        /// </exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown on non-iOS targets.</exception>
         public static void DeconfigureAudioSession()
         {
 #if UNITY_IOS && !UNITY_EDITOR
@@ -139,17 +94,14 @@ namespace StreamVideo.Libs.iOSAudioManagers
         }
 
         /// <summary>
-        /// Hard-override the output to the built-in loudspeaker, even if a wired
-        /// or Bluetooth headset is connected. Use sparingly: this overrides the
-        /// user's headphone choice. For the standard Meet/Zoom behavior you do
-        /// NOT need to call this - <see cref="ConfigureForWebRTC"/> already sets
-        /// the loudspeaker as the default route while still letting headphones
-        /// take over when connected.
-        /// Call <see cref="ClearOutputOverride"/> to undo.
+        /// Hard-override the output to the built-in loudspeaker even if a wired or
+        /// Bluetooth headset is connected. Use sparingly: this overrides the user's
+        /// headphone choice. <see cref="ConfigureForWebRTC"/> already defaults to the
+        /// loudspeaker while still letting headphones take over automatically; only
+        /// call this for an explicit speakerphone toggle.
+        /// Use <see cref="ClearOutputOverride"/> to undo.
         /// </summary>
-        /// <exception cref="PlatformNotSupportedException">
-        /// Thrown on any non-iOS build target.
-        /// </exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown on non-iOS targets.</exception>
         public static void ForceLoudspeaker()
         {
 #if UNITY_IOS && !UNITY_EDITOR
@@ -160,14 +112,10 @@ namespace StreamVideo.Libs.iOSAudioManagers
         }
 
         /// <summary>
-        /// Removes a previously applied output override (see
-        /// <see cref="ForceLoudspeaker"/>) so the session falls back to the
-        /// route iOS would normally pick: headphones if connected, otherwise
-        /// the built-in loudspeaker.
+        /// Removes a previous <see cref="ForceLoudspeaker"/> override so iOS picks the
+        /// route normally (headphones if connected, otherwise the built-in loudspeaker).
         /// </summary>
-        /// <exception cref="PlatformNotSupportedException">
-        /// Thrown on any non-iOS build target.
-        /// </exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown on non-iOS targets.</exception>
         public static void ClearOutputOverride()
         {
 #if UNITY_IOS && !UNITY_EDITOR
@@ -178,11 +126,11 @@ namespace StreamVideo.Libs.iOSAudioManagers
         }
 
         /// <summary>
-        /// Maximize microphone input gain.
+        /// Set microphone input gain to 1.0. iOS rarely allows this for the built-in
+        /// mic; the call is best-effort and silently ignored when the system disallows
+        /// it. <see cref="ConfigureForWebRTC"/> already invokes this.
         /// </summary>
-        /// <exception cref="PlatformNotSupportedException">
-        /// Thrown on any non-iOS build target.
-        /// </exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown on non-iOS targets.</exception>
         public static void MaximizeInputGain()
         {
 #if UNITY_IOS && !UNITY_EDITOR
@@ -193,19 +141,18 @@ namespace StreamVideo.Libs.iOSAudioManagers
         }
 
         /// <summary>
-        /// Returns true when iOS is currently routing capture/playback through the
-        /// VoiceProcessingIO audio unit, which provides hardware-accelerated AEC,
-        /// noise suppression and automatic gain control. This is the only noise
-        /// cancellation we use on iOS - WebRTC's APM stages are disabled.
+        /// <c>true</c> when the AVAudioSession is currently configured for the
+        /// VoiceProcessingIO audio unit (i.e. <c>category == PlayAndRecord</c> and
+        /// <c>mode == VoiceChat</c> or <c>VideoChat</c>), which gives us hardware
+        /// AEC, noise suppression and automatic gain control.
         /// </summary>
         /// <remarks>
-        /// VoiceProcessingIO is engaged automatically by CoreAudio when
-        /// <c>AVAudioSession.category == PlayAndRecord</c> and
-        /// <c>AVAudioSession.mode == VoiceChat</c> (or VideoChat).
+        /// This checks the session configuration only; it does NOT verify that the
+        /// IO buffer duration is small enough for VPIO AEC to actually converge. See
+        /// the <c>[StreamVideo iOS Audio] Configured: ... IOBuffer=...</c> device log
+        /// line for the authoritative status.
         /// </remarks>
-        /// <exception cref="PlatformNotSupportedException">
-        /// Thrown on any non-iOS build target.
-        /// </exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown on non-iOS targets.</exception>
         public static bool IsHardwareNoiseCancellationActive
         {
             get
@@ -219,12 +166,11 @@ namespace StreamVideo.Libs.iOSAudioManagers
         }
 
         /// <summary>
-        /// Returns a human-readable string describing the current iOS audio session state.
+        /// Returns a human-readable dump of the current iOS audio session state
+        /// (category, mode, options, route, sample rate, IO buffer, latencies).
         /// Useful for diagnostics.
         /// </summary>
-        /// <exception cref="PlatformNotSupportedException">
-        /// Thrown on any non-iOS build target.
-        /// </exception>
+        /// <exception cref="PlatformNotSupportedException">Thrown on non-iOS targets.</exception>
         public static string GetCurrentSettings()
         {
 #if UNITY_IOS && !UNITY_EDITOR

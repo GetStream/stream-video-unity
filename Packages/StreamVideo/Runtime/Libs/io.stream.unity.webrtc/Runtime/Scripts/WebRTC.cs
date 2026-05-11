@@ -1151,14 +1151,14 @@ namespace Unity.WebRTC
             Context.StopAudioPlayback();
         }
 
-        public static void MuteAndroidAudioPlayback()
+        public static void MuteAudioPlayback()
         {
-            Context.MuteAndroidAudioPlayback();
+            Context.MuteAudioPlayback();
         }
 
-        public static void UnmuteAndroidAudioPlayback()
+        public static void UnmuteAudioPlayback()
         {
-            Context.UnmuteAndroidAudioPlayback();
+            Context.UnmuteAudioPlayback();
         }
 
         /// <summary>
@@ -1884,10 +1884,10 @@ namespace Unity.WebRTC
         public static extern void StopAudioPlayback(IntPtr context);
 
         [DllImport(WebRTC.Lib)]
-        public static extern void MuteAndroidAudioPlayback(IntPtr context);
+        public static extern void MuteAudioPlayback(IntPtr context);
 
         [DllImport(WebRTC.Lib)]
-        public static extern void UnmuteAndroidAudioPlayback(IntPtr context);
+        public static extern void UnmuteAudioPlayback(IntPtr context);
 
         [DllImport(WebRTC.Lib)]
         public static extern void SetAudioProcessingModule(IntPtr context, bool enabled, bool echoCancellationEnabled, bool autoGainEnabled, bool noiseSuppressionEnabled, int noiseSuppressionLevel);

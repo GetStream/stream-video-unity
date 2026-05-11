@@ -669,9 +669,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
 #if STREAM_NATIVE_AUDIO
-                    // On iOS the duplex VPIO audio unit requires PlayAndRecord
-                    // before it opens; otherwise AURemoteIO_StartIO fails with
-                    // '!rec' and playback never recovers (no automatic retry).
+                    // iOS VPIO requires PlayAndRecord before the audio unit opens (no automatic retry on '!rec').
                     EnsureIOSAudioSessionReadyForVPIO($"{nameof(DoJoin)} StartAudioPlayback");
 
                     WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
@@ -754,10 +752,8 @@ namespace StreamVideo.Core.LowLevelClient
             if (UseNativeAudioBindings)
             {
 #if STREAM_NATIVE_AUDIO
-                // Order matters on iOS: stop both playback and capture FIRST so
-                // the duplex VPIO audio unit is fully torn down, then deactivate
-                // the AVAudioSession. Deactivating while VPIO is still running
-                // leaves it orphaned with AVAudioSessionErrorCodeIsBusy.
+                // iOS order: stop playback + capture (closes the duplex VPIO unit),
+                // THEN deactivate AVAudioSession. Reverse order returns IsBusy.
                 WebRTC.StopAudioPlayback();
 
 #if UNITY_IOS && !UNITY_EDITOR
@@ -928,36 +924,20 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
-        /// <summary>
-        /// Pauses audio playback coming from the StreamVideo SDK. Intended to be called from app lifecycle
-        /// events (e.g. <c>OnApplicationPause(true)</c>) without the caller having to branch on the runtime platform.
-        /// On Android this completely suspends native audio playback. iOS support is not yet implemented.
-        /// On other platforms this is a no-op because there is no equivalent app-backgrounding concept.
-        /// </summary>
-        public void PauseAudioPlayback()
+        // Mutes the AudioMixer so the playback callback writes silence to the speakers.
+        // The native audio device keeps running; on iOS this also keeps the VPIO audio
+        // unit alive so unmuting is instant and does not need a session reconfigure.
+        public void PauseMobileAudioPlayback()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR && STREAM_NATIVE_AUDIO
-            WebRTC.MuteAndroidAudioPlayback();
-            _logs.Warning("Audio Playback is paused. This stops all audio coming from StreamVideo SDK on Android platform.");
-#elif UNITY_IOS && !UNITY_EDITOR
-            //StreamTODO: implement iOS audio playback pause
+#if STREAM_NATIVE_AUDIO
+            WebRTC.MuteAudioPlayback();
 #endif
         }
 
-        //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
-        /// <summary>
-        /// Resumes audio playback previously paused via <see cref="PauseAudioPlayback"/>.
-        /// On Android this resumes native audio playback. iOS support is not yet implemented.
-        /// On other platforms this is a no-op.
-        /// </summary>
-        public void ResumeAudioPlayback()
+        public void ResumeMobileAudioPlayback()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR && STREAM_NATIVE_AUDIO
-            WebRTC.UnmuteAndroidAudioPlayback();
-            _logs.Warning("Audio Playback is resumed. This resumes audio coming from StreamVideo SDK on Android platform.");
-#elif UNITY_IOS && !UNITY_EDITOR
-            //StreamTODO: implement iOS audio playback resume
+#if STREAM_NATIVE_AUDIO
+            WebRTC.UnmuteAudioPlayback();
 #endif
         }
 
@@ -1461,9 +1441,7 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
                 //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
 
-                // Configure AVAudioSession BEFORE starting native capture so the
-                // VoiceProcessingIO audio unit opens with HW AEC/NS/AGC active
-                // from sample 0.
+                // Configure session BEFORE capture so VPIO opens with HW AEC/NS/AGC from sample 0.
                 EnsureIOSAudioSessionReadyForVPIO($"{nameof(UpdateAudioRecording)} StartLocalAudioCapture");
 
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> START local audio capture");
@@ -1483,25 +1461,17 @@ namespace StreamVideo.Core.LowLevelClient
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> STOP local audio capture");
                 Publisher.PublisherAudioTrack.StopLocalAudioCapture();
 
-                // NOTE: do NOT call IOSAudioManager.DeconfigureAudioSession() here.
-                // On iOS the duplex VPIO audio unit is shared between capture and
-                // playback - StopLocalAudioCapture only flips the capture flag,
-                // the ma_device stays open because playback is still running.
-                // Deactivating the AVAudioSession would yank it from under the
-                // still-active VPIO unit and stop ALL audio. The session is
-                // deactivated in StopAsync after both directions are stopped.
+                // Do NOT deactivate the AVAudioSession on mute: the duplex VPIO unit is
+                // shared with playback and would also stop, killing remote audio. The
+                // session is deactivated in StopAsync after both directions are torn down.
             }
 #endif
         }
 
         /// <summary>
-        /// Ensure the iOS AVAudioSession is in <c>PlayAndRecord</c> +
-        /// <c>VideoChat</c>/<c>VoiceChat</c> before we open the duplex
-        /// VoiceProcessingIO audio unit. If it isn't,
-        /// <c>AURemoteIO_StartIO</c> fails with <c>'!rec'</c> and the duplex
-        /// device is rolled back without retry. Configures, verifies, and
-        /// retries once to catch races with other components reasserting the
-        /// session. No-op on non-iOS targets.
+        /// Configure the iOS AVAudioSession for VPIO (PlayAndRecord + VideoChat) before
+        /// opening the duplex audio unit. Verifies the result and retries once to catch
+        /// races with other components reasserting the session. No-op on non-iOS targets.
         /// </summary>
         private void EnsureIOSAudioSessionReadyForVPIO(string callerContext)
         {

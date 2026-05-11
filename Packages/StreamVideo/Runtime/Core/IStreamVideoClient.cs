@@ -129,19 +129,17 @@ namespace StreamVideo.Core
 
 
         /// <summary>
-        /// Pauses audio playback coming from the StreamVideo SDK. Intended to be called from app lifecycle
-        /// events (e.g. <c>OnApplicationPause(true)</c>) without the caller having to branch on the runtime platform.
-        /// On Android this completely suspends native audio playback. iOS support is not yet implemented.
-        /// On other platforms this is a no-op.
+        /// Mutes native SDK audio playback (silences remote participants on the device's
+        /// speakers). Call from app lifecycle events such as <c>OnApplicationPause(true)</c>.
+        /// The native audio device stays open so resume is instant. No-op on platforms
+        /// that don't use the native audio pipeline (Editor, Standalone).
         /// </summary>
-        void PauseAudioPlayback();
+        void PauseMobileAudioPlayback();
 
         /// <summary>
-        /// Resumes audio playback previously paused via <see cref="PauseAudioPlayback"/>.
-        /// On Android this resumes native audio playback. iOS support is not yet implemented.
-        /// On other platforms this is a no-op.
+        /// Resumes playback previously muted via <see cref="PauseMobileAudioPlayback"/>.
         /// </summary>
-        void ResumeAudioPlayback();
+        void ResumeMobileAudioPlayback();
 
         /// <summary>
         /// Set Android Audio usage mode

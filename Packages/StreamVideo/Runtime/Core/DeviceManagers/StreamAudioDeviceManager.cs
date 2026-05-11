@@ -31,15 +31,7 @@ namespace StreamVideo.Core.DeviceManagers
             {
             }
 
-#if UNITY_IOS && !UNITY_EDITOR
-            // On iOS the native audio pipeline handles capture via miniaudio.
-            // Device enumeration uses Unity's Microphone API since iOS typically
-            // exposes a single input device and doesn't use Android's routing model.
-            foreach (var deviceName in Microphone.devices)
-            {
-                yield return new MicrophoneDeviceInfo(deviceName);
-            }
-#elif UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
             if (RtcSession.UseNativeAudioBindings)
             {
                 NativeAudioDeviceManager.GetAudioInputDevices(ref _inputDevicesBuffer);
@@ -52,20 +44,14 @@ namespace StreamVideo.Core.DeviceManagers
 
                     yield return new MicrophoneDeviceInfo(device.Id, device.Name);
                 }
+                yield break;
             }
-            else
-            {
-                foreach (var deviceName in Microphone.devices)
-                {
-                    yield return new MicrophoneDeviceInfo(deviceName);
-                }
-            }
-#else
+#endif
+
             foreach (var deviceName in Microphone.devices)
             {
                 yield return new MicrophoneDeviceInfo(deviceName);
             }
-#endif
         }
 
         protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msTimeout)

@@ -32,6 +32,11 @@ namespace StreamVideo.Core
         event CallHandler CallStarted;
         
         /// <summary>
+        /// Event fired when a call is about to be left. You can still access full call data because the leaving process is just starting.
+        /// </summary>
+        event CallHandler CallLeaving;
+        
+        /// <summary>
         /// Event fired when a call ended
         /// </summary>
         event CallHandler CallEnded;

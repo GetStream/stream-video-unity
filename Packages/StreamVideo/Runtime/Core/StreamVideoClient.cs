@@ -82,6 +82,7 @@ namespace StreamVideo.Core
         public event DisconnectedHandler Disconnected;
 
         public event CallHandler CallStarted;
+        public event CallHandler CallLeaving;
 
         //StreamTodo: not sure if this should pass instance because we want to destroy call instance when the call is over??
         public event CallHandler CallEnded;
@@ -497,7 +498,7 @@ namespace StreamVideo.Core
 #if UNITY_IOS || UNITY_ANDROID
             _logsCollector.Enable();
 #endif
-            _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer)
+            _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer, _logs)
                 .CreateTrelloReporter();
 #endif
         }
@@ -837,6 +838,10 @@ namespace StreamVideo.Core
 
         private void OnRtcCallStateChanged(CallingState previousState, CallingState newState)
         {
+            if (newState == CallingState.Leaving)
+            {
+                CallLeaving?.Invoke(ActiveCall);
+            }
             if (newState == CallingState.Left)
             {
                 CallEnded?.Invoke(ActiveCall);

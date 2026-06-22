@@ -75,7 +75,7 @@ namespace StreamVideo.Core.LowLevelClient
         public const bool UseNativeAudioBindings = false;
 #endif
 
-        public const int MaxParticipantsForVideoAutoSubscription = 5;
+        public const int MaxParticipantsForVideoAutoSubscription = 0;
 
         public event Action<bool> PublisherAudioTrackIsEnabledChanged;
         public event Action<bool> PublisherVideoTrackIsEnabledChanged;
@@ -1342,11 +1342,21 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        // We only request a participant's video when BOTH we want it (incoming-video opt-in) AND the SFU reports the
+        // peer is actually publishing it. Subscribing for a track the peer isn't publishing yet is a no-op on the SFU
+        // and, worse, means a later late-publish doesn't change our subscription set - so the SFU never sends the
+        // subscriberOffer and the video only appears once an unrelated participant join forces a full resync.
+        // Gating on PublishedTracks (instead of the request flag alone) is how the JS/Android SDKs avoid this.
         private bool ShouldSubscribeToVideoTrack(IStreamVideoCallParticipant participant)
-            => _incomingVideoRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false);
+            => _incomingVideoRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false)
+               && IsParticipantPublishingTrack(participant, TrackType.Video);
 
         private bool ShouldSubscribeToAudioTrack(IStreamVideoCallParticipant participant)
             => _incomingAudioRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false);
+
+        private static bool IsParticipantPublishingTrack(IStreamVideoCallParticipant participant, TrackType trackType)
+            => participant is StreamVideoCallParticipant concreteParticipant
+               && concreteParticipant.IsPublishingTrack(trackType);
 
         //StreamTodo: remove this, this is a workaround to Null UserId error
         private string GetUserId(IStreamVideoCallParticipant participant)
@@ -1595,11 +1605,17 @@ namespace StreamVideo.Core.LowLevelClient
             if (participant != null)
             {
                 participant.ClearTrackPausedByServer(type);
-            }
 
-            if (participantSfuDto != null && participant != null)
-            {
-                participant.UpdateFromSfu(participantSfuDto);
+                if (participantSfuDto != null)
+                {
+                    participant.UpdateFromSfu(participantSfuDto);
+                }
+                else
+                {
+                    // DTO is optional on this event - keep PublishedTracks in sync so we stop subscribing to a
+                    // track the peer no longer publishes (mirrors JS watchTrackUnpublished).
+                    participant.RemovePublishedTrack(type);
+                }
             }
 
             //StreamTodo: raise an event so user can react to track unpublished? Otherwise the video will just freeze
@@ -1619,13 +1635,25 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, updateLocalParticipantState: true,
                 out var participant);
 
-            if (participantSfuDto != null && participant != null)
+            if (participant != null)
             {
-                participant.UpdateFromSfu(participantSfuDto);
+                if (participantSfuDto != null)
+                {
+                    participant.UpdateFromSfu(participantSfuDto);
+                }
+                else
+                {
+                    // The participant DTO is optional on this event (see TrackPublished.participant in events.proto).
+                    // When it's omitted we still must record that the peer now publishes this track, otherwise
+                    // ShouldSubscribeToVideoTrack would keep returning false and we'd never subscribe.
+                    participant.AddPublishedTrack(type);
+                }
             }
 
-            //StreamTodo: fixes the case when joining a call where other participant starts with no video and activates video track after we've joined -
-            // validated that this how Android/Js is handling this
+            // Handles late publishing: a peer that joined with their camera off and enables it later. Because we only
+            // subscribe to a track type the peer is actually publishing (see GetDesiredTracksDetails), recording the
+            // new published track above makes the next UpdateSubscriptions request genuinely change, which is what
+            // makes the SFU emit the subscriberOffer for the new m-line. This mirrors how the JS/Android SDKs work.
             QueueTracksSubscriptionRequest();
         }
 

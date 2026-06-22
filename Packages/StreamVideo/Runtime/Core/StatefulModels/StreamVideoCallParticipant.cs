@@ -65,6 +65,33 @@ namespace StreamVideo.Core.StatefulModels
         public string TrackLookupPrefix { get; private set; }
         public ConnectionQuality ConnectionQuality { get; private set; }
 
+        /// <summary>
+        /// Whether the SFU reports this participant as currently publishing the given track type.
+        /// This is the publish-state signal (mirrors JS `publishedTracks`/Android `videoEnabled`) and is the
+        /// correct trigger for deciding what to subscribe to. Do NOT use <see cref="IsVideoEnabled"/> for this -
+        /// that is derived from already having the track, so it can't be used to decide whether to request it.
+        /// </summary>
+        internal bool IsPublishingTrack(TrackType trackType) => _publishedTracks.Contains(trackType);
+
+        /// <summary>
+        /// Records that the participant started publishing a track. Used when the SFU omits the participant DTO
+        /// on a <c>TrackPublished</c> event (the DTO is optional), so that <see cref="PublishedTracks"/> stays
+        /// in sync without it.
+        /// </summary>
+        internal void AddPublishedTrack(TrackType trackType)
+        {
+            if (!_publishedTracks.Contains(trackType))
+            {
+                _publishedTracks.Add(trackType);
+            }
+        }
+
+        /// <summary>
+        /// Records that the participant stopped publishing a track. Used when the SFU omits the participant DTO
+        /// on a <c>TrackUnpublished</c> event.
+        /// </summary>
+        internal void RemovePublishedTrack(TrackType trackType) => _publishedTracks.Remove(trackType);
+
         public bool IsSpeaking
         {
             get => _isSpeaking;

@@ -1098,6 +1098,11 @@ namespace StreamVideo.Core.LowLevelClient
         private bool _trackSubscriptionRequestInProgress;
         private int _trackSubscriptionGeneration;
 
+#if STREAM_DEBUG_ENABLED
+        private HashSet<string> _lastSubscriptionTrackKeys = new HashSet<string>();
+        private int _subscriberOfferCount;
+#endif
+
         private bool _publisherAudioTrackIsEnabled;
         private bool _publisherVideoTrackIsEnabled;
 
@@ -1139,6 +1144,10 @@ namespace StreamVideo.Core.LowLevelClient
             _videoResolutionByParticipantSessionId.Clear();
             _incomingVideoRequestedByParticipantSessionId.Clear();
             _incomingAudioRequestedByParticipantSessionId.Clear();
+#if STREAM_DEBUG_ENABLED
+            _lastSubscriptionTrackKeys.Clear();
+            _subscriberOfferCount = 0;
+#endif
             _tracerManager?.Clear();
 
             Subscriber?.Dispose();
@@ -1239,7 +1248,7 @@ namespace StreamVideo.Core.LowLevelClient
             try
             {
                 // StreamTodo: validate that the very first call to SubscribeToTracksAsync is correct because ActiveCall.Participants may not have been updated yet
-                var tracks = GetDesiredTracksDetails();
+                var tracks = GetDesiredTracksDetails().ToList();
 
                 var request = new UpdateSubscriptionsRequest
                 {
@@ -1248,6 +1257,8 @@ namespace StreamVideo.Core.LowLevelClient
                 request.Tracks.AddRange(tracks);
 
 #if STREAM_DEBUG_ENABLED
+                LateVideoDiagnostics.LogSubscriptionDiff(
+                    _logs, ref _lastSubscriptionTrackKeys, tracks, generationAtSend);
                 _logs.Info($"Request SFU - UpdateSubscriptionsRequest\n{_serializer.Serialize(request)}");
 #endif
 
@@ -1326,7 +1337,17 @@ namespace StreamVideo.Core.LowLevelClient
                     };
                 }
 
+                var incomingVideoRequested =
+                    _incomingVideoRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false);
+                var publishingVideo = IsParticipantPublishingTrack(participant, TrackType.Video);
                 var shouldConsumeVideo = ShouldSubscribeToVideoTrack(participant);
+
+#if STREAM_DEBUG_ENABLED
+                LateVideoDiagnostics.LogParticipantSubscribeGate(
+                    _logs, participant, shouldConsumeAudio, shouldConsumeVideo,
+                    incomingVideoRequested, publishingVideo);
+#endif
+
                 if (shouldConsumeVideo)
                 {
                     var requestedVideoResolution = GetRequestedVideoResolution(participant);
@@ -1505,7 +1526,8 @@ namespace StreamVideo.Core.LowLevelClient
             _sfuTracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, subscriberOffer);
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Warning("OnSfuSubscriberOffer");
+            _subscriberOfferCount++;
+            LateVideoDiagnostics.LogSubscriberOfferReceived(_logs, _subscriberOfferCount, subscriberOffer.Sdp);
 #endif
             //StreamTodo: check RtcSession.kt handleSubscriberOffer for the retry logic
 
@@ -1565,6 +1587,11 @@ namespace StreamVideo.Core.LowLevelClient
                 await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
                     GetCurrentCancellationTokenOrDefault(), response => response.Error, preLog: true);
                 Subscriber.ThrowDisposedDuringOperationIfNull();
+
+#if STREAM_DEBUG_ENABLED
+                LateVideoDiagnostics.LogSubscriberAnswerSent(
+                    _logs, _subscriberOfferCount, answer.sdp, Subscriber.GetConnectionStateDebugString());
+#endif
 
                 Subscriber.ResetIceRestart();
             }
@@ -1649,6 +1676,10 @@ namespace StreamVideo.Core.LowLevelClient
                     participant.AddPublishedTrack(type);
                 }
             }
+
+#if STREAM_DEBUG_ENABLED
+            LateVideoDiagnostics.LogTrackPublished(_logs, sessionId, type, participant);
+#endif
 
             // Handles late publishing: a peer that joined with their camera off and enables it later. Because we only
             // subscribe to a track type the peer is actually publishing (see GetDesiredTracksDetails), recording the
@@ -2198,6 +2229,11 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
+#if STREAM_DEBUG_ENABLED
+            LateVideoDiagnostics.LogSubscriberStreamAdded(
+                _logs, trackPrefix, trackTypeKey, participant, mediaStream.Id);
+#endif
+
             if (!TrackTypeExt.TryGetTrackType(trackTypeKey, out var trackType))
             {
                 _logs.Error(
@@ -2226,6 +2262,9 @@ namespace StreamVideo.Core.LowLevelClient
             foreach (var track in mediaStream.GetTracks())
             {
                 internalParticipant.SetTrack(trackType, track, out var streamTrack);
+#if STREAM_DEBUG_ENABLED
+                LateVideoDiagnostics.LogRemoteTrackAdded(_logs, internalParticipant, streamTrack);
+#endif
                 ActiveCall.NotifyTrackAdded(internalParticipant, streamTrack);
             }
         }

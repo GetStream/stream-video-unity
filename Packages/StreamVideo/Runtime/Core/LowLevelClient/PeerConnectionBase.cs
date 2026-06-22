@@ -404,7 +404,7 @@ namespace StreamVideo.Core.LowLevelClient
         private void OnIceGatheringStateChange(RTCIceGatheringState state)
         {
 #if STREAM_DEBUG_ENABLED
-            //Logs.Warning($"[{PeerType}] OnIceGatheringStateChange to: " + state);
+            Logs.Warning($"[{PeerType}] OnIceGatheringStateChange to: " + state);
 #endif
             Tracer?.Trace(PeerConnectionTraceKey.OnIceGatheringStateChange, state.ToString());
         }
@@ -420,6 +420,12 @@ namespace StreamVideo.Core.LowLevelClient
             {
 #if STREAM_DEBUG_ENABLED
                 Logs.Warning($"[{PeerType}] OnTrack {trackEvent.Track.GetType().Name}, Id: {trackEvent.Track.Id}");
+                if (trackEvent.Streams != null && trackEvent.Streams.Any())
+                {
+                    Logs.Warning(
+                        $"[LateVideoDiag] [{PeerType}] OnTrack streams: " +
+                        string.Join(", ", trackEvent.Streams.Select(s => s.Id)));
+                }
 #endif
 
                 var trackType = trackEvent.Track is AudioStreamTrack ? "audio" : "video";
@@ -454,5 +460,11 @@ namespace StreamVideo.Core.LowLevelClient
                 Logs.Warning($"[{PeerType}] OnTrack failed, likely a stale track from a previous session: {e.Message}");
             }
         }
+
+#if STREAM_DEBUG_ENABLED
+        internal string GetConnectionStateDebugString()
+            => $"ICE={PeerConnection.IceConnectionState}, Conn={PeerConnection.ConnectionState}, " +
+               $"Gathering={PeerConnection.GatheringState}, Signaling={PeerConnection.SignalingState}";
+#endif
     }
 }

@@ -120,6 +120,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             foreach (var participant in _activeCall.Participants)
             {
                 AddParticipant(participant, sortParticipantViews: false);
+                RequestIncomingTracks(participant);
             }
 
             SortParticipantViews();
@@ -189,10 +190,30 @@ namespace StreamVideo.ExampleProject.UI.Screens
         }
 
         private void OnParticipantJoined(IStreamVideoCallParticipant participant)
-            => AddParticipant(participant, sortParticipantViews: true);
+        {
+            AddParticipant(participant, sortParticipantViews: true);
+            RequestIncomingTracks(participant);
+        }
 
         private void OnParticipantLeft(string sessionId, string userId)
             => RemoveParticipant(sessionId, userId, sortParticipantViews: true);
+
+        /// <summary>
+        /// Matches customer integration: request incoming audio/video once per remote participant when the call
+        /// starts (existing participants) and when a newcomer joins.
+        /// </summary>
+        private static void RequestIncomingTracks(IStreamVideoCallParticipant participant)
+        {
+            if (participant.IsLocalParticipant)
+            {
+                return;
+            }
+
+            participant.SetIncomingVideoEnabled(true);
+            participant.SetIncomingAudioEnabled(true);
+            Debug.Log(
+                $"[IncomingTracks] Requested incoming audio+video for participant {participant.SessionId}");
+        }
 
         private void AddParticipant(IStreamVideoCallParticipant participant, bool sortParticipantViews)
         {

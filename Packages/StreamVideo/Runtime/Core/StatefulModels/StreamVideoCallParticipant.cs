@@ -73,6 +73,10 @@ namespace StreamVideo.Core.StatefulModels
         /// </summary>
         internal bool IsPublishingTrack(TrackType trackType) => _publishedTracks.Contains(trackType);
 
+#if STREAM_DEBUG_ENABLED
+        internal IReadOnlyList<TrackType> GetPublishedTracksDebug() => _publishedTracks;
+#endif
+
         /// <summary>
         /// Records that the participant started publishing a track. Used when the SFU omits the participant DTO
         /// on a <c>TrackPublished</c> event (the DTO is optional), so that <see cref="PublishedTracks"/> stays

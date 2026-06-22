@@ -44,6 +44,12 @@ namespace StreamVideo.ExampleProject.UI.Devices
         /// </summary>
         public void NotifyParentShow()
         {
+            // Refresh the cached device list before showing. The refresh coroutine only runs while this
+            // panel's GameObject is active, so a panel that was inactive at startup (e.g. the call screen
+            // before a call started, or before camera permission was granted) can have a stale/empty list.
+            // Without this, OnParentShow would fail to find the already-selected device in the dropdown.
+            RefreshDevices();
+
             _deviceButton.UpdateSprite(IsDeviceEnabled);
             OnParentShow();
         }
@@ -173,19 +179,30 @@ namespace StreamVideo.ExampleProject.UI.Devices
                 {
                     yield return _refreshDeviceInterval;
                 }
-                
-                var availableDevices = GetDevices().ToList();
-                var devicesChanged = !_devices.SequenceEqual(availableDevices);
-                if (devicesChanged)
-                {
-                    var prevDevicesLog = string.Join(", ", _devices);
-                    var newDevicesLog = string.Join(", ", availableDevices);
-                    Debug.Log($"Device list changed. Previous: {prevDevicesLog}, Current: {newDevicesLog}");
 
-                    UpdateDevicesDropdown(availableDevices);
-                }
+                RefreshDevices();
 
                 yield return _refreshDeviceInterval;
+            }
+        }
+
+        // Re-reads the available devices and updates the dropdown if the list changed.
+        private void RefreshDevices()
+        {
+            if (Client == null)
+            {
+                return;
+            }
+
+            var availableDevices = GetDevices().ToList();
+            var devicesChanged = !_devices.SequenceEqual(availableDevices);
+            if (devicesChanged)
+            {
+                var prevDevicesLog = string.Join(", ", _devices);
+                var newDevicesLog = string.Join(", ", availableDevices);
+                Debug.Log($"Device list changed. Previous: {prevDevicesLog}, Current: {newDevicesLog}");
+
+                UpdateDevicesDropdown(availableDevices);
             }
         }
 

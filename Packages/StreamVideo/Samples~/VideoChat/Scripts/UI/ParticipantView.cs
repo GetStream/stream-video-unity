@@ -30,7 +30,11 @@ namespace StreamVideo.ExampleProject.UI
             Participant.AudioLevelChanged += OnAudioLevelChanged;
             Participant.IsSpeakingChanged += OnIsSpeakingChanged;
 
+#if STREAM_DEBUG_ENABLED
+            _name.text = $"{Participant.Name} [{Participant.SessionId[..8]}]";
+#else
             _name.text = Participant.Name;
+#endif
         }
 
         public void UpdateIsDominantSpeaker(bool isDominantSpeaker)
@@ -156,6 +160,11 @@ namespace StreamVideo.ExampleProject.UI
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
         {
+#if STREAM_DEBUG_ENABLED
+            Debug.Log(
+                $"[LateVideoDiag] ParticipantView TrackAdded user={participant.UserId} " +
+                $"session={participant.SessionId} track={track.GetType().Name} enabled={track.IsEnabled}");
+#endif
             Debug.Log($"Track received from `{participant.UserId}`, type: {track.GetType()}");
             switch (track)
             {
@@ -181,6 +190,11 @@ namespace StreamVideo.ExampleProject.UI
 
                 case StreamVideoTrack streamVideoTrack:
                     streamVideoTrack.SetRenderTarget(_video);
+#if STREAM_DEBUG_ENABLED
+                    Debug.Log(
+                        $"[LateVideoDiag] ParticipantView video bound session={participant.SessionId} " +
+                        $"uiTexture={_video.texture != null}");
+#endif
                     break;
 
                 default:

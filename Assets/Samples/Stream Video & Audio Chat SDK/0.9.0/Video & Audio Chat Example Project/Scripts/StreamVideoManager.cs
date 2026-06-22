@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
@@ -10,9 +12,6 @@ using StreamVideo.Libs;
 using StreamVideo.Libs.Auth;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
-#if STREAM_DEBUG_ENABLED
-using System.Linq;
-#endif
 
 namespace StreamVideo.ExampleProject
 {
@@ -33,6 +32,7 @@ namespace StreamVideo.ExampleProject
 
             Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
             Client.CallStarted += OnCallStarted;
+            Client.CallLeaving += OnCallLeaving;
             Client.CallEnded += OnCallEnded;
         }
 
@@ -75,7 +75,24 @@ namespace StreamVideo.ExampleProject
 
             if (_autoEnableCamera)
             {
-                Client.VideoDeviceManager.SetEnabled(true);
+                if (_delayCameraEnable)
+                {
+                    // Fire-and-forget: do NOT await here so JoinAsync returns and the call
+                    // screen appears while video is still off. This reproduces the customer's
+                    // "enable video ~3s after join" flow that triggers a late publisher
+                    // renegotiation.
+                    Debug.Log($"[DelayedCamera] Scheduling delayed camera enable in {_autoEnableCameraDelaySeconds}s.");
+                    DelayedEnableCameraAsync().LogIfFailed();
+                }
+                else
+                {
+                    Debug.Log("[DelayedCamera] Enabling camera immediately (delay disabled).");
+                    Client.VideoDeviceManager.SetEnabled(true);
+                }
+            }
+            else
+            {
+                Debug.Log("[DelayedCamera] Auto-enable camera is OFF; camera will not be enabled automatically.");
             }
 
             if (_playOnCallStart)
@@ -200,6 +217,7 @@ namespace StreamVideo.ExampleProject
             }
 
             Client.CallStarted -= OnCallStarted;
+            Client.CallLeaving -= OnCallLeaving;
             Client.CallEnded -= OnCallEnded;
             Client.Dispose();
             Client = null;
@@ -275,10 +293,19 @@ namespace StreamVideo.ExampleProject
 
         [Header("Auto-enable devices on joining a call")]
         [SerializeField]
-        private bool _autoEnableCamera = false;
+        private bool _autoEnableCamera = true;
+
+        [Tooltip("When enabled, the camera is enabled after a delay (mimicking a cold-camera warm-up gate) " +
+                 "instead of immediately after joining. This reproduces the late publisher renegotiation flow.")]
+        [SerializeField]
+        private bool _delayCameraEnable = true;
+
+        [Tooltip("Delay (in seconds) before the camera is auto-enabled when " + nameof(_delayCameraEnable) + " is on.")]
+        [SerializeField]
+        private float _autoEnableCameraDelaySeconds = 8f;
 
         [SerializeField]
-        private bool _autoEnableMicrophone = false;
+        private bool _autoEnableMicrophone = true;
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
@@ -311,6 +338,113 @@ namespace StreamVideo.ExampleProject
             await Client.ConnectUserAsync(credentials);
         }
 
+        /// <summary>
+        /// Enables the camera after <see cref="_autoEnableCameraDelaySeconds"/> to mimic the customer's
+        /// cold-camera warm-up gate. Enabling video after join forces a late publisher renegotiation.
+        /// </summary>
+        private async Task DelayedEnableCameraAsync()
+        {
+            try
+            {
+                Debug.Log($"[DelayedCamera] DelayedEnableCameraAsync started. Waiting {_autoEnableCameraDelaySeconds}s...");
+                await Task.Delay(TimeSpan.FromSeconds(_autoEnableCameraDelaySeconds));
+                Debug.Log("[DelayedCamera] Delay elapsed. Continuing on thread: " +
+                          System.Threading.Thread.CurrentThread.ManagedThreadId);
+
+                if (_activeCall == null)
+                {
+                    Debug.Log("[DelayedCamera] Skipping delayed camera enable - the call is no longer active.");
+                    return;
+                }
+
+                Debug.Log("[DelayedCamera] Ensuring a working camera is selected before enabling...");
+                await EnsureWorkingCameraSelectedAsync();
+                Debug.Log("[DelayedCamera] EnsureWorkingCameraSelectedAsync completed. SelectedDevice: " +
+                          Client.VideoDeviceManager.SelectedDevice);
+
+                if (_activeCall == null)
+                {
+                    Debug.Log("[DelayedCamera] Skipping delayed camera enable - the call ended while selecting a camera.");
+                    return;
+                }
+
+                Debug.Log("[DelayedCamera] Calling VideoDeviceManager.SetEnabled(true). IsEnabled before: " +
+                          Client.VideoDeviceManager.IsEnabled);
+                Client.VideoDeviceManager.SetEnabled(true);
+                Debug.Log("[DelayedCamera] SetEnabled(true) returned. IsEnabled after: " +
+                          Client.VideoDeviceManager.IsEnabled);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("[DelayedCamera] DelayedEnableCameraAsync threw an exception:");
+                Debug.LogException(e);
+            }
+        }
+
+        /// <summary>
+        /// Ensures a working camera is selected (disabled) before enabling video. Mirrors the startup
+        /// selection logic in <c>UIManager.SelectFirstWorkingCameraOrDefaultAsync</c>, preferring the
+        /// front camera on mobile. Short-circuits if a device is already selected to avoid double-selection.
+        /// </summary>
+        private async Task EnsureWorkingCameraSelectedAsync()
+        {
+            // The startup logic in UIManager normally already picked a working/front camera (disabled).
+            if (!Client.VideoDeviceManager.SelectedDevice.Equals(default(CameraDeviceInfo)))
+            {
+                Debug.Log("[DelayedCamera] A device is already selected, short-circuiting selection. SelectedDevice: " +
+                          Client.VideoDeviceManager.SelectedDevice);
+                return;
+            }
+
+            Debug.Log("[DelayedCamera] No device selected yet. Searching for a working camera...");
+
+#if UNITY_ANDROID || UNITY_IOS
+            Debug.Log("[DelayedCamera] Mobile platform - preferring front-facing camera.");
+            foreach (var device in Client.VideoDeviceManager.EnumerateDevices())
+            {
+                Debug.Log($"[DelayedCamera] Inspecting device '{device.Name}', IsFrontFacing: {device.IsFrontFacing}.");
+                if (!device.IsFrontFacing)
+                {
+                    continue;
+                }
+
+                Debug.Log($"[DelayedCamera] Testing front camera '{device.Name}'...");
+                var isWorking = await Client.VideoDeviceManager.TestDeviceAsync(device);
+                Debug.Log($"[DelayedCamera] Front camera '{device.Name}' working: {isWorking}.");
+                if (isWorking)
+                {
+                    // Select with enable: false - the subsequent SetEnabled(true) performs the
+                    // enable, which exercises the late-renegotiation path.
+                    Debug.Log($"[DelayedCamera] Selecting front camera '{device.Name}' (enable: false).");
+                    Client.VideoDeviceManager.SelectDevice(device, enable: false);
+                    return;
+                }
+            }
+#endif
+
+            Debug.Log("[DelayedCamera] Falling back to TryFindFirstWorkingDeviceAsync...");
+            var workingDevice = await Client.VideoDeviceManager.TryFindFirstWorkingDeviceAsync();
+            if (workingDevice.HasValue)
+            {
+                Debug.Log($"[DelayedCamera] Selecting first working device '{workingDevice.Value.Name}' (enable: false).");
+                Client.VideoDeviceManager.SelectDevice(workingDevice.Value, enable: false);
+                return;
+            }
+
+            Debug.LogWarning("[DelayedCamera] No working camera found. Falling back to first device.");
+
+            var firstDevice = Client.VideoDeviceManager.EnumerateDevices().FirstOrDefault();
+            if (firstDevice.Equals(default(CameraDeviceInfo)))
+            {
+                Debug.LogError(
+                    "[DelayedCamera] No camera devices found! Video streaming will not work. Please ensure that a camera device is plugged in.");
+                return;
+            }
+
+            Debug.Log($"[DelayedCamera] Selecting first enumerated device '{firstDevice.Name}' (enable: false).");
+            Client.VideoDeviceManager.SelectDevice(firstDevice, enable: false);
+        }
+
         private void OnCallStarted(IStreamCall call)
         {
             _activeCall = call;
@@ -319,7 +453,7 @@ namespace StreamVideo.ExampleProject
             CallStarted?.Invoke(call);
         }
 
-        private void OnCallEnded(IStreamCall call)
+        private void OnCallLeaving(IStreamCall call)
         {
 #if STREAM_DEBUG_ENABLED
             try
@@ -353,7 +487,10 @@ namespace StreamVideo.ExampleProject
                 Debug.LogException(e);
             }
 #endif
+        }
 
+        private void OnCallEnded(IStreamCall call)
+        {
             _activeCall = null;
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
 

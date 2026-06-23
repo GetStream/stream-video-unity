@@ -171,9 +171,27 @@ namespace StreamVideo.Core.LowLevelClient
             return offer;
         }
 
-        public async Task<RTCSessionDescription> CreateAnswerAsync(CancellationToken cancellationToken)
+        public Task<RTCSessionDescription> CreateAnswerAsync(CancellationToken cancellationToken)
+            => CreateAnswerAsync(cancellationToken, iceRestart: false);
+
+        public async Task<RTCSessionDescription> CreateAnswerAsync(CancellationToken cancellationToken, bool iceRestart)
         {
-            var answer = await PeerConnection.CreateAnswerAsync(cancellationToken);
+            if (iceRestart)
+            {
+                IsIceRestarting = true;
+            }
+
+            RTCSessionDescription answer;
+            if (iceRestart)
+            {
+                var options = new RTCOfferAnswerOptions { iceRestart = true };
+                answer = await PeerConnection.CreateAnswerAsync(ref options, cancellationToken);
+            }
+            else
+            {
+                answer = await PeerConnection.CreateAnswerAsync(cancellationToken);
+            }
+
             Tracer?.Trace(PeerConnectionTraceKey.CreateAnswer, answer.sdp);
             return answer;
         }

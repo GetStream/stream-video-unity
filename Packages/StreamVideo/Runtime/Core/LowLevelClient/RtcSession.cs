@@ -1099,6 +1099,10 @@ namespace StreamVideo.Core.LowLevelClient
             = new Dictionary<string, bool>();
 
         private readonly HashSet<string> _remoteVideoSubscriptionRefreshInProgressBySessionId = new HashSet<string>();
+        private readonly HashSet<string> _textureStuckIceRestartAttemptedBySessionId = new HashSet<string>();
+
+        private int _negotiatedSubscriberVideoMLineCount;
+        private bool _subscriberMediaKickInProgress;
 
         private HttpClient _httpClient;
         private CallingState _callState;
@@ -1161,6 +1165,9 @@ namespace StreamVideo.Core.LowLevelClient
             _incomingVideoRequestedByParticipantSessionId.Clear();
             _incomingAudioRequestedByParticipantSessionId.Clear();
             _remoteVideoSubscriptionRefreshInProgressBySessionId.Clear();
+            _textureStuckIceRestartAttemptedBySessionId.Clear();
+            _negotiatedSubscriberVideoMLineCount = 0;
+            _subscriberMediaKickInProgress = false;
             _coalescedSubscriberOffer = null;
 #if STREAM_DEBUG_ENABLED
             _lastSubscriptionTrackKeys.Clear();
@@ -1694,7 +1701,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
                         _subscriberOfferCount++;
                         LateVideoDiagnostics.LogSubscriberOfferReceived(_logs, _subscriberOfferCount,
-                            offerToProcess.Sdp);
+                            offerToProcess.Sdp, offerToProcess.IceRestart);
 #endif
 
                         var answerSent = await NegotiateSubscriberOfferAsync(offerToProcess);
@@ -1729,7 +1736,9 @@ namespace StreamVideo.Core.LowLevelClient
         {
             _sfuTracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, subscriberOffer);
 
-            //StreamTodo: handle subscriberOffer.iceRestart
+            var videoMLineCount = CountSubscriberVideoMediaLines(subscriberOffer.Sdp);
+            var addedVideoMLine = videoMLineCount > _negotiatedSubscriberVideoMLineCount;
+
             var rtcSessionDescription = new RTCSessionDescription
             {
                 type = RTCSdpType.Offer,
@@ -1751,7 +1760,8 @@ namespace StreamVideo.Core.LowLevelClient
                 throw;
             }
 
-            var answer = await Subscriber.CreateAnswerAsync(GetCurrentCancellationTokenOrDefault());
+            var answer = await Subscriber.CreateAnswerAsync(
+                GetCurrentCancellationTokenOrDefault(), subscriberOffer.IceRestart);
             Subscriber.ThrowDisposedDuringOperationIfNull();
 
             //StreamTodo: mangle SDP
@@ -1799,8 +1809,81 @@ namespace StreamVideo.Core.LowLevelClient
 #endif
 
             Subscriber.ResetIceRestart();
+            _negotiatedSubscriberVideoMLineCount = videoMLineCount;
+
+            if (addedVideoMLine && videoMLineCount > 0)
+            {
+                TryKickSubscriberMediaAfterLateVideo("subscriber-offer-added-video-m-line");
+            }
+
             return true;
         }
+
+        /// <summary>
+        /// After the SFU adds a recv video m-line (late camera publish), Android Unity WebRTC can end up with a
+        /// live <see cref="VideoStreamTrack"/> but no decoded frames until the subscriber PC is kicked (ICE restart /
+        /// full renegotiation). A third participant joining used to provide that kick implicitly.
+        /// </summary>
+        private void TryKickSubscriberMediaAfterLateVideo(string reason)
+        {
+            if (Subscriber == null || ActiveCall == null)
+            {
+                return;
+            }
+
+            if (_subscriberMediaKickInProgress)
+            {
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning($"[LateVideoDiag] Subscriber media kick skipped - already in progress. reason={reason}");
+#endif
+                return;
+            }
+
+            TryKickSubscriberMediaAfterLateVideoAsync(reason).LogIfFailed();
+        }
+
+        private async Task TryKickSubscriberMediaAfterLateVideoAsync(string reason)
+        {
+            _subscriberMediaKickInProgress = true;
+            try
+            {
+                var cancellationToken = GetCurrentCancellationTokenOrDefault();
+                await Task.Delay(150, cancellationToken);
+
+                if (Subscriber == null || ActiveCall == null || !Subscriber.IsHealthy)
+                {
+#if STREAM_DEBUG_ENABLED
+                    _logs.Warning(
+                        $"[LateVideoDiag] Subscriber media kick skipped - subscriber unhealthy. reason={reason}");
+#endif
+                    return;
+                }
+
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning(
+                    $"[LateVideoDiag] Requesting subscriber ICE restart after late video. reason={reason} " +
+                    $"pc={Subscriber.GetConnectionStateDebugString()}");
+#endif
+
+                await Subscriber.RestartIce();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (DisposedDuringOperationException)
+            {
+            }
+            finally
+            {
+                _subscriberMediaKickInProgress = false;
+            }
+        }
+
+        private static int CountSubscriberVideoMediaLines(string sdp)
+            => string.IsNullOrEmpty(sdp)
+                ? 0
+                : System.Text.RegularExpressions.Regex.Matches(sdp, @"^m=video ",
+                    System.Text.RegularExpressions.RegexOptions.Multiline).Count;
 
         private void OnSfuTrackUnpublished(TrackUnpublished trackUnpublished)
         {
@@ -2449,6 +2532,11 @@ namespace StreamVideo.Core.LowLevelClient
                 track.Enabled = true;
             }
 
+            foreach (var track in mediaStream.GetVideoTracks())
+            {
+                track.Enabled = true;
+            }
+
             var internalParticipant = ((StreamVideoCallParticipant)participant);
 
             foreach (var track in mediaStream.GetTracks())
@@ -2463,7 +2551,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     videoTrack.TextureStillNull += _ =>
                         OnRemoteVideoTextureStillNull(internalParticipant, videoTrack, receiver);
-#if STREAM_DEBUG_ENABLED && (!UNITY_ANDROID || UNITY_EDITOR)
+#if STREAM_DEBUG_ENABLED
                     SampleRemoteVideoReceiverStatsAsync(
                         internalParticipant, videoTrack, receiver, "remote-track-added").LogIfFailed();
 #endif
@@ -2483,12 +2571,19 @@ namespace StreamVideo.Core.LowLevelClient
 
 #if STREAM_DEBUG_ENABLED
             _logs.Warning(
-                $"[LateVideoDiag] Remote video texture stuck; queueing subscription refresh. " +
-                $"session={participant.SessionId} user={participant.UserId} trackId={videoTrack.TrackId}");
-#if !UNITY_ANDROID || UNITY_EDITOR
+                $"[LateVideoDiag] Remote video texture stuck. session={participant.SessionId} " +
+                $"user={participant.UserId} trackId={videoTrack.TrackId}");
             SampleRemoteVideoReceiverStatsAsync(
                 participant, videoTrack, receiver, "texture-still-null").LogIfFailed();
 #endif
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (!_textureStuckIceRestartAttemptedBySessionId.Contains(participant.SessionId))
+            {
+                _textureStuckIceRestartAttemptedBySessionId.Add(participant.SessionId);
+                TryKickSubscriberMediaAfterLateVideo("texture-stuck");
+                return;
+            }
 #endif
 
             ForceRefreshRemoteVideoSubscriptionAsync(participant, videoTrack).LogIfFailed();
@@ -2591,7 +2686,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-#if STREAM_DEBUG_ENABLED && (!UNITY_ANDROID || UNITY_EDITOR)
+#if STREAM_DEBUG_ENABLED
         private async Task SampleRemoteVideoReceiverStatsAsync(
             IStreamVideoCallParticipant participant,
             StreamVideoTrack videoTrack,

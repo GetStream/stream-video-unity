@@ -19,6 +19,10 @@ namespace StreamVideo.Core.LowLevelClient
         public static Task<RTCSessionDescription> CreateAnswerAsync(this RTCPeerConnection peerConnection, CancellationToken cancellationToken)
             => WaitForOperationAsync(peerConnection.CreateAnswer(), r => r.Desc, cancellationToken);
 
+        public static Task<RTCSessionDescription> CreateAnswerAsync(this RTCPeerConnection peerConnection,
+            ref RTCOfferAnswerOptions options, CancellationToken cancellationToken)
+            => WaitForOperationAsync(peerConnection.CreateAnswer(ref options), r => r.Desc, cancellationToken);
+
         public static Task SetLocalDescriptionAsync(this RTCPeerConnection peerConnection,
             ref RTCSessionDescription desc, CancellationToken cancellationToken)
             => WaitForOperationAsync(peerConnection.SetLocalDescription(ref desc), cancellationToken);

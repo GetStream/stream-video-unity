@@ -89,10 +89,17 @@ namespace StreamVideo.Core.LowLevelClient
                 $"video(request={subscribeVideo}, received={FormatTrack(participant.VideoTrack)}, missing={videoMissing})");
         }
 
-        public static void LogSubscriberOfferReceived(ILogs logs, int offerNumber, string offerSdp)
+        public static void LogSubscriberOfferReceived(ILogs logs, int offerNumber, string offerSdp, bool iceRestart)
         {
-            logs.Warning($"{Tag} subscriberOffer #{offerNumber} offer={SummarizeSdp(offerSdp, isOffer: true)}");
+            logs.Warning(
+                $"{Tag} subscriberOffer #{offerNumber} iceRestart={iceRestart} " +
+                $"offer={SummarizeSdp(offerSdp, isOffer: true)}");
         }
+
+        public static int CountVideoMediaLines(string sdp)
+            => string.IsNullOrEmpty(sdp)
+                ? 0
+                : Regex.Matches(sdp, @"^m=video ", RegexOptions.Multiline).Count;
 
         public static void LogSubscriberAnswerSent(
             ILogs logs,

@@ -296,6 +296,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             TryExecuteSubscribeToTracks();
 
+            TryReconcileMissingTrackSubscriptions();
+
             TryExecutePendingReconnectRequest();
         }
 
@@ -1055,6 +1057,14 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
+
+        // How often the receiver-side self-heal pass re-checks for requested-but-missing tracks.
+        private const float TrackSubscriptionReconciliationInterval = 2f;
+
+#if STREAM_DEBUG_ENABLED
+        private const float TrackSubscriptionReconciliationSkipLogInterval = 2f;
+#endif
+
         private const int CallJoinMaxRetries = 3;
         internal const int CallRejoinMaxFastAttempts = 3;
 
@@ -1094,6 +1104,7 @@ namespace StreamVideo.Core.LowLevelClient
         private ICache _cache;
 
         private float _lastTrackSubscriptionRequestTime;
+        private float _lastTrackSubscriptionReconciliationTime;
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
         private int _trackSubscriptionGeneration;
@@ -1101,6 +1112,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
         private HashSet<string> _lastSubscriptionTrackKeys = new HashSet<string>();
         private int _subscriberOfferCount;
+        private float _lastTrackSubscriptionReconciliationSkipLogTime;
 #endif
 
         private bool _publisherAudioTrackIsEnabled;
@@ -1150,6 +1162,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             _lastSubscriptionTrackKeys.Clear();
             _subscriberOfferCount = 0;
+            _lastTrackSubscriptionReconciliationSkipLogTime = 0;
 #endif
             _tracerManager?.Clear();
 
@@ -1175,6 +1188,7 @@ namespace StreamVideo.Core.LowLevelClient
             _trackSubscriptionRequested = false;
             _trackSubscriptionRequestInProgress = false;
             _trackSubscriptionGeneration = 0;
+            _lastTrackSubscriptionReconciliationTime = 0;
 
             SessionId.Clear();
             SfuHost = string.Empty;
@@ -1295,6 +1309,134 @@ namespace StreamVideo.Core.LowLevelClient
                 _trackSubscriptionRequestInProgress = false;
                 _lastTrackSubscriptionRequestTime = _timeService.Time;
             }
+        }
+
+        /// <summary>
+        /// Receiver-side self-heal pass. A successful <c>UpdateSubscriptions</c> RPC only means the SFU accepted the
+        /// request - it does NOT guarantee that the <c>subscriberOffer</c> and the resulting media track ever arrived.
+        /// This happens, for example, when a peer enables their camera late (adding a new m-line via renegotiation):
+        /// existing subscribers can get <c>UpdateSubscriptions</c> SUCCESS with no follow-up offer, and the track never
+        /// shows up until an unrelated participant join forces a full resync.
+        ///
+        /// Here we detect "we requested this track AND the SFU reports the peer is publishing it AND we still have no
+        /// media track for it" and re-queue a subscription request. The pass is self-limiting: once the track arrives
+        /// the mismatch disappears and no further requests are issued.
+        ///
+        /// This is purely a receiver-side operation. It only re-requests media that a remote participant has already
+        /// chosen to publish and never creates or announces a local publisher track, so it has no billing impact.
+        /// </summary>
+        private void TryReconcileMissingTrackSubscriptions()
+        {
+            if (ActiveCall?.Participants == null || ActiveCall.Participants.Count == 0)
+            {
+#if STREAM_DEBUG_ENABLED
+                LogTrackSubscriptionReconciliationSkip("no active call participants");
+#endif
+                return;
+            }
+
+            // A subscription cycle is already pending or running - let it complete before reconciling.
+            if (_trackSubscriptionRequested || _trackSubscriptionRequestInProgress)
+            {
+#if STREAM_DEBUG_ENABLED
+                LogTrackSubscriptionReconciliationSkip(
+                    $"subscription already pending/running requested={_trackSubscriptionRequested} " +
+                    $"inProgress={_trackSubscriptionRequestInProgress} gen={_trackSubscriptionGeneration}");
+#endif
+                return;
+            }
+
+            var timeSinceLastReconciliation = _timeService.Time - _lastTrackSubscriptionReconciliationTime;
+            if (timeSinceLastReconciliation < TrackSubscriptionReconciliationInterval)
+            {
+#if STREAM_DEBUG_ENABLED
+                LogTrackSubscriptionReconciliationSkip(
+                    $"throttled elapsed={timeSinceLastReconciliation:F2}s " +
+                    $"interval={TrackSubscriptionReconciliationInterval:F2}s");
+#endif
+                return;
+            }
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning(
+                $"[LateVideoDiag] {nameof(TryReconcileMissingTrackSubscriptions)} pass " +
+                $"participants={ActiveCall.Participants.Count} gen={_trackSubscriptionGeneration}");
+#endif
+            _lastTrackSubscriptionReconciliationTime = _timeService.Time;
+
+            var hasMissingTrack = false;
+            foreach (var participant in ActiveCall.Participants)
+            {
+                if (participant == null || participant.IsLocalParticipant)
+                {
+                    continue;
+                }
+
+                var shouldSubscribeToVideo = ShouldSubscribeToVideoTrack(participant);
+                var shouldSubscribeToAudio = ShouldSubscribeToAudioTrack(participant);
+                var isVideoMissing = IsRequestedTrackMissing(participant, TrackType.Video, shouldSubscribeToVideo,
+                    participant.VideoTrack);
+                var isAudioMissing = IsRequestedTrackMissing(participant, TrackType.Audio, shouldSubscribeToAudio,
+                    participant.AudioTrack);
+
+#if STREAM_DEBUG_ENABLED
+                LateVideoDiagnostics.LogReconcileParticipantState(
+                    _logs, participant, shouldSubscribeToAudio, shouldSubscribeToVideo,
+                    isAudioMissing, isVideoMissing);
+#endif
+
+                if (isVideoMissing || isAudioMissing)
+                {
+                    hasMissingTrack = true;
+                    break;
+                }
+            }
+
+            if (!hasMissingTrack)
+            {
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning(
+                    $"[LateVideoDiag] {nameof(TryReconcileMissingTrackSubscriptions)} pass complete - " +
+                    "no requested/published track is missing.");
+#endif
+                return;
+            }
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning(
+                $"{nameof(TryReconcileMissingTrackSubscriptions)} - detected a requested track that the peer is publishing but that was never received. Re-queueing a subscription request.");
+#endif
+
+            QueueTracksSubscriptionRequest();
+        }
+
+#if STREAM_DEBUG_ENABLED
+        private void LogTrackSubscriptionReconciliationSkip(string reason)
+        {
+            var timeSinceLastLog = _timeService.Time - _lastTrackSubscriptionReconciliationSkipLogTime;
+            if (timeSinceLastLog < TrackSubscriptionReconciliationSkipLogInterval)
+            {
+                return;
+            }
+
+            _lastTrackSubscriptionReconciliationSkipLogTime = _timeService.Time;
+            _logs.Warning(
+                $"[LateVideoDiag] {nameof(TryReconcileMissingTrackSubscriptions)} skipped - {reason}");
+        }
+#endif
+
+        private static bool IsRequestedTrackMissing(IStreamVideoCallParticipant participant, TrackType publishedType,
+            bool isRequested, IStreamTrack receivedTrack)
+        {
+            if (!isRequested || receivedTrack != null)
+            {
+                return false;
+            }
+
+            // The SFU only emits a track for a peer that is actually publishing it. Without this check we'd keep
+            // re-requesting tracks for participants that simply have their camera/microphone off.
+            return participant is StreamVideoCallParticipant concreteParticipant
+                   && concreteParticipant.PublishedTracks.Contains(publishedType);
         }
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()

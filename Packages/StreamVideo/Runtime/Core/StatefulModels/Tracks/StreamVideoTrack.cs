@@ -28,7 +28,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         public StreamVideoTrack(MediaStreamTrack track)
             : base(track)
         {
-            //Track.OnVideoReceived += OnVideoReceived;
+            Track.OnVideoReceived += OnVideoReceived;
 #if STREAM_DEBUG_ENABLED
             _trackAddedAtRealtime = Time.realtimeSinceStartup;
 #endif
@@ -36,11 +36,11 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 
         private void OnVideoReceived(Texture renderer)
         {
-            if (_targetImage == null)
+            if (_targetImage == null || renderer == null)
             {
                 return;
             }
-            
+
             _targetImage.texture = renderer;
         }
 
@@ -82,11 +82,11 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 #if STREAM_DEBUG_ENABLED
             UnityEngine.Debug.LogWarning("[Participant] Video track disposed.");
 #endif
-            // if (Track != null)
-            // {
-            //     Track.OnVideoReceived -= OnVideoReceived;
-            // }
-            
+            if (Track != null)
+            {
+                Track.OnVideoReceived -= OnVideoReceived;
+            }
+
             base.OnDisposing();
         }
         

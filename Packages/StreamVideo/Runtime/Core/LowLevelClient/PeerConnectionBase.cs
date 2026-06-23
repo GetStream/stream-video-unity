@@ -178,6 +178,67 @@ namespace StreamVideo.Core.LowLevelClient
             return answer;
         }
 
+        /// <summary>
+        /// Waits until local ICE gathering completes so the local SDP can include inline candidates.
+        /// </summary>
+        internal async Task WaitForIceGatheringCompleteAsync(CancellationToken cancellationToken,
+            int timeoutMs = 2000)
+        {
+            if (PeerConnection.GatheringState == RTCIceGatheringState.Complete)
+            {
+                return;
+            }
+
+            var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+            while (PeerConnection.GatheringState != RTCIceGatheringState.Complete)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (DateTime.UtcNow >= deadline)
+                {
+#if STREAM_DEBUG_ENABLED
+                    Logs.Warning(
+                        $"[{PeerType}] ICE gathering did not complete within {timeoutMs}ms; " +
+                        "sending answer with current local description");
+#endif
+                    break;
+                }
+
+                await Task.Delay(10, cancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Returns the local SDP after ICE gathering, falling back to the create-answer SDP if unavailable.
+        /// </summary>
+        internal string GetLocalDescriptionSdpOrFallback(string fallbackSdp)
+        {
+            try
+            {
+                var localDescription = PeerConnection.LocalDescription;
+                if (!string.IsNullOrEmpty(localDescription.sdp))
+                {
+                    return localDescription.sdp;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+            }
+
+            try
+            {
+                var currentLocalDescription = PeerConnection.CurrentLocalDescription;
+                if (!string.IsNullOrEmpty(currentLocalDescription.sdp))
+                {
+                    return currentLocalDescription.sdp;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+            }
+
+            return fallbackSdp;
+        }
+
         //StreamTODO: perhaps no need to make a native call and just return _videoTransceiver, _audioTransceiver
         public IEnumerable<RTCRtpTransceiver> GetTransceivers() => PeerConnection.GetTransceivers();
 

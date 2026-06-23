@@ -1116,6 +1116,8 @@ namespace StreamVideo.Core.LowLevelClient
         private CancellationTokenSource _activeCallCts;
         
         private readonly ReconnectGuard _reconnectGuard = new ReconnectGuard();
+        private readonly SemaphoreSlim _subscriberNegotiationLock = new SemaphoreSlim(1, 1);
+        private SubscriberOffer _coalescedSubscriberOffer;
 
         private TaskCompletionSource<bool> _joinTaskCompletionSource;
         internal int _fastReconnectDeadlineSeconds;
@@ -1144,6 +1146,7 @@ namespace StreamVideo.Core.LowLevelClient
             _videoResolutionByParticipantSessionId.Clear();
             _incomingVideoRequestedByParticipantSessionId.Clear();
             _incomingAudioRequestedByParticipantSessionId.Clear();
+            _coalescedSubscriberOffer = null;
 #if STREAM_DEBUG_ENABLED
             _lastSubscriptionTrackKeys.Clear();
             _subscriberOfferCount = 0;
@@ -1515,21 +1518,13 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         /**
-     * This is called when the SFU sends us an offer
-     * - Sets the remote description
-     * - Creates an answer
-     * - Sets the local description
-     * - Sends the answer back to the SFU
+     * This is called when the SFU sends us an offer.
+     * Rapid back-to-back offers (audio-only then audio+video after a late publish) are coalesced:
+     * if a newer offer arrives while we are still preparing the answer, the stale answer is not sent.
      */
         private async void OnSfuSubscriberOffer(SubscriberOffer subscriberOffer)
         {
-            _sfuTracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, subscriberOffer);
-
-#if STREAM_DEBUG_ENABLED
-            _subscriberOfferCount++;
-            LateVideoDiagnostics.LogSubscriberOfferReceived(_logs, _subscriberOfferCount, subscriberOffer.Sdp);
-#endif
-            //StreamTodo: check RtcSession.kt handleSubscriberOffer for the retry logic
+            _coalescedSubscriberOffer = subscriberOffer;
 
             try
             {
@@ -1538,62 +1533,36 @@ namespace StreamVideo.Core.LowLevelClient
                     return;
                 }
 
-                //StreamTodo: handle subscriberOffer.iceRestart
-                var rtcSessionDescription = new RTCSessionDescription
-                {
-                    type = RTCSdpType.Offer,
-                    sdp = subscriberOffer.Sdp
-                };
-
+                await _subscriberNegotiationLock.WaitAsync(GetCurrentCancellationTokenOrDefault());
                 try
                 {
-                    await Subscriber.SetRemoteDescriptionAsync(rtcSessionDescription,
-                        GetCurrentCancellationTokenOrDefault());
-                    Subscriber.ThrowDisposedDuringOperationIfNull();
+                    while (_coalescedSubscriberOffer != null)
+                    {
+                        if (GetCurrentCancellationTokenOrDefault().IsCancellationRequested)
+                        {
+                            return;
+                        }
 
-                    Subscriber.AddPendingIceCandidates();
-                }
-                catch (Exception e)
-                {
-                    _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription,
-                        e.Message ?? "unknown");
-                    throw;
-                }
-
-                var answer = await Subscriber.CreateAnswerAsync(GetCurrentCancellationTokenOrDefault());
-                Subscriber.ThrowDisposedDuringOperationIfNull();
-
-                //StreamTodo: mangle SDP
-
-                try
-                {
-                    await Subscriber.SetLocalDescriptionAsync(ref answer, GetCurrentCancellationTokenOrDefault());
-                    Subscriber.ThrowDisposedDuringOperationIfNull();
-                }
-                catch (Exception e)
-                {
-                    _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetLocalDescription,
-                        e.Message ?? "unknown");
-                    throw;
-                }
-
-                var sendAnswerRequest = new SendAnswerRequest
-                {
-                    PeerType = PeerType.Subscriber,
-                    Sdp = answer.sdp,
-                    SessionId = SessionId.ToString()
-                };
-
-                await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
-                    GetCurrentCancellationTokenOrDefault(), response => response.Error, preLog: true);
-                Subscriber.ThrowDisposedDuringOperationIfNull();
+                        var offerToProcess = _coalescedSubscriberOffer;
+                        _coalescedSubscriberOffer = null;
 
 #if STREAM_DEBUG_ENABLED
-                LateVideoDiagnostics.LogSubscriberAnswerSent(
-                    _logs, _subscriberOfferCount, answer.sdp, Subscriber.GetConnectionStateDebugString());
+                        _subscriberOfferCount++;
+                        LateVideoDiagnostics.LogSubscriberOfferReceived(_logs, _subscriberOfferCount,
+                            offerToProcess.Sdp);
 #endif
 
-                Subscriber.ResetIceRestart();
+                        var answerSent = await NegotiateSubscriberOfferAsync(offerToProcess);
+                        if (!answerSent && _coalescedSubscriberOffer != null)
+                        {
+                            continue;
+                        }
+                    }
+                }
+                finally
+                {
+                    _subscriberNegotiationLock.Release();
+                }
             }
             catch (OperationCanceledException)
             {
@@ -1608,6 +1577,84 @@ namespace StreamVideo.Core.LowLevelClient
                 _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSubmit, e.Message ?? "unknown");
                 _logs.Exception(e);
             }
+        }
+
+        /// <returns>True when SendAnswer was sent; false when superseded by a newer subscriberOffer.</returns>
+        private async Task<bool> NegotiateSubscriberOfferAsync(SubscriberOffer subscriberOffer)
+        {
+            _sfuTracer?.Trace(PeerConnectionTraceKey.SetRemoteDescription, subscriberOffer);
+
+            //StreamTodo: handle subscriberOffer.iceRestart
+            var rtcSessionDescription = new RTCSessionDescription
+            {
+                type = RTCSdpType.Offer,
+                sdp = subscriberOffer.Sdp
+            };
+
+            try
+            {
+                await Subscriber.SetRemoteDescriptionAsync(rtcSessionDescription,
+                    GetCurrentCancellationTokenOrDefault());
+                Subscriber.ThrowDisposedDuringOperationIfNull();
+
+                Subscriber.AddPendingIceCandidates();
+            }
+            catch (Exception e)
+            {
+                _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetRemoteDescription,
+                    e.Message ?? "unknown");
+                throw;
+            }
+
+            var answer = await Subscriber.CreateAnswerAsync(GetCurrentCancellationTokenOrDefault());
+            Subscriber.ThrowDisposedDuringOperationIfNull();
+
+            //StreamTodo: mangle SDP
+
+            try
+            {
+                await Subscriber.SetLocalDescriptionAsync(ref answer, GetCurrentCancellationTokenOrDefault());
+                Subscriber.ThrowDisposedDuringOperationIfNull();
+            }
+            catch (Exception e)
+            {
+                _subscriberTracer?.Trace(PeerConnectionTraceKey.NegotiateErrorSetLocalDescription,
+                    e.Message ?? "unknown");
+                throw;
+            }
+
+            await Subscriber.WaitForIceGatheringCompleteAsync(GetCurrentCancellationTokenOrDefault());
+            Subscriber.ThrowDisposedDuringOperationIfNull();
+
+            if (_coalescedSubscriberOffer != null)
+            {
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning(
+                    "[LateVideoDiag] Skipping SendAnswer — superseded by newer subscriberOffer before answer was sent");
+#endif
+                return false;
+            }
+
+            var answerSdp = Subscriber.GetLocalDescriptionSdpOrFallback(answer.sdp);
+
+            var sendAnswerRequest = new SendAnswerRequest
+            {
+                PeerType = PeerType.Subscriber,
+                Sdp = answerSdp,
+                SessionId = SessionId.ToString()
+            };
+
+            await RpcCallAsync(sendAnswerRequest, GeneratedAPI.SendAnswer, nameof(GeneratedAPI.SendAnswer),
+                GetCurrentCancellationTokenOrDefault(), response => response.Error, preLog: true);
+            Subscriber.ThrowDisposedDuringOperationIfNull();
+
+#if STREAM_DEBUG_ENABLED
+            LateVideoDiagnostics.LogSubscriberAnswerSent(
+                _logs, _subscriberOfferCount, answerSdp, Subscriber.GetConnectionStateDebugString());
+#endif
+
+            Subscriber.ResetIceRestart();
+            return true;
         }
 
         private void OnSfuTrackUnpublished(TrackUnpublished trackUnpublished)

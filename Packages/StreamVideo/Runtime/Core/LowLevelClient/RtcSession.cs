@@ -296,6 +296,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             TryExecuteSubscribeToTracks();
 
+            TryReconcileMissingTrackSubscriptions();
+
             TryExecutePendingReconnectRequest();
         }
 
@@ -1055,6 +1057,10 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private const float TrackSubscriptionDebounceTime = 0.1f;
+
+        // How often the receiver-side self-heal pass re-checks for requested-but-missing tracks.
+        private const float TrackSubscriptionReconciliationInterval = 2f;
+
         private const int CallJoinMaxRetries = 3;
         internal const int CallRejoinMaxFastAttempts = 3;
 
@@ -1094,6 +1100,7 @@ namespace StreamVideo.Core.LowLevelClient
         private ICache _cache;
 
         private float _lastTrackSubscriptionRequestTime;
+        private float _lastTrackSubscriptionReconciliationTime;
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
 
@@ -1161,6 +1168,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             _trackSubscriptionRequested = false;
             _trackSubscriptionRequestInProgress = false;
+            _lastTrackSubscriptionReconciliationTime = 0;
 
             SessionId.Clear();
             SfuHost = string.Empty;
@@ -1275,6 +1283,86 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _trackSubscriptionRequestInProgress = false;
+        }
+
+        /// <summary>
+        /// Receiver-side self-heal pass. A successful <c>UpdateSubscriptions</c> RPC only means the SFU accepted the
+        /// request - it does NOT guarantee that the <c>subscriberOffer</c> and the resulting media track ever arrived.
+        /// This happens, for example, when a peer enables their camera late (adding a new m-line via renegotiation):
+        /// existing subscribers can get <c>UpdateSubscriptions</c> SUCCESS with no follow-up offer, and the track never
+        /// shows up until an unrelated participant join forces a full resync.
+        ///
+        /// Here we detect "we requested this track AND the SFU reports the peer is publishing it AND we still have no
+        /// media track for it" and re-queue a subscription request. The pass is self-limiting: once the track arrives
+        /// the mismatch disappears and no further requests are issued.
+        ///
+        /// This is purely a receiver-side operation. It only re-requests media that a remote participant has already
+        /// chosen to publish and never creates or announces a local publisher track, so it has no billing impact.
+        /// </summary>
+        private void TryReconcileMissingTrackSubscriptions()
+        {
+            if (ActiveCall?.Participants == null || ActiveCall.Participants.Count == 0)
+            {
+                return;
+            }
+
+            // A subscription cycle is already pending or running - let it complete before reconciling.
+            if (_trackSubscriptionRequested || _trackSubscriptionRequestInProgress)
+            {
+                return;
+            }
+
+            var timeSinceLastReconciliation = _timeService.Time - _lastTrackSubscriptionReconciliationTime;
+            if (timeSinceLastReconciliation < TrackSubscriptionReconciliationInterval)
+            {
+                return;
+            }
+
+            var hasMissingTrack = false;
+            foreach (var participant in ActiveCall.Participants)
+            {
+                if (participant == null || participant.IsLocalParticipant)
+                {
+                    continue;
+                }
+
+                if (IsRequestedTrackMissing(participant, TrackType.Video, ShouldSubscribeToVideoTrack(participant),
+                        participant.VideoTrack)
+                    || IsRequestedTrackMissing(participant, TrackType.Audio, ShouldSubscribeToAudioTrack(participant),
+                        participant.AudioTrack))
+                {
+                    hasMissingTrack = true;
+                    break;
+                }
+            }
+
+            if (!hasMissingTrack)
+            {
+                return;
+            }
+
+            _lastTrackSubscriptionReconciliationTime = _timeService.Time;
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning(
+                $"{nameof(TryReconcileMissingTrackSubscriptions)} - detected a requested track that the peer is publishing but that was never received. Re-queueing a subscription request.");
+#endif
+
+            QueueTracksSubscriptionRequest();
+        }
+
+        private static bool IsRequestedTrackMissing(IStreamVideoCallParticipant participant, TrackType publishedType,
+            bool isRequested, IStreamTrack receivedTrack)
+        {
+            if (!isRequested || receivedTrack != null)
+            {
+                return false;
+            }
+
+            // The SFU only emits a track for a peer that is actually publishing it. Without this check we'd keep
+            // re-requesting tracks for participants that simply have their camera/microphone off.
+            return participant is StreamVideoCallParticipant concreteParticipant
+                   && concreteParticipant.PublishedTracks.Contains(publishedType);
         }
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()

@@ -1098,6 +1098,8 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly Dictionary<string, bool> _incomingAudioRequestedByParticipantSessionId
             = new Dictionary<string, bool>();
 
+        private readonly HashSet<string> _remoteVideoSubscriptionRefreshInProgressBySessionId = new HashSet<string>();
+
         private HttpClient _httpClient;
         private CallingState _callState;
 
@@ -1158,6 +1160,7 @@ namespace StreamVideo.Core.LowLevelClient
             _videoResolutionByParticipantSessionId.Clear();
             _incomingVideoRequestedByParticipantSessionId.Clear();
             _incomingAudioRequestedByParticipantSessionId.Clear();
+            _remoteVideoSubscriptionRefreshInProgressBySessionId.Clear();
             _coalescedSubscriberOffer = null;
 #if STREAM_DEBUG_ENABLED
             _lastSubscriptionTrackKeys.Clear();
@@ -2460,7 +2463,7 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     videoTrack.TextureStillNull += _ =>
                         OnRemoteVideoTextureStillNull(internalParticipant, videoTrack, receiver);
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && (!UNITY_ANDROID || UNITY_EDITOR)
                     SampleRemoteVideoReceiverStatsAsync(
                         internalParticipant, videoTrack, receiver, "remote-track-added").LogIfFailed();
 #endif
@@ -2482,14 +2485,113 @@ namespace StreamVideo.Core.LowLevelClient
             _logs.Warning(
                 $"[LateVideoDiag] Remote video texture stuck; queueing subscription refresh. " +
                 $"session={participant.SessionId} user={participant.UserId} trackId={videoTrack.TrackId}");
+#if !UNITY_ANDROID || UNITY_EDITOR
             SampleRemoteVideoReceiverStatsAsync(
                 participant, videoTrack, receiver, "texture-still-null").LogIfFailed();
 #endif
+#endif
 
-            QueueTracksSubscriptionRequest();
+            ForceRefreshRemoteVideoSubscriptionAsync(participant, videoTrack).LogIfFailed();
         }
 
+        private async Task ForceRefreshRemoteVideoSubscriptionAsync(
+            StreamVideoCallParticipant participant,
+            StreamVideoTrack videoTrack)
+        {
+            if (participant == null || ActiveCall == null)
+            {
+                return;
+            }
+
+            if (!_incomingVideoRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false))
+            {
 #if STREAM_DEBUG_ENABLED
+                _logs.Warning(
+                    $"[LateVideoDiag] Remote video subscription refresh skipped - video is no longer requested. " +
+                    $"session={participant.SessionId} user={participant.UserId} trackId={videoTrack.TrackId}");
+#endif
+                return;
+            }
+
+            if (!_remoteVideoSubscriptionRefreshInProgressBySessionId.Add(participant.SessionId))
+            {
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning(
+                    $"[LateVideoDiag] Remote video subscription refresh skipped - already in progress. " +
+                    $"session={participant.SessionId} user={participant.UserId} trackId={videoTrack.TrackId}");
+#endif
+                return;
+            }
+
+            try
+            {
+                var cancellationToken = GetCurrentCancellationTokenOrDefault();
+                while (_trackSubscriptionRequestInProgress)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await Task.Delay(50, cancellationToken);
+                }
+
+                if (ActiveCall?.Participants == null || ActiveCall.Participants.Count == 0)
+                {
+                    return;
+                }
+
+                _trackSubscriptionRequestInProgress = true;
+                _trackSubscriptionGeneration++;
+                var generationAtSend = _trackSubscriptionGeneration;
+
+                try
+                {
+                    var tracksWithoutStuckVideo = GetDesiredTracksDetails()
+                        .Where(track => !(track.SessionId == participant.SessionId
+                                          && track.TrackType == SfuTrackType.Video))
+                        .ToList();
+
+                    var request = new UpdateSubscriptionsRequest
+                    {
+                        SessionId = SessionId.ToString(),
+                    };
+                    request.Tracks.AddRange(tracksWithoutStuckVideo);
+
+#if STREAM_DEBUG_ENABLED
+                    LateVideoDiagnostics.LogSubscriptionDiff(
+                        _logs, ref _lastSubscriptionTrackKeys, tracksWithoutStuckVideo, generationAtSend);
+                    _logs.Warning(
+                        $"[LateVideoDiag] Remote video subscription refresh - temporarily unsubscribing stuck video. " +
+                        $"session={participant.SessionId} user={participant.UserId} trackId={videoTrack.TrackId}\n" +
+                        _serializer.Serialize(request));
+#endif
+
+                    var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions,
+                        nameof(GeneratedAPI.UpdateSubscriptions), cancellationToken, response => response.Error);
+
+                    if (response?.Error != null)
+                    {
+                        _logs.Error(response.Error.Message);
+                        return;
+                    }
+                }
+                finally
+                {
+                    _trackSubscriptionRequestInProgress = false;
+                    _lastTrackSubscriptionRequestTime = _timeService.Time;
+                }
+
+#if STREAM_DEBUG_ENABLED
+                _logs.Warning(
+                    $"[LateVideoDiag] Remote video subscription refresh - re-queueing normal subscriptions. " +
+                    $"session={participant.SessionId} user={participant.UserId} trackId={videoTrack.TrackId}");
+#endif
+                QueueTracksSubscriptionRequest();
+            }
+            finally
+            {
+                _remoteVideoSubscriptionRefreshInProgressBySessionId.Remove(participant.SessionId);
+            }
+        }
+
+#if STREAM_DEBUG_ENABLED && (!UNITY_ANDROID || UNITY_EDITOR)
         private async Task SampleRemoteVideoReceiverStatsAsync(
             IStreamVideoCallParticipant participant,
             StreamVideoTrack videoTrack,

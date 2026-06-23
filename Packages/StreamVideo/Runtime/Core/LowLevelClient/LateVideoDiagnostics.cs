@@ -70,6 +70,25 @@ namespace StreamVideo.Core.LowLevelClient
                 $"publishedTracks=[{publishedTracks}] trackPrefix={participant?.TrackLookupPrefix}");
         }
 
+        public static void LogReconcileParticipantState(
+            ILogs logs,
+            IStreamVideoCallParticipant participant,
+            bool subscribeAudio,
+            bool subscribeVideo,
+            bool audioMissing,
+            bool videoMissing)
+        {
+            var publishedTracks = participant is StreamVideoCallParticipant concrete
+                ? string.Join(",", concrete.GetPublishedTracksDebug())
+                : "?";
+
+            logs.Warning(
+                $"{Tag} ReconcileParticipant session={participant.SessionId} user={participant.UserId} " +
+                $"published=[{publishedTracks}] " +
+                $"audio(request={subscribeAudio}, received={FormatTrack(participant.AudioTrack)}, missing={audioMissing}) " +
+                $"video(request={subscribeVideo}, received={FormatTrack(participant.VideoTrack)}, missing={videoMissing})");
+        }
+
         public static void LogSubscriberOfferReceived(ILogs logs, int offerNumber, string offerSdp)
         {
             logs.Warning($"{Tag} subscriberOffer #{offerNumber} offer={SummarizeSdp(offerSdp, isOffer: true)}");
@@ -160,6 +179,9 @@ namespace StreamVideo.Core.LowLevelClient
                 : "-";
             return $"{track.SessionId}:{track.TrackType}:{dimension}";
         }
+
+        private static string FormatTrack(IStreamTrack track)
+            => track != null ? $"{track.GetType().Name}/enabled={track.IsEnabled}" : "null";
 
         private static string ExtractOriginSessionVersion(string sdp)
         {

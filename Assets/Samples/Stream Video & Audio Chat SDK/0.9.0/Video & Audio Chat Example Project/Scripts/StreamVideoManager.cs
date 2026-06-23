@@ -75,7 +75,7 @@ namespace StreamVideo.ExampleProject
 
             if (_autoEnableCamera)
             {
-                Client.VideoDeviceManager.SetEnabled(true);
+                EnableCameraAfterDelayAsync(callId).LogIfFailed();
             }
 
             if (_playOnCallStart)
@@ -275,7 +275,7 @@ namespace StreamVideo.ExampleProject
 
         [Header("Auto-enable devices on joining a call")]
         [SerializeField]
-        private bool _autoEnableCamera = false;
+        private bool _autoEnableCamera = true;
 
         [SerializeField]
         private bool _autoEnableMicrophone = false;
@@ -292,6 +292,18 @@ namespace StreamVideo.ExampleProject
 
         // We mute by user ID because Session ID will change every time the user reconnects
         private readonly Dictionary<string, bool> _isUserMutedLocally = new Dictionary<string, bool>();
+
+        private async Task EnableCameraAfterDelayAsync(string callId)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
+            if (_activeCall == null || _activeCall.Id != callId)
+            {
+                return;
+            }
+
+            Client.VideoDeviceManager.SetEnabled(true);
+        }
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {

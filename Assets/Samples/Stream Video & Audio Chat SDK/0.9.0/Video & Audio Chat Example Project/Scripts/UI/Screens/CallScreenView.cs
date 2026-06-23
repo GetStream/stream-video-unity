@@ -209,6 +209,11 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 view.SetLocalCameraSource(webCamTexture);
                 //StreamTodo: this will invalidate each time WebCamTexture is internally replaced so we need a better way to expose this
             }
+            else
+            {
+                participant.SetIncomingAudioEnabled(true);
+                participant.SetIncomingVideoEnabled(true);
+            }
 
             if (sortParticipantViews)
             {

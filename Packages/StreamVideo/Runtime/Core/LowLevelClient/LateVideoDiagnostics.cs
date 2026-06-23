@@ -126,18 +126,30 @@ namespace StreamVideo.Core.LowLevelClient
                 .Cast<Match>()
                 .Select(match => match.Groups[1].Value)
                 .ToList();
+            var mids = Regex.Matches(sdp, @"^a=mid:([^\r\n]+)", RegexOptions.Multiline)
+                .Cast<Match>()
+                .Select(match => match.Groups[1].Value.Trim())
+                .ToList();
             var streamIds = Regex.Matches(sdp, @"a=msid:([^\s]+)")
                 .Cast<Match>()
                 .Select(match => match.Groups[1].Value.Split(':').FirstOrDefault() ?? match.Groups[1].Value)
                 .Distinct()
                 .ToList();
+            var videoCodecs = Regex.Matches(sdp, @"^a=rtpmap:\d+\s+([^/\r\n]+)", RegexOptions.Multiline)
+                .Cast<Match>()
+                .Select(match => match.Groups[1].Value.Trim())
+                .Where(codec => codec == "VP8" || codec == "VP9" || codec == "H264" || codec == "AV1")
+                .Distinct()
+                .ToList();
+            var ssrcCount = Regex.Matches(sdp, @"^a=ssrc:", RegexOptions.Multiline).Count;
             var inlineCandidates = Regex.Matches(sdp, @"a=candidate:").Count;
             var firstMediaConnectionAddress = ExtractFirstMediaConnectionAddress(sdp);
             var role = isOffer ? "offer" : "answer";
 
             return
-                $"{role} o-ver={originVersion} bundle={bundle} m=[{string.Join(",", mediaTypes)}] " +
-                $"streams=[{string.Join(",", streamIds)}] inlineCandidates={inlineCandidates} " +
+                $"{role} o-ver={originVersion} bundle={bundle} mids=[{string.Join(",", mids)}] " +
+                $"m=[{string.Join(",", mediaTypes)}] streams=[{string.Join(",", streamIds)}] " +
+                $"videoCodecs=[{string.Join(",", videoCodecs)}] ssrcCount={ssrcCount} inlineCandidates={inlineCandidates} " +
                 $"firstMediaC={firstMediaConnectionAddress}";
         }
 

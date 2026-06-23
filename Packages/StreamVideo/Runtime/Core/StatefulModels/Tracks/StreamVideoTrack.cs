@@ -8,6 +8,9 @@ namespace StreamVideo.Core.StatefulModels.Tracks
     public class StreamVideoTrack : BaseStreamTrack<VideoStreamTrack>
     {
         public event Action VideoRotationAngleChanged;
+        internal event Action<StreamVideoTrack> TextureStillNull;
+
+        internal string TrackId => Track?.Id;
 
         public int VideoRotationAngle
         {
@@ -29,13 +32,21 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             : base(track)
         {
             Track.OnVideoReceived += OnVideoReceived;
-#if STREAM_DEBUG_ENABLED
             _trackAddedAtRealtime = Time.realtimeSinceStartup;
-#endif
         }
 
         private void OnVideoReceived(Texture renderer)
         {
+#if STREAM_DEBUG_ENABLED
+            if (!_onVideoReceivedLogged)
+            {
+                _onVideoReceivedLogged = true;
+                Debug.LogWarning(
+                    $"[LateVideoDiag] StreamVideoTrack OnVideoReceived trackId={Track?.Id}, " +
+                    $"renderer={FormatTexture(renderer)}, targetBound={_targetImage != null}");
+            }
+#endif
+
             if (_targetImage == null || renderer == null)
             {
                 return;
@@ -57,7 +68,8 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 #if STREAM_DEBUG_ENABLED
             Debug.LogWarning(
                 $"[LateVideoDiag] StreamVideoTrack SetRenderTarget bound, trackId={Track?.Id}, " +
-                $"target={targetImage.name}, hasTexture={Track?.Texture != null}");
+                $"target={targetImage.name}, hasTexture={Track?.Texture != null}, " +
+                $"enabled={Track?.Enabled}, readyState={GetReadyStateDebug()}");
 #endif
         }
 
@@ -72,9 +84,7 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             
             _targetImage.texture = Track.Texture;
 
-#if STREAM_DEBUG_ENABLED
-            LogTextureDiagnostics();
-#endif
+            CheckTextureReadiness();
         }
 
         protected override void OnDisposing()
@@ -93,14 +103,13 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         //StreamTodo: remove
         internal RenderTexture TargetTexture => throw new NotSupportedException("This property is deprecated");
 
-#if STREAM_DEBUG_ENABLED
         private const float TextureNullWarningDelaySeconds = 3f;
 
         private float _trackAddedAtRealtime;
         private bool _textureReadyLogged;
         private bool _textureNullWarningLogged;
 
-        private void LogTextureDiagnostics()
+        private void CheckTextureReadiness()
         {
             var texture = Track?.Texture;
             if (texture != null)
@@ -111,11 +120,13 @@ namespace StreamVideo.Core.StatefulModels.Tracks
                 }
 
                 _textureReadyLogged = true;
+#if STREAM_DEBUG_ENABLED
                 var elapsed = Time.realtimeSinceStartup - _trackAddedAtRealtime;
                 Debug.LogWarning(
                     $"[LateVideoDiag] StreamVideoTrack texture ready after {elapsed:F2}s, " +
                     $"trackId={Track.Id}, size={texture.width}x{texture.height}, " +
                     $"targetBound={_targetImage != null}, uiTextureSet={_targetImage?.texture != null}");
+#endif
                 return;
             }
 
@@ -131,10 +142,33 @@ namespace StreamVideo.Core.StatefulModels.Tracks
             }
 
             _textureNullWarningLogged = true;
+#if STREAM_DEBUG_ENABLED
             Debug.LogWarning(
                 $"[LateVideoDiag] StreamVideoTrack texture still null after {waitTime:F2}s, " +
-                $"trackId={Track?.Id}, enabled={Track?.Enabled}, targetBound={_targetImage != null}");
+                $"trackId={Track?.Id}, enabled={Track?.Enabled}, readyState={GetReadyStateDebug()}, " +
+                $"targetBound={_targetImage != null}");
+#endif
+
+            TextureStillNull?.Invoke(this);
         }
+
+#if STREAM_DEBUG_ENABLED
+        private bool _onVideoReceivedLogged;
+
+        private string GetReadyStateDebug()
+        {
+            try
+            {
+                return Track?.ReadyState.ToString() ?? "null";
+            }
+            catch (InvalidOperationException)
+            {
+                return "disposed";
+            }
+        }
+
+        private static string FormatTexture(Texture texture)
+            => texture != null ? $"{texture.width}x{texture.height}" : "null";
 #endif
 
         private RawImage _targetImage;

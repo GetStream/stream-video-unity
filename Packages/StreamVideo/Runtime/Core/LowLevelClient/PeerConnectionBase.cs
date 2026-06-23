@@ -24,7 +24,7 @@ namespace StreamVideo.Core.LowLevelClient
     /// </summary>
     internal abstract class PeerConnectionBase : IDisposable
     {
-        public event Action<MediaStream> StreamAdded;
+        public event Action<MediaStream, RTCRtpReceiver> StreamAdded;
         public event Action<RTCIceCandidate, StreamPeerType> IceTrickled; //StreamTODO: remove StreamPeerType?
 
         public event Action Disconnected;
@@ -507,7 +507,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 foreach (var stream in trackEvent.Streams)
                 {
-                    StreamAdded?.Invoke(stream);
+                    StreamAdded?.Invoke(stream, trackEvent.Receiver);
 
                     //StreamTodo: taken from android sdk, check why this is needed
                     foreach (var audioTrack in stream.GetAudioTracks())

@@ -2257,7 +2257,7 @@ namespace StreamVideo.Core.LowLevelClient
             SendIceCandidateAsync(iceCandidate, peerType).LogIfFailed();
         }
 
-        private void OnSubscriberStreamAdded(MediaStream mediaStream)
+        private void OnSubscriberStreamAdded(MediaStream mediaStream, RTCRtpReceiver receiver)
         {
             var idParts = mediaStream.Id.Split(":");
             var trackPrefix = idParts[0];
@@ -2313,8 +2313,105 @@ namespace StreamVideo.Core.LowLevelClient
                 LateVideoDiagnostics.LogRemoteTrackAdded(_logs, internalParticipant, streamTrack);
 #endif
                 ActiveCall.NotifyTrackAdded(internalParticipant, streamTrack);
+
+                if (streamTrack is StreamVideoTrack videoTrack)
+                {
+                    videoTrack.TextureStillNull += _ =>
+                        OnRemoteVideoTextureStillNull(internalParticipant, videoTrack, receiver);
+#if STREAM_DEBUG_ENABLED
+                    SampleRemoteVideoReceiverStatsAsync(
+                        internalParticipant, videoTrack, receiver, "remote-track-added").LogIfFailed();
+#endif
+                }
             }
         }
+
+        private void OnRemoteVideoTextureStillNull(
+            StreamVideoCallParticipant participant,
+            StreamVideoTrack videoTrack,
+            RTCRtpReceiver receiver)
+        {
+            if (ActiveCall == null)
+            {
+                return;
+            }
+
+#if STREAM_DEBUG_ENABLED
+            _logs.Warning(
+                $"[LateVideoDiag] Remote video texture stuck; queueing subscription refresh. " +
+                $"session={participant.SessionId} user={participant.UserId} trackId={videoTrack.TrackId}");
+            SampleRemoteVideoReceiverStatsAsync(
+                participant, videoTrack, receiver, "texture-still-null").LogIfFailed();
+#endif
+
+            QueueTracksSubscriptionRequest();
+        }
+
+#if STREAM_DEBUG_ENABLED
+        private async Task SampleRemoteVideoReceiverStatsAsync(
+            IStreamVideoCallParticipant participant,
+            StreamVideoTrack videoTrack,
+            RTCRtpReceiver receiver,
+            string reason)
+        {
+            if (receiver == null)
+            {
+                _logs.Warning(
+                    $"[LateVideoDiag] ReceiverStats skipped reason={reason} session={participant.SessionId} " +
+                    $"trackId={videoTrack.TrackId} receiver=null");
+                return;
+            }
+
+            try
+            {
+                await Task.Delay(250, GetCurrentCancellationTokenOrDefault());
+                using (var report = await receiver.GetStatsAsync(GetCurrentCancellationTokenOrDefault()))
+                {
+                    var inboundStats = report.Stats.Values
+                        .OfType<RTCInboundRTPStreamStats>()
+                        .FirstOrDefault(stat => stat.kind == "video")
+                        ?? report.Stats.Values.OfType<RTCInboundRTPStreamStats>().FirstOrDefault();
+
+                    if (inboundStats == null)
+                    {
+                        _logs.Warning(
+                            $"[LateVideoDiag] ReceiverStats reason={reason} session={participant.SessionId} " +
+                            $"trackId={videoTrack.TrackId} inboundStats=none totalStats={report.Stats.Count}");
+                        return;
+                    }
+
+                    var dict = inboundStats.Dict;
+                    _logs.Warning(
+                        $"[LateVideoDiag] ReceiverStats reason={reason} session={participant.SessionId} " +
+                        $"user={participant.UserId} trackId={videoTrack.TrackId} statId={inboundStats.Id} " +
+                        $"kind={inboundStats.kind} mid={GetStatsValue(dict, "mid")} " +
+                        $"bytes={GetStatsValue(dict, "bytesReceived")} packets={GetStatsValue(dict, "packetsReceived")} " +
+                        $"framesReceived={GetStatsValue(dict, "framesReceived")} " +
+                        $"framesDecoded={GetStatsValue(dict, "framesDecoded")} " +
+                        $"keyFramesDecoded={GetStatsValue(dict, "keyFramesDecoded")} " +
+                        $"framesDropped={GetStatsValue(dict, "framesDropped")} " +
+                        $"jitter={GetStatsValue(dict, "jitter")} packetsLost={GetStatsValue(dict, "packetsLost")} " +
+                        $"fps={GetStatsValue(dict, "framesPerSecond")} " +
+                        $"frame={GetStatsValue(dict, "frameWidth")}x{GetStatsValue(dict, "frameHeight")}");
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (DisposedDuringOperationException)
+            {
+            }
+            catch (Exception e)
+            {
+                _logs.Warning(
+                    $"[LateVideoDiag] ReceiverStats failed reason={reason} session={participant.SessionId} " +
+                    $"trackId={videoTrack.TrackId}: {e.Message}");
+            }
+        }
+
+        private static string GetStatsValue(IDictionary<string, object> stats, string key)
+            => stats.TryGetValue(key, out var value) && value != null ? value.ToString() : "-";
+#endif
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)
         {

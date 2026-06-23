@@ -30,6 +30,9 @@ namespace StreamVideo.Core.LowLevelClient
         public static Task<RTCStatsReport> GetStatsAsync(this RTCPeerConnection peerConnection, CancellationToken cancellationToken)
             => WaitForOperationAsync(peerConnection.GetStats(), r => r.Value, cancellationToken);
 
+        public static Task<RTCStatsReport> GetStatsAsync(this RTCRtpReceiver receiver, CancellationToken cancellationToken)
+            => WaitForOperationAsync(receiver.GetStats(), r => r.Value, cancellationToken);
+
         private static async Task<TResponse> WaitForOperationAsync<TOperation, TResponse>(
             this TOperation asyncOperation, Func<TOperation, TResponse> response, CancellationToken cancellationToken)
             where TOperation : AsyncOperationBase

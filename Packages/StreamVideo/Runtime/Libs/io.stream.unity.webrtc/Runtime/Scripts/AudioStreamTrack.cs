@@ -26,15 +26,15 @@ namespace Unity.WebRTC
     public delegate void AudioReadEventHandler(float[] data, int channels, int sampleRate);
 
     /// <summary>
-    ///
+    /// Provides extension methods for the <see cref="AudioSource"/> class to facilitate integration with <see cref="AudioStreamTrack"/>.
     /// </summary>
     public static class AudioSourceExtension
     {
         /// <summary>
-        ///
+        /// Sets the <see cref="AudioStreamTrack"/> for the <see cref="AudioSource"/>.
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="track"></param>
+        /// <param name="source">The <see cref="AudioSource"/> to set the track for.</param>
+        /// <param name="track">The <see cref="AudioStreamTrack"/> to set.</param>
         public static void SetTrack(this AudioSource source, AudioStreamTrack track)
         {
             track._streamRenderer.Source = source;
@@ -42,7 +42,7 @@ namespace Unity.WebRTC
     }
 
     /// <summary>
-    ///     Represents a single audio track within a stream.
+    /// Represents a single audio track within a stream.
     /// </summary>
     /// <remarks>
     ///     `AudioStreamTrack` is a `MediaStreamTrack` that represents a single audio track within a stream.
@@ -289,10 +289,10 @@ namespace Unity.WebRTC
             NativeMethods.AudioTrackRemoveSink(
                 GetSelfOrThrow(), renderer.self);
         }
-
 #if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+
         /// <summary>
-        ///     Mutes this audio track locally without affecting other users.
+        ///     Mutes this audio track locally.
         /// </summary>
         /// <remarks>
         ///     `MuteLocally` mutes this audio track on the local device only. 
@@ -311,7 +311,7 @@ namespace Unity.WebRTC
         {
             if (_streamRenderer == null)
                 throw new InvalidOperationException("MuteLocally is only available for receiver side audio tracks.");
-            
+
             NativeMethods.AudioTrackSinkMute(_streamRenderer.self);
         }
 
@@ -333,7 +333,7 @@ namespace Unity.WebRTC
         {
             if (_streamRenderer == null)
                 throw new InvalidOperationException("UnmuteLocally is only available for receiver side audio tracks.");
-            
+
             NativeMethods.AudioTrackSinkUnmute(_streamRenderer.self);
         }
 
@@ -359,16 +359,16 @@ namespace Unity.WebRTC
         {
             if (_streamRenderer == null)
                 throw new InvalidOperationException("IsLocallyMuted is only available for receiver side audio tracks.");
-            
+
             return NativeMethods.AudioTrackSinkIsMuted(_streamRenderer.self);
         }
 #endif
 
         /// <summary>
-        ///     Disposes of AudioStreamTrack.
+        /// Disposes of AudioStreamTrack.
         /// </summary>
         /// <remarks>
-        ///     `Dispose` method disposes of the `AudioStreamTrack` and releases the associated resources.
+        /// `Dispose` method disposes of the `AudioStreamTrack` and releases the associated resources. 
         /// </remarks>
         /// <example>
         ///     <code lang="cs"><![CDATA[
@@ -402,12 +402,12 @@ namespace Unity.WebRTC
         }
 
         /// <summary>
-        ///     Provides the audio data to the track.
+        /// Provides the audio data to the track.
         /// </summary>
         /// <remarks>
-        ///     `SetData` method provides the audio data to the track.
+        /// `SetData` method provides the audio data to the track.
         /// </remarks>
-        /// <param name="nativeArray">`NativeArray<float>` containing audio data samples.</param>
+        /// <param name="nativeArray">NativeArray containing audio data samples.</param>
         /// <param name="channels">Number of audio channels.</param>
         /// <param name="sampleRate">Sample rate of the audio data</param>
         /// <example>
@@ -425,12 +425,12 @@ namespace Unity.WebRTC
         }
 
         /// <summary>
-        ///     Provides the audio data to the track.
+        /// Provides the audio data to the track.
         /// </summary>
         /// <remarks>
-        ///     `SetData` method provides the audio data to the track.
+        /// `SetData` method provides the audio data to the track.
         /// </remarks>
-        /// <param name="nativeSlice">`NativeSlice<float>` containing audio data samples.</param>
+        /// <param name="nativeSlice">NativeSlice containing audio data samples.</param>
         /// <param name="channels">Number of audio channels.</param>
         /// <param name="sampleRate">Sample rate of the audio data</param>
         /// <example>

@@ -1,0 +1,2 @@
+Packages/StreamVideo/Runtime/Libs/io.stream.unity.webrtc/Runtime/Plugins/iOS/webrtc.framework.dSYM/Contents/Resources/DWARF/webrtc filter=lfs diff=lfs merge=lfs -text
+Packages/StreamVideo/Runtime/Libs/io.stream.unity.webrtc/Runtime/Plugins/iOS/webrtc.framework.dSYM/Contents/Resources/Relocations/**/*.yml filter=lfs diff=lfs merge=lfs -text

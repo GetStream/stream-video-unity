@@ -402,9 +402,9 @@ namespace Unity.WebRTC
             NativeMethods.StopAudioCapture(self, track);
         }
 
-        public void StartAudioPlayback(int sampleRate, int numChannels)
+        public void StartAudioPlayback(int sampleRate)
         {
-            NativeMethods.StartAudioPlayback(self, sampleRate, numChannels);
+            NativeMethods.StartAudioPlayback(self, sampleRate);
         }
 
         public void StopAudioPlayback()

@@ -67,7 +67,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         // Some sources claim the 48kHz is the most optimal sample rate for WebRTC, other cause internal resampling
         public const int AudioOutputSampleRate = 48_000;
-        public const int AudioOutputChannels = 2;
 
 #if STREAM_NATIVE_AUDIO
         public const bool UseNativeAudioBindings = true;
@@ -672,7 +671,7 @@ namespace StreamVideo.Core.LowLevelClient
                     // iOS VPIO requires PlayAndRecord before the audio unit opens (no automatic retry on '!rec').
                     EnsureIOSAudioSessionReadyForVPIO($"{nameof(DoJoin)} StartAudioPlayback");
 
-                    WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+                    WebRTC.StartAudioPlayback(AudioOutputSampleRate);
 #endif
                 }
 
@@ -919,7 +918,7 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_NATIVE_AUDIO
                 WebRTC.StopAudioPlayback();
                 EnsureIOSAudioSessionReadyForVPIO(nameof(TryRestartAudioPlayback));
-                WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+                WebRTC.StartAudioPlayback(AudioOutputSampleRate);
 #endif
             }
         }

@@ -498,7 +498,7 @@ namespace StreamVideo.Core
 #if UNITY_IOS || UNITY_ANDROID
             _logsCollector.Enable();
 #endif
-            _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer, _logs)
+            _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer)
                 .CreateTrelloReporter();
 #endif
         }

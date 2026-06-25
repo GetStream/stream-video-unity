@@ -1,3 +1,26 @@
+0.10.0:
+
+### iOS Audio
+
+- Added active echo cancellation and noise reduction for the iOS platform
+- The SDK automatically configures the iOS audio session for voice calls — prioritizing low latency and best voice quality
+- When leaving a call, the audio session is restored so other apps can resume audio normally
+- **Recommended:** set Unity **Project Settings → Audio → DSP Buffer Size** to **Best Latency** (or **Good Latency**) before starting a call. If Unity locks a large audio buffer first, its session configuration can conflict with the SDK and reduce echo-cancellation effectiveness
+
+### Improvements
+
+- Added `client.CallLeaving` event — fired while the call is still active, before state is cleared. Use this when you need access to call data during the leave flow; `CallEnded` fires after the call state has already been reset
+- Added support for fetching demo credentials (API key + user token) for quick testing and sample apps — not intended for production use
+- Published video quality now adapts dynamically when the server requests a quality change during a call
+- Remote participant video can now be paused and resumed by the server when needed (e.g. to save bandwidth)
+- Expanded debug tracing and fixed WebRTC stats reporting for more accurate call diagnostics in the Stream dashboard
+
+### Bug Fixes
+
+- Fixed reconnection stopping permanently after a brief network drop during an in-progress reconnect
+- Fixed occasional crash when disposing the client while a call update was still in progress
+- Fixed being unable to join again after a previous join attempt failed
+
 0.9.0:
 
 ### Reconnection Flow

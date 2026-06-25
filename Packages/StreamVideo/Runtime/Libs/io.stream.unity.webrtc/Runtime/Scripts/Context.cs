@@ -376,7 +376,7 @@ namespace Unity.WebRTC
             NativeMethods.ContextGetReceiverCapabilities(self, kind, out capabilities);
         }
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
         public void GetAudioProcessingModuleConfig(out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel)
         {
             NativeMethods.GetAudioProcessingModuleConfig(self, out enabled, out echoCancellationEnabled, out autoGainEnabled, out noiseSuppressionEnabled, out noiseSuppressionLevel);
@@ -402,9 +402,9 @@ namespace Unity.WebRTC
             NativeMethods.StopAudioCapture(self, track);
         }
 
-        public void StartAudioPlayback(int sampleRate, int numChannels)
+        public void StartAudioPlayback(int sampleRate)
         {
-            NativeMethods.StartAudioPlayback(self, sampleRate, numChannels);
+            NativeMethods.StartAudioPlayback(self, sampleRate);
         }
 
         public void StopAudioPlayback()
@@ -412,14 +412,14 @@ namespace Unity.WebRTC
             NativeMethods.StopAudioPlayback(self);
         }
 
-        public void MuteAndroidAudioPlayback()
+        public void MuteAudioPlayback()
         {
-            NativeMethods.MuteAndroidAudioPlayback(self);
+            NativeMethods.MuteAudioPlayback(self);
         }
 
-        public void UnmuteAndroidAudioPlayback()
+        public void UnmuteAudioPlayback()
         {
-            NativeMethods.UnmuteAndroidAudioPlayback(self);
+            NativeMethods.UnmuteAudioPlayback(self);
         }
 
         public void SetAndroidAudioUsageMode(int usage)

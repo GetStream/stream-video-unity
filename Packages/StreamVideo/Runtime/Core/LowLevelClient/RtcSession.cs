@@ -1,4 +1,4 @@
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
 #endif
 using System;
@@ -67,7 +67,6 @@ namespace StreamVideo.Core.LowLevelClient
 
         // Some sources claim the 48kHz is the most optimal sample rate for WebRTC, other cause internal resampling
         public const int AudioOutputSampleRate = 48_000;
-        public const int AudioOutputChannels = 2;
 
 #if STREAM_NATIVE_AUDIO
         public const bool UseNativeAudioBindings = true;
@@ -593,7 +592,16 @@ namespace StreamVideo.Core.LowLevelClient
                     
                     //StreamTODO: if we try to rejoin a call with no other participants we'll get error from SFU not call FOUND
                     // What should we do then?
-                    
+
+                    if (ActiveCall == null)
+                    {
+                        throw new Exception("ActiveCall should never be null here.");
+                    }
+
+                    if (joinResponse == null)
+                    {
+                        throw new Exception("joinResponse was null");
+                    }
                     
                     ActiveCall.UpdateFromSfu(joinResponse);
                     _logs.WarningIfDebug($"{nameof(DoJoin)} - SFU Sending join response received. startNewPeerConnections: {startNewPeerConnections}");
@@ -665,7 +673,10 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     //StreamTODO: Either use UseNativeAudioBindings const or STREAM_NATIVE_AUDIO flag but not both. Once we replace the webRTC package we could remove STREAM_NATIVE_AUDIO
 #if STREAM_NATIVE_AUDIO
-                    WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+                    // iOS VPIO requires PlayAndRecord before the audio unit opens (no automatic retry on '!rec').
+                    EnsureIOSAudioSessionReadyForVPIO($"{nameof(DoJoin)} StartAudioPlayback");
+
+                    WebRTC.StartAudioPlayback(AudioOutputSampleRate);
 #endif
                 }
 
@@ -679,6 +690,15 @@ namespace StreamVideo.Core.LowLevelClient
                 if (CallState != CallingState.Offline)
                 {
                     CallState = prevCallState;
+                }
+                
+                try
+                {
+                    await ClearSessionAsync();
+                }
+                catch (Exception cleanupEx)
+                {
+                    _logs.Warning($"{nameof(DoJoin)} session cleanup after failure encountered an error: {cleanupEx.Message}");
                 }
 
                 throw;
@@ -736,7 +756,18 @@ namespace StreamVideo.Core.LowLevelClient
             if (UseNativeAudioBindings)
             {
 #if STREAM_NATIVE_AUDIO
+                // iOS order: stop playback + capture (closes the duplex VPIO unit),
+                // THEN deactivate AVAudioSession. Reverse order returns IsBusy.
                 WebRTC.StopAudioPlayback();
+
+#if UNITY_IOS && !UNITY_EDITOR
+                if (Publisher?.PublisherAudioTrack != null)
+                {
+                    Publisher.PublisherAudioTrack.StopLocalAudioCapture();
+                }
+
+                Libs.iOSAudioManagers.IOSAudioManager.DeconfigureAudioSession();
+#endif
 #endif
             }
 
@@ -887,37 +918,30 @@ namespace StreamVideo.Core.LowLevelClient
 
         public void TryRestartAudioPlayback()
         {
-            if (!UseNativeAudioBindings)
+            if (UseNativeAudioBindings)
             {
-                return;
+#if STREAM_NATIVE_AUDIO
+                WebRTC.StopAudioPlayback();
+                EnsureIOSAudioSessionReadyForVPIO(nameof(TryRestartAudioPlayback));
+                WebRTC.StartAudioPlayback(AudioOutputSampleRate);
+#endif
             }
+        }
+
+        // Mutes the AudioMixer so the playback callback writes silence to the speakers.
+        // The native audio device keeps running; on iOS this also keeps the VPIO audio
+        // unit alive so unmuting is instant and does not need a session reconfigure.
+        public void PauseMobileAudioPlayback()
+        {
 #if STREAM_NATIVE_AUDIO
-            WebRTC.StopAudioPlayback();
-            WebRTC.StartAudioPlayback(AudioOutputSampleRate, AudioOutputChannels);
+            WebRTC.MuteAudioPlayback();
 #endif
         }
 
-        //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
-        public void PauseAndroidAudioPlayback()
+        public void ResumeMobileAudioPlayback()
         {
 #if STREAM_NATIVE_AUDIO
-            WebRTC.MuteAndroidAudioPlayback();
-            _logs.Warning("Audio Playback is paused. This stops all audio coming from StreamVideo SDK on Android platform.");
-#else
-            throw new NotSupportedException(
-                $"{nameof(PauseAndroidAudioPlayback)} is only supported on Android platform.");
-#endif
-        }
-
-        //StreamTODO: temp solution to allow stopping the audio when app is minimized. User tried disabling the AudioSource but the audio is handled natively so it has no effect
-        public void ResumeAndroidAudioPlayback()
-        {
-#if STREAM_NATIVE_AUDIO
-            WebRTC.UnmuteAndroidAudioPlayback();
-            _logs.Warning("Audio Playback is resumed. This resumes audio coming from StreamVideo SDK on Android platform.");
-#else
-            throw new NotSupportedException(
-                $"{nameof(ResumeAndroidAudioPlayback)} is only supported on Android platform.");
+            WebRTC.UnmuteAudioPlayback();
 #endif
         }
 
@@ -1422,13 +1446,53 @@ namespace StreamVideo.Core.LowLevelClient
                 //StreamTODO: implement proper passing deviceID -> for Android and IOS we're skipping the deviceID
                 //because they operate on audio routing instead of actual devices. The underlying native implementation for Android let's OS pick the preferred device
 
+                // Configure session BEFORE capture so VPIO opens with HW AEC/NS/AGC from sample 0.
+                EnsureIOSAudioSessionReadyForVPIO($"{nameof(UpdateAudioRecording)} StartLocalAudioCapture");
+
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> START local audio capture");
                 Publisher.PublisherAudioTrack.StartLocalAudioCapture(-1, AudioInputSampleRate);
+
+#if UNITY_IOS && !UNITY_EDITOR
+                if (!Libs.iOSAudioManagers.IOSAudioManager.IsHardwareNoiseCancellationActive)
+                {
+                    _logs.Warning(
+                        "RtcSession.UpdateAudioRecording -> iOS hardware noise cancellation (VoiceProcessingIO) NOT active. "
+                        + "AEC/NS/AGC will not be applied. Check that no other plugin overrode AVAudioSession mode.");
+                }
+#endif
             }
             else
             {
                 _logs.WarningIfDebug("RtcSession.UpdateAudioRecording -> STOP local audio capture");
                 Publisher.PublisherAudioTrack.StopLocalAudioCapture();
+
+                // Do NOT deactivate the AVAudioSession on mute: the duplex VPIO unit is
+                // shared with playback and would also stop, killing remote audio. The
+                // session is deactivated in StopAsync after both directions are torn down.
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Configure the iOS AVAudioSession for VPIO (PlayAndRecord + VideoChat) before
+        /// opening the duplex audio unit. Verifies the result and retries once to catch
+        /// races with other components reasserting the session. No-op on non-iOS targets.
+        /// </summary>
+        private void EnsureIOSAudioSessionReadyForVPIO(string callerContext)
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            var configureOk = Libs.iOSAudioManagers.IOSAudioManager.ConfigureForWebRTC();
+            if (configureOk && Libs.iOSAudioManagers.IOSAudioManager.IsHardwareNoiseCancellationActive)
+            {
+                return;
+            }
+
+            configureOk = Libs.iOSAudioManagers.IOSAudioManager.ConfigureForWebRTC();
+            if (!configureOk || !Libs.iOSAudioManagers.IOSAudioManager.IsHardwareNoiseCancellationActive)
+            {
+                _logs.Error(
+                    $"RtcSession.{nameof(EnsureIOSAudioSessionReadyForVPIO)} ({callerContext}): session not VPIO-ready after retry. "
+                    + "Next StartAudio call may fail with '!rec'. See [StreamVideo iOS Audio] device log for NSError details.");
             }
 #endif
         }

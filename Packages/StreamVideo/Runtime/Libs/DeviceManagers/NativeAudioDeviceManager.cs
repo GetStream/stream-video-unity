@@ -65,8 +65,10 @@ namespace StreamVideo.Libs.DeviceManagers
         {
 #if UNITY_ANDROID
             AndroidAudioDeviceManager.SetPreferredAudioRoute(audioRoute);
+#elif UNITY_IOS
+            // StreamTODO: route via AVAudioSession (setPreferredInput / overrideOutputAudioPort).
 #else
-            UnityEngine.Debug.LogWarning($"{nameof(GetAudioInputDevices)} is not supported on this platform: " + UnityEngine.Application.platform);
+            UnityEngine.Debug.LogWarning($"{nameof(SetPreferredAudioRoute)} is not supported on this platform: " + UnityEngine.Application.platform);
 #endif
         }
 
@@ -74,6 +76,8 @@ namespace StreamVideo.Libs.DeviceManagers
         {
 #if UNITY_ANDROID
             AndroidAudioDeviceManager.GetAudioInputDevices(ref result);
+#elif UNITY_IOS
+            IOSAudioDeviceManager.GetAudioInputDevices(ref result);
 #else
             UnityEngine.Debug.LogWarning($"{nameof(GetAudioInputDevices)} is not supported on this platform: " + UnityEngine.Application.platform);
 #endif
@@ -86,6 +90,8 @@ namespace StreamVideo.Libs.DeviceManagers
         {
 #if UNITY_ANDROID
             AndroidAudioDeviceManager.GetAudioRoute();
+#elif UNITY_IOS
+            // StreamTODO: query AVAudioSession.currentRoute.
 #else
             UnityEngine.Debug.LogWarning($"{nameof(GetAudioRoute)} is not supported on this platform: " + UnityEngine.Application.platform);
 #endif

@@ -1,4 +1,4 @@
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
 #define STREAM_NATIVE_AUDIO //Defined in multiple files
 #endif
 using System;
@@ -302,13 +302,13 @@ namespace StreamVideo.Core
 #endif
         }
 
-        public void PauseAndroidAudioPlayback() => InternalLowLevelClient.RtcSession.PauseAndroidAudioPlayback();
+        public void PauseMobileAudioPlayback() => InternalLowLevelClient.RtcSession.PauseMobileAudioPlayback();
 
-        public void ResumeAndroidAudioPlayback() => InternalLowLevelClient.RtcSession.ResumeAndroidAudioPlayback();
+        public void ResumeMobileAudioPlayback() => InternalLowLevelClient.RtcSession.ResumeMobileAudioPlayback();
 
         public void SetAndroidAudioUsageMode(AndroidAudioUsageMode usageMode)
         {
-#if STREAM_NATIVE_AUDIO
+#if UNITY_ANDROID && !UNITY_EDITOR
             WebRTC.SetAndroidAudioUsageMode((Unity.WebRTC.AndroidAudioUsageMode)usageMode);
             _logs.Warning("Set audio usage mode to " + Enum.GetName(typeof(AndroidAudioUsageMode), usageMode));
 #else

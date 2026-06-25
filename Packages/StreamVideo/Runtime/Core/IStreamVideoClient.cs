@@ -134,16 +134,17 @@ namespace StreamVideo.Core
 
 
         /// <summary>
-        /// Temporary method (can be removed in the future) to pause audio playback on Android.
-        /// This will completely suspend playback of any audio coming from the StreamVideo SDK on the Android platform.
+        /// Mutes native SDK audio playback (silences remote participants on the device's
+        /// speakers). Call from app lifecycle events such as <c>OnApplicationPause(true)</c>.
+        /// The native audio device stays open so resume is instant. No-op on platforms
+        /// that don't use the native audio pipeline (Editor, Standalone).
         /// </summary>
-        void PauseAndroidAudioPlayback();
+        void PauseMobileAudioPlayback();
 
         /// <summary>
-        /// Temporary method (can be removed in the future) to resume audio playback on Android.
-        /// Call this resume audio playback if it was previously paused using <see cref="PauseAndroidAudioPlayback"/>.
+        /// Resumes playback previously muted via <see cref="PauseMobileAudioPlayback"/>.
         /// </summary>
-        void ResumeAndroidAudioPlayback();
+        void ResumeMobileAudioPlayback();
 
         /// <summary>
         /// Set Android Audio usage mode

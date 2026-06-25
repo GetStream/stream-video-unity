@@ -637,11 +637,50 @@ namespace StreamVideo.Core.StatefulModels
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
+#if STREAM_DEBUG_ENABLED
             var wasBefore = IsLocalParticipantIncluded();
+            
+            var callState = joinResponse?.CallState;
+            var preconditionFailed = joinResponse == null
+                                     || callState == null
+                                     || Cache == null
+                                     || Session == null
+                                     || callState.Pins == null
+                                     || callState.Participants == null
+                                     || callState.ParticipantCount == null;
+
+            if (preconditionFailed)
+            {
+                using (new StringBuilderPoolScope(out var tempSb))
+                {
+                    tempSb.Append($"{nameof(StreamCall)}.{nameof(UpdateFromSfu)}(JoinResponse) precondition failed. ");
+                    tempSb.Append($"joinResponse: {joinResponse != null}, ");
+                    tempSb.Append($"Session: {Session != null}, ");
+                    tempSb.Append($"Cache: {Cache != null}");
+
+                    if (joinResponse != null)
+                    {
+                        tempSb.Append($", joinResponse.CallState: {callState != null}");
+
+                        if (callState != null)
+                        {
+                            tempSb.Append($", CallState.Pins: {callState.Pins != null}");
+                            tempSb.Append(
+                                $", CallState.Participants: {callState.Participants != null} (count: {callState.Participants?.Count ?? 0})");
+                            tempSb.Append($", CallState.ParticipantCount: {callState.ParticipantCount != null}");
+                            tempSb.Append($", CallState.StartedAt: {callState.StartedAt != null}");
+                        }
+                    }
+
+                    Logs.Error(tempSb.ToString());
+                }
+            }
+#endif
 
             ((IStateLoadableFrom<CallState, CallSession>)Session).LoadFromDto(joinResponse.CallState, Cache);
-            UpdateServerPins(joinResponse.CallState.Pins);
+            UpdateServerPins(joinResponse.CallState?.Pins);
 
+#if STREAM_DEBUG_ENABLED
             var isAfter = IsLocalParticipantIncluded();
 
             try
@@ -677,6 +716,7 @@ namespace StreamVideo.Core.StatefulModels
             {
                 Logs.Exception(e);
             }
+#endif
         }
 
         internal void UpdateFromSfu(ParticipantJoined participantJoined, ICache cache)
@@ -724,7 +764,7 @@ namespace StreamVideo.Core.StatefulModels
         {
             Session?.UpdateFromSfu(healthCheckResponse, cache);
         }
-        
+
         internal void UpdateFromSfu(AudioLevelChanged audioLevelChanged)
         {
             Session?.UpdateFromSfu(audioLevelChanged);
@@ -971,6 +1011,11 @@ namespace StreamVideo.Core.StatefulModels
         private void UpdateServerPins(IEnumerable<Pin> pins)
         {
             _serverPinsSessionIds.Clear();
+
+            if (pins == null)
+            {
+                return;
+            }
 
             foreach (var pin in pins)
             {

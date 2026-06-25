@@ -62,13 +62,13 @@ namespace StreamVideo.Core.Models
             _acceptedBy.TryReplaceValuesFromDto(dto.AcceptedBy);
             EndedAt = dto.EndedAt;
             Id = dto.Id;
-            
+
             // CallSessionResponseInternalDTO usually (or always?) contains no participants. Participants are updated from the SFU join response
             // But SFU response can arrive before API response, so we can't override participants here because this clears the list
-            
+
             //StreamTODO: temp remove this. This seems to be only messing up the participants list. We're testing updating the participants only based on SFU data.
             // But we need to check how this will work with GetCall where there's not SFU connection
-            
+
             // foreach (var dtoParticipant in dto.Participants)
             // {
             //     var participant = cache.TryCreateOrUpdate(dtoParticipant);
@@ -77,19 +77,34 @@ namespace StreamVideo.Core.Models
             //         _participants.Add(participant);
             //     }
             // }
-            
+
             // StreamTODO: figure out how to best handle this. Should we update it from coordinator or only the SFU
             //_participantsCountByRole.TryReplaceValuesFromDto(dto.ParticipantsCountByRole);
             _rejectedBy.TryReplaceValuesFromDto(dto.RejectedBy);
             StartedAt = dto.StartedAt;
             LiveEndedAt = dto.LiveEndedAt;
             LiveStartedAt = dto.LiveStartedAt;
-            
+
             UpdateParticipantCountFromSessionInternal(dto.AnonymousParticipantCount, dto.ParticipantsCountByRole);
         }
 
         void IStateLoadableFrom<SfuCallState, CallSession>.LoadFromDto(SfuCallState dto, ICache cache)
         {
+#if STREAM_DEBUG_ENABLED
+            if (dto == null || cache == null || dto.Participants == null || dto.ParticipantCount == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(dto),
+                    $"{nameof(CallSession)}.LoadFromDto(SfuCallState) precondition failed. " +
+                    $"dto: {dto != null}, " +
+                    $"cache: {cache != null}, " +
+                    $"dto.Participants: {dto?.Participants != null} (count: {dto?.Participants?.Count ?? 0}), " +
+                    $"dto.ParticipantCount: {dto?.ParticipantCount != null}, " +
+                    $"dto.StartedAt: {dto?.StartedAt != null}, " +
+                    $"dto.Pins: {dto?.Pins != null}");
+            }
+#endif
+
             if (dto.StartedAt != null)
             {
                 StartedAt = dto.StartedAt.ToDateTimeOffset();
@@ -103,7 +118,7 @@ namespace StreamVideo.Core.Models
                 {
                     tempPrevSessionIds.Add(p.SessionId);
                 }
-                
+
                 // Treat SFU as the most updated source of truth for participants
                 _participants.Clear();
 
@@ -164,7 +179,7 @@ namespace StreamVideo.Core.Models
             ((IStateLoadableFrom<SfuParticipantCount, ParticipantCount>)ParticipantCount).LoadFromDto(
                 healthCheckResponse.ParticipantCount, cache);
         }
-        
+
         internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
             var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
@@ -176,16 +191,16 @@ namespace StreamVideo.Core.Models
                 cache.CallParticipants.TryRemove(participantLeft.Participant.SessionId);
             }
         }
-        
+
         internal void UpdateFromCoordinator(
             InternalDTO.Events.CallSessionParticipantCountsUpdatedEventInternalDTO participantCountsUpdated,
             LowLevelClient.CallingState callingState)
         {
             _participantsCountByRole.TryReplaceValuesFromDto(participantCountsUpdated.ParticipantsCountByRole);
-            UpdateParticipantCountFromCoordinator(participantCountsUpdated.AnonymousParticipantCount, 
+            UpdateParticipantCountFromCoordinator(participantCountsUpdated.AnonymousParticipantCount,
                 participantCountsUpdated.ParticipantsCountByRole, callingState);
         }
-        
+
         internal void UpdateFromCoordinator(
             InternalDTO.Events.CallSessionParticipantJoinedEventInternalDTO participantJoined, ICache cache,
             LowLevelClient.CallingState callingState)
@@ -197,7 +212,7 @@ namespace StreamVideo.Core.Models
             {
                 _participants.Add(participant);
             }
-            
+
             var role = participantJoined.Participant.Role;
             if (_participantsCountByRole.ContainsKey(role))
             {
@@ -207,7 +222,7 @@ namespace StreamVideo.Core.Models
             {
                 _participantsCountByRole[role] = 1;
             }
-            
+
             var anonymousCount = ParticipantCount != null ? (int)ParticipantCount.Anonymous : 0;
             UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
 
@@ -216,7 +231,7 @@ namespace StreamVideo.Core.Models
                 ParticipantAdded?.Invoke(participant);
             }
         }
-        
+
         //StreamTODO: double-check this logic
         internal void UpdateFromCoordinator(
             InternalDTO.Events.CallSessionParticipantLeftEventInternalDTO participantLeft, ICache cache,
@@ -224,18 +239,18 @@ namespace StreamVideo.Core.Models
         {
             var participant = cache.TryCreateOrUpdate(participantLeft.Participant);
             var wasRemoved = _participants.Remove(participant);
-            
+
             var role = participantLeft.Participant.Role;
             if (_participantsCountByRole.ContainsKey(role))
             {
                 _participantsCountByRole[role] = Math.Max(0, _participantsCountByRole[role] - 1);
-                
+
                 if (_participantsCountByRole[role] == 0)
                 {
                     _participantsCountByRole.Remove(role);
                 }
             }
-            
+
             var anonymousCount = ParticipantCount != null ? (int)ParticipantCount.Anonymous : 0;
             UpdateParticipantCountFromCoordinator(anonymousCount, _participantsCountByRole, callingState);
 
@@ -244,16 +259,16 @@ namespace StreamVideo.Core.Models
                 ParticipantRemoved?.Invoke(participant.SessionId, participant.UserId);
             }
         }
-        
+
         private readonly Dictionary<string, DateTimeOffset> _acceptedBy = new Dictionary<string, DateTimeOffset>();
         private readonly List<StreamVideoCallParticipant> _participants = new List<StreamVideoCallParticipant>();
         private readonly Dictionary<string, int> _participantsCountByRole = new Dictionary<string, int>();
         private readonly Dictionary<string, DateTimeOffset> _rejectedBy = new Dictionary<string, DateTimeOffset>();
-        
+
         /// <summary>
         /// Updates the ParticipantCount based on session data (used when NOT connected to SFU)
         /// </summary>
-        private void UpdateParticipantCountFromCoordinator(int anonymousParticipantCount, 
+        private void UpdateParticipantCountFromCoordinator(int anonymousParticipantCount,
             IReadOnlyDictionary<string, int> participantsCountByRole, LowLevelClient.CallingState callingState)
         {
             // When in JOINED state, we should use the participant count coming through
@@ -262,14 +277,14 @@ namespace StreamVideo.Core.Models
             {
                 return;
             }
-            
+
             UpdateParticipantCountFromSessionInternal(anonymousParticipantCount, participantsCountByRole);
         }
-        
+
         /// <summary>
         /// Updates the ParticipantCount based on session data
         /// </summary>
-        private void UpdateParticipantCountFromSessionInternal(int anonymousParticipantCount, 
+        private void UpdateParticipantCountFromSessionInternal(int anonymousParticipantCount,
             IReadOnlyDictionary<string, int> participantsCountByRole)
         {
             var byRoleCount = 0;
@@ -277,15 +292,15 @@ namespace StreamVideo.Core.Models
             {
                 byRoleCount += count;
             }
-            
+
             var total = Math.Max(byRoleCount, _participants.Count);
-            
+
             var dto = new SfuParticipantCount
             {
                 Total = (uint)total,
                 Anonymous = (uint)anonymousParticipantCount
             };
-            
+
             ((IStateLoadableFrom<SfuParticipantCount, ParticipantCount>)ParticipantCount)
                 .LoadFromDto(dto, null);
         }

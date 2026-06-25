@@ -378,6 +378,10 @@ Plugin~/WebRTCPluginTest/webrtc-test.xcodeproj/*
 Assets/Samples.meta
 Assets/Samples/
 
+#Plugin: Exclude debug symbols (stored separately by version, not shipped to customers)
+Runtime/Plugins/**/*.dSYM
+Runtime/Plugins/**/*.dSYM.meta
+
 #Plugin: Exclude unnecessary output from Visual Studio 
 Runtime/Plugins/x86_64/*.exp
 Runtime/Plugins/x86_64/*.exp.meta

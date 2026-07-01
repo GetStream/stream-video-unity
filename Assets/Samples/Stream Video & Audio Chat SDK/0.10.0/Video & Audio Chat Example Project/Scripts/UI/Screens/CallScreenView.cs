@@ -209,6 +209,12 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 view.SetLocalCameraSource(webCamTexture);
                 //StreamTodo: this will invalidate each time WebCamTexture is internally replaced so we need a better way to expose this
             }
+            else
+            {
+                // Repro customer integration: explicit subscription per participant (matches CallStarted + ParticipantJoined)
+                participant.SetIncomingVideoEnabled(true);
+                participant.SetIncomingAudioEnabled(true);
+            }
 
             if (sortParticipantViews)
             {

@@ -68,15 +68,9 @@ namespace StreamVideo.ExampleProject
             Debug.Log($"Join call, create: {create}, callId: {callId}");
             await Client.JoinCallAsync(CallType, callId, create, ring: true, notify: false);
 
-            if (_autoEnableMicrophone)
-            {
-                Client.AudioDeviceManager.SetEnabled(true);
-            }
-
-            if (_autoEnableCamera)
-            {
-                Client.VideoDeviceManager.SetEnabled(true);
-            }
+            // Repro customer issue: audio enabled immediately, video delayed until camera warm-up
+            Client.AudioDeviceManager.SetEnabled(true);
+            EnableDelayedVideoPublishingAsync().LogIfFailed();
 
             if (_playOnCallStart)
             {
@@ -273,12 +267,9 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private bool _playOnCallStart = false;
 
-        [Header("Auto-enable devices on joining a call")]
+        [Header("Repro: delayed video publishing")]
         [SerializeField]
-        private bool _autoEnableCamera = false;
-
-        [SerializeField]
-        private bool _autoEnableMicrophone = false;
+        private int _videoPublishDelayMs = 3000;
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
@@ -292,6 +283,17 @@ namespace StreamVideo.ExampleProject
 
         // We mute by user ID because Session ID will change every time the user reconnects
         private readonly Dictionary<string, bool> _isUserMutedLocally = new Dictionary<string, bool>();
+
+        private async Task EnableDelayedVideoPublishingAsync()
+        {
+            await Task.Delay(_videoPublishDelayMs);
+            if (_activeCall == null)
+            {
+                return;
+            }
+
+            Client.VideoDeviceManager.SetEnabled(true);
+        }
 
         private async Task ConnectToStreamAsync(AuthCredentials credentials)
         {

@@ -38,63 +38,74 @@ namespace StreamVideo.Core.Stats
 
         public async Task<StatsCollectionResult> CollectAsync(CancellationToken cancellationToken)
         {
-            var publisherStats = _rtcSession.Publisher != null
-                ? (await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken)).Stats
-                : null;
-
-            var subscriberStats = _rtcSession.Subscriber != null
-                ? (await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken)).Stats
-                : null;
-
-            var publisherStatsJson = ConvertStatsToJson(publisherStats);
-            var subscriberStatsJson = ConvertStatsToJson(subscriberStats);
-
-            // Performance stats MUST be computed before updating _previous*Stats
-            // so that deltas span across cycles (seconds apart), not within the same cycle
-            var encodeStats = ComputeEncodeStats(publisherStats);
-            var decodeStats = ComputeDecodeStats(subscriberStats);
-
-            string rtcStatsJson;
-            if (publisherStats != null && subscriberStats != null)
+            RTCStatsReport publisherReport = null;
+            RTCStatsReport subscriberReport = null;
+            try
             {
-                var publisherDelta = ComputeDeltaCompression(_previousPublisherStats, publisherStats);
-                var subscriberDelta = ComputeDeltaCompression(_previousSubscriberStats, subscriberStats);
+                if (_rtcSession.Publisher != null)
+                    publisherReport = await _rtcSession.Publisher.GetStatsReportAsync(cancellationToken);
 
-                //StreamTodo: check later if we can use fixed buffer e.g. list from pool
-                var allTraces = new List<object[]>();
+                if (_rtcSession.Subscriber != null)
+                    subscriberReport = await _rtcSession.Subscriber.GetStatsReportAsync(cancellationToken);
 
-                foreach (var tracer in _tracerManager.GetTracers())
+                var publisherStats = publisherReport?.Stats;
+                var subscriberStats = subscriberReport?.Stats;
+
+                var publisherStatsJson = ConvertStatsToJson(publisherStats);
+                var subscriberStatsJson = ConvertStatsToJson(subscriberStats);
+
+                // Performance stats MUST be computed before updating _previous*Stats
+                // so that deltas span across cycles (seconds apart), not within the same cycle
+                var encodeStats = ComputeEncodeStats(publisherStats);
+                var decodeStats = ComputeDecodeStats(subscriberStats);
+
+                string rtcStatsJson;
+                if (publisherStats != null && subscriberStats != null)
                 {
-                    var slice = tracer.Take();
-                    foreach (var record in slice.Snapshot)
+                    var publisherDelta = ComputeDeltaCompression(_previousPublisherStats, publisherStats);
+                    var subscriberDelta = ComputeDeltaCompression(_previousSubscriberStats, subscriberStats);
+
+                    //StreamTodo: check later if we can use fixed buffer e.g. list from pool
+                    var allTraces = new List<object[]>();
+
+                    foreach (var tracer in _tracerManager.GetTracers())
                     {
-                        allTraces.Add(new object[] { record.Tag, record.Id, record.Data, record.Timestamp });
+                        var slice = tracer.Take();
+                        foreach (var record in slice.Snapshot)
+                        {
+                            allTraces.Add(new object[] { record.Tag, record.Id, record.Data, record.Timestamp });
+                        }
                     }
+
+                    var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    allTraces.Add(new object[] { "getstats", "pub", publisherDelta, timestamp });
+                    allTraces.Add(new object[] { "getstats", "sub", subscriberDelta, timestamp });
+
+                    rtcStatsJson = _serializer.Serialize(allTraces, _serializationOptions);
+                }
+                else
+                {
+                    rtcStatsJson = EmptyJsonArray;
                 }
 
-                var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                allTraces.Add(new object[] { "getstats", "pub", publisherDelta, timestamp });
-                allTraces.Add(new object[] { "getstats", "sub", subscriberDelta, timestamp });
+                // Update previous stats AFTER all computations that depend on them
+                _previousPublisherStats = CreateStatsSnapshot(publisherStats);
+                _previousSubscriberStats = CreateStatsSnapshot(subscriberStats);
 
-                rtcStatsJson = _serializer.Serialize(allTraces, _serializationOptions);
+                return new StatsCollectionResult
+                {
+                    PublisherStatsJson = publisherStatsJson,
+                    SubscriberStatsJson = subscriberStatsJson,
+                    RtcStatsJson = rtcStatsJson,
+                    EncodeStats = encodeStats,
+                    DecodeStats = decodeStats,
+                };
             }
-            else
+            finally
             {
-                rtcStatsJson = EmptyJsonArray;
+                publisherReport?.Dispose();
+                subscriberReport?.Dispose();
             }
-
-            // Update previous stats AFTER all computations that depend on them
-            _previousPublisherStats = CreateStatsSnapshot(publisherStats);
-            _previousSubscriberStats = CreateStatsSnapshot(subscriberStats);
-
-            return new StatsCollectionResult
-            {
-                PublisherStatsJson = publisherStatsJson,
-                SubscriberStatsJson = subscriberStatsJson,
-                RtcStatsJson = rtcStatsJson,
-                EncodeStats = encodeStats,
-                DecodeStats = decodeStats,
-            };
         }
 
         internal UnityWebRtcStatsCollector(RtcSession rtcSession, ISerializer serializer, TracerManager tracerManager)

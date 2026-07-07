@@ -1120,6 +1120,7 @@ namespace StreamVideo.Core.LowLevelClient
         private float _lastTrackSubscriptionRequestTime;
         private bool _trackSubscriptionRequested;
         private bool _trackSubscriptionRequestInProgress;
+        private int _trackSubscriptionGeneration;
 
         private bool _publisherAudioTrackIsEnabled;
         private bool _publisherVideoTrackIsEnabled;
@@ -1185,6 +1186,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             _trackSubscriptionRequested = false;
             _trackSubscriptionRequestInProgress = false;
+            _trackSubscriptionGeneration = 0;
 
             SessionId.Clear();
             SfuHost = string.Empty;
@@ -1212,12 +1214,8 @@ namespace StreamVideo.Core.LowLevelClient
          */
         private void QueueTracksSubscriptionRequest()
         {
-            if (_trackSubscriptionRequested)
-            {
-                return;
-            }
-
             _trackSubscriptionRequested = true;
+            _trackSubscriptionGeneration++;
         }
 
         private void TryExecuteSubscribeToTracks()
@@ -1233,18 +1231,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            SubscribeToTracksAsync(GetCurrentCancellationTokenOrDefault()).ContinueWith(t =>
-            {
-                if (ActiveCall == null)
-                {
-                    return;
-                }
-
-                t.LogIfFailed();
-            });
-
-            _lastTrackSubscriptionRequestTime = _timeService.Time;
-            _trackSubscriptionRequested = false;
+            SubscribeToTracksAsync(GetCurrentCancellationTokenOrDefault()).LogIfFailed();
         }
 
         /// <summary>
@@ -1260,6 +1247,7 @@ namespace StreamVideo.Core.LowLevelClient
                     $"{nameof(SubscribeToTracksAsync)} Ignored - No participants in the call to subscribe tracks for");
 #endif
 
+                // Participants may not be wired yet — keep the pending request for a later Update() tick.
                 return;
             }
 
@@ -1270,36 +1258,58 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _trackSubscriptionRequestInProgress = true;
+            var generationAtSend = _trackSubscriptionGeneration;
 
-            // StreamTodo: validate that the very first call to SubscribeToTracksAsync is correct because ActiveCall.Participants may not have been updated yet
-            var tracks = GetDesiredTracksDetails();
-
-            var request = new UpdateSubscriptionsRequest
+            try
             {
-                SessionId = SessionId.ToString(),
-            };
-            request.Tracks.AddRange(tracks);
+                // StreamTodo: validate that the very first call to SubscribeToTracksAsync is correct because ActiveCall.Participants may not have been updated yet
+                var tracks = GetDesiredTracksDetails();
+
+                var request = new UpdateSubscriptionsRequest
+                {
+                    SessionId = SessionId.ToString(),
+                };
+                request.Tracks.AddRange(tracks);
 
 #if STREAM_DEBUG_ENABLED
-            _logs.Info($"Request SFU - UpdateSubscriptionsRequest\n{_serializer.Serialize(request)}");
+                _logs.Info($"Request SFU - UpdateSubscriptionsRequest\n{_serializer.Serialize(request)}");
 #endif
 
-            var response = await RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions,
-                nameof(GeneratedAPI.UpdateSubscriptions), cancellationToken, response => response.Error);
+                var response = await SendUpdateSubscriptionsAsync(request, cancellationToken);
 
-            if (ActiveCall == null)
-            {
-                //Ignore if call ended during this request
-                return;
+                if (ActiveCall == null)
+                {
+                    //Ignore if call ended during this request
+                    return;
+                }
+
+                if (response?.Error != null)
+                {
+                    _logs.Error(response.Error.Message);
+                    return;
+                }
+
+                if (generationAtSend == _trackSubscriptionGeneration)
+                {
+                    _trackSubscriptionRequested = false;
+                }
             }
-
-            if (response?.Error != null)
+            catch (Exception)
             {
-                _logs.Error(response.Error.Message);
+                _trackSubscriptionRequested = true;
+                throw;
             }
-
-            _trackSubscriptionRequestInProgress = false;
+            finally
+            {
+                _trackSubscriptionRequestInProgress = false;
+                _lastTrackSubscriptionRequestTime = _timeService.Time;
+            }
         }
+
+        protected virtual Task<UpdateSubscriptionsResponse> SendUpdateSubscriptionsAsync(
+            UpdateSubscriptionsRequest request, CancellationToken cancellationToken)
+            => RpcCallAsync(request, GeneratedAPI.UpdateSubscriptions,
+                nameof(GeneratedAPI.UpdateSubscriptions), cancellationToken, response => response.Error);
 
         private IEnumerable<TrackSubscriptionDetails> GetDesiredTracksDetails()
         {

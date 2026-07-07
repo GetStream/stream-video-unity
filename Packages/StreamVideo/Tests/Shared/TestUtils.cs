@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using StreamVideo.Core;
 using StreamVideo.Core.DeviceManagers;
 using UnityEngine.TestTools;
@@ -13,6 +14,21 @@ namespace StreamVideo.Tests.Shared
     public static class TestUtils
     {
         public const string StreamVideoPackageName = "io.getstream.video";
+
+        /// <summary>
+        /// Polls <paramref name="condition"/> until it returns true or the timeout elapses,
+        /// then asserts it is true with <paramref name="timeoutMessage"/>.
+        /// </summary>
+        public static async Task WaitUntilAsync(Func<bool> condition, string timeoutMessage, int timeoutMs = 5000)
+        {
+            var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+            while (!condition() && DateTime.UtcNow < deadline)
+            {
+                await Task.Delay(10);
+            }
+
+            Assert.That(condition(), Is.True, timeoutMessage);
+        }
         
         public static IEnumerator RunAsIEnumerator(this Task task,
             Action onSuccess = null, bool ignoreFailingMessages = false)

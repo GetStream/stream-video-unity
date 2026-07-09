@@ -143,10 +143,13 @@ namespace StreamVideo.Tests.Editor
             var participant = SetupCallWithRemoteParticipant("remote-session",
                 publishedTracks: new[] { PublishTrackType.Audio, PublishTrackType.Video });
             _session.UpdateIncomingVideoRequested("remote-session", true);
+            _session.UpdateIncomingAudioRequested("remote-session", true);
 
             await SendUpdateSubscriptionsAsync();
             Assert.That(ContainsTrackType(_session.LastRequestedTracks, SfuTrackType.Video), Is.True,
                 "Precondition: video should be subscribed while the peer is publishing.");
+            Assert.That(ContainsTrackType(_session.LastRequestedTracks, SfuTrackType.Audio), Is.True,
+                "Precondition: audio should be subscribed while the peer is publishing.");
 
             InvokeTrackUnpublished(new TrackUnpublished
             {

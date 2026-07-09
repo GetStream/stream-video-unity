@@ -1371,10 +1371,15 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private bool ShouldSubscribeToVideoTrack(IStreamVideoCallParticipant participant)
-            => _incomingVideoRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false);
+            => _incomingVideoRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false)
+               && IsParticipantPublishingTrack(participant, TrackType.Video);
 
         private bool ShouldSubscribeToAudioTrack(IStreamVideoCallParticipant participant)
             => _incomingAudioRequestedByParticipantSessionId.GetValueOrDefault(participant.SessionId, false);
+
+        private static bool IsParticipantPublishingTrack(IStreamVideoCallParticipant participant, TrackType trackType)
+            => participant is StreamVideoCallParticipant concreteParticipant
+               && concreteParticipant.IsPublishingTrack(trackType);
 
         //StreamTodo: remove this, this is a workaround to Null UserId error
         private string GetUserId(IStreamVideoCallParticipant participant)
@@ -1663,12 +1668,19 @@ namespace StreamVideo.Core.LowLevelClient
             if (participant != null)
             {
                 participant.ClearTrackPausedByServer(type);
+
+                if (participantSfuDto != null)
+                {
+                    // Handles updating PublishedTracks
+                    participant.UpdateFromSfu(participantSfuDto);
+                }
+                else
+                {
+                    participant.RemovePublishedTrack(type);
+                }
             }
 
-            if (participantSfuDto != null && participant != null)
-            {
-                participant.UpdateFromSfu(participantSfuDto);
-            }
+            QueueTracksSubscriptionRequest();
 
             //StreamTodo: raise an event so user can react to track unpublished? Otherwise the video will just freeze
         }
@@ -1687,13 +1699,19 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, updateLocalParticipantState: true,
                 out var participant);
 
-            if (participantSfuDto != null && participant != null)
+            if (participant != null)
             {
-                participant.UpdateFromSfu(participantSfuDto);
+                if (participantSfuDto != null)
+                {
+                    // Handles updating PublishedT
+                    participant.UpdateFromSfu(participantSfuDto);
+                }
+                else
+                {
+                    participant.AddPublishedTrack(type);
+                }
             }
 
-            //StreamTodo: fixes the case when joining a call where other participant starts with no video and activates video track after we've joined -
-            // validated that this how Android/Js is handling this
             QueueTracksSubscriptionRequest();
         }
 

@@ -65,6 +65,18 @@ namespace StreamVideo.Core.StatefulModels
         public string TrackLookupPrefix { get; private set; }
         public ConnectionQuality ConnectionQuality { get; private set; }
 
+        internal bool IsPublishingTrack(TrackType trackType) => _publishedTracks.Contains(trackType);
+
+        internal void AddPublishedTrack(TrackType trackType)
+        {
+            if (!_publishedTracks.Contains(trackType))
+            {
+                _publishedTracks.Add(trackType);
+            }
+        }
+
+        internal void RemovePublishedTrack(TrackType trackType) => _publishedTracks.Remove(trackType);
+
         public bool IsSpeaking
         {
             get => _isSpeaking;

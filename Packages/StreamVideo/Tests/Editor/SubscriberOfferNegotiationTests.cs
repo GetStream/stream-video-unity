@@ -10,7 +10,6 @@ using NUnit.Framework;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.LowLevelClient.WebSockets;
-using StreamVideo.Core.Models;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.NetworkMonitors;
 using StreamVideo.Libs.Serialization;
@@ -18,6 +17,7 @@ using StreamVideo.Libs.Time;
 using StreamVideo.Tests.Shared;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
+using StreamVideo.Core.StatefulModels;
 using UnityEngine.TestTools;
 
 namespace StreamVideo.Tests.Editor

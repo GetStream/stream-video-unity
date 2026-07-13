@@ -158,10 +158,10 @@ namespace StreamVideo.Tests.Editor
             protected override async Task NegotiateSubscriberOfferAsync(SubscriberOffer subscriberOffer,
                 CancellationToken cancellationToken)
             {
-                var concurrent = Interlocked.Increment(ref _inFlightNegotiations);
+                _inFlightNegotiations++;
                 try
                 {
-                    MaxConcurrentNegotiations = Math.Max(MaxConcurrentNegotiations, concurrent);
+                    MaxConcurrentNegotiations = Math.Max(MaxConcurrentNegotiations, _inFlightNegotiations);
                     NegotiateCallCount++;
 
                     if (_firstNegotiationBlock != null && NegotiateCallCount == 1)
@@ -171,7 +171,7 @@ namespace StreamVideo.Tests.Editor
                 }
                 finally
                 {
-                    Interlocked.Decrement(ref _inFlightNegotiations);
+                    _inFlightNegotiations--;
                 }
             }
         }

@@ -232,13 +232,24 @@ namespace StreamVideo.Tests.Editor
 
         private static MediaStream CreateMediaStream(string streamId)
         {
-            var ptr = WebRTC.Context.CreateMediaStream(streamId);
+            var context = GetWebRtcContext();
+            var ptr = (IntPtr)context.GetType()
+                .GetMethod("CreateMediaStream", BindingFlags.Instance | BindingFlags.Public)
+                .Invoke(context, new object[] { streamId });
             return (MediaStream)Activator.CreateInstance(
                 typeof(MediaStream),
                 BindingFlags.Instance | BindingFlags.NonPublic,
                 binder: null,
                 args: new object[] { ptr },
                 culture: null);
+        }
+
+        private static object GetWebRtcContext()
+        {
+            var contextProperty = typeof(WebRTC).GetProperty("Context",
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            Assert.That(contextProperty, Is.Not.Null, "Expected internal WebRTC.Context property.");
+            return contextProperty.GetValue(null);
         }
 
         private static StreamVideoCallParticipant GetRemoteParticipant(StreamCall call)

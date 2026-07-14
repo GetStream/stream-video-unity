@@ -724,6 +724,9 @@ namespace StreamVideo.Core.StatefulModels
             Session.UpdateFromSfu(participantJoined, cache);
         }
 
+        internal StreamVideoCallParticipant AddOrUpdateParticipantFromSfu(Participant participantDto, ICache cache)
+            => Session.AddOrUpdateParticipantFromSfu(participantDto, cache);
+
         internal void UpdateFromSfu(ParticipantLeft participantLeft, ICache cache)
         {
             try

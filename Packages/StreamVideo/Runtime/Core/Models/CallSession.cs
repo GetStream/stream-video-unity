@@ -8,6 +8,7 @@ using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.Utils;
 using SfuCallState = StreamVideo.v1.Sfu.Models.CallState;
+using SfuParticipant = StreamVideo.v1.Sfu.Models.Participant;
 using SfuParticipantCount = StreamVideo.v1.Sfu.Models.ParticipantCount;
 
 namespace StreamVideo.Core.Models
@@ -172,6 +173,24 @@ namespace StreamVideo.Core.Models
                 _participants.Add(participant);
                 ParticipantAdded?.Invoke(participant);
             }
+        }
+
+        /// <summary>
+        /// Creates or updates a participant from an SFU participant DTO and ensures it's part of the session.
+        /// Used for the large-call optimization where the SFU skips <c>ParticipantJoined</c> and only embeds the
+        /// participant on the first <c>TrackPublished</c>/<c>TrackUnpublished</c> event.
+        /// </summary>
+        internal StreamVideoCallParticipant AddOrUpdateParticipantFromSfu(SfuParticipant participantDto, ICache cache)
+        {
+            var participant = cache.TryCreateOrUpdate(participantDto);
+
+            if (!_participants.Contains(participant))
+            {
+                _participants.Add(participant);
+                ParticipantAdded?.Invoke(participant);
+            }
+
+            return participant;
         }
 
         internal void UpdateFromSfu(HealthCheckResponse healthCheckResponse, ICache cache)

@@ -127,10 +127,19 @@ namespace StreamVideo.Tests.Editor
 
         private Task When_track_published_with_participant_dto_expect_pending_stream_bound_Async()
         {
-            var remoteParticipant = SetupCallWithRemoteParticipant(trackLookupPrefix: string.Empty);
+            // Large-call optimization: the SFU skips ParticipantJoined and only embeds the participant on the first
+            // TrackPublished. The participant is therefore absent from the call when the subscriber stream arrives.
+            var call = CreateEmptyCall();
+            _session.ActiveCall = call;
+
+            var remoteParticipant = CreateRemoteParticipant(RemoteSessionId, trackLookupPrefix: string.Empty);
+            ConfigureParticipantCache(remoteParticipant);
+
             InvokeSubscriberStreamAdded(CreateMediaStream($"{TrackPrefix}:{VideoTrackTypeKey}"));
             Assert.That(GetPendingTrackCount(), Is.EqualTo(1),
                 "Precondition: stream should be buffered before TrackPublished.");
+            Assert.That(call.Participants, Is.Empty,
+                "Precondition: no participant should exist before TrackPublished in the large-call path.");
 
             InvokeTrackPublished(new TrackPublished
             {
@@ -145,6 +154,8 @@ namespace StreamVideo.Tests.Editor
                 },
             });
 
+            Assert.That(call.Participants, Has.Count.EqualTo(1),
+                "TrackPublished with embedded DTO should materialize the participant (large-call path).");
             Assert.That(_session.BindAttempts, Has.Count.EqualTo(1),
                 "Pending stream should bind after TrackPublished embeds participant prefix.");
             Assert.That(GetPendingTrackCount(), Is.EqualTo(0),
@@ -172,7 +183,7 @@ namespace StreamVideo.Tests.Editor
 
         private StreamVideoCallParticipant SetupCallWithRemoteParticipant(string trackLookupPrefix)
         {
-            var call = CreateCallWithRemoteParticipant(_session, RemoteSessionId, trackLookupPrefix);
+            var call = CreateCallWithRemoteParticipant(RemoteSessionId, trackLookupPrefix);
             _session.ActiveCall = call;
             return GetRemoteParticipant(call);
         }
@@ -241,14 +252,22 @@ namespace StreamVideo.Tests.Editor
             return participants.Single();
         }
 
-        private static StreamCall CreateCallWithRemoteParticipant(RtcSession session, string remoteSessionId,
-            string trackLookupPrefix)
+        private StreamCall CreateEmptyCall()
         {
             var call = new StreamCall(CallCid,
                 Substitute.For<ICacheRepository<StreamCall>>(),
                 Substitute.For<IStatefulModelContext>());
 
-            var participantContext = CreateParticipantContext(session);
+            typeof(StreamCall)
+                .GetField("_session", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(call, new CallSession());
+
+            return call;
+        }
+
+        private StreamVideoCallParticipant CreateRemoteParticipant(string remoteSessionId, string trackLookupPrefix)
+        {
+            var participantContext = CreateParticipantContext(_session);
             var participant = new StreamVideoCallParticipant(
                 remoteSessionId,
                 Substitute.For<ICacheRepository<StreamVideoCallParticipant>>(),
@@ -263,16 +282,24 @@ namespace StreamVideo.Tests.Editor
                 },
                 participantContext.Cache);
 
-            var callSession = new CallSession();
+            return participant;
+        }
+
+        private static void AddParticipantToCall(StreamCall call, StreamVideoCallParticipant participant)
+        {
+            var callSession = (CallSession)typeof(StreamCall)
+                .GetField("_session", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(call);
             var participants = (List<StreamVideoCallParticipant>)typeof(CallSession)
                 .GetField("_participants", BindingFlags.Instance | BindingFlags.NonPublic)
                 .GetValue(callSession);
             participants.Add(participant);
+        }
 
-            typeof(StreamCall)
-                .GetField("_session", BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(call, callSession);
-
+        private StreamCall CreateCallWithRemoteParticipant(string remoteSessionId, string trackLookupPrefix)
+        {
+            var call = CreateEmptyCall();
+            AddParticipantToCall(call, CreateRemoteParticipant(remoteSessionId, trackLookupPrefix));
             return call;
         }
 

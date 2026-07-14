@@ -1683,6 +1683,8 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, updateLocalParticipantState,
                 out var participant);
 
+            participant = EnsureParticipantFromSfuDto(participant, participantSfuDto);
+
             if (participant != null)
             {
                 participant.ClearTrackPausedByServer(type);
@@ -1718,6 +1720,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, updateLocalParticipantState: true,
                 out var participant);
+
+            participant = EnsureParticipantFromSfuDto(participant, participantSfuDto);
 
             if (participant != null)
             {
@@ -2470,6 +2474,19 @@ namespace StreamVideo.Core.LowLevelClient
 
         private static string GetTrackLookupPrefix(StreamVideoCallParticipant participant, Participant participantSfuDto)
             => participant?.TrackLookupPrefix ?? participantSfuDto?.TrackLookupPrefix;
+
+        // Large-call optimization: the SFU may skip ParticipantJoined and only embed the participant on the first
+        // TrackPublished/TrackUnpublished. Materialize the participant so buffered subscriber tracks can bind by prefix.
+        private StreamVideoCallParticipant EnsureParticipantFromSfuDto(StreamVideoCallParticipant participant,
+            Participant participantSfuDto)
+        {
+            if (participant != null || participantSfuDto == null || ActiveCall == null)
+            {
+                return participant;
+            }
+
+            return ActiveCall.AddOrUpdateParticipantFromSfu(participantSfuDto, _cache);
+        }
 
         private sealed class PendingTrack
         {

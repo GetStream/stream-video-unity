@@ -1,3 +1,21 @@
+0.11.0:
+
+### Improvements
+
+- Remote video subscriptions are now more reliable when participants join a call at different times — the SDK waits until a participant is actually publishing video before requesting their stream, and automatically re-subscribes when they start publishing
+- Improved handling of large calls where remote media can arrive before full participant information is available — tracks are held and matched once the participant is known
+- Subscriber connection setup is now serialized, preventing overlapping negotiations from interfering with each other
+
+### Bug Fixes
+
+- Fixed remote video not appearing when a participant starts publishing their camera after others have already joined the call
+- Fixed subscription changes being lost when made while a previous subscription request was still in progress
+- Fixed remote video tracks being dropped when they arrived before the participant's track identifier was available
+- Fixed ICE restart not being applied to the connection that receives remote media, which could leave video stuck after a network recovery
+- Fixed incorrect parsing of remote track identifiers in edge cases that could prevent video from binding to the right participant
+- Fixed occasional crash when collecting WebRTC call statistics
+- Fixed Unity console warnings when reading camera rotation before the camera has finished initializing
+
 0.10.0:
 
 ### iOS Audio

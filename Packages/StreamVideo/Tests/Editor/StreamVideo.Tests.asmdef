@@ -5,6 +5,7 @@
         "StreamVideo.Core",
         "StreamVideo.Libs",
         "StreamVideo.Tests.Shared",
+        "Stream.Unity.WebRTC",
         "TNRD.NSubstitute"
     ],
     "includePlatforms": [

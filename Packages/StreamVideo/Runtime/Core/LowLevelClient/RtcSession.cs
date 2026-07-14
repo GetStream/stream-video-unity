@@ -604,6 +604,7 @@ namespace StreamVideo.Core.LowLevelClient
                     }
                     
                     ActiveCall.UpdateFromSfu(joinResponse);
+                    TryAssignAllPendingTracks();
                     _logs.WarningIfDebug($"{nameof(DoJoin)} - SFU Sending join response received. startNewPeerConnections: {startNewPeerConnections}");
 
                     _fastReconnectDeadlineSeconds = joinResponse.FastReconnectDeadlineSeconds;
@@ -1101,6 +1102,7 @@ namespace StreamVideo.Core.LowLevelClient
         private Tracer _subscriberTracer;
 
         private readonly List<SfuICETrickle> _pendingIceTrickleRequests = new List<SfuICETrickle>();
+        private readonly List<PendingTrack> _pendingTracks = new List<PendingTrack>();
         private readonly PublisherVideoSettings _publisherVideoSettings = PublisherVideoSettings.Default;
 
         private readonly Dictionary<string, VideoResolution> _videoResolutionByParticipantSessionId
@@ -1161,6 +1163,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             _pendingIceTrickleRequests.Clear();
+            _pendingTracks.Clear();
             _videoResolutionByParticipantSessionId.Clear();
             _incomingVideoRequestedByParticipantSessionId.Clear();
             _incomingAudioRequestedByParticipantSessionId.Clear();
@@ -1680,6 +1683,8 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: false, updateLocalParticipantState,
                 out var participant);
 
+            participant = EnsureParticipantFromSfuDto(participant, participantSfuDto);
+
             if (participant != null)
             {
                 participant.ClearTrackPausedByServer(type);
@@ -1696,6 +1701,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             QueueTracksSubscriptionRequest();
+
+            TryAssignPendingTracks(GetTrackLookupPrefix(participant, participantSfuDto));
 
             //StreamTodo: raise an event so user can react to track unpublished? Otherwise the video will just freeze
         }
@@ -1714,6 +1721,8 @@ namespace StreamVideo.Core.LowLevelClient
             UpdateParticipantTracksState(userId, sessionId, type, isEnabled: true, updateLocalParticipantState: true,
                 out var participant);
 
+            participant = EnsureParticipantFromSfuDto(participant, participantSfuDto);
+
             if (participant != null)
             {
                 if (participantSfuDto != null)
@@ -1728,6 +1737,8 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
             QueueTracksSubscriptionRequest();
+
+            TryAssignPendingTracks(GetTrackLookupPrefix(participant, participantSfuDto));
         }
 
         private void UpdateParticipantTracksState(string userId, string sessionId, TrackType trackType, bool isEnabled,
@@ -1957,6 +1968,8 @@ namespace StreamVideo.Core.LowLevelClient
             var id = $"{participantJoined.Participant.UserId}({participantJoined.Participant.SessionId})";
             _logs.Info($"Participant: {id} joined");
 
+            TryAssignPendingTracks(participantJoined.Participant?.TrackLookupPrefix);
+
             QueueTracksSubscriptionRequest();
         }
 
@@ -1968,6 +1981,8 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 return;
             }
+
+            RemovePendingTracks(participantLeft.Participant?.TrackLookupPrefix);
 
             ActiveCall.UpdateFromSfu(participantLeft, _cache);
 
@@ -2033,6 +2048,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             _sfuTracer?.Trace("healthCheck", healthCheckResponse);
             ActiveCall.UpdateFromSfu(healthCheckResponse, _cache);
+            TryAssignAllPendingTracks();
         }
 
         private void OnSfuIceRestart(ICERestart iceRestart)
@@ -2149,7 +2165,8 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            _cache.TryCreateOrUpdate(participantUpdated.Participant);
+            var participant = _cache.TryCreateOrUpdate(participantUpdated.Participant);
+            TryAssignPendingTracks(participant?.TrackLookupPrefix);
         }
 
         private void OnSfuWebSocketOnCallEnded()
@@ -2266,35 +2283,66 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnSubscriberStreamAdded(MediaStream mediaStream)
         {
-            var idParts = mediaStream.Id.Split(":");
-            var trackPrefix = idParts[0];
-            var trackTypeKey = idParts[1];
+            if (!TryParseSubscriberStreamId(mediaStream.Id, out var trackPrefix, out var trackTypeKey))
+            {
+                _logs.Error($"Malformed subscriber stream ID: {mediaStream.Id}");
+                return;
+            }
 
 #if STREAM_DEBUG_ENABLED
             _logs.Warning($"Subscriber stream received, trackPrefix: {trackPrefix}, trackTypeKey: {trackTypeKey}");
 #endif
 
-            var participant = ActiveCall.Participants.SingleOrDefault(p => p.TrackLookupPrefix == trackPrefix);
-            if (participant == null)
+            TryBindOrBufferSubscriberStream(trackPrefix, trackTypeKey, mediaStream);
+        }
+
+        private static bool TryParseSubscriberStreamId(string streamId, out string trackPrefix, out string trackTypeKey)
+        {
+            trackPrefix = null;
+            trackTypeKey = null;
+
+            var idParts = streamId.Split(':');
+            if (idParts.Length != 2 || string.IsNullOrEmpty(idParts[0]) || string.IsNullOrEmpty(idParts[1]))
             {
-                //StreamTodo: figure out severity of this case. Perhaps it's not an error, maybe we haven't received coordinator event yet like ParticipantJoined
-                _logs.Warning(
-                    $"Failed to find participant with trackPrefix: {trackPrefix} for media stream with ID: {mediaStream.Id}");
+                return false;
+            }
+
+            trackPrefix = idParts[0];
+            trackTypeKey = idParts[1];
+            return true;
+        }
+
+        private void TryBindOrBufferSubscriberStream(string trackPrefix, string trackTypeKey, MediaStream mediaStream)
+        {
+            var participant = FindParticipantByTrackPrefix(trackPrefix);
+            if (participant != null)
+            {
+                BindSubscriberStream(participant, trackTypeKey, mediaStream);
                 return;
             }
 
+            BufferPendingTrack(trackPrefix, trackTypeKey, mediaStream);
+        }
+
+        private StreamVideoCallParticipant FindParticipantByTrackPrefix(string trackPrefix)
+            => (StreamVideoCallParticipant)ActiveCall?.Participants
+                .SingleOrDefault(p => p.TrackLookupPrefix == trackPrefix);
+
+        protected virtual bool BindSubscriberStream(StreamVideoCallParticipant participant, string trackTypeKey,
+            MediaStream mediaStream)
+        {
             if (!TrackTypeExt.TryGetTrackType(trackTypeKey, out var trackType))
             {
                 _logs.Error(
                     $"Failed to get {typeof(TrackType)} for value: {trackTypeKey} on media stream with ID: {mediaStream.Id}");
-                return;
+                return false;
             }
 
             if (trackType == TrackType.Unspecified)
             {
                 _logs.Error(
                     $"Unexpected {nameof(trackType)} of value: {trackType} on media stream with ID: {mediaStream.Id}");
-                return;
+                return false;
             }
 
             //StreamTodo: assert that we expect exactly one track per type.
@@ -2306,13 +2354,154 @@ namespace StreamVideo.Core.LowLevelClient
                 track.Enabled = true;
             }
 
-            var internalParticipant = ((StreamVideoCallParticipant)participant);
-
             foreach (var track in mediaStream.GetTracks())
             {
-                internalParticipant.SetTrack(trackType, track, out var streamTrack);
-                ActiveCall.NotifyTrackAdded(internalParticipant, streamTrack);
+                participant.SetTrack(trackType, track, out var streamTrack);
+                ActiveCall.NotifyTrackAdded(participant, streamTrack);
             }
+
+            return true;
+        }
+
+        private void BufferPendingTrack(string trackPrefix, string trackTypeKey, MediaStream mediaStream)
+        {
+            if (ActiveCall == null)
+            {
+                _logs.Error(
+                    $"Received subscriber stream for unknown participant but {nameof(ActiveCall)} is null. Stream ID: {mediaStream.Id}");
+                return;
+            }
+
+            if (_pendingTracks.Any(entry => entry.StreamId == mediaStream.Id))
+            {
+                _logs.WarningIfDebug(
+                    $"Subscriber stream {mediaStream.Id} is already buffered for trackPrefix={trackPrefix}.");
+                return;
+            }
+
+            _pendingTracks.Add(new PendingTrack(
+                mediaStream.Id,
+                trackPrefix,
+                trackTypeKey,
+                mediaStream));
+
+            var awaitingPrefixSessionIds = ActiveCall.Participants
+                .Where(p => !p.IsLocalParticipant && string.IsNullOrEmpty(p.TrackLookupPrefix))
+                .Select(p => p.SessionId)
+                .ToList();
+
+            var awaitingPrefixDetails = awaitingPrefixSessionIds.Count == 0
+                ? "0 participant(s) awaiting TrackLookupPrefix"
+                : $"{awaitingPrefixSessionIds.Count} participant(s) awaiting TrackLookupPrefix: [{string.Join(", ", awaitingPrefixSessionIds)}]";
+
+            _logs.Warning(
+                $"Received track for unknown participant. Buffered subscriber stream {mediaStream.Id}: no participant for trackPrefix={trackPrefix}. {awaitingPrefixDetails}");
+        }
+
+        private void TryAssignPendingTracks(string trackLookupPrefix)
+        {
+            if (ActiveCall == null || string.IsNullOrEmpty(trackLookupPrefix) || _pendingTracks.Count == 0)
+            {
+                return;
+            }
+
+            var participant = FindParticipantByTrackPrefix(trackLookupPrefix);
+            if (participant == null)
+            {
+                return;
+            }
+
+            var pendingEntries = _pendingTracks
+                .Where(entry => entry.TrackPrefix == trackLookupPrefix)
+                .ToList();
+
+            if (pendingEntries.Count == 0)
+            {
+                return;
+            }
+
+            var assignedCount = 0;
+            foreach (var entry in pendingEntries)
+            {
+                try
+                {
+                    if (BindSubscriberStream(participant, entry.TrackTypeKey, entry.MediaStream))
+                    {
+                        _pendingTracks.Remove(entry);
+                        assignedCount++;
+                    }
+                    else
+                    {
+                        _pendingTracks.Remove(entry);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logs.Exception(e);
+                    _pendingTracks.Remove(entry);
+                }
+            }
+
+            if (assignedCount > 0)
+            {
+                _logs.Info(
+                    $"Assigned {assignedCount} pending track(s) for trackPrefix={trackLookupPrefix}, sessionId={participant.SessionId}");
+            }
+        }
+
+        private void TryAssignAllPendingTracks()
+        {
+            if (_pendingTracks.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var trackPrefix in _pendingTracks.Select(entry => entry.TrackPrefix).Distinct().ToList())
+            {
+                TryAssignPendingTracks(trackPrefix);
+            }
+        }
+
+        private void RemovePendingTracks(string trackLookupPrefix)
+        {
+            if (string.IsNullOrEmpty(trackLookupPrefix) || _pendingTracks.Count == 0)
+            {
+                return;
+            }
+
+            _pendingTracks.RemoveAll(entry => entry.TrackPrefix == trackLookupPrefix);
+        }
+
+        private static string GetTrackLookupPrefix(StreamVideoCallParticipant participant, Participant participantSfuDto)
+            => participant?.TrackLookupPrefix ?? participantSfuDto?.TrackLookupPrefix;
+
+        // Large-call optimization: the SFU may skip ParticipantJoined and only embed the participant on the first
+        // TrackPublished/TrackUnpublished. Materialize the participant so buffered subscriber tracks can bind by prefix.
+        private StreamVideoCallParticipant EnsureParticipantFromSfuDto(StreamVideoCallParticipant participant,
+            Participant participantSfuDto)
+        {
+            if (participant != null || participantSfuDto == null || ActiveCall == null)
+            {
+                return participant;
+            }
+
+            return ActiveCall.AddOrUpdateParticipantFromSfu(participantSfuDto, _cache);
+        }
+
+        private sealed class PendingTrack
+        {
+            public PendingTrack(string streamId, string trackPrefix, string trackTypeKey, MediaStream mediaStream)
+            {
+                StreamId = streamId;
+                TrackPrefix = trackPrefix;
+                TrackTypeKey = trackTypeKey;
+                MediaStream = mediaStream;
+            }
+
+            public string StreamId { get; }
+            public string TrackPrefix { get; }
+            public string TrackTypeKey { get; }
+            public MediaStream MediaStream { get; }
         }
 
         private void CreateSubscriber(IEnumerable<ICEServer> iceServers)

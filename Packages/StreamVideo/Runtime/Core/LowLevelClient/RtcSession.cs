@@ -2302,7 +2302,8 @@ namespace StreamVideo.Core.LowLevelClient
             trackTypeKey = null;
 
             var idParts = streamId.Split(':');
-            if (idParts.Length != 2 || string.IsNullOrEmpty(idParts[0]) || string.IsNullOrEmpty(idParts[1]))
+            // SFU stream IDs are `{trackLookupPrefix}:{trackTypeKey}` with an optional track suffix, e.g. `:tR`.
+            if (idParts.Length < 2 || string.IsNullOrEmpty(idParts[0]) || string.IsNullOrEmpty(idParts[1]))
             {
                 return false;
             }
@@ -2638,12 +2639,24 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnPublisherAudioTrackChanged(AudioStreamTrack audioTrack)
         {
+            if (audioTrack != null && _publisherAudioTrackIsEnabled)
+            {
+                UpdateMuteStateAsync(TrackType.Audio, true).LogIfFailed();
+            }
+
             UpdateAudioRecording();
             PublisherAudioTrackChanged?.Invoke();
         }
 
         private void OnPublisherVideoTrackChanged(VideoStreamTrack videoTrack)
         {
+            // InternalExecuteSetPublisherVideoTrackEnabled runs before the track exists on first enable,
+            // so UpdateMuteStates must be sent once the publisher track is actually created.
+            if (videoTrack != null && _publisherVideoTrackIsEnabled)
+            {
+                UpdateMuteStateAsync(TrackType.Video, true).LogIfFailed();
+            }
+
             PublisherVideoTrackChanged?.Invoke();
         }
 

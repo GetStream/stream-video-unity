@@ -181,6 +181,22 @@ namespace StreamVideo.Tests.Editor
             return Task.CompletedTask;
         }
 
+        [UnityTest]
+        public IEnumerator When_stream_id_has_track_suffix_expect_immediate_bind()
+            => When_stream_id_has_track_suffix_expect_immediate_bind_Async().RunAsIEnumerator();
+
+        private Task When_stream_id_has_track_suffix_expect_immediate_bind_Async()
+        {
+            SetupCallWithRemoteParticipant(trackLookupPrefix: TrackPrefix);
+            InvokeSubscriberStreamAdded(CreateMediaStream($"{TrackPrefix}:{VideoTrackTypeKey}:tR"));
+
+            Assert.That(_session.BindAttempts, Has.Count.EqualTo(1),
+                "Stream IDs with an optional track suffix should still bind.");
+            Assert.That(_session.BindAttempts[0].TrackTypeKey, Is.EqualTo(VideoTrackTypeKey));
+            Assert.That(GetPendingTrackCount(), Is.EqualTo(0));
+            return Task.CompletedTask;
+        }
+
         private StreamVideoCallParticipant SetupCallWithRemoteParticipant(string trackLookupPrefix)
         {
             var call = CreateCallWithRemoteParticipant(RemoteSessionId, trackLookupPrefix);

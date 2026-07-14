@@ -97,6 +97,12 @@ namespace StreamVideo.ExampleProject.UI
             // For local user, we don't have a video track, so we get the video rotation angle directly from WebCamTexture
             if (Participant != null && Participant.IsLocalParticipant && _video.texture is WebCamTexture sourceWebCamTexture)
             {
+                // WebCamTexture reports width=16 until fully initialized; reading videoRotationAngle before that logs a warning every frame
+                if (!sourceWebCamTexture.isPlaying || sourceWebCamTexture.width <= 16)
+                {
+                    return;
+                }
+
                 _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-sourceWebCamTexture.videoRotationAngle, Vector3.forward);
             }
         }

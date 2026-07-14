@@ -434,7 +434,13 @@ namespace StreamVideo.Core.StatefulModels
                 return;
             }
 
-            var angle = Client.InternalLowLevelClient.RtcSession.VideoInput.videoRotationAngle;
+            var videoInput = Client.InternalLowLevelClient.RtcSession.VideoInput;
+            if (!videoInput.isPlaying || videoInput.width <= 16)
+            {
+                return;
+            }
+
+            var angle = videoInput.videoRotationAngle;
             var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);
 
             if (!hasPrevAngle || Mathf.Abs(angle - prevAngle) > 0)

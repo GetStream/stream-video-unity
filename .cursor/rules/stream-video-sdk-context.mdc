@@ -1,0 +1,44 @@
+---
+description: Core product, compatibility, and engineering context for the Stream Video Unity SDK
+alwaysApply: true
+---
+
+# Stream Video Unity SDK Context
+
+- This repository contains a Unity plugin that lets customers add real-time audio and video communication to applications and games.
+- Communication is based on WebRTC and uses Stream's custom fork of Unity's `com.unity.webrtc` package.
+- The distributable SDK is under `Packages/StreamVideo`.
+- Customers integrate the plugin into established Unity projects and expect upgrades to preserve their code, assets, configuration, and existing behavior.
+
+## Supported Environments
+
+Consider Android, iOS, Windows, macOS, Linux, Unity Editor and player builds, Mono, and IL2CPP/AOT where supported.
+
+Account for differences in:
+
+- Unity versions, operating systems, hardware, devices, and network conditions.
+- Main-thread and lifecycle requirements.
+- Async operations, cancellation, synchronization, callbacks, events, and teardown.
+- Native resources, memory, permissions, media capture, rendering, and audio routing.
+- Conditional compilation, platform APIs, reflection, and managed-code stripping.
+- Assembly definitions, Unity serialization, assets, prefabs, JSON models, and wire formats.
+- Stream backend behavior and the custom WebRTC fork.
+
+## Compatibility
+
+Treat public and externally observable behavior as a customer contract, including:
+
+- Public and protected APIs, interfaces, inheritance, overloads, defaults, and enum values.
+- Namespaces, assembly names, package layout, serialized data, and configuration.
+- Callback ordering and threads, exceptions, timing, lifecycle, and runtime behavior.
+
+Avoid exposing underlying WebRTC implementation details through public APIs unless deliberately required.
+Assume breaking changes are unacceptable unless explicitly planned for a major release with a migration strategy.
+
+## Engineering Priorities
+
+- Optimize for customer value, correctness, reliability, simplicity, maintainability, and backward compatibility.
+- Prefer the smallest implementation that fully satisfies the requirement and fits existing architecture.
+- Avoid speculative abstractions, unnecessary indirection, duplicate functionality, unrelated changes, and needless public API expansion.
+- Base conclusions on evidence. Distinguish confirmed facts, inferred behavior, and unverified risks.
+- Validate proportionately and state clearly what was not tested or could not be verified.

@@ -9,6 +9,11 @@ on:
   schedule:
     - cron: "0 5 * * *"  # run daily at 5 AM (UTC)
 
+permissions:
+  actions: write
+  contents: read
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ubuntu-latest

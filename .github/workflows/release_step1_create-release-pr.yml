@@ -10,6 +10,10 @@ on:
         description: 'Changelog (for last version only & base64 encoded)'
         required: true
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest

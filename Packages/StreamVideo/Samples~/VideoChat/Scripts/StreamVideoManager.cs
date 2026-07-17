@@ -63,6 +63,7 @@ namespace StreamVideo.ExampleProject
 
             Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
             Client.CallStarted += OnCallStarted;
+            Client.CallLeaving += OnCallLeaving;
             Client.CallEnded += OnCallEnded;
         }
 
@@ -230,6 +231,7 @@ namespace StreamVideo.ExampleProject
             }
 
             Client.CallStarted -= OnCallStarted;
+            Client.CallLeaving -= OnCallLeaving;
             Client.CallEnded -= OnCallEnded;
             Client.Dispose();
             Client = null;
@@ -353,29 +355,27 @@ namespace StreamVideo.ExampleProject
             CallStarted?.Invoke(call);
         }
 
-        private void OnCallEnded(IStreamCall call)
+        private void OnCallLeaving(IStreamCall call)
         {
 #if STREAM_DEBUG_ENABLED
             try
             {
-                if (_activeCall == null)
+                if (call == null)
                 {
-                    Debug.LogError("Active call was null when trying to end it. call is null " + (call == null));
+                    Debug.LogError("[Debug] Call was null when trying to send debug logs on leave.");
                     return;
                 }
 
-                if (_activeCall.Participants == null)
+                if (call.Participants == null)
                 {
-                    Debug.LogError("Active call participants were null when trying to end it. call is null " +
-                                   (call == null));
+                    Debug.LogError("[Debug] Call participants were null when trying to send debug logs on leave.");
                     return;
                 }
 
-                var callId = _activeCall.Id;
-                var localParticipant = _activeCall.Participants.FirstOrDefault(p => p.IsLocalParticipant);
+                var localParticipant = call.Participants.FirstOrDefault(p => p.IsLocalParticipant);
                 if (localParticipant != null)
                 {
-                    Client.SendDebugLogs(call.Id, localParticipant.SessionId);
+                    Client.SendDebugLogs(call.Id, localParticipant.SessionId).LogIfFailed();
                 }
                 else
                 {
@@ -387,7 +387,10 @@ namespace StreamVideo.ExampleProject
                 Debug.LogException(e);
             }
 #endif
+        }
 
+        private void OnCallEnded(IStreamCall call)
+        {
             _activeCall = null;
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
 

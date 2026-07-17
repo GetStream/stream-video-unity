@@ -524,8 +524,12 @@ namespace StreamVideo.Core.LowLevelClient
 
             if (track.Kind == TrackKind.Video)
             {
-                var videoLayers = GetPublisherVideoLayers(transceiver.Sender.GetParameters().encodings);
+                var videoLayers = GetPublisherVideoLayers(transceiver.Sender.GetParameters().encodings).ToList();
                 trackInfo.Layers.AddRange(videoLayers);
+#if STREAM_DEBUG_ENABLED
+                SimulcastDebugLogger.LogPublisherAnnouncedLayers(Logs, $"sessionId={SfuClient.SessionId}",
+                    videoLayers);
+#endif
             }
 
             return trackInfo;
@@ -890,6 +894,13 @@ namespace StreamVideo.Core.LowLevelClient
 
             VideoSender = _videoTransceiver.Sender;
 
+#if STREAM_DEBUG_ENABLED
+            var webcamResolution = new VideoResolution(_mediaInputProvider.VideoInput.width,
+                _mediaInputProvider.VideoInput.height);
+            SimulcastDebugLogger.LogPublisherTrackCreated(Logs, $"sessionId={SfuClient.SessionId}",
+                webcamResolution, PublisherTargetResolution, VideoSender.GetParameters());
+#endif
+
             if (negotiate)
             {
                 // StreamTODO: better handle async??
@@ -933,9 +944,6 @@ namespace StreamVideo.Core.LowLevelClient
             track.Enabled = _mediaInputProvider.PublisherVideoTrackIsEnabled;
             return track;
         }
-
-
-        //StreamTodo: CreatePublisherVideoTrackFromSceneCamera() is not used in any path
         private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()
         {
             ReleasePublisherVideoTrackTexture();

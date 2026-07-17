@@ -65,19 +65,30 @@ namespace StreamVideo.ExampleProject.UI
         // Called by Unity Engine
         protected void Update()
         {
-            var rect = _videoRectTransform.rect;
-            var videoRenderedSize = new Vector2(rect.width, rect.height);
-            var forcedRequestedSize = new Vector2(_forceRequestedResolutionWidth, _forceRequestedResolutionHeight);
-            var finalRequestedSize = _forceRequestedResolution ? forcedRequestedSize : videoRenderedSize;
-            
-            if (_lastRequestedResolution != finalRequestedSize)
+            VideoResolution videoResolution;
+            if (_videoManager.TryGetForcedRequestedVideoResolution(out var forcedResolution))
             {
-                _lastRequestedResolution = finalRequestedSize;
-                var videoResolution = new VideoResolution((int)finalRequestedSize.x, (int)finalRequestedSize.y);
-                
-                // To optimize bandwidth we always request the video resolution that matches what we're actually rendering
+                videoResolution = forcedResolution;
+            }
+            else
+            {
+                var rect = _videoRectTransform.rect;
+                var videoRenderedSize = new Vector2(rect.width, rect.height);
+                var forcedRequestedSize = new Vector2(_forceRequestedResolutionWidth, _forceRequestedResolutionHeight);
+                var finalRequestedSize = _forceRequestedResolution ? forcedRequestedSize : videoRenderedSize;
+                videoResolution = new VideoResolution((int)finalRequestedSize.x, (int)finalRequestedSize.y);
+            }
+
+            var requestedSize = new Vector2(videoResolution.Width, videoResolution.Height);
+            if (_lastRequestedResolution != requestedSize)
+            {
+                _lastRequestedResolution = requestedSize;
+
+                // To optimize bandwidth we request the video resolution that matches what we're rendering,
+                // unless StreamVideoManager or this view overrides it for simulcast testing.
                 Participant.UpdateRequestedVideoResolution(videoResolution);
-                Debug.Log($"Rendered resolution changed for participant `{Participant.UserId}`. Requested video resolution update to: {videoResolution}");
+                Debug.Log(
+                    $"[Simulcast][Subscriber] Requested video resolution for `{Participant.UserId}` updated to: {videoResolution}");
             }
 
             FixVideoOrientation();

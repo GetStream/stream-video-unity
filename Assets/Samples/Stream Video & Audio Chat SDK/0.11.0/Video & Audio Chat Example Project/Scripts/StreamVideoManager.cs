@@ -24,12 +24,42 @@ namespace StreamVideo.ExampleProject
         public IStreamVideoClient Client { get; private set; }
         public IStreamCall ActiveCall => _activeCall;
 
+        /// <summary>
+        /// When set, all remote participant views request this dimension instead of their rendered size.
+        /// Use per-build to force different devices to consume different simulcast layers.
+        /// </summary>
+        public bool TryGetForcedRequestedVideoResolution(out VideoResolution resolution)
+        {
+            switch (_forcedConsumeLayer)
+            {
+                case ForcedSimulcastConsumeLayer.Full:
+                    resolution = VideoResolution.Res_720p;
+                    return true;
+                case ForcedSimulcastConsumeLayer.Half:
+                    resolution = new VideoResolution(640, 360);
+                    return true;
+                case ForcedSimulcastConsumeLayer.Quarter:
+                    resolution = new VideoResolution(320, 180);
+                    return true;
+                default:
+                    resolution = default;
+                    return false;
+            }
+        }
+
         public void Init()
         {
             _clientConfig = new StreamClientConfig
             {
                 LogLevel = StreamLogLevel.Debug,
             };
+
+            if (TryGetForcedRequestedVideoResolution(out var forcedResolution))
+            {
+                _clientConfig.Video.DefaultParticipantVideoResolution = forcedResolution;
+                Debug.Log(
+                    $"[Simulcast][Subscriber] Forcing consume layer {_forcedConsumeLayer} -> requestedDimension={forcedResolution}");
+            }
 
             Client = StreamVideoClient.CreateDefaultClient(_clientConfig);
             Client.CallStarted += OnCallStarted;
@@ -279,6 +309,10 @@ namespace StreamVideo.ExampleProject
 
         [SerializeField]
         private bool _autoEnableMicrophone = false;
+
+        [Header("Debug - Simulcast layer testing")]
+        [SerializeField]
+        private ForcedSimulcastConsumeLayer _forcedConsumeLayer = ForcedSimulcastConsumeLayer.Auto;
 
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;

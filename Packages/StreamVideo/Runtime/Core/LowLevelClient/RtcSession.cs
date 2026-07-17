@@ -247,7 +247,7 @@ namespace StreamVideo.Core.LowLevelClient
             _networkMonitor = networkMonitor;
             _sfuWebSocketFactory = sfuWebSocketFactory ?? throw new ArgumentNullException(nameof(sfuWebSocketFactory));
 
-            var statsCollector = new UnityWebRtcStatsCollector(this, _serializer, _tracerManager);
+            var statsCollector = new UnityWebRtcStatsCollector(this, _serializer, _tracerManager, _logs);
             _statsSender = new WebRtcStatsSender(this, statsCollector, _timeService, _logs);
 
             //StreamTodo: enable this only if a special mode e.g. compiler flag 
@@ -864,6 +864,10 @@ namespace StreamVideo.Core.LowLevelClient
         public void UpdateRequestedVideoResolution(string participantSessionId, VideoResolution videoResolution)
         {
             _videoResolutionByParticipantSessionId[participantSessionId] = videoResolution;
+#if STREAM_DEBUG_ENABLED
+            SimulcastDebugLogger.LogSubscriberConsumeRequest(_logs, GetSimulcastLogContext(),
+                TryGetParticipantUserId(participantSessionId), participantSessionId, videoResolution);
+#endif
             QueueTracksSubscriptionRequest();
         }
 
@@ -1276,7 +1280,7 @@ namespace StreamVideo.Core.LowLevelClient
                 request.Tracks.AddRange(tracks);
 
 #if STREAM_DEBUG_ENABLED
-                _logs.Info($"Request SFU - UpdateSubscriptionsRequest\n{_serializer.Serialize(request)}");
+                SimulcastDebugLogger.LogSubscriberSubscriptions(_logs, GetSimulcastLogContext(), tracks);
 #endif
 
                 var response = await SendUpdateSubscriptionsAsync(request, cancellationToken);
@@ -1420,6 +1424,49 @@ namespace StreamVideo.Core.LowLevelClient
 
             return _config.Video.DefaultParticipantVideoResolution;
         }
+
+#if STREAM_DEBUG_ENABLED
+        private string GetSimulcastLogContext()
+        {
+            return $"localUser={TryGetLocalParticipantUserId()} localSession={SessionId}";
+        }
+
+        private string TryGetLocalParticipantUserId()
+        {
+            if (ActiveCall?.Participants == null)
+            {
+                return "?";
+            }
+
+            foreach (var participant in ActiveCall.Participants)
+            {
+                if (participant is { IsLocalParticipant: true })
+                {
+                    return GetUserId(participant);
+                }
+            }
+
+            return "?";
+        }
+
+        private string TryGetParticipantUserId(string participantSessionId)
+        {
+            if (ActiveCall?.Participants == null || string.IsNullOrEmpty(participantSessionId))
+            {
+                return "?";
+            }
+
+            foreach (var participant in ActiveCall.Participants)
+            {
+                if (participant.SessionId == participantSessionId)
+                {
+                    return GetUserId(participant);
+                }
+            }
+
+            return "?";
+        }
+#endif
 
         private async Task SendIceCandidateAsync(RTCIceCandidate candidate, StreamPeerType streamPeerType)
         {

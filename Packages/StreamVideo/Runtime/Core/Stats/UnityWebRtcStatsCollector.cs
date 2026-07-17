@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Trace;
+using StreamVideo.Core.Utils;
+using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Serialization;
 using StreamVideo.v1.Sfu.Models;
 using Unity.WebRTC;
@@ -17,6 +19,7 @@ namespace StreamVideo.Core.Stats
         private readonly RtcSession _rtcSession;
         private readonly ISerializer _serializer;
         private readonly TracerManager _tracerManager;
+        private readonly ILogs _logs;
         private Dictionary<string, StatSnapshot> _previousPublisherStats = new Dictionary<string, StatSnapshot>();
         private Dictionary<string, StatSnapshot> _previousSubscriberStats = new Dictionary<string, StatSnapshot>();
 
@@ -92,6 +95,13 @@ namespace StreamVideo.Core.Stats
                 _previousPublisherStats = CreateStatsSnapshot(publisherStats);
                 _previousSubscriberStats = CreateStatsSnapshot(subscriberStats);
 
+#if STREAM_DEBUG_ENABLED
+                var statsContext =
+                    $"localUser={GetLocalParticipantUserId()} localSession={_rtcSession.SessionId}";
+                SimulcastDebugLogger.LogPublisherOutboundStats(_logs, statsContext, publisherStats);
+                SimulcastDebugLogger.LogSubscriberInboundStats(_logs, statsContext, subscriberStats);
+#endif
+
                 return new StatsCollectionResult
                 {
                     PublisherStatsJson = publisherStatsJson,
@@ -108,11 +118,13 @@ namespace StreamVideo.Core.Stats
             }
         }
 
-        internal UnityWebRtcStatsCollector(RtcSession rtcSession, ISerializer serializer, TracerManager tracerManager)
+        internal UnityWebRtcStatsCollector(RtcSession rtcSession, ISerializer serializer,
+            TracerManager tracerManager, ILogs logs)
         {
             _rtcSession = rtcSession ?? throw new ArgumentNullException(nameof(rtcSession));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _tracerManager = tracerManager ?? throw new ArgumentNullException(nameof(tracerManager));
+            _logs = logs ?? throw new ArgumentNullException(nameof(logs));
 
             _serializationOptions = new SerializationOptions
             {
@@ -553,5 +565,26 @@ namespace StreamVideo.Core.Stats
             }
             return 0;
         }
+
+#if STREAM_DEBUG_ENABLED
+        private string GetLocalParticipantUserId()
+        {
+            var activeCall = _rtcSession.ActiveCall;
+            if (activeCall?.Participants == null)
+            {
+                return "?";
+            }
+
+            foreach (var participant in activeCall.Participants)
+            {
+                if (participant is { IsLocalParticipant: true })
+                {
+                    return string.IsNullOrEmpty(participant.UserId) ? "?" : participant.UserId;
+                }
+            }
+
+            return "?";
+        }
+#endif
     }
 }

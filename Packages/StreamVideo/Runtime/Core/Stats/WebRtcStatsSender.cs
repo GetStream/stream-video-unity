@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf.Collections;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
 using StreamVideo.Libs.Time;
 using StreamVideo.Libs.Utils;
@@ -142,6 +143,11 @@ namespace StreamVideo.Core.Stats
             {
                 request.DecodeStats.Add(stat);
             }
+
+#if STREAM_DEBUG_ENABLED
+            SimulcastDebugLogger.LogSendStatsSummary(_logs,
+                $"localSession={_rtcSession.SessionId}", stats.EncodeStats, stats.DecodeStats);
+#endif
 
 #pragma warning disable CS0162 // Disable unreachable code warning
 #if STREAM_DEBUG_ENABLED

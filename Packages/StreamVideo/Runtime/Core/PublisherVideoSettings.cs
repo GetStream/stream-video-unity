@@ -14,7 +14,7 @@
         /// The final resolution depends on factors like network bandwidth and traffic.
         /// Stream will automatically adjust the resolution to network conditions in order to ensure smooth video as much as possible.
         /// </summary>
-        public VideoResolution MaxResolution { get; set; } = VideoResolution.Res_720p;
+        public VideoResolution MaxResolution { get; set; } = VideoResolution.Res_1080p;
         
         /// <summary>
         /// Frames per second (FPS) at which the video will be streamed to other participants.

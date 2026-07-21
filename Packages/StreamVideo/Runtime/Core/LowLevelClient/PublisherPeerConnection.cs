@@ -146,6 +146,8 @@ namespace StreamVideo.Core.LowLevelClient
         {
             base.OnUpdate();
 
+            TryCreateDeferredPublisherVideoTrack();
+
             //StreamTodo: investigate if this Blit is necessary
             // One reason was to easy control target resolution -> we don't accept every target resolution because small res can crash Android video encoder
             // We should check if WebCamTexture allows setting any resolution
@@ -660,6 +662,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             TryClearPublisherAudioTrack();
             TryClearVideoTrack();
+
+            _pendingPublisherVideoTrackCreation = false;
             
             base.OnDisposing();
         }
@@ -720,6 +724,8 @@ namespace StreamVideo.Core.LowLevelClient
         private RenderTexture _publisherVideoTrackTexture;
         private VideoStreamTrack _publisherVideoTrack;
         private AudioStreamTrack _publisherAudioTrack;
+
+        private bool _pendingPublisherVideoTrackCreation;
 
         private RTCRtpTransceiver _videoTransceiver;
         private RTCRtpTransceiver _audioTransceiver;
@@ -1073,9 +1079,20 @@ namespace StreamVideo.Core.LowLevelClient
             var isActive = _mediaInputProvider.VideoInput != null && _mediaInputProvider.PublisherVideoTrackIsEnabled;
             if (!isActive)
             {
+                _pendingPublisherVideoTrackCreation = false;
                 TryClearVideoTrack();
                 return;
             }
+
+            if (ShouldDeferPublisherVideoTrackCreation())
+            {
+                _pendingPublisherVideoTrackCreation = true;
+                Logs.WarningIfDebug(
+                    "[Publisher] Deferring video publish until WebCamTexture has initialized resolution");
+                return;
+            }
+
+            _pendingPublisherVideoTrackCreation = false;
 
             if (_videoTransceiver == null)
             {
@@ -1087,6 +1104,33 @@ namespace StreamVideo.Core.LowLevelClient
 
             TryClearVideoTrack();
             ReplaceActiveVideoTrack(newVideoTrack);
+        }
+
+        private bool ShouldDeferPublisherVideoTrackCreation()
+        {
+            var videoInput = _mediaInputProvider.VideoInput;
+            return videoInput != null && !WebCamTextureUtils.HasInitializedResolution(videoInput);
+        }
+
+        private void TryCreateDeferredPublisherVideoTrack()
+        {
+            if (!_pendingPublisherVideoTrackCreation)
+            {
+                return;
+            }
+
+            if (!_mediaInputProvider.PublisherVideoTrackIsEnabled)
+            {
+                _pendingPublisherVideoTrackCreation = false;
+                return;
+            }
+
+            if (ShouldDeferPublisherVideoTrackCreation())
+            {
+                return;
+            }
+
+            ReplacePublisherVideoTrack(negotiate: true);
         }
 
         private void OnVideoSceneInputChanged(Camera camera)

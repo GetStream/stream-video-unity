@@ -490,12 +490,8 @@ namespace StreamVideo.Core.LowLevelClient
                         $"{nameof(DoJoin)} - Skipped join call request: callExists: {callCredentialsExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
                 }
 
-                ActiveCall = call ?? throw new NullReferenceException(nameof(call));
-
-                if (ActiveCall.Credentials == null || string.IsNullOrEmpty(ActiveCall.Credentials.Token))
-                {
-                    _logs.ErrorIfDebug($"{nameof(DoJoin)} - Missing credentials!");
-                }
+                ActiveCall = call;
+                EnsureCallHasJoinCredentials(ActiveCall);
 
                 _httpClient = _httpClientFactory(ActiveCall);
 
@@ -745,11 +741,44 @@ namespace StreamVideo.Core.LowLevelClient
 
             var joinCallResponse
                 = await _lowLevelClient.InternalVideoClientApi.JoinCallAsync(data.Type, data.Id, joinCallRequest);
+            if (joinCallResponse == null)
+            {
+                throw new InvalidOperationException(
+                    $"Join call API returned an empty response for `{data.Type}:{data.Id}`.");
+            }
+
             var streamCall = _cache.TryCreateOrUpdate(joinCallResponse);
+            if (streamCall == null)
+            {
+                throw new InvalidOperationException(
+                    $"Join call API response could not be applied for `{data.Type}:{data.Id}`.");
+            }
 
             //StreamTODO: add ring accept logic. Check JS doJoinRequest
 
             return streamCall;
+        }
+
+        private static void EnsureCallHasJoinCredentials(StreamCall call)
+        {
+            if (call == null)
+            {
+                throw new InvalidOperationException("Join call response did not contain call data.");
+            }
+
+            var credentials = call.Credentials;
+            if (credentials == null || string.IsNullOrEmpty(credentials.Token))
+            {
+                throw new InvalidOperationException(
+                    $"Join call response for `{call.Cid}` is missing credentials or token.");
+            }
+
+            var server = credentials.Server;
+            if (server == null || string.IsNullOrEmpty(server.Url))
+            {
+                throw new InvalidOperationException(
+                    $"Join call response for `{call.Cid}` is missing SFU server URL.");
+            }
         }
 
         public Task StopAsync(string reason = "")

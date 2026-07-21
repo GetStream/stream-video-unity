@@ -113,7 +113,14 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
                 catch (Exception e)
                 {
                     LogRestCall(uri, endpoint, httpMethod, responseContent, success: false, logContent);
-                    throw new StreamDeserializationException(responseContent, typeof(TResponse), e);
+                    throw new StreamDeserializationException(responseContent, typeof(APIErrorInternalDTO), e);
+                }
+
+                if (apiError == null)
+                {
+                    LogRestCall(uri, endpoint, httpMethod, responseContent, success: false, logContent);
+                    throw new StreamDeserializationException(responseContent, typeof(APIErrorInternalDTO),
+                        new InvalidOperationException("Deserializer returned null"));
                 }
                 
                 if (apiError.Code != InvalidAuthTokenErrorCode)
@@ -165,6 +172,13 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
             try
             {
                 var response = _serializer.Deserialize<TResponse>(responseContent);
+                if (response == null)
+                {
+                    LogRestCall(uri, endpoint, httpMethod, responseContent, success: false, logContent);
+                    throw new StreamDeserializationException(responseContent, typeof(TResponse),
+                        new InvalidOperationException("Deserializer returned null"));
+                }
+
                 LogRestCall(uri, endpoint, httpMethod, responseContent, success: true, logContent);
                 return response;
             }

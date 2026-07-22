@@ -989,20 +989,11 @@ namespace StreamVideo.Core.LowLevelClient
                 return false;
             }
 
-            var sizeError = WebRTC.ValidateTextureSize(videoInput.width, videoInput.height, Application.platform);
-            if (sizeError.errorType != RTCErrorType.None)
-            {
-                ineligibleReason = string.IsNullOrEmpty(sizeError.message)
-                    ? $"texture size validation failed ({sizeError.errorType})"
-                    : sizeError.message;
-                return false;
-            }
-
             ineligibleReason = null;
             return true;
         }
 
-        private static void LogWebCamCaptureAlignmentIfNeeded(Texture videoInput, VideoResolution publishTarget)
+        private void LogWebCamCaptureAlignmentIfNeeded(Texture videoInput, VideoResolution publishTarget)
         {
             if (videoInput is not WebCamTexture webCam || !WebCamTextureUtils.HasInitializedResolution(webCam))
             {

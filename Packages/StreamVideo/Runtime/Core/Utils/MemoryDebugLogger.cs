@@ -86,12 +86,17 @@ namespace StreamVideo.Core.Utils
         [DllImport("/usr/lib/libSystem.B.dylib")]
         private static extern int task_info(int targetTask, int flavor, ref TaskVmInfoData info, ref int count);
 
+        // Layout must match the kernel's `task_vm_info` (mach/task_info.h) exactly, otherwise `task_info`
+        // reads the wrong offsets and, if the field count is below TASK_VM_INFO_REV0_COUNT, rejects the
+        // call with KERN_INVALID_ARGUMENT. `region_count`/`page_size` are 4-byte integer_t; every other
+        // field is an 8-byte mach_vm_size_t. Fields run through `phys_footprint` (rev1), which is what
+        // iOS jetsam uses to decide when to kill the process.
         [StructLayout(LayoutKind.Sequential)]
         private struct TaskVmInfoData
         {
             public ulong virtual_size;
-            public ulong region_count;
-            public ulong page_size;
+            public int region_count;
+            public int page_size;
             public ulong resident_size;
             public ulong resident_size_peak;
             public ulong device;
@@ -102,6 +107,12 @@ namespace StreamVideo.Core.Utils
             public ulong external_peak;
             public ulong reusable_size;
             public ulong reusable_peak;
+            public ulong purgeable_volatile_pmap;
+            public ulong purgeable_volatile_resident;
+            public ulong purgeable_volatile_virtual;
+            public ulong compressed;
+            public ulong compressed_peak;
+            public ulong compressed_lifetime;
             public ulong phys_footprint;
         }
 
@@ -110,7 +121,13 @@ namespace StreamVideo.Core.Utils
             var info = new TaskVmInfoData();
             var count = Marshal.SizeOf<TaskVmInfoData>() / sizeof(int);
             var result = task_info(mach_task_self(), TASK_VM_INFO, ref info, ref count);
-            return result == 0 ? (long)info.phys_footprint : -1;
+            if (result != 0)
+            {
+                UnityEngine.Debug.LogWarning($"[Memory] task_info(TASK_VM_INFO) failed with kern_return_t={result}");
+                return -1;
+            }
+
+            return (long)info.phys_footprint;
         }
 #endif
 

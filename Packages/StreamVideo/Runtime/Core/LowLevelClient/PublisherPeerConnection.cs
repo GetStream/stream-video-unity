@@ -148,9 +148,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             TryCreateDeferredPublisherVideoTrack();
 
-            //StreamTodo: investigate if this Blit is necessary
-            // One reason was to easy control target resolution -> we don't accept every target resolution because small res can crash Android video encoder
-            // We should check if WebCamTexture allows setting any resolution
+            // Intermediate RT is only used when capture size/format differs from publish target (downscale or format conversion).
             if (_publisherVideoTrackTexture != null && _mediaInputProvider.VideoInput != null)
             {
                 Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
@@ -927,7 +925,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private VideoStreamTrack CreatePublisherVideoTrack()
         {
-            if (_mediaInputProvider.VideoInput == null)
+            var videoInput = _mediaInputProvider.VideoInput;
+            if (videoInput == null)
             {
                 throw new ArgumentException(
                     $"Can't create publisher video track because `{nameof(_mediaInputProvider.VideoInput)}` is null");
@@ -935,20 +934,70 @@ namespace StreamVideo.Core.LowLevelClient
 
             ReleasePublisherVideoTrackTexture();
 
-            var gfxType = SystemInfo.graphicsDeviceType;
-            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+            var targetResolution = PublisherTargetResolution;
 
-            var res = PublisherTargetResolution;
-            _publisherVideoTrackTexture = new RenderTexture((int)res.Width, (int)res.Height, 0, format);
+            if (CanPublishFromVideoInputDirectly(videoInput, targetResolution, out var directPathIneligibleReason))
+            {
+#if STREAM_DEBUG_ENABLED
+                Debug.LogWarning(
+                    $"[Publisher] Video track using direct VideoInput (no intermediate RenderTexture). " +
+                    $"Resolution: {videoInput.width}x{videoInput.height}, format: {videoInput.graphicsFormat}, " +
+                    $"isPlaying: {videoInput.isPlaying}, readable: {videoInput.isReadable}");
+#endif
+                var directTrack = new VideoStreamTrack(videoInput);
+                directTrack.Enabled = _mediaInputProvider.PublisherVideoTrackIsEnabled;
+                return directTrack;
+            }
 
 #if STREAM_DEBUG_ENABLED
             Debug.LogWarning(
-                $"CreatePublisherVideoTrack, isPlaying: {_mediaInputProvider.VideoInput.isPlaying}, readable: {_mediaInputProvider.VideoInput.isReadable}");
+                $"[Publisher] Video track using RenderTexture + Blit fallback. Reason: {directPathIneligibleReason}. " +
+                $"Input: {videoInput.width}x{videoInput.height} ({videoInput.graphicsFormat}), target: {targetResolution}, " +
+                $"isPlaying: {videoInput.isPlaying}, readable: {videoInput.isReadable}");
 #endif
+
+            var gfxType = SystemInfo.graphicsDeviceType;
+            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
+
+            _publisherVideoTrackTexture = new RenderTexture((int)targetResolution.Width, (int)targetResolution.Height, 0, format);
 
             var track = new VideoStreamTrack(_publisherVideoTrackTexture);
             track.Enabled = _mediaInputProvider.PublisherVideoTrackIsEnabled;
             return track;
+        }
+
+        private static bool CanPublishFromVideoInputDirectly(Texture videoInput, VideoResolution targetResolution,
+            out string ineligibleReason)
+        {
+            if (videoInput.width != (int)targetResolution.Width ||
+                videoInput.height != (int)targetResolution.Height)
+            {
+                ineligibleReason =
+                    $"resolution mismatch (input {videoInput.width}x{videoInput.height}, target {targetResolution.Width}x{targetResolution.Height})";
+                return false;
+            }
+
+            try
+            {
+                WebRTC.ValidateGraphicsFormat(videoInput.graphicsFormat);
+            }
+            catch (ArgumentException e)
+            {
+                ineligibleReason = $"unsupported graphics format {videoInput.graphicsFormat}: {e.Message}";
+                return false;
+            }
+
+            var sizeError = WebRTC.ValidateTextureSize(videoInput.width, videoInput.height, Application.platform);
+            if (sizeError.errorType != RTCErrorType.None)
+            {
+                ineligibleReason = string.IsNullOrEmpty(sizeError.message)
+                    ? $"texture size validation failed ({sizeError.errorType})"
+                    : sizeError.message;
+                return false;
+            }
+
+            ineligibleReason = null;
+            return true;
         }
         private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()
         {

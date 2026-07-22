@@ -147,6 +147,8 @@ namespace StreamVideo.Core.Stats
 #if STREAM_DEBUG_ENABLED
             SimulcastDebugLogger.LogSendStatsSummary(_logs,
                 $"localSession={_rtcSession.SessionId}", stats.EncodeStats, stats.DecodeStats);
+            MemoryDebugLogger.Log(_logs, "periodic-stats",
+                $"localSession={_rtcSession.SessionId}");
 #endif
 
 #pragma warning disable CS0162 // Disable unreachable code warning

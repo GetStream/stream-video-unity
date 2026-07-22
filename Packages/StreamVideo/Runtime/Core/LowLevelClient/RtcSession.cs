@@ -434,6 +434,9 @@ namespace StreamVideo.Core.LowLevelClient
             _joinCallData = joinCallData;
 
             CallState = CallingState.Joining;
+#if STREAM_DEBUG_ENABLED
+            MemoryDebugLogger.Log(_logs, "call-join-started", $"callId={joinCallData.Id}");
+#endif
 
             if (_joinCallCts != null)
             {
@@ -638,6 +641,9 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     // in MIGRATION, `JOINED` state is set in `this.reconnectMigrate()`
                     CallState = CallingState.Joined;
+#if STREAM_DEBUG_ENABLED
+                    MemoryDebugLogger.Log(_logs, "call-joined", GetSimulcastLogContext());
+#endif
                 }
 
                 // Following JS: For FAST reconnect, always call RestartIce (after updating SfuClient if needed).
@@ -787,6 +793,9 @@ namespace StreamVideo.Core.LowLevelClient
 
             CallState = CallingState.Leaving;
             _logs.InfoIfDebug("Leaving the call - cleanup session");
+#if STREAM_DEBUG_ENABLED
+            MemoryDebugLogger.Log(_logs, "call-leave-started", GetSimulcastLogContext());
+#endif
 
             _ongoingStopTask = StopInternalAsync(reason);
             return _ongoingStopTask;
@@ -840,6 +849,10 @@ namespace StreamVideo.Core.LowLevelClient
 
                 await ClearSessionAsync();
 
+#if STREAM_DEBUG_ENABLED
+                MemoryDebugLogger.Log(_logs, "call-leave-after-cleanup", GetSimulcastLogContext());
+#endif
+
                 if (_sfuWebSocket != null)
                 {
                     using (new TimeLogScope("Sending leave call request & disconnect", _logs.Info))
@@ -858,6 +871,9 @@ namespace StreamVideo.Core.LowLevelClient
                 // can still access the call reference
                 CallState = CallingState.Left;
                 ActiveCall = null;
+#if STREAM_DEBUG_ENABLED
+                MemoryDebugLogger.Log(_logs, "call-leave-complete", GetSimulcastLogContext());
+#endif
             }
         }
 

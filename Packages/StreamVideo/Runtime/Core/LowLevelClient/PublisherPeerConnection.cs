@@ -936,6 +936,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             var targetResolution = PublisherTargetResolution;
 
+            LogWebCamCaptureAlignmentIfNeeded(videoInput, targetResolution);
+
             if (CanPublishFromVideoInputDirectly(videoInput, targetResolution, out var directPathIneligibleReason))
             {
 #if STREAM_DEBUG_ENABLED
@@ -999,6 +1001,25 @@ namespace StreamVideo.Core.LowLevelClient
             ineligibleReason = null;
             return true;
         }
+
+        private static void LogWebCamCaptureAlignmentIfNeeded(Texture videoInput, VideoResolution publishTarget)
+        {
+            if (videoInput is not WebCamTexture webCam || !WebCamTextureUtils.HasInitializedResolution(webCam))
+            {
+                return;
+            }
+
+            if (webCam.width == (int)publishTarget.Width && webCam.height == (int)publishTarget.Height)
+            {
+                return;
+            }
+
+            Logs.WarningIfDebug(
+                $"[Publisher] Camera capture {webCam.width}x{webCam.height} " +
+                $"(requested {webCam.requestedWidth}x{webCam.requestedHeight}) " +
+                $"does not match publish target {publishTarget}.");
+        }
+
         private VideoStreamTrack CreatePublisherVideoTrackFromSceneCamera()
         {
             ReleasePublisherVideoTrackTexture();

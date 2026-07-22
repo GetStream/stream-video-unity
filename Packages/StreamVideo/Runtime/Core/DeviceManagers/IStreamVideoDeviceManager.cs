@@ -12,7 +12,7 @@ namespace StreamVideo.Core.DeviceManagers
         //StreamTodo: probably move all members from IDeviceManager here so we can have all comments specifically about video or audio
         
         /// <summary>
-        /// Select a camera device for video capturing.
+        /// Select a camera device for video capturing at the SDK publish max resolution (default 1080p).
         /// </summary>
         /// <param name="device">Camera device</param>
         /// <param name="enable">Enable this device (Start Capturing Video)</param>

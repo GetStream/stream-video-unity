@@ -125,6 +125,11 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
+        /// <summary>
+        /// Max resolution for published video. Used as the default camera capture request in <see cref="StreamVideoDeviceManager"/>.
+        /// </summary>
+        internal VideoResolution PublisherVideoMaxResolution => _publisherVideoSettings.MaxResolution;
+
         public CallingState CallState
         {
             get => _callState;

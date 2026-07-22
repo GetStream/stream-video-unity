@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using StreamVideo.Core.LowLevelClient;
+using StreamVideo.Core.Utils;
 using StreamVideo.Libs.Logs;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -38,7 +39,7 @@ namespace StreamVideo.Core.DeviceManagers
         }
 
         public void SelectDevice(CameraDeviceInfo device, bool enable, int requestedFPS = 30)
-            => SelectDevice(device, VideoResolution.Res_720p, enable, requestedFPS);
+            => SelectDevice(device, RtcSession.PublisherVideoMaxResolution, enable, requestedFPS);
 
         public void SelectDevice(CameraDeviceInfo device, VideoResolution requestedResolution, bool enable, int requestedFPS = 30)
         {
@@ -48,7 +49,7 @@ namespace StreamVideo.Core.DeviceManagers
             }
             
             var deviceChanged = SelectedDevice != device;
-            var newInstanceNeeded = IsNewInstanceNeeded(device, requestedResolution);
+            var newInstanceNeeded = IsNewInstanceNeeded(requestedResolution, requestedFPS);
             
             if (_activeCamera != null && _activeCamera.isPlaying)
             {
@@ -74,6 +75,7 @@ namespace StreamVideo.Core.DeviceManagers
                 //OnSetEnabled will not trigger because IsEnabled value didn't change
                 _activeCamera.Play();
                 Client.SetCameraInputSource(_activeCamera);
+                LogWebCamCaptureAlignmentIfReady();
             }
 
             SetEnabled(enable);
@@ -191,11 +193,30 @@ namespace StreamVideo.Core.DeviceManagers
         private WebCamTexture _activeCamera;
         private Stopwatch _stopwatch;
 
-        private bool IsNewInstanceNeeded(CameraDeviceInfo device, VideoResolution resolution, int fps = 30)
+        private bool IsNewInstanceNeeded(VideoResolution resolution, int fps)
         {
             return _activeCamera == null || _activeCamera.requestedWidth != resolution.Width ||
                    _activeCamera.requestedHeight != resolution.Height ||
-                   Mathf.Abs(_activeCamera.requestedFPS - fps) < 0.01f;
+                   Mathf.Abs(_activeCamera.requestedFPS - fps) > 0.01f;
+        }
+
+        private void LogWebCamCaptureAlignmentIfReady()
+        {
+            if (_activeCamera == null || !WebCamTextureUtils.HasInitializedResolution(_activeCamera))
+            {
+                return;
+            }
+
+            var publishTarget = RtcSession.PublisherVideoMaxResolution;
+            if (_activeCamera.width == (int)publishTarget.Width && _activeCamera.height == (int)publishTarget.Height)
+            {
+                return;
+            }
+
+            Logs.WarningIfDebug(
+                $"[VideoDeviceManager] Camera capture {_activeCamera.width}x{_activeCamera.height} " +
+                $"(requested {_activeCamera.requestedWidth}x{_activeCamera.requestedHeight}) " +
+                $"does not match publish target {publishTarget}. Publisher may use RenderTexture + Blit fallback.");
         }
         
         private static bool AreFramesEqual(IReadOnlyList<Color> frame1, IReadOnlyList<Color> frame2)
@@ -228,6 +249,7 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 _activeCamera.Play();
                 Client.SetCameraInputSource(_activeCamera);
+                LogWebCamCaptureAlignmentIfReady();
             }
 
             if (!isEnabled)
@@ -256,6 +278,10 @@ namespace StreamVideo.Core.DeviceManagers
             IsEnabledChanged?.Invoke(isEnabled);
         }
         
-        private void OnPublisherVideoTrackChanged() => UpdateVideoHandling();
+        private void OnPublisherVideoTrackChanged()
+        {
+            UpdateVideoHandling();
+            LogWebCamCaptureAlignmentIfReady();
+        }
     }
 }

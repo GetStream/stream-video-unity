@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using StreamVideo.Core;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Utils;
@@ -13,7 +12,6 @@ namespace StreamVideo.ExampleProject.UI
     {
         public event Action<WebCamTexture> LocalCameraChanged;
 
-        public VideoResolution SenderVideoResolution => new VideoResolution(_senderVideoWidth, _senderVideoHeight);
         public int SenderVideoFps => _senderVideoFps;
 
         protected void Awake()
@@ -73,12 +71,6 @@ namespace StreamVideo.ExampleProject.UI
         private StreamVideoManager _videoManager;
 
         [SerializeField]
-        private int _senderVideoWidth = 1920;
-
-        [SerializeField]
-        private int _senderVideoHeight = 1080;
-
-        [SerializeField]
         private int _senderVideoFps = 30;
 
         [SerializeField]
@@ -133,7 +125,7 @@ namespace StreamVideo.ExampleProject.UI
                 var isWorking = await _videoManager.Client.VideoDeviceManager.TestDeviceAsync(device);
                 if (isWorking)
                 {
-                    _videoManager.Client.VideoDeviceManager.SelectDevice(device, SenderVideoResolution, enable: false, _senderVideoFps);
+                    _videoManager.Client.VideoDeviceManager.SelectDevice(device, enable: false, _senderVideoFps);
                     return;
                 }
             }
@@ -142,7 +134,7 @@ namespace StreamVideo.ExampleProject.UI
             var workingDevice = await _videoManager.Client.VideoDeviceManager.TryFindFirstWorkingDeviceAsync();
             if (workingDevice.HasValue)
             {
-                _videoManager.Client.VideoDeviceManager.SelectDevice(workingDevice.Value, SenderVideoResolution, enable: false, _senderVideoFps);
+                _videoManager.Client.VideoDeviceManager.SelectDevice(workingDevice.Value, enable: false, _senderVideoFps);
                 return;
             }
 
@@ -156,7 +148,7 @@ namespace StreamVideo.ExampleProject.UI
                 return;
             }
 
-            _videoManager.Client.VideoDeviceManager.SelectDevice(firstDevice, SenderVideoResolution, enable: false, _senderVideoFps);
+            _videoManager.Client.VideoDeviceManager.SelectDevice(firstDevice, enable: false, _senderVideoFps);
         }
 
         private void SelectFirstMicrophone()

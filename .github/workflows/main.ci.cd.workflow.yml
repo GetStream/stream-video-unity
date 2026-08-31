@@ -35,7 +35,7 @@ jobs:
       # STANDARD_2_x are still exercised.
       #
       # Video-specific constraints vs stream-chat-unity:
-      # - Floor is 2020.3 (package.json + WebRTC 3.0.0-pre.x dropped 2019.4).
+      # - Floor is 2021.3 (package.json). Vendored Google.Protobuf needs C# 9.
       # - compiler is always il2cpp (Unity WebRTC requires it; no Mono).
       # - iOS stays off: ubuntu/ios fails Unity's build post-process cp (PBE-5316).
       # - testMode is `all` because this repo has both Editor and Runtime tests.
@@ -44,13 +44,12 @@ jobs:
       # dataset_index must be unique per row and within 0-15 (test data set count).
       matrix:
         include:
-          - { unity_version: "2020.3", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 0, image: "unityci/editor:ubuntu-2020.3.40f1-android-3.1.0" }
-          - { unity_version: "2021.3", target_platform: android, dotnet_version: STANDARD_2_x, compiler: il2cpp, dataset_index: 1, image: "unityci/editor:ubuntu-2021.3.36f1-android-3.1.0" }
-          - { unity_version: "2022.3", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 2, image: "unityci/editor:ubuntu-2022.3.62f2-android-3.2.2" }
-          - { unity_version: "2023.2", target_platform: android, dotnet_version: STANDARD_2_x, compiler: il2cpp, dataset_index: 3, image: "unityci/editor:ubuntu-2023.2.20f1-android-3.2.2" }
-          - { unity_version: "6000.0", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 4, image: "unityci/editor:ubuntu-6000.0.63f1-android-3.2.2" }
-          - { unity_version: "6000.1", target_platform: android, dotnet_version: STANDARD_2_x, compiler: il2cpp, dataset_index: 5, image: "unityci/editor:ubuntu-6000.1.17f1-android-3.2.2" }
-          - { unity_version: "6000.2", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 6, image: "unityci/editor:ubuntu-6000.2.12f1-android-3.2.2" }
+          - { unity_version: "2021.3", target_platform: android, dotnet_version: STANDARD_2_x, compiler: il2cpp, dataset_index: 0, image: "unityci/editor:ubuntu-2021.3.36f1-android-3.1.0" }
+          - { unity_version: "2022.3", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 1, image: "unityci/editor:ubuntu-2022.3.62f2-android-3.2.2" }
+          - { unity_version: "2023.2", target_platform: android, dotnet_version: STANDARD_2_x, compiler: il2cpp, dataset_index: 2, image: "unityci/editor:ubuntu-2023.2.20f1-android-3.2.2" }
+          - { unity_version: "6000.0", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 3, image: "unityci/editor:ubuntu-6000.0.63f1-android-3.2.2" }
+          - { unity_version: "6000.1", target_platform: android, dotnet_version: STANDARD_2_x, compiler: il2cpp, dataset_index: 4, image: "unityci/editor:ubuntu-6000.1.17f1-android-3.2.2" }
+          - { unity_version: "6000.2", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 5, image: "unityci/editor:ubuntu-6000.2.12f1-android-3.2.2" }
 
     steps:
       - name: Checkout repository
@@ -114,16 +113,6 @@ jobs:
 
           echo "RUNNER_ID=$RUNNER_ID" >> $GITHUB_ENV
           echo "BUILD_NAME=$BUILD_NAME" >> $GITHUB_ENV
-
-      # Host Packages/manifest.json pins packages that do not resolve on 2020.3
-      # (ai.navigation 1.1, timeline 1.7, visualscripting 1.9). Swap in the same
-      # test/sample dependencies without those. Overwrites a tracked file, so every
-      # Unity step below needs allowDirtyBuild.
-      - name: Install 2020.3 Packages/manifest.json
-        if: matrix.unity_version == '2020.3'
-        run: |
-          cp .github/workflows/manifests/build-2020.3.manifest.json Packages/manifest.json
-          rm -f Packages/packages-lock.json
 
       - name: Enable Tests
         uses: game-ci/unity-builder@v4

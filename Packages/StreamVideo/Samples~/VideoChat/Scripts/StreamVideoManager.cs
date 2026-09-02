@@ -316,6 +316,11 @@ namespace StreamVideo.ExampleProject
             _activeCall = call;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
+            if (call.IsBackgroundFilterSupported)
+            {
+                call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Heavy));
+            }
+
             CallStarted?.Invoke(call);
         }
 

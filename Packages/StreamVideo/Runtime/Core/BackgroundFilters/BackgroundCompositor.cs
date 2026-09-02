@@ -230,7 +230,8 @@ namespace StreamVideo.Core.BackgroundFilters
 
             ReleaseRt(ref current);
 
-            var rt = new RenderTexture(width, height, 0, RenderTextureFormat.R8)
+            // Linear so Unity requests R8_UNorm. Default R8 is sRGB, which GLES often rejects.
+            var rt = new RenderTexture(width, height, 0, RenderTextureFormat.R8, RenderTextureReadWrite.Linear)
             {
                 name = name,
                 filterMode = FilterMode.Bilinear,

@@ -100,18 +100,30 @@ namespace StreamVideo.ExampleProject.UI.Screens
             var current = call.ActiveBackgroundFilter;
             if (current == null)
             {
+                BackgroundFilter.DebugView = 0;
                 call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Light));
             }
             else if (current.Intensity == BlurIntensity.Light)
             {
+                BackgroundFilter.DebugView = 0;
                 call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Medium));
             }
             else if (current.Intensity == BlurIntensity.Medium)
             {
+                BackgroundFilter.DebugView = 0;
                 call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Heavy));
+            }
+            else if (BackgroundFilter.DebugView == 0)
+            {
+                BackgroundFilter.DebugView = 1;
+            }
+            else if (BackgroundFilter.DebugView == 1)
+            {
+                BackgroundFilter.DebugView = 2;
             }
             else
             {
+                BackgroundFilter.DebugView = 0;
                 call.SetBackgroundFilter(null);
             }
 
@@ -135,7 +147,11 @@ namespace StreamVideo.ExampleProject.UI.Screens
             var current = call.ActiveBackgroundFilter;
             _backgroundFilterLabel.text = current == null
                 ? "BG Blur: Off"
-                : "BG Blur: " + current.Intensity;
+                : BackgroundFilter.DebugView == 1
+                    ? "BG Blur: Mask"
+                    : BackgroundFilter.DebugView == 2
+                        ? "BG Blur: Overlay"
+                        : "BG Blur: " + current.Intensity;
         }
     }
 }

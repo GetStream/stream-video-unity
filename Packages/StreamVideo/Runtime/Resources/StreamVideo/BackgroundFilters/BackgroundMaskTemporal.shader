@@ -44,8 +44,9 @@ Shader "Hidden/StreamVideo/BackgroundMaskTemporal"
             {
                 float newMask = tex2D(_MainTex, i.uv).r;
                 float prevMask = tex2D(_PrevMask, i.uv).r;
-                float alpha = saturate(_Smoothing * newMask);
-                float mask = lerp(prevMask, newMask, alpha);
+                // Symmetric EMA so background pixels decay. The previous formula used
+                // alpha = smoothing * newMask, which froze old person pixels at 0.
+                float mask = lerp(prevMask, newMask, _Smoothing);
                 return float4(mask, mask, mask, 1);
             }
             ENDCG

@@ -13,7 +13,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
         public int SegmentIntervalFrames { get; private set; } = DefaultSegmentIntervalFrames;
 
-        public BlurIntensity EffectiveIntensity { get; private set; } = BlurIntensity.Medium;
+        public BlurIntensity EffectiveIntensity { get; private set; } = BlurIntensity.Heavy;
 
         public bool ShouldDisable { get; private set; }
 
@@ -79,7 +79,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
         private const int MaxQualityTier = 3;
 
-        private BlurIntensity _requestedIntensity = BlurIntensity.Medium;
+        private BlurIntensity _requestedIntensity = BlurIntensity.Heavy;
         private float _lowRatioSeconds;
         private float _highRatioSeconds;
 

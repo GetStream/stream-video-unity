@@ -7,6 +7,7 @@ Shader "Hidden/StreamVideo/BackgroundMaskBlend"
         _Mask ("Mask", 2D) = "black" {}
         _SmoothMin ("Smooth Min", Range(0, 1)) = 0.6
         _SmoothMax ("Smooth Max", Range(0, 1)) = 0.9
+        _DebugMode ("Debug Mode", Float) = 0
     }
     SubShader
     {
@@ -23,6 +24,7 @@ Shader "Hidden/StreamVideo/BackgroundMaskBlend"
             sampler2D _Mask;
             float _SmoothMin;
             float _SmoothMax;
+            float _DebugMode;
 
             struct appdata
             {
@@ -50,7 +52,20 @@ Shader "Hidden/StreamVideo/BackgroundMaskBlend"
                 float4 blurred = tex2D(_Blurred, i.uv);
                 float mask = tex2D(_Mask, i.uv).r;
                 float person = smoothstep(_SmoothMin, _SmoothMax, mask);
-                return lerp(blurred, original, person);
+                float4 color = lerp(blurred, original, person);
+
+                if (_DebugMode > 1.5)
+                {
+                    float3 debug = lerp(float3(1, 0, 0), float3(0, 1, 0), person);
+                    return float4(lerp(color.rgb, debug, 0.5), 1);
+                }
+
+                if (_DebugMode > 0.5)
+                {
+                    return float4(mask, mask, mask, 1);
+                }
+
+                return color;
             }
             ENDCG
         }

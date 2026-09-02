@@ -4,13 +4,15 @@ using Object = UnityEngine.Object;
 namespace StreamVideo.Core.BackgroundFilters
 {
     /// <summary>
-    /// GPU composite: temporal mask EMA, half-res separable blur, mask blend.
+    /// GPU composite: temporal mask EMA, downscaled separable blur, mask blend.
+    /// Light/Medium/Heavy all blur at half-res. Person pixels are excluded from the
+    /// blur kernel so skin/hair does not bleed into the background.
     /// First pass is a default blit so Android OES WebCamTextures become a regular RT.
     /// </summary>
     internal sealed class BackgroundCompositor : IVideoFilter
     {
         public const float DefaultSmoothing = 0.8f;
-        public const float DefaultSmoothstepMin = 0.6f;
+        public const float DefaultSmoothstepMin = 0.7f;
         public const float DefaultSmoothstepMax = 0.9f;
 
         public bool IsReady => _blendMaterial != null;
@@ -52,15 +54,17 @@ namespace StreamVideo.Core.BackgroundFilters
             else
             {
                 Graphics.Blit(Texture2D.blackTexture, _maskRt);
+                Graphics.Blit(Texture2D.blackTexture, _prevMaskRt);
             }
 
-            Graphics.Blit(_sourceRt, _halfRt);
+            Graphics.Blit(_sourceRt, _blurRt);
 
             var iterations = GetBlurIterations(_intensity);
             var spread = GetBlurSpread(_intensity);
-            var blurSource = _halfRt;
+            var blurSource = _blurRt;
             var blurDest = _blurPingRt;
 
+            _blurMaterial.SetTexture(MaskId, _maskRt);
             for (var i = 0; i < iterations; i++)
             {
                 _blurMaterial.SetFloat(SpreadId, spread);
@@ -75,13 +79,14 @@ namespace StreamVideo.Core.BackgroundFilters
             _blendMaterial.SetTexture(MaskId, _maskRt);
             _blendMaterial.SetFloat(SmoothMinId, DefaultSmoothstepMin);
             _blendMaterial.SetFloat(SmoothMaxId, DefaultSmoothstepMax);
+            _blendMaterial.SetFloat(DebugModeId, BackgroundFilter.DebugView);
             Graphics.Blit(_sourceRt, destination, _blendMaterial);
         }
 
         public void Release()
         {
             ReleaseRt(ref _sourceRt);
-            ReleaseRt(ref _halfRt);
+            ReleaseRt(ref _blurRt);
             ReleaseRt(ref _blurPingRt);
             ReleaseRt(ref _maskRt);
             ReleaseRt(ref _prevMaskRt);
@@ -99,12 +104,13 @@ namespace StreamVideo.Core.BackgroundFilters
         private static readonly int MaskId = Shader.PropertyToID("_Mask");
         private static readonly int SmoothMinId = Shader.PropertyToID("_SmoothMin");
         private static readonly int SmoothMaxId = Shader.PropertyToID("_SmoothMax");
+        private static readonly int DebugModeId = Shader.PropertyToID("_DebugMode");
 
         private Texture _mask;
-        private BlurIntensity _intensity = BlurIntensity.Medium;
+        private BlurIntensity _intensity = BlurIntensity.Heavy;
 
         private RenderTexture _sourceRt;
-        private RenderTexture _halfRt;
+        private RenderTexture _blurRt;
         private RenderTexture _blurPingRt;
         private RenderTexture _maskRt;
         private RenderTexture _prevMaskRt;
@@ -120,7 +126,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 case BlurIntensity.Light:
                     return 1;
                 case BlurIntensity.Heavy:
-                    return 3;
+                    return 4;
                 default:
                     return 2;
             }
@@ -133,7 +139,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 case BlurIntensity.Light:
                     return 1f;
                 case BlurIntensity.Heavy:
-                    return 1.6f;
+                    return 2f;
                 default:
                     return 1.25f;
             }
@@ -143,12 +149,12 @@ namespace StreamVideo.Core.BackgroundFilters
         {
             EnsureMaterials();
 
-            var halfW = Mathf.Max(2, width / 2);
-            var halfH = Mathf.Max(2, height / 2);
+            var blurW = Mathf.Max(2, width / 2);
+            var blurH = Mathf.Max(2, height / 2);
 
             _sourceRt = EnsureColorRt(_sourceRt, width, height, format, "StreamBgFilterSource");
-            _halfRt = EnsureColorRt(_halfRt, halfW, halfH, format, "StreamBgFilterHalf");
-            _blurPingRt = EnsureColorRt(_blurPingRt, halfW, halfH, format, "StreamBgFilterBlurPing");
+            _blurRt = EnsureColorRt(_blurRt, blurW, blurH, format, "StreamBgFilterBlur");
+            _blurPingRt = EnsureColorRt(_blurPingRt, blurW, blurH, format, "StreamBgFilterBlurPing");
             _maskRt = EnsureMaskRt(_maskRt, width, height, "StreamBgFilterMask");
             _prevMaskRt = EnsureMaskRt(_prevMaskRt, width, height, "StreamBgFilterPrevMask");
         }
@@ -228,6 +234,10 @@ namespace StreamVideo.Core.BackgroundFilters
                 wrapMode = TextureWrapMode.Clamp,
             };
             rt.Create();
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            GL.Clear(true, true, Color.black);
+            RenderTexture.active = prev;
             return rt;
         }
 

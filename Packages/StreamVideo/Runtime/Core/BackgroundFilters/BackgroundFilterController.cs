@@ -45,6 +45,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
             if (filter == null)
             {
+                BackgroundFilter.DebugView = 0;
                 CameraOrientationDebug.Flush(_logs);
                 CameraOrientationDebug.Log(_logs, "controller.setFilter", "filter=null");
                 _compositor.SetMask(null);
@@ -52,7 +53,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 ReleasePreview();
                 if (!_scheduler.ShouldDisable)
                 {
-                    _scheduler.Reset(BlurIntensity.Medium);
+                    _scheduler.Reset(BlurIntensity.Heavy);
                 }
 
                 PublishPerformanceIfChanged();
@@ -153,7 +154,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
         private const float TargetFrameSeconds = 1f / 30f;
 
-        private BlurIntensity _requestedIntensity = BlurIntensity.Medium;
+        private BlurIntensity _requestedIntensity = BlurIntensity.Heavy;
         private BackgroundFilterPerformance _lastPublishedPerformance;
         private Texture _previewTexture;
         private int _frameIndex;
@@ -172,6 +173,8 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " | " + CameraOrientationDebug.DescribeTexture("dest", destination)
                 + " | " + CameraOrientationDebug.DescribeTexture("mask", mask)
                 + " | filter=" + (ActiveFilter == null ? "null" : ActiveFilter.Kind + "/" + ActiveFilter.Intensity)
+                + " effectiveIntensity=" + _scheduler.EffectiveIntensity
+                + " debugView=" + BackgroundFilter.DebugView
                 + " hasMask=" + _segmenter.HasMask
                 + " paused=" + _paused
                 + " compositing=" + IsCompositing

@@ -18,12 +18,12 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
-        public void When_default_state_expect_segment_every_second_frame()
+        public void When_default_state_expect_segment_every_frame()
         {
             Assert.That(_scheduler.ShouldSegment(0), Is.True,
                 "Frame 0 should request segmentation.");
-            Assert.That(_scheduler.ShouldSegment(1), Is.False,
-                "Frame 1 should reuse the last mask.");
+            Assert.That(_scheduler.ShouldSegment(1), Is.True,
+                "Frame 1 should request segmentation; native busy flags throttle.");
             Assert.That(_scheduler.ShouldSegment(2), Is.True,
                 "Frame 2 should request segmentation.");
         }
@@ -33,8 +33,8 @@ namespace StreamVideo.Tests.Editor
         {
             _scheduler.RecordFpsRatio(0.5f, FilterFrameScheduler.DegradeHoldSeconds);
 
-            Assert.That(_scheduler.SegmentIntervalFrames, Is.EqualTo(3),
-                "Sustained low FPS should drop segmentation to every 3rd frame.");
+            Assert.That(_scheduler.SegmentIntervalFrames, Is.EqualTo(2),
+                "Sustained low FPS should drop segmentation to every 2nd frame.");
             Assert.That(_scheduler.Performance.Degraded, Is.True,
                 "Sustained low FPS should mark the filter as degraded.");
             Assert.That(_scheduler.ShouldDisable, Is.False,
@@ -62,7 +62,7 @@ namespace StreamVideo.Tests.Editor
         public void When_fps_ratio_recovers_expect_quality_restored()
         {
             _scheduler.RecordFpsRatio(0.5f, FilterFrameScheduler.DegradeHoldSeconds);
-            Assert.That(_scheduler.SegmentIntervalFrames, Is.EqualTo(3),
+            Assert.That(_scheduler.SegmentIntervalFrames, Is.EqualTo(2),
                 "Precondition: scheduler should already be degraded.");
 
             _scheduler.RecordFpsRatio(0.95f, FilterFrameScheduler.DegradeHoldSeconds);

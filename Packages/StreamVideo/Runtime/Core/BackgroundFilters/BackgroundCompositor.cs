@@ -11,7 +11,7 @@ namespace StreamVideo.Core.BackgroundFilters
     /// </summary>
     internal sealed class BackgroundCompositor : IVideoFilter
     {
-        public const float DefaultSmoothing = 0.8f;
+        public const float DefaultSmoothing = 0.9f;
         public const float DefaultSmoothstepMin = 0.45f;
         public const float DefaultSmoothstepMax = 0.8f;
         public const float DefaultMaskExpandPixels = 3f;

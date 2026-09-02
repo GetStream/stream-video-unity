@@ -1,12 +1,14 @@
 namespace StreamVideo.Core.BackgroundFilters
 {
     /// <summary>
-    /// Segments every N frames and degrades on sustained low processed/source FPS.
+    /// Requests a mask whenever the previous request is done. Native busy flags are the
+    /// real throttle; the interval is only a floor (1 = every Unity frame).
+    /// Degrades on sustained low processed/source FPS.
     /// Hysteresis: degrade below 0.75, recover above 0.85.
     /// </summary>
     internal sealed class FilterFrameScheduler
     {
-        public const int DefaultSegmentIntervalFrames = 2;
+        public const int DefaultSegmentIntervalFrames = 1;
         public const float DegradeRatioThreshold = 0.75f;
         public const float RecoverRatioThreshold = 0.85f;
         public const float DegradeHoldSeconds = 3f;
@@ -116,7 +118,7 @@ namespace StreamVideo.Core.BackgroundFilters
                     Performance = new BackgroundFilterPerformance(false, BackgroundFilterDegradeReason.None);
                     break;
                 case 1:
-                    SegmentIntervalFrames = 3;
+                    SegmentIntervalFrames = 2;
                     EffectiveIntensity = _requestedIntensity;
                     ShouldDisable = false;
                     Performance = new BackgroundFilterPerformance(true, BackgroundFilterDegradeReason.FrameDrop);

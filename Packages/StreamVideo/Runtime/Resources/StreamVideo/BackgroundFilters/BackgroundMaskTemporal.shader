@@ -4,7 +4,7 @@ Shader "Hidden/StreamVideo/BackgroundMaskTemporal"
     {
         _MainTex ("New Mask", 2D) = "white" {}
         _PrevMask ("Previous Mask", 2D) = "black" {}
-        _Smoothing ("Smoothing", Range(0, 1)) = 0.8
+        _Smoothing ("Smoothing", Range(0, 1)) = 0.9
     }
     SubShader
     {

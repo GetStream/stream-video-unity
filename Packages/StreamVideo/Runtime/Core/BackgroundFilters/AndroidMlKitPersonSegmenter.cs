@@ -10,6 +10,8 @@ namespace StreamVideo.Core.BackgroundFilters
 {
     /// <summary>
     /// Android ML Kit selfie segmenter. Async process, last-mask reuse, downscaled input via AsyncGPUReadback.
+    /// GPU readback is pipelined with ML Kit: a new camera frame is read while the previous
+    /// <c>processAsync</c> is in flight, then submitted as soon as the segmenter is free.
     /// Does not block <c>OnUpdate</c> and does not ReadPixels the publish texture.
     /// Input is scaled so the short side is <see cref="MinMaskInputSize"/> (ML Kit's 256px floor) while
     /// keeping the camera aspect. Rotation is not applied; mask and composite stay in WebCamTexture space.
@@ -72,11 +74,15 @@ namespace StreamVideo.Core.BackgroundFilters
             }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-            if (_native == null || _native.Call<bool>("isBusy"))
+            if (_native == null)
             {
                 return;
             }
 
+            // Read back the next camera frame even while ML Kit is busy. The latest
+            // RGBA is queued and submitted as soon as processAsync is free, so mask
+            // latency is max(readback, ML Kit) instead of the sum. That is what
+            // falls apart when the camera moves.
             EnsureDownscaleRt(source);
             Graphics.Blit(source, _downscaleRt);
             _lastSource = source;
@@ -97,6 +103,9 @@ namespace StreamVideo.Core.BackgroundFilters
         public void Pause()
         {
             _paused = true;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            _hasPendingRgba = false;
+#endif
         }
 
         public void Resume()
@@ -128,6 +137,7 @@ namespace StreamVideo.Core.BackgroundFilters
             }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
+            _hasPendingRgba = false;
             if (_native != null)
             {
                 try
@@ -156,12 +166,12 @@ namespace StreamVideo.Core.BackgroundFilters
             var width = _native.Call<int>("getMaskWidth");
             var height = _native.Call<int>("getMaskHeight");
             var maskBytes = _native.Call<sbyte[]>("takeMaskIfNew");
-            if (maskBytes == null || width <= 0 || height <= 0)
+            if (maskBytes != null && width > 0 && height > 0)
             {
-                return;
+                UploadMask(ToByteArray(maskBytes), width, height);
             }
 
-            UploadMask(ToByteArray(maskBytes), width, height);
+            TrySubmitPending();
 #endif
         }
 
@@ -177,6 +187,10 @@ namespace StreamVideo.Core.BackgroundFilters
 #if UNITY_ANDROID && !UNITY_EDITOR
         private Texture2D _syncReadbackTexture;
         private sbyte[] _rgbaSbytes;
+        private byte[] _pendingRgba;
+        private int _pendingWidth;
+        private int _pendingHeight;
+        private bool _hasPendingRgba;
 #endif
 
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -226,7 +240,33 @@ namespace StreamVideo.Core.BackgroundFilters
             }
 
             var data = request.GetData<byte>();
-            SubmitRgba(data.ToArray(), _downscaleRt.width, _downscaleRt.height);
+            var length = data.Length;
+            if (_pendingRgba == null || _pendingRgba.Length != length)
+            {
+                _pendingRgba = new byte[length];
+            }
+
+            data.CopyTo(_pendingRgba);
+            _pendingWidth = request.width;
+            _pendingHeight = request.height;
+            _hasPendingRgba = true;
+            TrySubmitPending();
+        }
+
+        private void TrySubmitPending()
+        {
+            if (!_hasPendingRgba || _paused || _native == null)
+            {
+                return;
+            }
+
+            if (_native.Call<bool>("isBusy"))
+            {
+                return;
+            }
+
+            SubmitRgba(_pendingRgba, _pendingWidth, _pendingHeight);
+            _hasPendingRgba = false;
         }
 
         private void ReadbackSynchronouslyAndProcess()

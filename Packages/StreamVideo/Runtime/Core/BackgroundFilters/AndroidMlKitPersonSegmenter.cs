@@ -9,12 +9,14 @@ using Object = UnityEngine.Object;
 namespace StreamVideo.Core.BackgroundFilters
 {
     /// <summary>
-    /// Android ML Kit selfie segmenter. Async process, last-mask reuse, ~256px input via AsyncGPUReadback.
+    /// Android ML Kit selfie segmenter. Async process, last-mask reuse, downscaled input via AsyncGPUReadback.
     /// Does not block <c>OnUpdate</c> and does not ReadPixels the publish texture.
+    /// Input is scaled so the short side is <see cref="MinMaskInputSize"/> (ML Kit's 256px floor) while
+    /// keeping the camera aspect. Rotation is not applied; mask and composite stay in WebCamTexture space.
     /// </summary>
     internal sealed class AndroidMlKitPersonSegmenter : IPersonSegmenter
     {
-        public const int MaxMaskInputSize = 256;
+        public const int MinMaskInputSize = 256;
 
         public static bool TryCreate(ILogs logs, out AndroidMlKitPersonSegmenter segmenter)
         {
@@ -262,7 +264,7 @@ namespace StreamVideo.Core.BackgroundFilters
             var webcamRot = webcam != null ? webcam.videoRotationAngle : -1;
             CameraOrientationDebug.Log(_logs, "mlkit.submit",
                 "rgba=" + width + "x" + height + " bytes=" + rgba.Length
-                + " mlkitRotationDegrees=0"
+                + " mlkitRotationDegrees=0 (webcam space)"
                 + " webcamRot=" + webcamRot
                 + " mirrored=" + (webcam != null && webcam.videoVerticallyMirrored)
                 + " gfx=" + SystemInfo.graphicsDeviceType
@@ -378,22 +380,22 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " | " + (webcam != null
                     ? CameraOrientationDebug.DescribeWebCam(webcam)
                     : "sourceIsWebCam=false")
-                + " blit=Graphics.Blit(source, downscale) no rotation/mirror");
+                + " blit=Graphics.Blit(source, downscale) no pixel rotation");
         }
 
         private static void GetMaskInputSize(int sourceWidth, int sourceHeight, out int width, out int height)
         {
             sourceWidth = Mathf.Max(2, sourceWidth);
             sourceHeight = Mathf.Max(2, sourceHeight);
-            var longSide = Mathf.Max(sourceWidth, sourceHeight);
-            if (longSide <= MaxMaskInputSize)
+            var shortSide = Mathf.Min(sourceWidth, sourceHeight);
+            if (shortSide <= MinMaskInputSize)
             {
                 width = sourceWidth;
                 height = sourceHeight;
                 return;
             }
 
-            var scale = MaxMaskInputSize / (float)longSide;
+            var scale = MinMaskInputSize / (float)shortSide;
             width = Mathf.Max(2, Mathf.RoundToInt(sourceWidth * scale));
             height = Mathf.Max(2, Mathf.RoundToInt(sourceHeight * scale));
         }

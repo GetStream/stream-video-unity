@@ -175,7 +175,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " hasMask=" + _segmenter.HasMask
                 + " paused=" + _paused
                 + " compositing=" + IsCompositing
-                + " mlkitRotationDegrees=0 (not applied)";
+                + " mlkitRotationDegrees=0 (webcam space)";
             CameraOrientationDebug.Log(_logs, checkpoint, payload);
         }
 

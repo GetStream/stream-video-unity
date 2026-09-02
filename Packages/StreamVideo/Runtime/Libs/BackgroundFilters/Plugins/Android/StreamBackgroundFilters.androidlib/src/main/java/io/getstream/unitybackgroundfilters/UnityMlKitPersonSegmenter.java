@@ -43,9 +43,11 @@ public class UnityMlKitPersonSegmenter {
     public boolean create() {
         destroy();
         try {
+            // Do not enableRawSizeMask(): that returns the 256x256 model tensor, which we were
+            // stretching onto the 16:9 camera frame. Let ML Kit rescale the mask to the bitmap size
+            // so composite UVs match. Keep InputImage rotation at 0 so the mask stays in webcam UV space.
             SelfieSegmenterOptions options = new SelfieSegmenterOptions.Builder()
                     .setDetectorMode(SelfieSegmenterOptions.STREAM_MODE)
-                    .enableRawSizeMask()
                     .build();
             segmenter = Segmentation.getClient(options);
             return true;
@@ -77,8 +79,10 @@ public class UnityMlKitPersonSegmenter {
         try {
             Bitmap bitmap = getBitmap(width, height);
             copyRgbaToBitmap(rgba, width, height, bitmap);
+            // Do not pass WebCamTexture.videoRotationAngle here: InputImage rotation remaps/swaps
+            // the mask, which misaligns compositor UVs. Display rotation is applied in the UI.
             debug("submit", "processAsync bitmap=" + width + "x" + height
-                    + " mlkitRotationDegrees=0 rgbaBytes=" + rgba.length);
+                    + " mlkitRotationDegrees=0 (webcam space) rgbaBytes=" + rgba.length);
             InputImage image = InputImage.fromBitmap(bitmap, 0);
             segmenter.process(image)
                     .addOnSuccessListener(this::onMaskSuccess)

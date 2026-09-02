@@ -105,6 +105,7 @@ namespace StreamVideo.Core.BackgroundFilters
         public void Dispose()
         {
             _paused = true;
+            CameraOrientationDebug.Flush(_logs);
 
             if (_maskTexture != null)
             {
@@ -173,7 +174,7 @@ namespace StreamVideo.Core.BackgroundFilters
         private Texture _lastSource;
 #if UNITY_ANDROID && !UNITY_EDITOR
         private Texture2D _syncReadbackTexture;
-        private byte[] _rgbaBuffer;
+        private sbyte[] _rgbaSbytes;
 #endif
 
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -257,7 +258,6 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            _rgbaBuffer = rgba;
             var webcam = _lastSource as WebCamTexture;
             var webcamRot = webcam != null ? webcam.videoRotationAngle : -1;
             CameraOrientationDebug.Log(_logs, "mlkit.submit",
@@ -267,7 +267,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " mirrored=" + (webcam != null && webcam.videoVerticallyMirrored)
                 + " gfx=" + SystemInfo.graphicsDeviceType
                 + " asyncReadback=" + SystemInfo.supportsAsyncGPUReadback);
-            _native.Call("processAsync", _rgbaBuffer, width, height);
+            _native.Call("processAsync", ToSByteArray(rgba), width, height);
         }
 
         private void UploadMask(byte[] mask, int width, int height)
@@ -309,12 +309,12 @@ namespace StreamVideo.Core.BackgroundFilters
 
             var inputW = _downscaleRt != null ? _downscaleRt.width : 0;
             var inputH = _downscaleRt != null ? _downscaleRt.height : 0;
-            CameraOrientationDebug.Log(_logs, "mlkit.mask",
+            CameraOrientationDebug.RecordMask(_logs,
                 "mask=" + width + "x" + height
                 + " input=" + inputW + "x" + inputH
                 + " aspectMatch=" + (width * inputH == height * inputW)
-                + " coverage=" + (hits / (float)Mathf.Max(1, needed)).ToString("0.000")
-                + " | " + CameraOrientationDebug.DescribeWebCam(_lastSource as WebCamTexture));
+                + " | " + CameraOrientationDebug.DescribeWebCam(_lastSource as WebCamTexture),
+                hits / (float)Mathf.Max(1, needed));
 #endif
         }
 
@@ -329,6 +329,23 @@ namespace StreamVideo.Core.BackgroundFilters
             Buffer.BlockCopy(source, 0, dest, 0, source.Length);
             return dest;
         }
+
+        private sbyte[] ToSByteArray(byte[] source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            if (_rgbaSbytes == null || _rgbaSbytes.Length < source.Length)
+            {
+                _rgbaSbytes = new sbyte[source.Length];
+            }
+
+            Buffer.BlockCopy(source, 0, _rgbaSbytes, 0, source.Length);
+            return _rgbaSbytes;
+        }
+
         private void EnsureDownscaleRt(Texture source)
         {
             GetMaskInputSize(source.width, source.height, out var width, out var height);

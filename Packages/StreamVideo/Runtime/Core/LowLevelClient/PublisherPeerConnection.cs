@@ -1071,12 +1071,13 @@ namespace StreamVideo.Core.LowLevelClient
         {
             var webcam = _mediaInputProvider.VideoInput;
             var filter = _backgroundFilterController != null ? _backgroundFilterController.ActiveFilter : null;
+            var compositing = _backgroundFilterController != null && _backgroundFilterController.IsCompositing;
             CameraOrientationDebug.Log(Logs, "publisher.blit",
                 CameraOrientationDebug.DescribeScreen()
                 + " | " + CameraOrientationDebug.DescribeWebCam(webcam)
                 + " | " + CameraOrientationDebug.DescribeTexture("publisherRT", _publisherVideoTrackTexture)
                 + " | filter=" + (filter == null ? "off" : filter.Kind + "/" + filter.Intensity)
-                + " blit=Graphics.Blit(webcam, publisherRT) no rotation"
+                + " path=" + (compositing ? "compositor" : "Graphics.Blit")
                 + " | encodeCopy=VerticalFlipCopy");
         }
 

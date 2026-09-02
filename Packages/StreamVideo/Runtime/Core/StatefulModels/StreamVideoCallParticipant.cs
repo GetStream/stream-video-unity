@@ -443,6 +443,10 @@ namespace StreamVideo.Core.StatefulModels
 
             var angle = videoInput.videoRotationAngle;
             var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);
+            if (hasPrevAngle && Mathf.Abs(angle - prevAngle) <= 0)
+            {
+                return;
+            }
 
             CameraOrientationDebug.Log(Logs, "publisher.customDataAngle",
                 "publishingAngle=" + angle
@@ -450,11 +454,8 @@ namespace StreamVideo.Core.StatefulModels
                 + " | " + CameraOrientationDebug.DescribeWebCam(videoInput)
                 + " | " + CameraOrientationDebug.DescribeScreen());
 
-            if (!hasPrevAngle || Mathf.Abs(angle - prevAngle) > 0)
-            {
-                //StreamTodo: there can be potentially multiple video tracks so best to store this by track ID
-                CustomData.SetAsync(VideoRotationAngleKey, angle);
-            }
+            //StreamTodo: there can be potentially multiple video tracks so best to store this by track ID
+            CustomData.SetAsync(VideoRotationAngleKey, angle);
         }
     }
 }

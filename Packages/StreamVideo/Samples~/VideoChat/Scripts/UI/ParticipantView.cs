@@ -156,7 +156,7 @@ namespace StreamVideo.ExampleProject.UI
             }
 
             _lastOrientationDebug = payload;
-            Debug.LogWarning(payload);
+            Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null, "{0}", payload);
         }
 
         private static bool IsFrontFacing(WebCamTexture webcam)

@@ -20,6 +20,7 @@ public class UnityMlKitPersonSegmenter {
 
     private final AtomicBoolean inFlight = new AtomicBoolean(false);
     private boolean debugLogs;
+    private final java.util.Map<String, String> lastDebugByKey = new java.util.HashMap<String, String>();
     private Segmenter segmenter;
     private Bitmap reusableBitmap;
     private int[] argbScratch;
@@ -57,7 +58,7 @@ public class UnityMlKitPersonSegmenter {
 
     public void setDebugLogs(boolean enabled) {
         debugLogs = enabled;
-        debug("debug logs " + (enabled ? "on" : "off"));
+        debug("init", "debug logs " + (enabled ? "on" : "off"));
     }
 
     public boolean isBusy() {
@@ -76,7 +77,7 @@ public class UnityMlKitPersonSegmenter {
         try {
             Bitmap bitmap = getBitmap(width, height);
             copyRgbaToBitmap(rgba, width, height, bitmap);
-            debug("processAsync bitmap=" + width + "x" + height
+            debug("submit", "processAsync bitmap=" + width + "x" + height
                     + " mlkitRotationDegrees=0 rgbaBytes=" + rgba.length);
             InputImage image = InputImage.fromBitmap(bitmap, 0);
             segmenter.process(image)
@@ -119,6 +120,7 @@ public class UnityMlKitPersonSegmenter {
         if (reusableBitmap != null && !reusableBitmap.isRecycled()) {
             reusableBitmap.recycle();
         }
+        lastDebugByKey.clear();
         reusableBitmap = null;
         argbScratch = null;
 
@@ -191,7 +193,7 @@ public class UnityMlKitPersonSegmenter {
                 maskHeight = height;
                 maskDirty = true;
             }
-            debug("onMaskSuccess mask=" + width + "x" + height
+            debug("mask", "onMaskSuccess mask=" + width + "x" + height
                     + " bitmap=" + (reusableBitmap != null ? reusableBitmap.getWidth() + "x" + reusableBitmap.getHeight() : "null")
                     + " aspectMatch=" + (reusableBitmap != null
                     && width * reusableBitmap.getHeight() == height * reusableBitmap.getWidth()));
@@ -207,9 +209,17 @@ public class UnityMlKitPersonSegmenter {
         inFlight.set(false);
     }
 
-    private void debug(String message) {
-        if (debugLogs) {
-            Log.i(TAG, message);
+    private void debug(String key, String message) {
+        if (!debugLogs || message == null) {
+            return;
         }
+
+        String previous = lastDebugByKey.get(key);
+        if (message.equals(previous)) {
+            return;
+        }
+
+        lastDebugByKey.put(key, message);
+        Log.i(TAG, message);
     }
 }

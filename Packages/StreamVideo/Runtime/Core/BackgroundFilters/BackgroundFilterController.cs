@@ -45,6 +45,8 @@ namespace StreamVideo.Core.BackgroundFilters
 
             if (filter == null)
             {
+                CameraOrientationDebug.Flush(_logs);
+                CameraOrientationDebug.Log(_logs, "controller.setFilter", "filter=null");
                 _compositor.SetMask(null);
                 _segmenter.Pause();
                 ReleasePreview();

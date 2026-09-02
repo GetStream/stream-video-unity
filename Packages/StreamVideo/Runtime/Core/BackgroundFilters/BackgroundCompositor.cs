@@ -12,8 +12,9 @@ namespace StreamVideo.Core.BackgroundFilters
     internal sealed class BackgroundCompositor : IVideoFilter
     {
         public const float DefaultSmoothing = 0.8f;
-        public const float DefaultSmoothstepMin = 0.7f;
-        public const float DefaultSmoothstepMax = 0.9f;
+        public const float DefaultSmoothstepMin = 0.45f;
+        public const float DefaultSmoothstepMax = 0.8f;
+        public const float DefaultMaskExpandPixels = 3f;
 
         public bool IsReady => _blendMaterial != null;
 
@@ -79,6 +80,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _blendMaterial.SetTexture(MaskId, _maskRt);
             _blendMaterial.SetFloat(SmoothMinId, DefaultSmoothstepMin);
             _blendMaterial.SetFloat(SmoothMaxId, DefaultSmoothstepMax);
+            _blendMaterial.SetFloat(ExpandPixelsId, DefaultMaskExpandPixels);
             _blendMaterial.SetFloat(DebugModeId, BackgroundFilter.DebugView);
             Graphics.Blit(_sourceRt, destination, _blendMaterial);
         }
@@ -104,6 +106,7 @@ namespace StreamVideo.Core.BackgroundFilters
         private static readonly int MaskId = Shader.PropertyToID("_Mask");
         private static readonly int SmoothMinId = Shader.PropertyToID("_SmoothMin");
         private static readonly int SmoothMaxId = Shader.PropertyToID("_SmoothMax");
+        private static readonly int ExpandPixelsId = Shader.PropertyToID("_ExpandPixels");
         private static readonly int DebugModeId = Shader.PropertyToID("_DebugMode");
 
         private Texture _mask;

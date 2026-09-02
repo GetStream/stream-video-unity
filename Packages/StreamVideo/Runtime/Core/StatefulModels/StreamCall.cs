@@ -15,7 +15,9 @@ using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
+using StreamVideo.Core.BackgroundFilters;
 using StreamVideo.Core.Utils;
+using UnityEngine;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using ParticipantCount = StreamVideo.Core.Models.Sfu.ParticipantCount;
 
@@ -57,6 +59,46 @@ namespace StreamVideo.Core.StatefulModels
         public event Action<CallEvent> EventReceived;
 
         public event Action Updated;
+
+        public event Action<BackgroundFilterPerformance> BackgroundFilterPerformanceChanged
+        {
+            add
+            {
+                if (FilterController != null)
+                {
+                    FilterController.PerformanceChanged += value;
+                }
+            }
+            remove
+            {
+                if (FilterController != null)
+                {
+                    FilterController.PerformanceChanged -= value;
+                }
+            }
+        }
+
+        public event Action<Texture> LocalPreviewTextureChanged
+        {
+            add
+            {
+                if (FilterController != null)
+                {
+                    FilterController.PreviewTextureChanged += value;
+                }
+            }
+            remove
+            {
+                if (FilterController != null)
+                {
+                    FilterController.PreviewTextureChanged -= value;
+                }
+            }
+        }
+
+        public BackgroundFilter ActiveBackgroundFilter => FilterController?.ActiveFilter;
+
+        public bool IsBackgroundFilterSupported => FilterController != null && FilterController.IsSupported;
 
         public IStreamCustomData CustomData => InternalCustomData;
 
@@ -463,6 +505,20 @@ namespace StreamVideo.Core.StatefulModels
             }
 
             return UploadCustomDataAsync();
+        }
+
+        public void SetBackgroundFilter(BackgroundFilter filter)
+            => FilterController?.SetFilter(filter);
+
+        public Texture GetLocalPreviewTexture()
+        {
+            var filtered = FilterController?.GetPreviewTexture();
+            if (filtered != null)
+            {
+                return filtered;
+            }
+
+            return LowLevelClient?.RtcSession?.VideoInput;
         }
 
         public IStreamVideoCallParticipant GetLocalParticipant()
@@ -1158,6 +1214,9 @@ namespace StreamVideo.Core.StatefulModels
 
             participantCustomData = allParticipantsCustomData[participant.SessionId];
         }
+
+        private BackgroundFilterController FilterController
+            => LowLevelClient?.RtcSession?.BackgroundFilterController;
 
         private bool IsLocalParticipantIncluded()
         {

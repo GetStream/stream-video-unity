@@ -44,14 +44,11 @@ namespace StreamVideo.ExampleProject.UI
         /// So in order to show the stream from a local camera we hook it up separately
         /// </summary>
         public void SetLocalCameraSource(WebCamTexture localWebCamTexture)
+            => SetLocalCameraSource((Texture)localWebCamTexture);
+
+        public void SetLocalCameraSource(Texture localCameraTexture)
         {
-            if (localWebCamTexture == null)
-            {
-                _video.texture = null;
-                return;
-            }
-            
-            _video.texture = localWebCamTexture;
+            _video.texture = localCameraTexture;
         }
         
         // Called by Unity Engine
@@ -94,11 +91,13 @@ namespace StreamVideo.ExampleProject.UI
                 _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-streamVideoTrack.VideoRotationAngle, Vector3.forward);
             }
             
-            // For local user, we don't have a video track, so we get the video rotation angle directly from WebCamTexture
-            if (Participant != null && Participant.IsLocalParticipant && _video.texture is WebCamTexture sourceWebCamTexture)
+            // Local preview may be a compositor RT; rotation still comes from the camera, not the RT.
+            if (Participant != null && Participant.IsLocalParticipant)
             {
-                // WebCamTexture reports width=16 until fully initialized; reading videoRotationAngle before that logs a warning every frame
-                if (!sourceWebCamTexture.isPlaying || sourceWebCamTexture.width <= 16)
+                var sourceWebCamTexture = _videoManager != null
+                    ? _videoManager.Client.VideoDeviceManager.GetSelectedDeviceWebCamTexture()
+                    : _video.texture as WebCamTexture;
+                if (sourceWebCamTexture == null || !sourceWebCamTexture.isPlaying || sourceWebCamTexture.width <= 16)
                 {
                     return;
                 }

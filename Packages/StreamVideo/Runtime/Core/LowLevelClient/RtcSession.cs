@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
+using StreamVideo.Core.BackgroundFilters;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.Exceptions;
@@ -144,6 +145,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         public StreamCall ActiveCall { get; internal set; }
 
+        internal BackgroundFilterController BackgroundFilterController { get; }
+
         public SubscriberPeerConnection Subscriber { get; private set; }
         public PublisherPeerConnection Publisher { get; private set; }
 
@@ -249,6 +252,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             var statsCollector = new UnityWebRtcStatsCollector(this, _serializer, _tracerManager);
             _statsSender = new WebRtcStatsSender(this, statsCollector, _timeService, _logs);
+            BackgroundFilterController = new BackgroundFilterController(_logs);
+            PublisherVideoTrackIsEnabledChanged += OnBackgroundFilterVideoEnabledChanged;
 
             //StreamTodo: enable this only if a special mode e.g. compiler flag 
 #if STREAM_AUDIO_BENCHMARK_ENABLED
@@ -259,11 +264,15 @@ namespace StreamVideo.Core.LowLevelClient
             _networkMonitor.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
 
             _mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            _wasApplicationFocused = Application.isFocused;
         }
 
         public void Dispose()
         {
             StopAsync("Video Client is being disposed").LogIfFailed();
+
+            PublisherVideoTrackIsEnabledChanged -= OnBackgroundFilterVideoEnabledChanged;
+            BackgroundFilterController?.Dispose();
 
             DisposeSfuWebSocket();
 
@@ -278,6 +287,7 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
         public void Update()
         {
+            UpdateBackgroundFilterApplicationFocus();
             _networkMonitor.Update();
             _sfuWebSocket?.Update();
             Publisher?.Update();
@@ -887,6 +897,7 @@ namespace StreamVideo.Core.LowLevelClient
                 // can still access the call reference
                 CallState = CallingState.Left;
                 ActiveCall = null;
+                BackgroundFilterController?.SetFilter(null);
             }
         }
 
@@ -1155,6 +1166,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private bool _publisherAudioTrackIsEnabled;
         private bool _publisherVideoTrackIsEnabled;
+        private bool _wasApplicationFocused;
 
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
@@ -2576,12 +2588,43 @@ namespace StreamVideo.Core.LowLevelClient
 
             //StreamTODO: pass factory for WS creation. We may need two WS clients for migration so we can't rely on the same one
             Publisher = new PublisherPeerConnection(_logs, iceServers, this, _config.Audio, _publisherVideoSettings,
-                sfuClient: this, _publisherTracer, _serializer);
+                sfuClient: this, _publisherTracer, _serializer, BackgroundFilterController);
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
             Publisher.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
             Publisher.ReconnectionNeeded += OnReconnectionNeeded;
             Publisher.Disconnected += PublisherOnDisconnected;
+        }
+
+        private void OnBackgroundFilterVideoEnabledChanged(bool isEnabled)
+        {
+            if (isEnabled)
+            {
+                BackgroundFilterController?.Resume();
+            }
+            else
+            {
+                BackgroundFilterController?.Pause();
+            }
+        }
+
+        private void UpdateBackgroundFilterApplicationFocus()
+        {
+            var isFocused = Application.isFocused;
+            if (isFocused == _wasApplicationFocused)
+            {
+                return;
+            }
+
+            _wasApplicationFocused = isFocused;
+            if (isFocused)
+            {
+                BackgroundFilterController?.Resume();
+            }
+            else
+            {
+                BackgroundFilterController?.Pause();
+            }
         }
 
         private void DisposePublisher()

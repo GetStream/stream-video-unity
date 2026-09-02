@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using StreamVideo.Core.BackgroundFilters;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.Models;
 using StreamVideo.Core.Models.Sfu;
@@ -91,15 +92,19 @@ namespace StreamVideo.Core.LowLevelClient
         // Full: 704×576  -> half: 352×288 -> quarter: 176×144 <- We want the smallest resolution to be above 96x96
         public static VideoResolution MinimumSafeTargetResolution => new VideoResolution(704, 576);
 
+        public RenderTexture PublisherVideoTrackTexture => _publisherVideoTrackTexture;
+
         public PublisherPeerConnection(ILogs logs, IEnumerable<ICEServer> iceServers,
             IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig,
-            PublisherVideoSettings publisherVideoSettings, ISfuClient sfuClient, Tracer tracer, ISerializer serializer)
+            PublisherVideoSettings publisherVideoSettings, ISfuClient sfuClient, Tracer tracer, ISerializer serializer,
+            BackgroundFilterController backgroundFilterController = null)
             : base(logs, StreamPeerType.Publisher, iceServers, tracer, serializer, sfuClient)
         {
             _mediaInputProvider = mediaInputProvider ?? throw new ArgumentNullException(nameof(mediaInputProvider));
             _audioConfig = audioConfig ?? throw new ArgumentNullException(nameof(audioConfig));
             _publisherVideoSettings = publisherVideoSettings ??
                                       throw new ArgumentNullException(nameof(publisherVideoSettings));
+            _backgroundFilterController = backgroundFilterController;
 
             _mediaInputProvider.AudioInputChanged += OnAudioInputChanged;
             _mediaInputProvider.VideoSceneInputChanged += OnVideoSceneInputChanged;
@@ -151,7 +156,14 @@ namespace StreamVideo.Core.LowLevelClient
             // We should check if WebCamTexture allows setting any resolution
             if (_publisherVideoTrackTexture != null && _mediaInputProvider.VideoInput != null)
             {
-                Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
+                if (_backgroundFilterController != null && _backgroundFilterController.ActiveFilter != null)
+                {
+                    _backgroundFilterController.Composite(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
+                }
+                else
+                {
+                    Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
+                }
             }
             
             if (_negotiateRequested && !_isNegotiating)
@@ -706,6 +718,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private readonly IMediaInputProvider _mediaInputProvider;
         private readonly IStreamAudioConfig _audioConfig;
+        private readonly BackgroundFilterController _backgroundFilterController;
 
         private readonly List<TrackType> _publishedTrackOrder = new List<TrackType>();
         

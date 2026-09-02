@@ -7,6 +7,7 @@ using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
+using UnityEngine;
 
 namespace StreamVideo.Core.StatefulModels
 {
@@ -342,5 +343,37 @@ namespace StreamVideo.Core.StatefulModels
         /// Helper function to get the local participant object for the current user in this call
         /// </summary>
         IStreamVideoCallParticipant GetLocalParticipant();
+
+        /// <summary>
+        /// Fired when background-filter performance drops or recovers.
+        /// </summary>
+        event Action<BackgroundFilterPerformance> BackgroundFilterPerformanceChanged;
+
+        /// <summary>
+        /// Fired when the local preview texture instance changes (filter enable/disable or publisher RT recreate).
+        /// </summary>
+        event Action<Texture> LocalPreviewTextureChanged;
+
+        /// <summary>
+        /// Active local background filter, or <see langword="null"/> when disabled.
+        /// </summary>
+        BackgroundFilter ActiveBackgroundFilter { get; }
+
+        /// <summary>
+        /// True when a person-segmenter backend is available on this platform/device.
+        /// Unsupported devices no-op <see cref="SetBackgroundFilter"/> and do not throw.
+        /// </summary>
+        bool IsBackgroundFilterSupported { get; }
+
+        /// <summary>
+        /// Enable a local pre-encode background filter, or pass <see langword="null"/> to disable.
+        /// Remote peers receive the composited camera frames. Unsupported devices log and no-op.
+        /// </summary>
+        void SetBackgroundFilter(BackgroundFilter filter);
+
+        /// <summary>
+        /// Texture for the local participant preview. Filtered publisher RT when a filter is active, otherwise the camera.
+        /// </summary>
+        Texture GetLocalPreviewTexture();
     }
 }

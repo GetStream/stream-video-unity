@@ -19,6 +19,7 @@ public class UnityMlKitPersonSegmenter {
     private static final String TAG = "StreamBgFilter";
 
     private final AtomicBoolean inFlight = new AtomicBoolean(false);
+    private boolean debugLogs;
     private Segmenter segmenter;
     private Bitmap reusableBitmap;
     private int[] argbScratch;
@@ -54,6 +55,11 @@ public class UnityMlKitPersonSegmenter {
         }
     }
 
+    public void setDebugLogs(boolean enabled) {
+        debugLogs = enabled;
+        debug("debug logs " + (enabled ? "on" : "off"));
+    }
+
     public boolean isBusy() {
         return inFlight.get();
     }
@@ -70,6 +76,8 @@ public class UnityMlKitPersonSegmenter {
         try {
             Bitmap bitmap = getBitmap(width, height);
             copyRgbaToBitmap(rgba, width, height, bitmap);
+            debug("processAsync bitmap=" + width + "x" + height
+                    + " mlkitRotationDegrees=0 rgbaBytes=" + rgba.length);
             InputImage image = InputImage.fromBitmap(bitmap, 0);
             segmenter.process(image)
                     .addOnSuccessListener(this::onMaskSuccess)
@@ -183,6 +191,10 @@ public class UnityMlKitPersonSegmenter {
                 maskHeight = height;
                 maskDirty = true;
             }
+            debug("onMaskSuccess mask=" + width + "x" + height
+                    + " bitmap=" + (reusableBitmap != null ? reusableBitmap.getWidth() + "x" + reusableBitmap.getHeight() : "null")
+                    + " aspectMatch=" + (reusableBitmap != null
+                    && width * reusableBitmap.getHeight() == height * reusableBitmap.getWidth()));
         } catch (Throwable t) {
             Log.w(TAG, "Failed to copy ML Kit mask.", t);
         } finally {
@@ -193,5 +205,11 @@ public class UnityMlKitPersonSegmenter {
     private void onMaskFailure(Exception e) {
         Log.w(TAG, "ML Kit segmentation failed.", e);
         inFlight.set(false);
+    }
+
+    private void debug(String message) {
+        if (debugLogs) {
+            Log.i(TAG, message);
+        }
     }
 }

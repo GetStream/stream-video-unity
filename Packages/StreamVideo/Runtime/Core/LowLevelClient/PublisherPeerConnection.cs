@@ -164,6 +164,8 @@ namespace StreamVideo.Core.LowLevelClient
                 {
                     Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
                 }
+
+                LogPublisherOrientation();
             }
             
             if (_negotiateRequested && !_isNegotiating)
@@ -944,6 +946,11 @@ namespace StreamVideo.Core.LowLevelClient
 
             var track = new VideoStreamTrack(_publisherVideoTrackTexture);
             track.Enabled = _mediaInputProvider.PublisherVideoTrackIsEnabled;
+            CameraOrientationDebug.Log(Logs, "publisher.createTrack",
+                CameraOrientationDebug.DescribeScreen()
+                + " | " + CameraOrientationDebug.DescribeWebCam(_mediaInputProvider.VideoInput)
+                + " | " + CameraOrientationDebug.DescribeTexture("publisherRT", _publisherVideoTrackTexture)
+                + " | encodeCopy=VerticalFlipCopy after this RT");
             return track;
         }
 
@@ -1059,6 +1066,19 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private void OnVideoInputChanged(WebCamTexture webCamTexture) => ReplacePublisherVideoTrack();
+
+        private void LogPublisherOrientation()
+        {
+            var webcam = _mediaInputProvider.VideoInput;
+            var filter = _backgroundFilterController != null ? _backgroundFilterController.ActiveFilter : null;
+            CameraOrientationDebug.Log(Logs, "publisher.blit",
+                CameraOrientationDebug.DescribeScreen()
+                + " | " + CameraOrientationDebug.DescribeWebCam(webcam)
+                + " | " + CameraOrientationDebug.DescribeTexture("publisherRT", _publisherVideoTrackTexture)
+                + " | filter=" + (filter == null ? "off" : filter.Kind + "/" + filter.Intensity)
+                + " blit=Graphics.Blit(webcam, publisherRT) no rotation"
+                + " | encodeCopy=VerticalFlipCopy");
+        }
 
         private void OnPublisherVideoTrackIsEnabledChanged(bool isEnabled)
         {

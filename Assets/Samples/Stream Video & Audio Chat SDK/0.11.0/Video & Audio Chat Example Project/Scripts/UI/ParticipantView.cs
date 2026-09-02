@@ -85,10 +85,15 @@ namespace StreamVideo.ExampleProject.UI
         /// </summary>
         private void FixVideoOrientation()
         {
+            var remoteAngle = 0;
+            var localAngle = 0;
+            Texture previewTex = _video != null ? _video.texture : null;
+
             // For remote users we have their video track -> fix rotation based on the video track rotation angle
             if (Participant != null && Participant.VideoTrack != null && Participant.VideoTrack is StreamVideoTrack streamVideoTrack)
             {
-                _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-streamVideoTrack.VideoRotationAngle, Vector3.forward);
+                remoteAngle = streamVideoTrack.VideoRotationAngle;
+                _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-remoteAngle, Vector3.forward);
             }
             
             // Local preview may be a compositor RT; rotation still comes from the camera, not the RT.
@@ -102,9 +107,74 @@ namespace StreamVideo.ExampleProject.UI
                     return;
                 }
 
-                _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-sourceWebCamTexture.videoRotationAngle, Vector3.forward);
+                localAngle = sourceWebCamTexture.videoRotationAngle;
+                _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-localAngle, Vector3.forward);
+#if STREAM_DEBUG_ENABLED
+                LogOrientationDebug(sourceWebCamTexture, previewTex, localAngle, remoteAngle, isLocal: true);
+#endif
+                return;
             }
+
+#if STREAM_DEBUG_ENABLED
+            LogOrientationDebug(previewTex as WebCamTexture, previewTex, localAngle, remoteAngle, isLocal: false);
+#endif
         }
+
+#if STREAM_DEBUG_ENABLED
+        private void LogOrientationDebug(WebCamTexture webcam, Texture preview, int localAngle, int remoteAngle,
+            bool isLocal)
+        {
+            var rect = _videoRectTransform != null ? _videoRectTransform.rect : Rect.zero;
+            var texW = preview != null ? preview.width : 0;
+            var texH = preview != null ? preview.height : 0;
+            var appliedZ = _videoRectTransform != null ? _videoRectTransform.eulerAngles.z : 0f;
+            var swap = Mathf.Abs(localAngle) % 180 == 90 || Mathf.Abs(remoteAngle) % 180 == 90;
+            var texAspect = texH > 0 ? texW / (float)texH : 0f;
+            var rectAspect = rect.height > 0.001f ? rect.width / rect.height : 0f;
+            var expectedAspectAfterRot = swap && texH > 0 ? texH / (float)texW : texAspect;
+            var payload = "[BgFilterOrient] ui.preview"
+                + " | local=" + isLocal
+                + " screen=" + Screen.width + "x" + Screen.height + " " + Screen.orientation
+                + " tex=" + texW + "x" + texH + " type=" + (preview != null ? preview.GetType().Name : "null")
+                + " rect=" + rect.width.ToString("0") + "x" + rect.height.ToString("0")
+                + " texAspect=" + texAspect.ToString("0.000")
+                + " rectAspect=" + rectAspect.ToString("0.000")
+                + " expectedAspectAfterRot=" + expectedAspectAfterRot.ToString("0.000")
+                + " aspectMismatch=" + (Mathf.Abs(rectAspect - expectedAspectAfterRot) > 0.05f)
+                + " localAngle=" + localAngle
+                + " remoteAngle=" + remoteAngle
+                + " appliedZ=" + appliedZ.ToString("0.0")
+                + (webcam != null
+                    ? " webcam=" + webcam.width + "x" + webcam.height
+                      + " rot=" + webcam.videoRotationAngle
+                      + " mirrored=" + webcam.videoVerticallyMirrored
+                      + " frontDevice=" + IsFrontFacing(webcam)
+                    : "");
+            if (payload == _lastOrientationDebug)
+            {
+                return;
+            }
+
+            _lastOrientationDebug = payload;
+            Debug.LogWarning(payload);
+        }
+
+        private static bool IsFrontFacing(WebCamTexture webcam)
+        {
+            var devices = WebCamTexture.devices;
+            for (var i = 0; i < devices.Length; i++)
+            {
+                if (devices[i].name == webcam.deviceName)
+                {
+                    return devices[i].isFrontFacing;
+                }
+            }
+
+            return false;
+        }
+
+        private string _lastOrientationDebug;
+#endif
 
         // Called by Unity Engine
         protected void OnDestroy()

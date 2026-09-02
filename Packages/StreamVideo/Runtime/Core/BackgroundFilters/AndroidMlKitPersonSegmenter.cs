@@ -77,6 +77,8 @@ namespace StreamVideo.Core.BackgroundFilters
 
             EnsureDownscaleRt(source);
             Graphics.Blit(source, _downscaleRt);
+            _lastSource = source;
+            LogSubmitOrientation(source);
 
             if (SystemInfo.supportsAsyncGPUReadback)
             {
@@ -168,6 +170,7 @@ namespace StreamVideo.Core.BackgroundFilters
         private bool _readbackInFlight;
         private Texture2D _maskTexture;
         private RenderTexture _downscaleRt;
+        private Texture _lastSource;
 #if UNITY_ANDROID && !UNITY_EDITOR
         private Texture2D _syncReadbackTexture;
         private byte[] _rgbaBuffer;
@@ -186,6 +189,16 @@ namespace StreamVideo.Core.BackgroundFilters
             _logs = logs;
 #if UNITY_ANDROID && !UNITY_EDITOR
             _native = native;
+#if STREAM_DEBUG_ENABLED
+            try
+            {
+                _native.Call("setDebugLogs", true);
+            }
+            catch (Exception e)
+            {
+                _logs?.Warning("Background filter: failed to enable ML Kit debug logs: " + e.Message);
+            }
+#endif
 #endif
         }
 
@@ -245,6 +258,15 @@ namespace StreamVideo.Core.BackgroundFilters
             }
 
             _rgbaBuffer = rgba;
+            var webcam = _lastSource as WebCamTexture;
+            var webcamRot = webcam != null ? webcam.videoRotationAngle : -1;
+            CameraOrientationDebug.Log(_logs, "mlkit.submit",
+                "rgba=" + width + "x" + height + " bytes=" + rgba.Length
+                + " mlkitRotationDegrees=0"
+                + " webcamRot=" + webcamRot
+                + " mirrored=" + (webcam != null && webcam.videoVerticallyMirrored)
+                + " gfx=" + SystemInfo.graphicsDeviceType
+                + " asyncReadback=" + SystemInfo.supportsAsyncGPUReadback);
             _native.Call("processAsync", _rgbaBuffer, width, height);
         }
 
@@ -273,6 +295,27 @@ namespace StreamVideo.Core.BackgroundFilters
             _maskTexture.SetPixelData(mask, 0);
             _maskTexture.Apply(false, false);
             _hasMask = true;
+
+#if STREAM_DEBUG_ENABLED
+            var hits = 0;
+            var needed = width * height;
+            for (var i = 0; i < needed; i++)
+            {
+                if (mask[i] > 128)
+                {
+                    hits++;
+                }
+            }
+
+            var inputW = _downscaleRt != null ? _downscaleRt.width : 0;
+            var inputH = _downscaleRt != null ? _downscaleRt.height : 0;
+            CameraOrientationDebug.Log(_logs, "mlkit.mask",
+                "mask=" + width + "x" + height
+                + " input=" + inputW + "x" + inputH
+                + " aspectMatch=" + (width * inputH == height * inputW)
+                + " coverage=" + (hits / (float)Mathf.Max(1, needed)).ToString("0.000")
+                + " | " + CameraOrientationDebug.DescribeWebCam(_lastSource as WebCamTexture));
+#endif
         }
 
         private static byte[] ToByteArray(sbyte[] source)
@@ -307,6 +350,18 @@ namespace StreamVideo.Core.BackgroundFilters
                 wrapMode = TextureWrapMode.Clamp,
             };
             _downscaleRt.Create();
+        }
+
+        private void LogSubmitOrientation(Texture source)
+        {
+            var webcam = source as WebCamTexture;
+            CameraOrientationDebug.Log(_logs, "mlkit.downscale",
+                CameraOrientationDebug.DescribeTexture("source", source)
+                + " | " + CameraOrientationDebug.DescribeTexture("downscale", _downscaleRt)
+                + " | " + (webcam != null
+                    ? CameraOrientationDebug.DescribeWebCam(webcam)
+                    : "sourceIsWebCam=false")
+                + " blit=Graphics.Blit(source, downscale) no rotation/mirror");
         }
 
         private static void GetMaskInputSize(int sourceWidth, int sourceHeight, out int width, out int height)

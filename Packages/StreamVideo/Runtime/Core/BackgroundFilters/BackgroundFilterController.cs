@@ -21,6 +21,9 @@ namespace StreamVideo.Core.BackgroundFilters
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _segmenter = segmenter ?? PersonSegmenterFactory.Create(_logs);
+            CameraOrientationDebug.Log(_logs, "controller.init",
+                "segmenter=" + _segmenter.GetType().Name + " supported=" + _segmenter.IsSupported
+                + " | " + CameraOrientationDebug.DescribeScreen());
         }
 
         public void SetFilter(BackgroundFilter filter)
@@ -60,6 +63,10 @@ namespace StreamVideo.Core.BackgroundFilters
             _segmenter.Resume();
             _paused = false;
             _frameIndex = 0;
+            CameraOrientationDebug.Log(_logs, "controller.setFilter",
+                "filter=" + (filter == null ? "null" : filter.Kind + "/" + filter.Intensity)
+                + " supported=" + IsSupported
+                + " segmenter=" + _segmenter.GetType().Name);
             PublishPerformanceIfChanged();
         }
 
@@ -74,6 +81,7 @@ namespace StreamVideo.Core.BackgroundFilters
             {
                 Graphics.Blit(source, destination);
                 SetPreview(destination);
+                LogCompositeOrientation(source, destination, "composite.passthrough");
                 return;
             }
 
@@ -100,6 +108,7 @@ namespace StreamVideo.Core.BackgroundFilters
             {
                 Graphics.Blit(source, destination);
                 SetPreview(destination);
+                LogCompositeOrientation(source, destination, "composite.waitingMask");
                 return;
             }
 
@@ -107,6 +116,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _compositor.SetIntensity(_scheduler.EffectiveIntensity);
             _compositor.Apply(source, destination);
             SetPreview(destination);
+            LogCompositeOrientation(source, destination, "composite.apply");
         }
 
         public Texture GetPreviewTexture() => _previewTexture;
@@ -148,6 +158,24 @@ namespace StreamVideo.Core.BackgroundFilters
         private int _sampleFrames;
         private float _sampleSeconds;
         private bool _paused;
+
+        private void LogCompositeOrientation(Texture source, RenderTexture destination, string checkpoint)
+        {
+            var webcam = source as WebCamTexture;
+            var mask = _segmenter.MaskTexture;
+            var payload = CameraOrientationDebug.DescribeScreen()
+                + " | " + (webcam != null
+                    ? CameraOrientationDebug.DescribeWebCam(webcam)
+                    : CameraOrientationDebug.DescribeTexture("source", source))
+                + " | " + CameraOrientationDebug.DescribeTexture("dest", destination)
+                + " | " + CameraOrientationDebug.DescribeTexture("mask", mask)
+                + " | filter=" + (ActiveFilter == null ? "null" : ActiveFilter.Kind + "/" + ActiveFilter.Intensity)
+                + " hasMask=" + _segmenter.HasMask
+                + " paused=" + _paused
+                + " compositing=" + IsCompositing
+                + " mlkitRotationDegrees=0 (not applied)";
+            CameraOrientationDebug.Log(_logs, checkpoint, payload);
+        }
 
         private void PumpAndroidMask()
         {

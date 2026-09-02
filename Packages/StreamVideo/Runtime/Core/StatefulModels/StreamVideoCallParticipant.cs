@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using StreamVideo.Core.BackgroundFilters;
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models.Sfu;
@@ -442,6 +443,12 @@ namespace StreamVideo.Core.StatefulModels
 
             var angle = videoInput.videoRotationAngle;
             var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);
+
+            CameraOrientationDebug.Log(Logs, "publisher.customDataAngle",
+                "publishingAngle=" + angle
+                + " prev=" + (hasPrevAngle ? prevAngle.ToString() : "none")
+                + " | " + CameraOrientationDebug.DescribeWebCam(videoInput)
+                + " | " + CameraOrientationDebug.DescribeScreen());
 
             if (!hasPrevAngle || Mathf.Abs(angle - prevAngle) > 0)
             {

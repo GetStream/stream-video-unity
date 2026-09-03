@@ -177,6 +177,8 @@ namespace StreamVideo.ExampleProject.UI
         private PermissionsManager _permissionsManager;
         private Transform _participantViewsPool;
         private CanvasScaler _canvasScaler;
+        private CanvasScaler.ScreenMatchMode _defaultScreenMatchMode;
+        private float _defaultMatchWidthOrHeight;
         private bool _isPortrait;
         private bool _isDestroyed;
         private string _joinCallIdDraft = string.Empty;
@@ -391,22 +393,21 @@ namespace StreamVideo.ExampleProject.UI
             if (_canvasScaler == null)
             {
                 _canvasScaler = GetComponent<CanvasScaler>();
+                if (_canvasScaler == null)
+                {
+                    return;
+                }
+
+                _defaultScreenMatchMode = _canvasScaler.screenMatchMode;
+                _defaultMatchWidthOrHeight = _canvasScaler.matchWidthOrHeight;
             }
 
-            if (_canvasScaler == null)
-            {
-                return;
-            }
-
-            _canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            _canvasScaler.referenceResolution = new Vector2(1920, 1080);
-
-            // Portrait CallScreen is authored against match-width. Landscape CallScreen is 1080px
-            // tall — Expand so a 20:9 phone does not scale that stack past the screen height.
+            // Landscape CallScreen is a fixed 1080px-tall stack. Expand so 20:9 phones do not
+            // scale it off-screen. Portrait keeps the scene scaler so CallScreenPortrait is unchanged.
             if (isPortrait)
             {
-                _canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-                _canvasScaler.matchWidthOrHeight = 0f;
+                _canvasScaler.screenMatchMode = _defaultScreenMatchMode;
+                _canvasScaler.matchWidthOrHeight = _defaultMatchWidthOrHeight;
             }
             else
             {

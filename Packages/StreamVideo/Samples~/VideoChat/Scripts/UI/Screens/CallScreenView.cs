@@ -94,6 +94,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _moreOptionsWindow.Init(VideoManager);
             _moreBtn.onClick.AddListener(_moreOptionsWindow.Show);
 
+            ApplyLandscapeControlInsets();
+
 #if AUDIO_PROCESSING_ENABLED
             // Landscape CallScreen leaves these unassigned; portrait CallScreenPortrait wires them.
             if (_apmToggleBtn != null && _echoToggleBtn != null && _noiseToggleBtn != null &&
@@ -153,6 +155,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
             // Notify child components
             _cameraPanel.NotifyParentShow();
             _microphonePanel.NotifyParentShow();
+
+            ApplyLandscapeControlInsets();
 
 #if AUDIO_PROCESSING_ENABLED
             _audioProcessingConfig?.LoadCurrentConfig();
@@ -289,6 +293,81 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         private Transform GetParticipantViewParent(bool isDominantSpeaker)
             => isDominantSpeaker ? _dominantSpeakerContainer : _remainingParticipantsContainer;
+
+        private void ApplyLandscapeControlInsets()
+        {
+            // CallScreenPortrait embeds CallScreen.prefab and adds ControlsPortrait.
+            // Never run landscape layout on that instance — it stretches Leave/End/Call ID.
+            if (transform.Find("ControlsPortrait") != null)
+            {
+                return;
+            }
+
+            var controls = transform.Find("Controls");
+            var participants = transform.Find("Participants");
+            if (controls == null || participants == null)
+            {
+                return;
+            }
+
+            var rootLayout = GetComponent<VerticalLayoutGroup>();
+            if (rootLayout == null)
+            {
+                return;
+            }
+
+            // Padding on a 980+100 fixed stack is clipped. Let Participants take leftover height
+            // so side/bottom insets actually show. Portrait CallScreenPortrait has no Controls child.
+            rootLayout.childControlHeight = true;
+            rootLayout.childForceExpandHeight = true;
+
+            var participantsLayout = GetOrAddLayoutElement(participants.gameObject);
+            participantsLayout.flexibleHeight = 1;
+            participantsLayout.preferredHeight = -1;
+            participantsLayout.minHeight = 0;
+
+            var controlsLayoutElement = GetOrAddLayoutElement(controls.gameObject);
+            controlsLayoutElement.preferredHeight = 100;
+            controlsLayoutElement.flexibleHeight = 0;
+            controlsLayoutElement.minHeight = 100;
+
+            var moreOptions = transform.Find("MoreOptionsWindow");
+            if (moreOptions != null)
+            {
+                var moreLayout = GetOrAddLayoutElement(moreOptions.gameObject);
+                moreLayout.ignoreLayout = true;
+            }
+
+            var scale = 1f;
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas != null && canvas.scaleFactor > 0f)
+            {
+                scale = canvas.scaleFactor;
+            }
+
+            var safe = Screen.safeArea;
+            var padLeft = Mathf.RoundToInt(Mathf.Max(48f, safe.x / scale));
+            var padRight = Mathf.RoundToInt(Mathf.Max(48f, (Screen.width - safe.xMax) / scale));
+            var padBottom = Mathf.RoundToInt(Mathf.Max(40f, safe.y / scale));
+            rootLayout.padding = new RectOffset(padLeft, padRight, 0, padBottom);
+
+#if STREAM_DEBUG_ENABLED
+            LogUiRotate(
+                $"Landscape insets pad L{padLeft} R{padRight} B{padBottom} safe={safe} " +
+                $"{Screen.width}x{Screen.height} scale={scale:0.###}");
+#endif
+        }
+
+        private static LayoutElement GetOrAddLayoutElement(GameObject target)
+        {
+            var layoutElement = target.GetComponent<LayoutElement>();
+            if (layoutElement == null)
+            {
+                layoutElement = target.AddComponent<LayoutElement>();
+            }
+
+            return layoutElement;
+        }
 
         private void OnLocalCameraChanged(WebCamTexture activeCamera)
             => RefreshLocalPreview();

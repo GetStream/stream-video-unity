@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using StreamVideo.Core;
@@ -16,6 +17,54 @@ namespace StreamVideo.ExampleProject.UI
         public VideoResolution SenderVideoResolution => new VideoResolution(_senderVideoWidth, _senderVideoHeight);
         public int SenderVideoFps => _senderVideoFps;
 
+        /// <summary>
+        /// Join-call ID typed on the main screen. Shared so landscape/portrait copies stay in sync.
+        /// </summary>
+        public string JoinCallIdDraft
+        {
+            get => _joinCallIdDraft;
+            set => _joinCallIdDraft = value ?? string.Empty;
+        }
+
+        public ParticipantView GetOrCreateParticipantView(IStreamVideoCallParticipant participant, Transform parent,
+            ParticipantView prefab)
+        {
+            if (participant == null)
+            {
+                throw new ArgumentNullException(nameof(participant));
+            }
+
+            if (parent == null)
+            {
+                throw new ArgumentNullException(nameof(parent));
+            }
+
+            if (_participantViews.TryGetValue(participant.SessionId, out var existing) && existing != null)
+            {
+                AttachParticipantView(existing, parent);
+                return existing;
+            }
+
+            var view = Instantiate(prefab, parent);
+            view.Init(participant, _videoManager);
+            _participantViews[participant.SessionId] = view;
+            return view;
+        }
+
+        public void DestroyParticipantView(string sessionId)
+        {
+            if (!_participantViews.TryGetValue(sessionId, out var view))
+            {
+                return;
+            }
+
+            _participantViews.Remove(sessionId);
+            if (view != null)
+            {
+                Destroy(view.gameObject);
+            }
+        }
+
         protected void Awake()
         {
             _permissionsManager = new PermissionsManager(this);
@@ -28,7 +77,13 @@ namespace StreamVideo.ExampleProject.UI
             _videoManager.Client.VideoDeviceManager.SelectedDeviceChanged += OnCameraDeviceChanged;
             _videoManager.Client.AudioDeviceManager.SelectedDeviceChanged += OnMicrophoneDeviceChanged;
 
-            GetCurrentScreenSet().Init(_videoManager, uiManager: this);
+            CreateParticipantViewsPool();
+
+            _landscapeModeUIScreensSet.Init(_videoManager, uiManager: this);
+            _portraitModeUIScreensSet.Init(_videoManager, uiManager: this);
+
+            _isPortrait = IsPortraitMode();
+            SetScreenSetRootsActive(_isPortrait);
 
             if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Camera))
             {
@@ -57,8 +112,22 @@ namespace StreamVideo.ExampleProject.UI
 
         protected void Start() => ShowMainScreen();
 
+        protected void Update()
+        {
+            var isPortrait = IsPortraitMode();
+            if (isPortrait == _isPortrait)
+            {
+                return;
+            }
+
+            _isPortrait = isPortrait;
+            SwitchScreenSet();
+        }
+
         protected void OnDestroy()
         {
+            _isDestroyed = true;
+
             _videoManager.CallStarted -= OnCallStarted;
             _videoManager.CallEnded -= OnCallEnded;
 
@@ -90,15 +159,110 @@ namespace StreamVideo.ExampleProject.UI
         [SerializeField]
         private bool _forceTestPortraitMode;
 
+        private readonly Dictionary<string, ParticipantView> _participantViews
+            = new Dictionary<string, ParticipantView>();
+
         private PermissionsManager _permissionsManager;
+        private Transform _participantViewsPool;
+        private bool _isPortrait;
+        private bool _isDestroyed;
+        private string _joinCallIdDraft = string.Empty;
+
+        private bool CanUseClient
+            => !_isDestroyed && _videoManager != null && _videoManager.Client != null;
+
+        private UIScreensSet ActiveScreenSet
+            => _isPortrait ? _portraitModeUIScreensSet : _landscapeModeUIScreensSet;
+
+        private UIScreensSet InactiveScreenSet
+            => _isPortrait ? _landscapeModeUIScreensSet : _portraitModeUIScreensSet;
 
         private void OnCallStarted(IStreamCall call) => ShowCallScreen(call);
 
-        private void OnCallEnded() => ShowMainScreen();
+        private void OnCallEnded()
+        {
+            ShowMainScreen();
+            DestroyAllParticipantViews();
+        }
 
-        private void ShowMainScreen() => GetCurrentScreenSet().ShowMainScreen();
+        private void ShowMainScreen() => ActiveScreenSet.ShowMainScreen();
 
-        private void ShowCallScreen(IStreamCall call) => GetCurrentScreenSet().ShowCallScreen(call);
+        private void ShowCallScreen(IStreamCall call) => ActiveScreenSet.ShowCallScreen(call);
+
+        private void SwitchScreenSet()
+        {
+            var outgoing = InactiveScreenSet;
+            var incoming = ActiveScreenSet;
+
+            ParkParticipantViews();
+            outgoing.HideAll();
+            SetScreenSetRootsActive(_isPortrait);
+
+            if (_videoManager.ActiveCall != null)
+            {
+                incoming.ShowCallScreen(_videoManager.ActiveCall);
+            }
+            else
+            {
+                incoming.ShowMainScreen();
+            }
+        }
+
+        private void SetScreenSetRootsActive(bool isPortrait)
+        {
+            _portraitModeUIScreensSet.gameObject.SetActive(isPortrait);
+            _landscapeModeUIScreensSet.gameObject.SetActive(!isPortrait);
+        }
+
+        private void CreateParticipantViewsPool()
+        {
+            var poolObject = new GameObject("ParticipantViewsPool", typeof(RectTransform), typeof(CanvasGroup));
+            poolObject.transform.SetParent(transform, false);
+
+            var rect = (RectTransform)poolObject.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.zero;
+            rect.sizeDelta = Vector2.zero;
+            rect.anchoredPosition = Vector2.zero;
+
+            var canvasGroup = poolObject.GetComponent<CanvasGroup>();
+            canvasGroup.alpha = 0f;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+
+            _participantViewsPool = poolObject.transform;
+        }
+
+        private void ParkParticipantViews()
+        {
+            foreach (var view in _participantViews.Values)
+            {
+                if (view != null)
+                {
+                    AttachParticipantView(view, _participantViewsPool);
+                }
+            }
+        }
+
+        private void DestroyAllParticipantViews()
+        {
+            foreach (var view in _participantViews.Values)
+            {
+                if (view != null)
+                {
+                    Destroy(view.gameObject);
+                }
+            }
+
+            _participantViews.Clear();
+        }
+
+        private static void AttachParticipantView(ParticipantView view, Transform parent)
+        {
+            view.transform.SetParent(parent, worldPositionStays: false);
+            view.transform.localScale = Vector3.one;
+            view.transform.localRotation = Quaternion.identity;
+        }
 
         private void OnMicrophoneDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice)
         {
@@ -109,16 +273,25 @@ namespace StreamVideo.ExampleProject.UI
         {
             Debug.Log($"Changed active CAMERA from `{previousDevice}` to `{currentDevice}`");
 
+            if (!CanUseClient)
+            {
+                return;
+            }
+
             var webCamTexture = _videoManager.Client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
             LocalCameraChanged?.Invoke(webCamTexture);
         }
 
         private async Task SelectFirstWorkingCameraOrDefaultAsync()
         {
-            if (!_videoManager.Client.VideoDeviceManager.EnumerateDevices().Any())
+            if (!CanUseClient || !_videoManager.Client.VideoDeviceManager.EnumerateDevices().Any())
             {
-                Debug.LogError(
-                    "No camera devices found! Video streaming will not work. Please ensure that a camera device is plugged in.");
+                if (CanUseClient)
+                {
+                    Debug.LogError(
+                        "No camera devices found! Video streaming will not work. Please ensure that a camera device is plugged in.");
+                }
+
                 return;
             }
 
@@ -131,6 +304,11 @@ namespace StreamVideo.ExampleProject.UI
                 }
 
                 var isWorking = await _videoManager.Client.VideoDeviceManager.TestDeviceAsync(device);
+                if (!CanUseClient)
+                {
+                    return;
+                }
+
                 if (isWorking)
                 {
                     _videoManager.Client.VideoDeviceManager.SelectDevice(device, SenderVideoResolution, enable: false, _senderVideoFps);
@@ -140,6 +318,11 @@ namespace StreamVideo.ExampleProject.UI
 #endif
 
             var workingDevice = await _videoManager.Client.VideoDeviceManager.TryFindFirstWorkingDeviceAsync();
+            if (!CanUseClient)
+            {
+                return;
+            }
+
             if (workingDevice.HasValue)
             {
                 _videoManager.Client.VideoDeviceManager.SelectDevice(workingDevice.Value, SenderVideoResolution, enable: false, _senderVideoFps);
@@ -173,16 +356,6 @@ namespace StreamVideo.ExampleProject.UI
             _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice, enable: false);
         }
 
-        private UIScreensSet GetCurrentScreenSet()
-        {
-            var isPortraitMode = IsPortraitMode();
-
-            _portraitModeUIScreensSet.gameObject.SetActive(isPortraitMode);
-            _landscapeModeUIScreensSet.gameObject.SetActive(!isPortraitMode);
-
-            return isPortraitMode ? _portraitModeUIScreensSet : _landscapeModeUIScreensSet;
-        }
-
         private bool IsPortraitMode()
         {
 #if UNITY_EDITOR
@@ -190,10 +363,8 @@ namespace StreamVideo.ExampleProject.UI
             {
                 return true;
             }
-#elif (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-            return true;
 #endif
-            return false;
+            return Screen.height >= Screen.width;
         }
     }
 }

@@ -31,6 +31,14 @@ namespace StreamVideo.ExampleProject.UI
             Participant.IsSpeakingChanged += OnIsSpeakingChanged;
 
             _name.text = Participant.Name;
+
+            if (!Participant.IsLocalParticipant)
+            {
+                foreach (var track in Participant.GetTracks())
+                {
+                    OnParticipantTrackAdded(Participant, track);
+                }
+            }
         }
 
         public void UpdateIsDominantSpeaker(bool isDominantSpeaker)
@@ -63,6 +71,11 @@ namespace StreamVideo.ExampleProject.UI
         protected void Update()
         {
             var rect = _videoRectTransform.rect;
+            if (rect.width < 2f || rect.height < 2f)
+            {
+                return;
+            }
+
             var videoRenderedSize = new Vector2(rect.width, rect.height);
             var forcedRequestedSize = new Vector2(_forceRequestedResolutionWidth, _forceRequestedResolutionHeight);
             var finalRequestedSize = _forceRequestedResolution ? forcedRequestedSize : videoRenderedSize;

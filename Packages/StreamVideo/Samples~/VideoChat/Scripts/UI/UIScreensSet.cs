@@ -11,19 +11,25 @@ namespace StreamVideo.ExampleProject.UI
             _mainScreen.Init(videoManager, uiManager);
             _callScreen.Init(videoManager, uiManager);
         }
-        
+
         public void ShowMainScreen()
         {
             _callScreen.Hide();
             _mainScreen.Show();
         }
-        
+
         public void ShowCallScreen(IStreamCall call)
         {
             _mainScreen.Hide();
             _callScreen.Show(new CallScreenView.ShowArgs(call));
         }
-        
+
+        public void HideAll()
+        {
+            _callScreen.Hide();
+            _mainScreen.Hide();
+        }
+
         [SerializeField]
         private CallScreenView _callScreen;
 

@@ -20,6 +20,18 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
         }
 
+        public string JoinCallId
+        {
+            get => _joinCallIdInput != null ? _joinCallIdInput.text : string.Empty;
+            set
+            {
+                if (_joinCallIdInput != null)
+                {
+                    _joinCallIdInput.text = value ?? string.Empty;
+                }
+            }
+        }
+
         public void Show() => base.Show(new CallScreenView.ShowArgs());
 
         protected override void OnInit()
@@ -29,15 +41,24 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             _audioRedToggle.onValueChanged.AddListener(VideoManager.SetAudioREDundancyEncoding);
             _audioDtxToggle.onValueChanged.AddListener(VideoManager.SetAudioDtx);
-            
+            VideoManager.SetAudioREDundancyEncoding(_audioRedToggle.isOn);
+            VideoManager.SetAudioDtx(_audioDtxToggle.isOn);
+
+            _joinCallIdInput.onValueChanged.AddListener(OnJoinCallIdChanged);
+
             _cameraPanel.Init(VideoManager.Client, UIManager);
             _microphonePanel.Init(VideoManager.Client, UIManager);
         }
-        
+
         protected override void OnShow(CallScreenView.ShowArgs showArgs)
         {
             UIManager.LocalCameraChanged += OnLocalCameraChanged;
-            
+
+            JoinCallId = UIManager.JoinCallIdDraft;
+            _audioRedToggle.SetIsOnWithoutNotify(VideoManager.IsAudioRedundancyEncodingEnabled);
+            _audioDtxToggle.SetIsOnWithoutNotify(VideoManager.IsAudioDtxEnabled);
+            BindLocalCameraPreview();
+
             // Notify child components
             _cameraPanel.NotifyParentShow();
             _microphonePanel.NotifyParentShow();
@@ -45,8 +66,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected override void OnHide()
         {
+            UIManager.JoinCallIdDraft = JoinCallId;
             UIManager.LocalCameraChanged -= OnLocalCameraChanged;
-            
+
             // Notify child components
             _cameraPanel.NotifyParentHide();
             _microphonePanel.NotifyParentHide();
@@ -133,9 +155,17 @@ namespace StreamVideo.ExampleProject.UI.Screens
             }
         }
 
+        private void OnJoinCallIdChanged(string value) => UIManager.JoinCallIdDraft = value;
+
         private void OnLocalCameraChanged(WebCamTexture activeCamera)
         {
             _localCameraImage.texture = activeCamera;
+        }
+
+        private void BindLocalCameraPreview()
+        {
+            var webCamTexture = VideoManager.Client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
+            _localCameraImage.texture = webCamTexture;
         }
 
         private async Task<string> CreateRandomCallId()

@@ -133,12 +133,15 @@ namespace StreamVideo.ExampleProject
         /// <summary>
         /// Read <see cref="IStreamAudioConfig.EnableDtx"/>
         /// </summary>
-        /// <param name="value"></param>
+        public bool IsAudioDtxEnabled => _clientConfig.Audio.EnableDtx;
+
         public void SetAudioDtx(bool value) => _clientConfig.Audio.EnableDtx = value;
 
         /// <summary>
         /// Read <see cref="IStreamAudioConfig.EnableRed"/>
         /// </summary>
+        public bool IsAudioRedundancyEncodingEnabled => _clientConfig.Audio.EnableRed;
+
         public void SetAudioREDundancyEncoding(bool value) => _clientConfig.Audio.EnableRed = value;
 
         public void MuteLocally(IStreamVideoCallParticipant participant)
@@ -176,6 +179,10 @@ namespace StreamVideo.ExampleProject
             try
             {
                 await ConnectToStreamAsync(credentials);
+            }
+            catch (OperationCanceledException)
+            {
+                // Play Mode exit / domain reload cancels an in-flight connect.
             }
             catch (Exception e)
             {
@@ -329,28 +336,13 @@ namespace StreamVideo.ExampleProject
 #if STREAM_DEBUG_ENABLED
             try
             {
-                if (_activeCall == null)
+                if (_activeCall != null && _activeCall.Participants != null)
                 {
-                    Debug.LogError("Active call was null when trying to end it. call is null " + (call == null));
-                    return;
-                }
-
-                if (_activeCall.Participants == null)
-                {
-                    Debug.LogError("Active call participants were null when trying to end it. call is null " +
-                                   (call == null));
-                    return;
-                }
-
-                var callId = _activeCall.Id;
-                var localParticipant = _activeCall.Participants.FirstOrDefault(p => p.IsLocalParticipant);
-                if (localParticipant != null)
-                {
-                    Client.SendDebugLogs(call.Id, localParticipant.SessionId);
-                }
-                else
-                {
-                    Debug.LogWarning("[Debug] Failed to find local participant in active call to send debug stats.");
+                    var localParticipant = _activeCall.Participants.FirstOrDefault(p => p.IsLocalParticipant);
+                    if (localParticipant != null)
+                    {
+                        Client.SendDebugLogs(_activeCall.Id, localParticipant.SessionId);
+                    }
                 }
             }
             catch (Exception e)

@@ -59,26 +59,37 @@ namespace StreamVideo.ExampleProject.UI.Devices
         protected IStreamVideoClient Client { get; private set; }
 
         // Called by Unity
-        protected void Awake()
+        protected void OnEnable()
         {
-            _refreshCoroutine = StartCoroutine(RefreshDevicesList());
+            if (_refreshCoroutine == null)
+            {
+                _refreshCoroutine = StartCoroutine(RefreshDevicesList());
+            }
+        }
+
+        // Called by Unity
+        protected void OnDisable()
+        {
+            if (_refreshCoroutine != null)
+            {
+                StopCoroutine(_refreshCoroutine);
+                _refreshCoroutine = null;
+            }
         }
 
         // Called by Unity
         protected void Start()
         {
-            _deviceButton.UpdateSprite(IsDeviceEnabled);
+            if (Client != null)
+            {
+                _deviceButton.UpdateSprite(IsDeviceEnabled);
+            }
         }
 
         // Called by Unity
         protected void OnDestroy()
         {
             OnDestroying();
-            
-            if (_refreshCoroutine != null)
-            {
-                StopCoroutine(_refreshCoroutine);
-            }
         }
         
         protected virtual void OnInit()

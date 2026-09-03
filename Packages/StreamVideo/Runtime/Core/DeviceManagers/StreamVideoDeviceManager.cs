@@ -128,6 +128,11 @@ namespace StreamVideo.Core.DeviceManagers
 
                 while (_stopwatch.ElapsedMilliseconds < msTimeout)
                 {
+                    if (camTexture == null)
+                    {
+                        return false;
+                    }
+
                     //WebCamTexture.didUpdateThisFrame does not guarantee that camera is capturing data. We need to compare frames
                     if (camTexture.didUpdateThisFrame)
                     {
@@ -159,10 +164,16 @@ namespace StreamVideo.Core.DeviceManagers
                     await Task.Delay(1);
                 }
                 
-                return isCapturing;
+                return camTexture != null && isCapturing;
             }
             catch (Exception e)
             {
+                // Domain reload / Play Mode exit destroys the temporary WebCamTexture while this test is still running.
+                if (camTexture == null)
+                {
+                    return false;
+                }
+
                 Logs.Error(e.Message);
                 return false;
             }

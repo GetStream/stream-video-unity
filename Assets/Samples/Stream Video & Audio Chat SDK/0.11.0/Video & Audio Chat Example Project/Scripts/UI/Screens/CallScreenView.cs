@@ -8,7 +8,6 @@ using StreamVideo.Core.StatefulModels;
 using StreamVideo.ExampleProject.UI.Devices;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject.UI.Screens
@@ -96,16 +95,21 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _moreBtn.onClick.AddListener(_moreOptionsWindow.Show);
 
 #if AUDIO_PROCESSING_ENABLED
-            _apmToggleBtn.onClick.AddListener(OnApmToggleClicked);
-            _echoToggleBtn.onClick.AddListener(OnEchoToggleClicked);
-            _noiseToggleBtn.onClick.AddListener(OnNoiseToggleClicked);
-            _gainToggleBtn.onClick.AddListener(OnGainToggleClicked);
-            _noiseLvlBtn.onClick.AddListener(OnNoiseLvlClicked);
+            // Landscape CallScreen leaves these unassigned; portrait CallScreenPortrait wires them.
+            if (_apmToggleBtn != null && _echoToggleBtn != null && _noiseToggleBtn != null &&
+                _gainToggleBtn != null && _noiseLvlBtn != null)
+            {
+                _apmToggleBtn.onClick.AddListener(OnApmToggleClicked);
+                _echoToggleBtn.onClick.AddListener(OnEchoToggleClicked);
+                _noiseToggleBtn.onClick.AddListener(OnNoiseToggleClicked);
+                _gainToggleBtn.onClick.AddListener(OnGainToggleClicked);
+                _noiseLvlBtn.onClick.AddListener(OnNoiseLvlClicked);
 
-            _audioProcessingConfig = new AudioProcessingConfig(VideoManager.Client);
-            _audioProcessingConfig.Updated += AudioProcessingConfigUpdated;
+                _audioProcessingConfig = new AudioProcessingConfig(VideoManager.Client);
+                _audioProcessingConfig.Updated += AudioProcessingConfigUpdated;
 
-            _audioProcessingConfig.LoadCurrentConfig();
+                _audioProcessingConfig.LoadCurrentConfig();
+            }
 #endif
         }
 
@@ -116,7 +120,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             // If local user is the call owner we can "end" the call for all participants, otherwise we can only "leave" the call
             _endBtn.gameObject.SetActive(_activeCall.IsLocalUserOwner);
 
-            // Generate participant UI for already present participants
+            // Adopt existing participant views (rotation) or create them (join)
             foreach (var participant in _activeCall.Participants)
             {
                 AddParticipant(participant, sortParticipantViews: false);
@@ -138,10 +142,14 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             // Show active call ID so user can copy it and send others to join
             _joinCallIdInput.text = _activeCall.Id;
-            
+
             // Notify child components
             _cameraPanel.NotifyParentShow();
             _microphonePanel.NotifyParentShow();
+
+#if AUDIO_PROCESSING_ENABLED
+            _audioProcessingConfig?.LoadCurrentConfig();
+#endif
         }
 
         protected override void OnHide()
@@ -156,10 +164,16 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 _activeCall = null;
             }
 
-            RemoveAllParticipants();
+            // Views are owned by UIManager and moved between layouts. Do not destroy them here.
+            _participantSessionIdToView.Clear();
 
             UIManager.LocalCameraChanged -= OnLocalCameraChanged;
-            
+
+            if (_moreOptionsWindow != null)
+            {
+                _moreOptionsWindow.Hide();
+            }
+
             // Notify child components
             _cameraPanel.NotifyParentHide();
             _microphonePanel.NotifyParentHide();
@@ -200,15 +214,13 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             Debug.Log("Participant Joined. SessionID: " + participant.SessionId);
             var parent = GetParticipantViewParent(participant);
-            var view = Instantiate(_participantViewPrefab, parent);
-            view.Init(participant, VideoManager);
-            _participantSessionIdToView.Add(participant.SessionId, view);
+            var view = UIManager.GetOrCreateParticipantView(participant, parent, _participantViewPrefab);
+            _participantSessionIdToView[participant.SessionId] = view;
 
             if (participant.IsLocalParticipant)
             {
                 // Set input camera as a video source for local participant - we won't receive TrackAdded event for local participant
                 view.SetLocalCameraSource(_activeCall.GetLocalPreviewTexture());
-                //StreamTodo: this will invalidate each time WebCamTexture is internally replaced so we need a better way to expose this
             }
 
             if (sortParticipantViews)
@@ -220,14 +232,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
         private void RemoveParticipant(string sessionId, string userId, bool sortParticipantViews)
         {
             Debug.Log("Participant Left. SessionID: " + sessionId);
-            if (!_participantSessionIdToView.TryGetValue(sessionId, out var view))
-            {
-                Debug.LogError("Failed to find view for removed participant with sessionId: " + sessionId);
-                return;
-            }
-
             _participantSessionIdToView.Remove(sessionId);
-            Destroy(view.gameObject);
+            UIManager.DestroyParticipantView(sessionId);
 
             if (sortParticipantViews)
             {
@@ -247,7 +253,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 var isDominantSpeaker = participantView.Participant == _activeCall.DominantSpeaker;
                 var parent = GetParticipantViewParent(isDominantSpeaker);
 
-                participantView.transform.SetParent(parent);
+                participantView.transform.SetParent(parent, worldPositionStays: false);
+                participantView.transform.localScale = Vector3.one;
+                participantView.transform.localRotation = Quaternion.identity;
 
                 if (!isDominantSpeaker)
                 {
@@ -266,16 +274,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         private Transform GetParticipantViewParent(bool isDominantSpeaker)
             => isDominantSpeaker ? _dominantSpeakerContainer : _remainingParticipantsContainer;
-
-        private void RemoveAllParticipants()
-        {
-            foreach (var (sessionId, view) in _participantSessionIdToView)
-            {
-                Destroy(view.gameObject);
-            }
-
-            _participantSessionIdToView.Clear();
-        }
 
         private void OnLocalCameraChanged(WebCamTexture activeCamera)
             => RefreshLocalPreview();
@@ -333,6 +331,11 @@ namespace StreamVideo.ExampleProject.UI.Screens
         
         void AudioProcessingConfigUpdated()
         {
+            if (_apmToggleBtn == null)
+            {
+                return;
+            }
+
             var apmOn = _audioProcessingConfig.Enabled;
 
             try

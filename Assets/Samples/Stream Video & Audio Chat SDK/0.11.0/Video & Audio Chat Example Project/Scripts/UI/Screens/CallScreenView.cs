@@ -117,6 +117,13 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             _activeCall = showArgs.ActiveCall;
 
+#if STREAM_DEBUG_ENABLED
+            LogUiRotate(
+                $"OnShow parent={transform.parent?.name} screen={name} call={_activeCall.Id} " +
+                $"participants={_activeCall.Participants.Count} {Screen.width}x{Screen.height} {Screen.orientation} " +
+                $"dominant={DescribeRect(_dominantSpeakerContainer)} remaining={DescribeRect(_remainingParticipantsContainer)}");
+#endif
+
             // If local user is the call owner we can "end" the call for all participants, otherwise we can only "leave" the call
             _endBtn.gameObject.SetActive(_activeCall.IsLocalUserOwner);
 
@@ -154,6 +161,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected override void OnHide()
         {
+#if STREAM_DEBUG_ENABLED
+            LogUiRotate($"OnHide parent={transform.parent?.name} screen={name}");
+#endif
             if (_activeCall != null)
             {
                 _activeCall.ParticipantJoined -= OnParticipantJoined;
@@ -216,6 +226,11 @@ namespace StreamVideo.ExampleProject.UI.Screens
             var parent = GetParticipantViewParent(participant);
             var view = UIManager.GetOrCreateParticipantView(participant, parent, _participantViewPrefab);
             _participantSessionIdToView[participant.SessionId] = view;
+#if STREAM_DEBUG_ENABLED
+            LogUiRotate(
+                $"AddParticipant session={participant.SessionId} local={participant.IsLocalParticipant} " +
+                $"parent={parent?.name} viewParent={view.transform.parent?.name} set={transform.parent?.name}");
+#endif
 
             if (participant.IsLocalParticipant)
             {
@@ -292,6 +307,30 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             localParticipant.SetLocalCameraSource(_activeCall.GetLocalPreviewTexture());
         }
+
+#if STREAM_DEBUG_ENABLED
+        private static void LogUiRotate(string message)
+        {
+            Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null, "[UIRotate] {0}", message);
+        }
+
+        private static string DescribeRect(Transform target)
+        {
+            if (target == null)
+            {
+                return "null";
+            }
+
+            var rectTransform = target as RectTransform;
+            if (rectTransform == null)
+            {
+                return target.name;
+            }
+
+            var rect = rectTransform.rect;
+            return $"{target.name} {rect.width:0}x{rect.height:0} hier={target.gameObject.activeInHierarchy}";
+        }
+#endif
         
 #if AUDIO_PROCESSING_ENABLED
         private void OnNoiseLvlClicked()

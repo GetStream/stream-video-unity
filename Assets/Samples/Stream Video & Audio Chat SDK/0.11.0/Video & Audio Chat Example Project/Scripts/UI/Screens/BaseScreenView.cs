@@ -24,9 +24,18 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             if (_gameObject.activeSelf)
             {
+#if STREAM_DEBUG_ENABLED
+                Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null,
+                    "[UIRotate] Show skipped already active: {0} parent={1}", name, transform.parent != null ? transform.parent.name : "null");
+#endif
                 return;
             }
 
+#if STREAM_DEBUG_ENABLED
+            Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null,
+                "[UIRotate] Show {0} parent={1} inHierarchy={2}",
+                name, transform.parent != null ? transform.parent.name : "null", _gameObject.activeInHierarchy);
+#endif
             _gameObject.SetActive(true);
             OnShow(initArgs);
         }
@@ -35,9 +44,17 @@ namespace StreamVideo.ExampleProject.UI.Screens
         {
             if (!_gameObject.activeSelf)
             {
+#if STREAM_DEBUG_ENABLED
+                Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null,
+                    "[UIRotate] Hide skipped already inactive: {0} parent={1}", name, transform.parent != null ? transform.parent.name : "null");
+#endif
                 return;
             }
 
+#if STREAM_DEBUG_ENABLED
+            Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null,
+                "[UIRotate] Hide {0} parent={1}", name, transform.parent != null ? transform.parent.name : "null");
+#endif
             _gameObject.SetActive(false);
             OnHide();
         }

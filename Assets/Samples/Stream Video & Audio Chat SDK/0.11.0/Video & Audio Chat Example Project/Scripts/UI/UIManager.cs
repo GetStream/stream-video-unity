@@ -7,6 +7,7 @@ using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject.UI
 {
@@ -83,7 +84,11 @@ namespace StreamVideo.ExampleProject.UI
             _portraitModeUIScreensSet.Init(_videoManager, uiManager: this);
 
             _isPortrait = IsPortraitMode();
+            ConfigureCanvasScaler(_isPortrait);
             SetScreenSetRootsActive(_isPortrait);
+            LogUiRotate(
+                $"Awake portrait={_isPortrait} forceP={_forceTestPortraitMode} forceL={_forceTestLandscapeMode} " +
+                $"{DescribeScreen()} {DescribeCanvas()} active={DescribeScreenSet(ActiveScreenSet)} inactive={DescribeScreenSet(InactiveScreenSet)}");
 
             if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Camera))
             {
@@ -121,6 +126,8 @@ namespace StreamVideo.ExampleProject.UI
             }
 
             _isPortrait = isPortrait;
+            ConfigureCanvasScaler(_isPortrait);
+            LogUiRotate($"Size changed → portrait={_isPortrait} {DescribeScreen()} {DescribeCanvas()}");
             SwitchScreenSet();
         }
 
@@ -157,13 +164,19 @@ namespace StreamVideo.ExampleProject.UI
         private UIScreensSet _portraitModeUIScreensSet;
 
         [SerializeField]
+        [Tooltip("Locks portrait UI regardless of Screen size. Works in player builds.")]
         private bool _forceTestPortraitMode;
+
+        [SerializeField]
+        [Tooltip("Locks landscape UI regardless of Screen size. Works in player builds. Wins over force portrait.")]
+        private bool _forceTestLandscapeMode;
 
         private readonly Dictionary<string, ParticipantView> _participantViews
             = new Dictionary<string, ParticipantView>();
 
         private PermissionsManager _permissionsManager;
         private Transform _participantViewsPool;
+        private CanvasScaler _canvasScaler;
         private bool _isPortrait;
         private bool _isDestroyed;
         private string _joinCallIdDraft = string.Empty;
@@ -185,20 +198,37 @@ namespace StreamVideo.ExampleProject.UI
             DestroyAllParticipantViews();
         }
 
-        private void ShowMainScreen() => ActiveScreenSet.ShowMainScreen();
+        private void ShowMainScreen()
+        {
+            LogUiRotate($"ShowMainScreen {DescribeScreenSet(ActiveScreenSet)} {DescribeScreen()}");
+            ActiveScreenSet.ShowMainScreen();
+        }
 
-        private void ShowCallScreen(IStreamCall call) => ActiveScreenSet.ShowCallScreen(call);
+        private void ShowCallScreen(IStreamCall call)
+        {
+            LogUiRotate($"ShowCallScreen {DescribeScreenSet(ActiveScreenSet)} call={call?.Id} {DescribeScreen()}");
+            ActiveScreenSet.ShowCallScreen(call);
+        }
 
         private void SwitchScreenSet()
         {
             var outgoing = InactiveScreenSet;
             var incoming = ActiveScreenSet;
+            var showCall = _videoManager.ActiveCall != null;
+
+            LogUiRotate(
+                $"Switch outgoing={DescribeScreenSet(outgoing)} incoming={DescribeScreenSet(incoming)} " +
+                $"showCall={showCall} views={_participantViews.Count} {DescribeScreen()} {DescribeCanvas()}");
 
             ParkParticipantViews();
             outgoing.HideAll();
             SetScreenSetRootsActive(_isPortrait);
 
-            if (_videoManager.ActiveCall != null)
+            LogUiRotate(
+                $"Switch after SetActive portraitRoot={DescribeScreenSet(_portraitModeUIScreensSet)} " +
+                $"landscapeRoot={DescribeScreenSet(_landscapeModeUIScreensSet)}");
+
+            if (showCall)
             {
                 incoming.ShowCallScreen(_videoManager.ActiveCall);
             }
@@ -356,15 +386,82 @@ namespace StreamVideo.ExampleProject.UI
             _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice, enable: false);
         }
 
+        private void ConfigureCanvasScaler(bool isPortrait)
+        {
+            if (_canvasScaler == null)
+            {
+                _canvasScaler = GetComponent<CanvasScaler>();
+            }
+
+            if (_canvasScaler == null)
+            {
+                return;
+            }
+
+            _canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            _canvasScaler.referenceResolution = new Vector2(1920, 1080);
+
+            // Portrait CallScreen is authored against match-width. Landscape CallScreen is 1080px
+            // tall — Expand so a 20:9 phone does not scale that stack past the screen height.
+            if (isPortrait)
+            {
+                _canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                _canvasScaler.matchWidthOrHeight = 0f;
+            }
+            else
+            {
+                _canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+            }
+        }
+
         private bool IsPortraitMode()
         {
-#if UNITY_EDITOR
+            if (_forceTestLandscapeMode)
+            {
+                return false;
+            }
+
             if (_forceTestPortraitMode)
             {
                 return true;
             }
-#endif
+
             return Screen.height >= Screen.width;
+        }
+
+        private static string DescribeScreen()
+            => $"{Screen.width}x{Screen.height} {Screen.orientation}";
+
+        private string DescribeCanvas()
+        {
+            if (_canvasScaler == null)
+            {
+                return "canvas=null";
+            }
+
+            var rect = transform as RectTransform;
+            var size = rect != null ? rect.rect : Rect.zero;
+            return
+                $"canvas={size.width:0}x{size.height:0} scale={_canvasScaler.scaleFactor:0.###} " +
+                $"mode={_canvasScaler.screenMatchMode} match={_canvasScaler.matchWidthOrHeight:0.##}";
+        }
+
+        private static string DescribeScreenSet(UIScreensSet set)
+        {
+            if (set == null)
+            {
+                return "null";
+            }
+
+            var go = set.gameObject;
+            return $"{go.name} self={go.activeSelf} hier={go.activeInHierarchy}";
+        }
+
+        private static void LogUiRotate(string message)
+        {
+#if STREAM_DEBUG_ENABLED
+            Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null, "[UIRotate] {0}", message);
+#endif
         }
     }
 }

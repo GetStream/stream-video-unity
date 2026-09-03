@@ -597,9 +597,7 @@ MonoBehaviour:
   _senderVideoWidth: 1920
   _senderVideoHeight: 1080
   _senderVideoFps: 30
-  _landscapeModeUIScreensSet: {fileID: 716394319}
-  _portraitModeUIScreensSet: {fileID: 835210816}
-  _forceTestPortraitMode: 0
+  _uiScreensSet: {fileID: 716394319}
 --- !u!1 &1354881823
 GameObject:
   m_ObjectHideFlags: 0

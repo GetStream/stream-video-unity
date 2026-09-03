@@ -3567,6 +3567,7 @@ MonoBehaviour:
   _participantViewPrefab: {fileID: 206063798946056810, guid: 8e6e01d55ac3a294190ec75159fd5592, type: 3}
   _dominantSpeakerContainer: {fileID: 2642389010182971069}
   _remainingParticipantsContainer: {fileID: 6480392315420529555}
+  _stage: {fileID: 6480392313659073240}
   _leaveBtn: {fileID: 6480392315580084351}
   _endBtn: {fileID: 6480392314047834102}
   _joinCallIdInput: {fileID: 7384330386348051496}

@@ -8,7 +8,6 @@ using StreamVideo.Core.StatefulModels;
 using StreamVideo.ExampleProject.UI.Devices;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace StreamVideo.ExampleProject.UI.Screens
@@ -43,6 +42,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         [SerializeField]
         private Transform _remainingParticipantsContainer;
+
+        [SerializeField]
+        private RectTransform _stage;
 
         [SerializeField]
         private Button _leaveBtn;
@@ -83,9 +85,17 @@ namespace StreamVideo.ExampleProject.UI.Screens
         private IStreamCall _activeCall;
         private ParticipantView _currentDominantSpeakerView;
         private AudioProcessingConfig _audioProcessingConfig;
+        private readonly List<ParticipantView> _layoutViews = new List<ParticipantView>();
+        private GridLayoutGroup _stageGrid;
+        private Vector2 _lastStageSize;
+        private int _lastScreenWidth;
+        private int _lastScreenHeight;
+        private bool _stagePrepared;
 
         protected override void OnInit()
         {
+            PrepareStage();
+
             _leaveBtn.onClick.AddListener(VideoManager.LeaveActiveCall);
             _endBtn.onClick.AddListener(VideoManager.EndActiveCall);
 
@@ -96,16 +106,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _moreBtn.onClick.AddListener(_moreOptionsWindow.Show);
 
 #if AUDIO_PROCESSING_ENABLED
-            _apmToggleBtn.onClick.AddListener(OnApmToggleClicked);
-            _echoToggleBtn.onClick.AddListener(OnEchoToggleClicked);
-            _noiseToggleBtn.onClick.AddListener(OnNoiseToggleClicked);
-            _gainToggleBtn.onClick.AddListener(OnGainToggleClicked);
-            _noiseLvlBtn.onClick.AddListener(OnNoiseLvlClicked);
-
-            _audioProcessingConfig = new AudioProcessingConfig(VideoManager.Client);
-            _audioProcessingConfig.Updated += AudioProcessingConfigUpdated;
-
-            _audioProcessingConfig.LoadCurrentConfig();
+            InitAudioProcessingUi();
 #endif
         }
 
@@ -119,10 +120,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
             // Generate participant UI for already present participants
             foreach (var participant in _activeCall.Participants)
             {
-                AddParticipant(participant, sortParticipantViews: false);
+                AddParticipant(participant, applyLayout: false);
             }
 
-            SortParticipantViews();
+            ApplyLayout();
 
             // Subscribe to participants joining or leaving the call
             _activeCall.ParticipantJoined += OnParticipantJoined;
@@ -131,7 +132,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             // Subscribe to the change of the most actively speaking participant
             _activeCall.DominantSpeakerChanged += OnDominantSpeakerChanged;
 
-            _activeCall.SortedParticipantsUpdated += SortParticipantViews;
+            _activeCall.SortedParticipantsUpdated += ApplyLayout;
             _activeCall.LocalPreviewTextureChanged += OnLocalPreviewTextureChanged;
 
             UIManager.LocalCameraChanged += OnLocalCameraChanged;
@@ -151,7 +152,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 _activeCall.ParticipantJoined -= OnParticipantJoined;
                 _activeCall.ParticipantLeft -= OnParticipantLeft;
                 _activeCall.DominantSpeakerChanged -= OnDominantSpeakerChanged;
-                _activeCall.SortedParticipantsUpdated -= SortParticipantViews;
+                _activeCall.SortedParticipantsUpdated -= ApplyLayout;
                 _activeCall.LocalPreviewTextureChanged -= OnLocalPreviewTextureChanged;
                 _activeCall = null;
             }
@@ -177,7 +178,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 participantView.UpdateIsDominantSpeaker(isDominantSpeaker);
             }
 
-            SortParticipantViews();
+            ApplyLayout();
         }
 
         private static string GetSpeakerName(IStreamVideoCallParticipant participant)
@@ -191,16 +192,15 @@ namespace StreamVideo.ExampleProject.UI.Screens
         }
 
         private void OnParticipantJoined(IStreamVideoCallParticipant participant)
-            => AddParticipant(participant, sortParticipantViews: true);
+            => AddParticipant(participant, applyLayout: true);
 
         private void OnParticipantLeft(string sessionId, string userId)
-            => RemoveParticipant(sessionId, userId, sortParticipantViews: true);
+            => RemoveParticipant(sessionId, userId, applyLayout: true);
 
-        private void AddParticipant(IStreamVideoCallParticipant participant, bool sortParticipantViews)
+        private void AddParticipant(IStreamVideoCallParticipant participant, bool applyLayout)
         {
             Debug.Log("Participant Joined. SessionID: " + participant.SessionId);
-            var parent = GetParticipantViewParent(participant);
-            var view = Instantiate(_participantViewPrefab, parent);
+            var view = Instantiate(_participantViewPrefab, _stage);
             view.Init(participant, VideoManager);
             _participantSessionIdToView.Add(participant.SessionId, view);
 
@@ -211,13 +211,13 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 //StreamTodo: this will invalidate each time WebCamTexture is internally replaced so we need a better way to expose this
             }
 
-            if (sortParticipantViews)
+            if (applyLayout)
             {
-                SortParticipantViews();
+                ApplyLayout();
             }
         }
 
-        private void RemoveParticipant(string sessionId, string userId, bool sortParticipantViews)
+        private void RemoveParticipant(string sessionId, string userId, bool applyLayout)
         {
             Debug.Log("Participant Left. SessionID: " + sessionId);
             if (!_participantSessionIdToView.TryGetValue(sessionId, out var view))
@@ -229,43 +229,189 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _participantSessionIdToView.Remove(sessionId);
             Destroy(view.gameObject);
 
-            if (sortParticipantViews)
+            if (applyLayout)
             {
-                SortParticipantViews();
+                ApplyLayout();
             }
         }
 
-        /// <summary>
-        /// Sort participant views based on SortedParticipants property.
-        /// This will place dominant participant in large window and the other participants in a scrollable view underneath
-        /// </summary>
-        private void SortParticipantViews()
+        protected void Update()
         {
-            var index = 0;
-            foreach (var participantView in _participantSessionIdToView.Values)
+            if (_activeCall == null || _stage == null)
             {
-                var isDominantSpeaker = participantView.Participant == _activeCall.DominantSpeaker;
-                var parent = GetParticipantViewParent(isDominantSpeaker);
+                return;
+            }
 
-                participantView.transform.SetParent(parent);
+            var size = _stage.rect.size;
+            if (size == _lastStageSize && Screen.width == _lastScreenWidth && Screen.height == _lastScreenHeight)
+            {
+                return;
+            }
 
-                if (!isDominantSpeaker)
+            _lastStageSize = size;
+            _lastScreenWidth = Screen.width;
+            _lastScreenHeight = Screen.height;
+            ApplyLayout();
+        }
+
+        private void PrepareStage()
+        {
+            if (_stagePrepared)
+            {
+                return;
+            }
+
+            _stagePrepared = true;
+
+            if (_dominantSpeakerContainer != null && _dominantSpeakerContainer.parent != null)
+            {
+                _dominantSpeakerContainer.parent.gameObject.SetActive(false);
+            }
+
+            if (_remainingParticipantsContainer != null)
+            {
+                var viewport = _remainingParticipantsContainer.parent;
+                var scroll = viewport != null ? viewport.parent : null;
+                if (scroll != null)
                 {
-                    // Set valid order of the view relative to other views. We skip this for dominant speaker because he's under a different parent Transform
-                    participantView.transform.SetSiblingIndex(index);
-                    index++;
+                    scroll.gameObject.SetActive(false);
+                }
+                else
+                {
+                    _remainingParticipantsContainer.gameObject.SetActive(false);
                 }
             }
+
+            if (_stage == null && _dominantSpeakerContainer != null)
+            {
+                var dominantParent = _dominantSpeakerContainer.parent;
+                if (dominantParent != null)
+                {
+                    _stage = dominantParent.parent as RectTransform;
+                }
+            }
+
+            if (_stage == null)
+            {
+                Debug.LogError("CallScreenView is missing the participant stage RectTransform.");
+                return;
+            }
+
+            var stageLayout = _stage.GetComponent<HorizontalOrVerticalLayoutGroup>();
+            if (stageLayout != null)
+            {
+                stageLayout.enabled = false;
+            }
+
+            _stageGrid = _stage.GetComponent<GridLayoutGroup>();
+            if (_stageGrid == null)
+            {
+                _stageGrid = _stage.gameObject.AddComponent<GridLayoutGroup>();
+            }
+
+            _stageGrid.childAlignment = TextAnchor.MiddleCenter;
+            _stageGrid.startCorner = GridLayoutGroup.Corner.UpperLeft;
+            _stageGrid.startAxis = GridLayoutGroup.Axis.Horizontal;
+            _stageGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+
+            var callLayout = GetComponent<VerticalLayoutGroup>();
+            if (callLayout != null)
+            {
+                callLayout.childControlHeight = true;
+                callLayout.childForceExpandHeight = true;
+                callLayout.childControlWidth = true;
+                callLayout.childForceExpandWidth = true;
+            }
+
+            var stageElement = _stage.GetComponent<LayoutElement>();
+            if (stageElement == null)
+            {
+                stageElement = _stage.gameObject.AddComponent<LayoutElement>();
+            }
+
+            stageElement.flexibleHeight = 1f;
+            stageElement.flexibleWidth = 1f;
+            stageElement.minHeight = 0f;
+
+            var controls = transform.Find("Controls");
+            if (controls != null)
+            {
+                var controlsElement = controls.GetComponent<LayoutElement>();
+                if (controlsElement == null)
+                {
+                    controlsElement = controls.gameObject.AddComponent<LayoutElement>();
+                }
+
+                controlsElement.minHeight = 100f;
+                controlsElement.preferredHeight = 100f;
+                controlsElement.flexibleHeight = 0f;
+            }
+
+            var moreOptions = transform.Find("MoreOptionsWindow");
+            if (moreOptions != null)
+            {
+                var moreElement = moreOptions.GetComponent<LayoutElement>();
+                if (moreElement == null)
+                {
+                    moreElement = moreOptions.gameObject.AddComponent<LayoutElement>();
+                }
+
+                moreElement.ignoreLayout = true;
+            }
         }
 
-        private Transform GetParticipantViewParent(IStreamVideoCallParticipant participant)
+        private void ApplyLayout()
         {
-            var isDominantSpeaker = participant == _activeCall.DominantSpeaker;
-            return GetParticipantViewParent(isDominantSpeaker);
-        }
+            if (_stage == null || _activeCall == null)
+            {
+                return;
+            }
 
-        private Transform GetParticipantViewParent(bool isDominantSpeaker)
-            => isDominantSpeaker ? _dominantSpeakerContainer : _remainingParticipantsContainer;
+            _layoutViews.Clear();
+            foreach (var participant in _activeCall.SortedParticipants)
+            {
+                if (!_participantSessionIdToView.TryGetValue(participant.SessionId, out var view))
+                {
+                    continue;
+                }
+
+                _layoutViews.Add(view);
+                if (view.transform.parent != _stage)
+                {
+                    view.transform.SetParent(_stage, worldPositionStays: false);
+                }
+            }
+
+            var count = _layoutViews.Count;
+            if (_stageGrid == null || count == 0)
+            {
+                return;
+            }
+
+            var isPortrait = Screen.height >= Screen.width || _stage.rect.height >= _stage.rect.width;
+            var cols = count == 1 || (count == 2 && isPortrait)
+                ? 1
+                : isPortrait ? 2 : Mathf.Min(3, count);
+            var rows = Mathf.Max(1, Mathf.CeilToInt(count / (float)cols));
+
+            _stageGrid.enabled = true;
+            _stageGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            _stageGrid.constraintCount = cols;
+            _stageGrid.spacing = new Vector2(8f, 8f);
+
+            var rect = _stage.rect;
+            var spacing = _stageGrid.spacing;
+            _stageGrid.cellSize = new Vector2(
+                Mathf.Max(1f, (rect.width - spacing.x * (cols - 1)) / cols),
+                Mathf.Max(1f, (rect.height - spacing.y * (rows - 1)) / rows));
+
+            for (var i = 0; i < _layoutViews.Count; i++)
+            {
+                _layoutViews[i].transform.SetSiblingIndex(i);
+            }
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_stage);
+        }
 
         private void RemoveAllParticipants()
         {
@@ -296,6 +442,25 @@ namespace StreamVideo.ExampleProject.UI.Screens
         }
         
 #if AUDIO_PROCESSING_ENABLED
+        private void InitAudioProcessingUi()
+        {
+            if (_apmToggleBtn == null || _echoToggleBtn == null || _noiseToggleBtn == null ||
+                _gainToggleBtn == null || _noiseLvlBtn == null)
+            {
+                return;
+            }
+
+            _apmToggleBtn.onClick.AddListener(OnApmToggleClicked);
+            _echoToggleBtn.onClick.AddListener(OnEchoToggleClicked);
+            _noiseToggleBtn.onClick.AddListener(OnNoiseToggleClicked);
+            _gainToggleBtn.onClick.AddListener(OnGainToggleClicked);
+            _noiseLvlBtn.onClick.AddListener(OnNoiseLvlClicked);
+
+            _audioProcessingConfig = new AudioProcessingConfig(VideoManager.Client);
+            _audioProcessingConfig.Updated += AudioProcessingConfigUpdated;
+            _audioProcessingConfig.LoadCurrentConfig();
+        }
+
         private void OnNoiseLvlClicked()
         {
             _audioProcessingConfig.NoiseLvl++;

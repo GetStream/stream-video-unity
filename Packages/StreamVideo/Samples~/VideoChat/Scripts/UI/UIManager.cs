@@ -6,6 +6,7 @@ using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Libs.Utils;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace StreamVideo.ExampleProject.UI
 {
@@ -28,7 +29,7 @@ namespace StreamVideo.ExampleProject.UI
             _videoManager.Client.VideoDeviceManager.SelectedDeviceChanged += OnCameraDeviceChanged;
             _videoManager.Client.AudioDeviceManager.SelectedDeviceChanged += OnMicrophoneDeviceChanged;
 
-            GetCurrentScreenSet().Init(_videoManager, uiManager: this);
+            _uiScreensSet.Init(_videoManager, uiManager: this);
 
             if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Camera))
             {
@@ -81,14 +82,9 @@ namespace StreamVideo.ExampleProject.UI
         [SerializeField]
         private int _senderVideoFps = 30;
 
+        [FormerlySerializedAs("_landscapeModeUIScreensSet")]
         [SerializeField]
-        private UIScreensSet _landscapeModeUIScreensSet;
-
-        [SerializeField]
-        private UIScreensSet _portraitModeUIScreensSet;
-
-        [SerializeField]
-        private bool _forceTestPortraitMode;
+        private UIScreensSet _uiScreensSet;
 
         private PermissionsManager _permissionsManager;
 
@@ -96,9 +92,9 @@ namespace StreamVideo.ExampleProject.UI
 
         private void OnCallEnded() => ShowMainScreen();
 
-        private void ShowMainScreen() => GetCurrentScreenSet().ShowMainScreen();
+        private void ShowMainScreen() => _uiScreensSet.ShowMainScreen();
 
-        private void ShowCallScreen(IStreamCall call) => GetCurrentScreenSet().ShowCallScreen(call);
+        private void ShowCallScreen(IStreamCall call) => _uiScreensSet.ShowCallScreen(call);
 
         private void OnMicrophoneDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice)
         {
@@ -171,29 +167,6 @@ namespace StreamVideo.ExampleProject.UI
             }
 
             _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice, enable: false);
-        }
-
-        private UIScreensSet GetCurrentScreenSet()
-        {
-            var isPortraitMode = IsPortraitMode();
-
-            _portraitModeUIScreensSet.gameObject.SetActive(isPortraitMode);
-            _landscapeModeUIScreensSet.gameObject.SetActive(!isPortraitMode);
-
-            return isPortraitMode ? _portraitModeUIScreensSet : _landscapeModeUIScreensSet;
-        }
-
-        private bool IsPortraitMode()
-        {
-#if UNITY_EDITOR
-            if (_forceTestPortraitMode)
-            {
-                return true;
-            }
-#elif (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-            return true;
-#endif
-            return false;
         }
     }
 }

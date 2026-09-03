@@ -57,6 +57,35 @@ namespace StreamVideo.ExampleProject.UI
             _videoRectTransform = _video.GetComponent<RectTransform>();
             _baseVideoRotation = _videoRectTransform.rotation;
             _muteLocallyToggleButton.onClick.AddListener(OnMuteLocallyToggleClicked);
+            StretchVideoToTile();
+        }
+
+        private void StretchVideoToTile()
+        {
+            var rootLayout = GetComponent<VerticalLayoutGroup>();
+            if (rootLayout != null)
+            {
+                rootLayout.enabled = false;
+            }
+
+            if (_videoFrame != null)
+            {
+                var frame = _videoFrame.rectTransform;
+                frame.anchorMin = Vector2.zero;
+                frame.anchorMax = Vector2.one;
+                frame.offsetMin = Vector2.zero;
+                frame.offsetMax = Vector2.zero;
+            }
+
+            if (_name != null)
+            {
+                var nameRt = _name.rectTransform;
+                nameRt.anchorMin = new Vector2(0f, 1f);
+                nameRt.anchorMax = new Vector2(1f, 1f);
+                nameRt.pivot = new Vector2(0.5f, 1f);
+                nameRt.sizeDelta = new Vector2(0f, 36f);
+                nameRt.anchoredPosition = Vector2.zero;
+            }
         }
 
         // Called by Unity Engine

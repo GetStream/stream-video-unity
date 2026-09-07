@@ -173,8 +173,15 @@ namespace Unity.WebRTC
                 return;
 
             m_source?.Update();
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (Encoding)
+                NativeMethods.RenderLocalVideotrack(GetSelfOrThrow(), true);
+            else if (Decoding && TexturePtr != IntPtr.Zero)
+                NativeMethods.UpdateRendererTexture(GetSelfOrThrow(), TexturePtr, NeedReceivedVideoFlipVertically);
+#else
             if (m_renderer?.customTextureUpload == false)
                 m_renderer?.Update();
+#endif
 
             var texturePtr = TexturePtr;
             if (m_data.ptrTexture != texturePtr)
@@ -228,13 +235,15 @@ namespace Unity.WebRTC
             m_dataptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VideoStreamTrackData)));
             Marshal.StructureToPtr(m_data, m_dataptr, false);
 
-            var dest = CreateRenderTexture(texture.width, texture.height);
-
             m_source = source;
             m_source.copyTexture_ = copyTexture ?? CopyTextureHelper.VerticalFlipCopy;
             m_source.sourceTexture_ = texture;
-            m_source.destTexture_ = dest;
-            m_source.destTexturePtr_ = dest.GetNativeTexturePtr();
+            if (m_source.destTexture_ == null)
+            {
+                var dest = CreateRenderTexture(texture.width, texture.height);
+                m_source.destTexture_ = dest;
+                m_source.destTexturePtr_ = dest.GetNativeTexturePtr();
+            }
         }
 
         /// <summary>
@@ -336,7 +345,20 @@ namespace Unity.WebRTC
 
             var label = Guid.NewGuid().ToString();
             source = new VideoTrackSource();
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var dest = CreateRenderTexture(texture.width, texture.height);
+            source.sourceTexture_ = texture;
+            source.destTexture_ = dest;
+            source.destTexturePtr_ = dest.GetNativeTexturePtr();
+            source.copyTexture_ = CopyTextureHelper.VerticalFlipCopy;
+            return WebRTC.Context.CreateVideoTrack(
+                texture.GetNativeTexturePtr(),
+                dest.GetNativeTexturePtr(),
+                texture.width,
+                texture.height);
+#else
             return WebRTC.Context.CreateVideoTrack(label, source.GetSelfOrThrow());
+#endif
         }
 
         /// <summary>
@@ -378,11 +400,6 @@ namespace Unity.WebRTC
 
         public void Update()
         {
-            // [Note-kazuki: 2020-03-09] Flip vertically RenderTexture
-            // note: streamed video is flipped vertical if no action was taken:
-            //  - duplicate RenderTexture from its source texture
-            //  - call Graphics.Blit command with flip material every frame
-            //  - it might be better to implement this if possible
             copyTexture_(sourceTexture_, destTexture_);
         }
 

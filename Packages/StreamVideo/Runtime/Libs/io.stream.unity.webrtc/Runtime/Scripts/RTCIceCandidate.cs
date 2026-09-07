@@ -182,7 +182,8 @@ namespace Unity.WebRTC
         /// <summary>
         /// Returns the transport protocol for this candidate.
         /// </summary>
-        public RTCIceProtocol? Protocol => _candidate.protocol.ParseRTCIceProtocol();
+        public RTCIceProtocol? Protocol =>
+            string.IsNullOrEmpty(_candidate.protocol) ? (RTCIceProtocol?)null : _candidate.protocol.ParseRTCIceProtocol();
         /// <summary>
         /// Returns the port number for this candidate.
         /// </summary>
@@ -190,7 +191,8 @@ namespace Unity.WebRTC
         /// <summary>
         /// Returns the candidate type.
         /// </summary>
-        public RTCIceCandidateType? Type => _candidate.type.ParseRTCIceCandidateType();
+        public RTCIceCandidateType? Type =>
+            string.IsNullOrEmpty(_candidate.type) ? (RTCIceCandidateType?)null : _candidate.type.ParseRTCIceCandidateType();
         /// <summary>
         /// Returns the TCP type for this candidate, if applicable.
         /// </summary>
@@ -252,6 +254,12 @@ namespace Unity.WebRTC
                 throw new ArgumentException("sdpMid and sdpMLineIndex are both null");
 
             RTCIceCandidateInitInternal option = (RTCIceCandidateInitInternal)candidateInfo;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            self = NativeMethods.CreateNativeRTCIceCandidate(
+                option.candidate, option.sdpMid, option.sdpMLineIndex);
+            if (self == IntPtr.Zero)
+                throw new ArgumentException("create candidate is failed.");
+#else
             RTCErrorType error = NativeMethods.CreateIceCandidate(ref option, out self);
             if (error != RTCErrorType.None)
                 throw new ArgumentException(
@@ -261,7 +269,19 @@ namespace Unity.WebRTC
                         $"sdpMLineIndex:{candidateInfo.sdpMLineIndex}\n");
 
             NativeMethods.IceCandidateGetCandidate(self, out _candidate);
+#endif
         }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        internal RTCIceCandidate(RTCIceCandidateInit candidateInfo, IntPtr nativePtr)
+        {
+            candidateInfo = candidateInfo ?? new RTCIceCandidateInit();
+            self = nativePtr;
+            _candidate = default;
+            _candidate.candidate = candidateInfo.candidate;
+            _candidate.address = candidateInfo.candidate;
+        }
+#endif
     }
 
     internal struct RTCIceCandidateInitInternal

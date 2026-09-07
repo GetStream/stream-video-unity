@@ -100,12 +100,16 @@ namespace Unity.WebRTC
         /// <returns>Capabilities supported by the receiver.</returns>
         public static RTCRtpCapabilities GetCapabilities(TrackKind kind)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return WebGLRtpCapabilitiesParser.Parse(WebRTC.Context.GetReceiverCapabilitiesJson(kind));
+#else
             WebRTC.Context.GetReceiverCapabilities(kind, out IntPtr ptr);
             RTCRtpCapabilitiesInternal capabilitiesInternal =
                 Marshal.PtrToStructure<RTCRtpCapabilitiesInternal>(ptr);
             RTCRtpCapabilities capabilities = new RTCRtpCapabilities(capabilitiesInternal);
             Marshal.FreeHGlobal(ptr);
             return capabilities;
+#endif
         }
 
         /// <summary>
@@ -123,6 +127,9 @@ namespace Unity.WebRTC
         /// <returns>Returns an array of contributing sources.</returns>
         public RTCRtpContributingSource[] GetContributingSources()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return Array.Empty<RTCRtpContributingSource>();
+#else
             RTCRtpContributingSourceInternal[] array = NativeMethods.ReceiverGetSources(self, out var length).AsArray<RTCRtpContributingSourceInternal>((int)length);
 
             RTCRtpContributingSource[] sources = new RTCRtpContributingSource[length];
@@ -131,6 +138,7 @@ namespace Unity.WebRTC
                 sources[i] = new RTCRtpContributingSource(ref array[i], RtpSourceType.CSRC);
             }
             return sources;
+#endif
         }
 
         /// <summary>
@@ -139,6 +147,9 @@ namespace Unity.WebRTC
         /// <returns>Returns an array of synchronization sources.</returns>
         public RTCRtpContributingSource[] GetSynchronizationSources()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return Array.Empty<RTCRtpContributingSource>();
+#else
             RTCRtpContributingSourceInternal[] array = NativeMethods.ReceiverGetSources(self, out var length).AsArray<RTCRtpContributingSourceInternal>((int)length);
 
             RTCRtpContributingSource[] sources = new RTCRtpContributingSource[length];
@@ -147,6 +158,7 @@ namespace Unity.WebRTC
                 sources[i] = new RTCRtpContributingSource(ref array[i], RtpSourceType.SSRC);
             }
             return sources;
+#endif
         }
 
         /// <summary>
@@ -190,8 +202,13 @@ namespace Unity.WebRTC
         {
             get
             {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                var ptr = NativeMethods.ReceiverGetStreams(GetSelfOrThrow());
+                return WebRTC.Deserialize(WebGLSessionOps.PtrToIntPtrArray(ptr), p => new MediaStream(p));
+#else
                 IntPtr ptrStreams = NativeMethods.ReceiverGetStreams(GetSelfOrThrow(), out ulong length);
                 return WebRTC.Deserialize(ptrStreams, (int)length, ptr => new MediaStream(ptr));
+#endif
             }
         }
     }

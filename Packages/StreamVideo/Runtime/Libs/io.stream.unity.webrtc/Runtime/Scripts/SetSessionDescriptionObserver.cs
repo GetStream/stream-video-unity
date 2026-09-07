@@ -7,9 +7,16 @@ namespace Unity.WebRTC
     {
         public Action<RTCErrorType, string> onSetSessionDescription;
 
-        private SetSessionDescriptionObserver()
+        internal SetSessionDescriptionObserver()
             : base(IntPtr.Zero, true)
         {
+        }
+
+        internal static SetSessionDescriptionObserver CreateWithHandle(IntPtr handle)
+        {
+            var observer = new SetSessionDescriptionObserver();
+            observer.SetHandle(handle);
+            return observer;
         }
 
         public void Invoke(RTCErrorType type, string message)

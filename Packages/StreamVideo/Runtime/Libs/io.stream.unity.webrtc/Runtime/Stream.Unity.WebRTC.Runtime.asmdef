@@ -1,12 +1,15 @@
 {
     "name": "Stream.Unity.WebRTC",
-    "references": [],
+    "references": [
+        "Newtonsoft.Json"
+    ],
     "includePlatforms": [
         "Android",
         "Editor",
         "iOS",
         "LinuxStandalone64",
         "macOSStandalone",
+        "WebGL",
         "WindowsStandalone64"
     ],
     "excludePlatforms": [],

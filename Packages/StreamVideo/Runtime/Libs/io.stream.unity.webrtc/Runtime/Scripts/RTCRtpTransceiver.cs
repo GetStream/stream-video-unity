@@ -105,12 +105,19 @@ namespace Unity.WebRTC
         {
             get
             {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                int direction = NativeMethods.TransceiverGetCurrentDirection(GetSelfOrThrow());
+                if (direction < 0)
+                    return null;
+                return (RTCRtpTransceiverDirection)direction;
+#else
                 if (NativeMethods.TransceiverGetCurrentDirection(GetSelfOrThrow(), out var direction))
                 {
                     return direction;
                 }
 
                 return null;
+#endif
             }
         }
 
@@ -166,6 +173,10 @@ namespace Unity.WebRTC
         /// <seealso cref="RTCPeerConnection"/>
         public RTCErrorType SetCodecPreferences(RTCRtpCodecCapability[] codecs)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return NativeMethods.TransceiverSetCodecPreferences(
+                GetSelfOrThrow(), WebGLRtpCapabilitiesParser.ToCodecPreferencesJson(codecs));
+#else
             RTCRtpCodecCapabilityInternal[] array = Array.ConvertAll(codecs, v => v.Cast());
             MarshallingArray<RTCRtpCodecCapabilityInternal> instance = array;
             RTCErrorType error = NativeMethods.TransceiverSetCodecPreferences(GetSelfOrThrow(), instance.ptr, instance.length);
@@ -175,6 +186,7 @@ namespace Unity.WebRTC
             }
             instance.Dispose();
             return error;
+#endif
         }
 
         /// <summary>

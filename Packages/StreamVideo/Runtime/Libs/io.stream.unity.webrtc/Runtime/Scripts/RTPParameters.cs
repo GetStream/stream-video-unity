@@ -242,6 +242,12 @@ namespace Unity.WebRTC
         /// </summary>
         public readonly RTCRtpCodecParameters[] codecs;
 
+        internal RTCRtpParameters()
+        {
+            headerExtensions = Array.Empty<RTCRtpHeaderExtensionParameters>();
+            codecs = Array.Empty<RTCRtpCodecParameters>();
+        }
+
         internal RTCRtpParameters(ref RTCRtpSendParametersInternal src)
         {
             headerExtensions = Array.ConvertAll(src.headerExtensions.ToArray(),
@@ -266,6 +272,13 @@ namespace Unity.WebRTC
         /// 
         /// </summary>
         public readonly string transactionId;
+
+        internal RTCRtpSendParameters(RTCRtpEncodingParameters[] encodings, string transactionId)
+            : base()
+        {
+            this.encodings = encodings ?? Array.Empty<RTCRtpEncodingParameters>();
+            this.transactionId = transactionId;
+        }
 
         internal RTCRtpSendParameters(ref RTCRtpSendParametersInternal src)
             : base(ref src)
@@ -345,6 +358,10 @@ namespace Unity.WebRTC
         /// </summary>
         public string sdpFmtpLine;
 
+        internal RTCRtpCodecCapability()
+        {
+        }
+
         internal RTCRtpCodecCapability(ref RTCRtpCodecCapabilityInternal v)
         {
             mimeType = v.mimeType.AsAnsiStringWithFreeMem();
@@ -377,6 +394,10 @@ namespace Unity.WebRTC
         /// </summary>
         public string uri;
 
+        internal RTCRtpHeaderExtensionCapability()
+        {
+        }
+
         internal RTCRtpHeaderExtensionCapability(ref RTCRtpHeaderExtensionCapabilityInternal v)
         {
             uri = v.uri.AsAnsiStringWithFreeMem();
@@ -404,6 +425,12 @@ namespace Unity.WebRTC
                 v => new RTCRtpCodecCapability(ref v));
             headerExtensions = Array.ConvertAll(capabilities.extensionHeaders.ToArray(),
                 v => new RTCRtpHeaderExtensionCapability(ref v));
+        }
+
+        internal RTCRtpCapabilities(RTCRtpCodecCapability[] codecs, RTCRtpHeaderExtensionCapability[] headerExtensions)
+        {
+            this.codecs = codecs ?? Array.Empty<RTCRtpCodecCapability>();
+            this.headerExtensions = headerExtensions ?? Array.Empty<RTCRtpHeaderExtensionCapability>();
         }
     }
 

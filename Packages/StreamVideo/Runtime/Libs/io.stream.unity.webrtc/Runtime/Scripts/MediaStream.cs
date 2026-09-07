@@ -121,8 +121,13 @@ namespace Unity.WebRTC
         /// </example>
         public IEnumerable<VideoStreamTrack> GetVideoTracks()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var ptr = NativeMethods.MediaStreamGetVideoTracks(GetSelfOrThrow());
+            return WebRTC.Deserialize(WebGLSessionOps.PtrToIntPtrArray(ptr), p => new VideoStreamTrack(p));
+#else
             var buf = NativeMethods.MediaStreamGetVideoTracks(GetSelfOrThrow(), out ulong length);
             return WebRTC.Deserialize(buf, (int)length, ptr => new VideoStreamTrack(ptr));
+#endif
         }
 
         /// <summary>
@@ -139,8 +144,13 @@ namespace Unity.WebRTC
         /// </example>
         public IEnumerable<AudioStreamTrack> GetAudioTracks()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var ptr = NativeMethods.MediaStreamGetAudioTracks(GetSelfOrThrow());
+            return WebRTC.Deserialize(WebGLSessionOps.PtrToIntPtrArray(ptr), p => new AudioStreamTrack(p));
+#else
             var buf = NativeMethods.MediaStreamGetAudioTracks(GetSelfOrThrow(), out ulong length);
             return WebRTC.Deserialize(buf, (int)length, ptr => new AudioStreamTrack(ptr));
+#endif
         }
 
         /// <summary>

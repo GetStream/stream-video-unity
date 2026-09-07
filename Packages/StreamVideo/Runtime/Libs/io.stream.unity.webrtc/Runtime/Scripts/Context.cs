@@ -179,8 +179,10 @@ namespace Unity.WebRTC
                 }
                 table.Clear();
 
+#if !(UNITY_WEBGL && !UNITY_EDITOR)
                 // Release buffers on the rendering thread
                 batch.Submit(true);
+#endif
 
                 NativeMethods.ContextDestroy(id);
                 self = IntPtr.Zero;
@@ -221,32 +223,69 @@ namespace Unity.WebRTC
 
         public IntPtr PeerConnectionGetReceivers(IntPtr ptr, out ulong length)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var buf = NativeMethods.PeerConnectionGetReceivers(self, ptr);
+            var arr = WebGLSessionOps.PtrToIntPtrArray(buf);
+            length = (ulong)arr.Length;
+            return buf;
+#else
             return NativeMethods.PeerConnectionGetReceivers(self, ptr, out length);
+#endif
         }
 
         public IntPtr PeerConnectionGetSenders(IntPtr ptr, out ulong length)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var buf = NativeMethods.PeerConnectionGetSenders(self, ptr);
+            var arr = WebGLSessionOps.PtrToIntPtrArray(buf);
+            length = (ulong)arr.Length;
+            return buf;
+#else
             return NativeMethods.PeerConnectionGetSenders(self, ptr, out length);
+#endif
         }
 
         public IntPtr PeerConnectionGetTransceivers(IntPtr ptr, out ulong length)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var buf = NativeMethods.PeerConnectionGetTransceivers(self, ptr);
+            var arr = WebGLSessionOps.PtrToIntPtrArray(buf);
+            length = (ulong)arr.Length;
+            return buf;
+#else
             return NativeMethods.PeerConnectionGetTransceivers(self, ptr, out length);
+#endif
         }
 
         public CreateSessionDescriptionObserver PeerConnectionCreateOffer(IntPtr ptr, ref RTCOfferAnswerOptions options)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var observer = WebGLSessionOps.EnqueueCreate(ptr);
+            NativeMethods.PeerConnectionCreateOffer(ptr, JsonUtility.ToJson(options));
+            return observer;
+#else
             return NativeMethods.PeerConnectionCreateOffer(self, ptr, ref options);
+#endif
         }
 
         public CreateSessionDescriptionObserver PeerConnectionCreateAnswer(IntPtr ptr, ref RTCOfferAnswerOptions options)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var observer = WebGLSessionOps.EnqueueCreate(ptr);
+            NativeMethods.PeerConnectionCreateAnswer(ptr, JsonUtility.ToJson(options));
+            return observer;
+#else
             return NativeMethods.PeerConnectionCreateAnswer(self, ptr, ref options);
+#endif
         }
 
         public IntPtr CreateDataChannel(IntPtr ptr, string label, ref RTCDataChannelInitInternal options)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return NativeMethods.ContextCreateDataChannel(self, ptr, label, JsonUtility.ToJson(options));
+#else
             return NativeMethods.ContextCreateDataChannel(self, ptr, label, ref options);
+#endif
         }
 
         public void DeleteDataChannel(IntPtr ptr)
@@ -335,10 +374,17 @@ namespace Unity.WebRTC
             return NativeMethods.ContextCreateAudioTrack(self, label, trackSource);
         }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        public IntPtr CreateVideoTrack(IntPtr srcTexturePtr, IntPtr dstTexturePtr, int width, int height)
+        {
+            return NativeMethods.ContextCreateVideoTrack(self, srcTexturePtr, dstTexturePtr, width, height);
+        }
+#else
         public IntPtr CreateVideoTrack(string label, IntPtr source)
         {
             return NativeMethods.ContextCreateVideoTrack(self, label, source);
         }
+#endif
 
         public void StopMediaStreamTrack(IntPtr track)
         {
@@ -358,7 +404,13 @@ namespace Unity.WebRTC
 
         public IntPtr GetStatsList(IntPtr report, out ulong length, ref IntPtr types)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            length = 0;
+            types = IntPtr.Zero;
+            return IntPtr.Zero;
+#else
             return NativeMethods.ContextGetStatsList(self, report, out length, ref types);
+#endif
         }
 
         public void DeleteStatsReport(IntPtr report)
@@ -366,6 +418,13 @@ namespace Unity.WebRTC
             NativeMethods.ContextDeleteStatsReport(self, report);
         }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        public string GetSenderCapabilitiesJson(TrackKind kind)
+            => NativeMethods.ContextGetSenderCapabilities(self, kind);
+
+        public string GetReceiverCapabilitiesJson(TrackKind kind)
+            => NativeMethods.ContextGetReceiverCapabilities(self, kind);
+#else
         public void GetSenderCapabilities(TrackKind kind, out IntPtr capabilities)
         {
             NativeMethods.ContextGetSenderCapabilities(self, kind, out capabilities);
@@ -375,6 +434,7 @@ namespace Unity.WebRTC
         {
             NativeMethods.ContextGetReceiverCapabilities(self, kind, out capabilities);
         }
+#endif
 
 #if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
         public void GetAudioProcessingModuleConfig(out bool enabled, out bool echoCancellationEnabled, out bool autoGainEnabled, out bool noiseSuppressionEnabled, out int noiseSuppressionLevel)

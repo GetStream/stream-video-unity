@@ -3,7 +3,7 @@ using UnityEngine;
 #if UNITY_ANDROID
 using UnityEngine.Android;
 #endif
-#if UNITY_IOS
+#if UNITY_IOS || (UNITY_WEBGL && !UNITY_EDITOR)
 using System.Collections;
 #endif
 
@@ -29,9 +29,9 @@ namespace StreamVideo.ExampleProject.UI
 #elif UNITY_ANDROID
             var androidPermission = PermissionTypeToAndroidPermission(permissionType);
             return Permission.HasUserAuthorizedPermission(androidPermission);
-#elif UNITY_IOS
-            var iosPermission = PermissionTypeToIOSPermission(permissionType);
-            return Application.HasUserAuthorization(iosPermission);
+#elif UNITY_IOS || (UNITY_WEBGL && !UNITY_EDITOR)
+            var userAuthorization = PermissionTypeToUserAuthorization(permissionType);
+            return Application.HasUserAuthorization(userAuthorization);
 #else
             Debug.LogWarning($"Handling permissions not implemented for platform: {Application.platform}. Requested {permissionType}. Assuming permission is granted.");
             return true;
@@ -43,8 +43,8 @@ namespace StreamVideo.ExampleProject.UI
         {
 #if UNITY_ANDROID
             RequestAndroidPermission(permissionType, onGranted, onDenied);
-#elif UNITY_IOS
-            _coroutineRunner.StartCoroutine(RequestIOSPermissionCoroutine(permissionType, onGranted, onDenied));
+#elif UNITY_IOS || (UNITY_WEBGL && !UNITY_EDITOR)
+            _coroutineRunner.StartCoroutine(RequestUserAuthorizationCoroutine(permissionType, onGranted, onDenied));
 #else
             Debug.LogError($"Handling permissions not implemented for platform: " + Application.platform);
 #endif
@@ -95,14 +95,14 @@ namespace StreamVideo.ExampleProject.UI
         }
 #endif
 
-#if UNITY_IOS
-        private IEnumerator RequestIOSPermissionCoroutine(PermissionType permissionType, Action onGranted = null,
+#if UNITY_IOS || (UNITY_WEBGL && !UNITY_EDITOR)
+        private IEnumerator RequestUserAuthorizationCoroutine(PermissionType permissionType, Action onGranted = null,
             Action onDenied = null)
         {
-            var iosPermission = PermissionTypeToIOSPermission(permissionType);
-            yield return Application.RequestUserAuthorization(iosPermission);
+            var userAuthorization = PermissionTypeToUserAuthorization(permissionType);
+            yield return Application.RequestUserAuthorization(userAuthorization);
 
-            if (Application.HasUserAuthorization(iosPermission))
+            if (Application.HasUserAuthorization(userAuthorization))
             {
                 onGranted?.Invoke();
             }
@@ -112,7 +112,7 @@ namespace StreamVideo.ExampleProject.UI
             }
         }
         
-        UserAuthorization PermissionTypeToIOSPermission(PermissionType type)
+        UserAuthorization PermissionTypeToUserAuthorization(PermissionType type)
         {
             switch (type)
             {

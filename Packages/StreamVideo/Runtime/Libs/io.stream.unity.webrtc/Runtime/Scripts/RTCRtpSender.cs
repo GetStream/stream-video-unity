@@ -84,12 +84,16 @@ namespace Unity.WebRTC
         /// </example>
         public static RTCRtpCapabilities GetCapabilities(TrackKind kind)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return WebGLRtpCapabilitiesParser.Parse(WebRTC.Context.GetSenderCapabilitiesJson(kind));
+#else
             WebRTC.Context.GetSenderCapabilities(kind, out IntPtr ptr);
             RTCRtpCapabilitiesInternal capabilitiesInternal =
                 Marshal.PtrToStructure<RTCRtpCapabilitiesInternal>(ptr);
             RTCRtpCapabilities capabilities = new RTCRtpCapabilities(capabilitiesInternal);
             Marshal.FreeHGlobal(ptr);
             return capabilities;
+#endif
         }
 
         /// <summary>
@@ -216,11 +220,16 @@ namespace Unity.WebRTC
         /// <seealso cref="SetParameters" />
         public RTCRtpSendParameters GetParameters()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            string json = NativeMethods.SenderGetParameters(GetSelfOrThrow());
+            return WebGLRtpCapabilitiesParser.ParseSendParameters(json);
+#else
             NativeMethods.SenderGetParameters(GetSelfOrThrow(), out var ptr);
             RTCRtpSendParametersInternal parametersInternal = Marshal.PtrToStructure<RTCRtpSendParametersInternal>(ptr);
             RTCRtpSendParameters parameters = new RTCRtpSendParameters(ref parametersInternal);
             Marshal.FreeHGlobal(ptr);
             return parameters;
+#endif
         }
 
         /// <summary>
@@ -269,12 +278,18 @@ namespace Unity.WebRTC
                 }
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            RTCErrorType webGlType = NativeMethods.SenderSetParameters(
+                GetSelfOrThrow(), WebGLRtpCapabilitiesParser.ToSendParametersJson(parameters));
+            return new RTCError { errorType = webGlType };
+#else
             parameters.CreateInstance(out RTCRtpSendParametersInternal instance);
             IntPtr ptr = Marshal.AllocCoTaskMem(Marshal.SizeOf(instance));
             Marshal.StructureToPtr(instance, ptr, false);
             RTCErrorType type = NativeMethods.SenderSetParameters(GetSelfOrThrow(), ptr);
             Marshal.FreeCoTaskMem(ptr);
             return new RTCError { errorType = type };
+#endif
         }
 
         /// <summary>

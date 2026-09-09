@@ -22,9 +22,10 @@ namespace StreamVideo.Libs.Http
 
         public static HttpResponse CreateFromUnityWebRequest(UnityWebRequest unityWebRequest)
         {
-            var isSuccessStatusCode = unityWebRequest.result == UnityWebRequest.Result.Success;
+            var statusCode = (int)unityWebRequest.responseCode;
+            var isSuccessStatusCode = statusCode >= 200 && statusCode <= 299;
             var result = unityWebRequest.downloadHandler?.text ?? string.Empty;
-            return new HttpResponse(isSuccessStatusCode, (int)unityWebRequest.responseCode, result);
+            return new HttpResponse(isSuccessStatusCode, statusCode, result);
         }
 
         public HttpResponse(bool isSuccessStatusCode, int statusCode, string result)

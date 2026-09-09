@@ -31,7 +31,8 @@ namespace StreamVideo.Core.IssueReporters
 #elif UNITY_STANDALONE || UNITY_EDITOR
             return new StandaloneLogsProvider();
 #else
-            throw new System.NotSupportedException($"Logs provider for platform {UnityEngine.Application.platform} is not supported");
+            // WebGL and other platforms have no player.log file. Use the in-session collector instead of failing client construction.
+            return new MobileLogsProvider(_logsCollector);
 #endif
         }
     }

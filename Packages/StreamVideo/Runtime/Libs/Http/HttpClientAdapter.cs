@@ -15,6 +15,7 @@ namespace StreamVideo.Libs.Http
         public HttpClientAdapter()
         {
             _httpClient = new HttpClient();
+            _headHttpClient = new HttpClient();
         }
 
         public void SetDefaultAuthenticationHeader(string value)
@@ -79,7 +80,10 @@ namespace StreamVideo.Libs.Http
         public async Task<HttpResponse> HeadAsync(Uri uri,
             ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null, CancellationToken cancellationToken = default)
         {
-            var response = await _httpClient.SendAsync(new HttpRequestMessage(new HttpMethod("HEAD"), uri), cancellationToken);
+            // Location hint must not carry Authorization / X-Stream-Client; those
+            // headers trigger a CORS preflight that the hint CDN rejects.
+            var response = await _headHttpClient.SendAsync(
+                new HttpRequestMessage(new HttpMethod("HEAD"), uri), cancellationToken);
             if (resultHeaders != null)
             {
                 foreach (var header in response.Headers)
@@ -98,6 +102,7 @@ namespace StreamVideo.Libs.Http
         }
 
         private readonly HttpClient _httpClient;
+        private readonly HttpClient _headHttpClient;
 
         private static HttpContent TryGetHttpContent(object content)
         {

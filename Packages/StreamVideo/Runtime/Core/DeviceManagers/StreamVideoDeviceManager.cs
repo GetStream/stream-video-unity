@@ -31,6 +31,14 @@ namespace StreamVideo.Core.DeviceManagers
         //StreamTodo: user can add/remove devices, we might want to expose DeviceAdded, DeviceRemoved events
         public override IEnumerable<CameraDeviceInfo> EnumerateDevices()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var devices = WebCamTexture.devices;
+            if (devices == null || devices.Length == 0)
+            {
+                yield return new CameraDeviceInfo("Default Camera", isFrontFacing: true, this);
+                yield break;
+            }
+#endif
             foreach (var device in WebCamTexture.devices)
             {
                 yield return new CameraDeviceInfo(device.name, device.isFrontFacing, this);
@@ -69,12 +77,21 @@ namespace StreamVideo.Core.DeviceManagers
                 }
             }
             
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // Lobby preview needs the webcam running even when the publisher track is still disabled.
+            if (_activeCamera != null && !_activeCamera.isPlaying)
+            {
+                _activeCamera.Play();
+                Client.SetCameraInputSource(_activeCamera);
+            }
+#else
             if (IsEnabled && enable && _activeCamera != null && !_activeCamera.isPlaying)
             {
                 //OnSetEnabled will not trigger because IsEnabled value didn't change
                 _activeCamera.Play();
                 Client.SetCameraInputSource(_activeCamera);
             }
+#endif
 
             SetEnabled(enable);
         }
@@ -96,6 +113,11 @@ namespace StreamVideo.Core.DeviceManagers
 
         protected override async Task<bool> OnTestDeviceAsync(CameraDeviceInfo device, int msTimeout)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // WebCamTexture.GetPixels() never completes on WebGL without getUserMedia + a user gesture.
+            await Task.CompletedTask;
+            return true;
+#else
             WebCamTexture camTexture = null;
             try
             {
@@ -167,6 +189,7 @@ namespace StreamVideo.Core.DeviceManagers
                     Object.Destroy(camTexture);
                 }
             }
+#endif
         }
 
         protected override void OnDisposing()

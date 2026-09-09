@@ -38,7 +38,11 @@ namespace StreamVideo.Core.LowLevelClient
             while (!asyncOperation.IsDone)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(1, cancellationToken);
+#if UNITY_WEBGL && !UNITY_EDITOR
+                WebGLSessionOps.PumpPendingSessionOps();
+#endif
+                // Task.Delay uses a thread-pool timer and never resumes on WebGL IL2CPP.
+                await Task.Yield();
             }
 
             if (asyncOperation.IsError)
@@ -57,7 +61,10 @@ namespace StreamVideo.Core.LowLevelClient
             while (!asyncOperation.IsDone)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(1, cancellationToken);
+#if UNITY_WEBGL && !UNITY_EDITOR
+                WebGLSessionOps.PumpPendingSessionOps();
+#endif
+                await Task.Yield();
             }
 
             if (asyncOperation.IsError)

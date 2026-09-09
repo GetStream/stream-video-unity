@@ -94,6 +94,9 @@ namespace StreamVideo.Core.LowLevelClient.API.Internal
             {
                 queryParameters ??= QueryParameters.Default;
                 queryParameters.Set("payload", serializedContent);
+                // Native HttpClient GET ignores the body. WebGL XHR GET with a JSON body
+                // fails as ConnectionError / Unknown Error (browsers forbid GET bodies).
+                httpContent = null;
             }
 
             var uri = _requestUriFactory.CreateEndpointUri(endpoint, queryParameters);

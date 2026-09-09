@@ -25,6 +25,12 @@ namespace StreamVideo.Core.DeviceManagers
 
         public override IEnumerable<MicrophoneDeviceInfo> EnumerateDevices()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // UnityEngine.Microphone is not compiled into WebGL players.
+            // StreamTODO: enumerate browser devices via navigator.mediaDevices.enumerateDevices
+            yield return new MicrophoneDeviceInfo("Default Microphone");
+            yield break;
+#else
             // Dummy call to ensure Unity requests Android permissions for audio recording. StreamTODO: create AndroidManifest with proper permissions and ensure it's being composed into final manifest file.
             var devices = Microphone.devices;
             foreach (var d in devices)
@@ -52,6 +58,7 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 yield return new MicrophoneDeviceInfo(deviceName);
             }
+#endif
         }
 
         protected override async Task<bool> OnTestDeviceAsync(MicrophoneDeviceInfo device, int msTimeout)
@@ -62,6 +69,10 @@ namespace StreamVideo.Core.DeviceManagers
                 return false;
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // UnityEngine.Microphone is not compiled into WebGL players.
+            return await Task.FromResult(false);
+#else
             const int sampleRate = 44100;
             var maxRecordingTime = (int)Math.Ceiling(msTimeout / 1000f);
 
@@ -89,6 +100,7 @@ namespace StreamVideo.Core.DeviceManagers
             }
 
             return hasData;
+#endif
         }
 
         /// <summary>
@@ -278,16 +290,22 @@ namespace StreamVideo.Core.DeviceManagers
             }
 
             //StreamTODO: We currently need this because in StreamPeerConnection ctor we check for audio source to create audio track. Refactor this dependency because we're progressively moving towards native audio handling
-            var targetAudioSource = GetOrCreateTargetAudioSource();
+            GetOrCreateTargetAudioSource();
 
             if (RtcSession.UseNativeAudioBindings)
             {
                 return;
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // UnityEngine.Microphone is not compiled into WebGL players.
+            // StreamTODO: start browser getUserMedia audio capture for the publisher track
+            return;
+#else
             // StreamTodo: use Microphone.GetDeviceCaps to get min/max frequency -> validate it and pass to Microphone.Start
 
             // Sample rate must probably match the one used in AudioCustomFilter (this is what's being sent to webRTC). It's currently using AudioSettings.outputSampleRate
+            var targetAudioSource = GetOrCreateTargetAudioSource();
             _recordingDeviceName = SelectedDevice.Name;
             targetAudioSource.clip
                 = Microphone.Start(_recordingDeviceName, loop: true, lengthSec: 1, AudioSettings.outputSampleRate);
@@ -302,6 +320,7 @@ namespace StreamVideo.Core.DeviceManagers
             }
             targetAudioSource.Play();
             Logs.WarningIfDebug("[Audio] Started recording from microphone: " + device);
+#endif
         }
         
         private void TryStopRecording()
@@ -316,6 +335,10 @@ namespace StreamVideo.Core.DeviceManagers
                 return;
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            _recordingDeviceName = null;
+            return;
+#else
             if (Microphone.IsRecording(_recordingDeviceName))
             {
                 Microphone.End(_recordingDeviceName);
@@ -323,6 +346,7 @@ namespace StreamVideo.Core.DeviceManagers
             
             Logs.WarningIfDebug("[Audio] Stopped recording from microphone: " + _recordingDeviceName);
             _recordingDeviceName = null;
+#endif
         }
 
         private void TrySyncMicrophoneAudioSourceReadPosWithMicrophoneWritePos()
@@ -332,6 +356,9 @@ namespace StreamVideo.Core.DeviceManagers
                 return;
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return;
+#else
             var isRecording = IsEnabled && SelectedDevice.IsValid && Microphone.IsRecording(SelectedDevice.Name) &&
                               _targetAudioSource != null;
             if (!isRecording)
@@ -344,6 +371,7 @@ namespace StreamVideo.Core.DeviceManagers
             {
                 _targetAudioSource.timeSamples = microphonePosition;
             }
+#endif
         }
         
         private void OnPublisherAudioTrackIsEnabledChanged(bool isEnabled)

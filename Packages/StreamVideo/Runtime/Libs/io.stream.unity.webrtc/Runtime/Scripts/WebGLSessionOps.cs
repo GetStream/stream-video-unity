@@ -54,49 +54,97 @@ namespace Unity.WebRTC
             return result;
         }
 
-        [AOT.MonoPInvokeCallback(typeof(DelegateWebGLCreateSessionSuccess))]
-        public static void OnCreateSuccess(IntPtr peerPtr, int sdpType, string sdp)
+        public static void PumpPendingSessionOps()
         {
-            WebRTC.Sync(peerPtr, () =>
-            {
-                if (!TryDequeueCreate(peerPtr, out var observer))
-                    return;
-                observer.Invoke((RTCSdpType)sdpType, sdp, RTCErrorType.None, null);
-            });
+            PumpCreate();
+            PumpSet();
+        }
+
+        [AOT.MonoPInvokeCallback(typeof(DelegateWebGLCreateSessionSuccess))]
+        public static void OnCreateSuccess(IntPtr peerPtr, int sdpType, IntPtr sdpPtr)
+        {
+            var sdp = PtrToUtf8(sdpPtr);
+            WebRTC.Sync(peerPtr, () => CompleteCreate(peerPtr, sdpType, sdp, (int)RTCErrorType.None, null));
         }
 
         [AOT.MonoPInvokeCallback(typeof(DelegateWebGLCreateSessionFailure))]
-        public static void OnCreateFailure(IntPtr peerPtr, int errorType, string message)
+        public static void OnCreateFailure(IntPtr peerPtr, int errorType, IntPtr messagePtr)
         {
-            WebRTC.Sync(peerPtr, () =>
-            {
-                if (!TryDequeueCreate(peerPtr, out var observer))
-                    return;
-                observer.Invoke(RTCSdpType.Offer, null, (RTCErrorType)errorType, message);
-            });
+            var message = PtrToUtf8(messagePtr);
+            WebRTC.Sync(peerPtr, () => CompleteCreate(peerPtr, (int)RTCSdpType.Offer, null, errorType, message));
         }
 
         [AOT.MonoPInvokeCallback(typeof(DelegateWebGLSetSessionSuccess))]
         public static void OnSetSuccess(IntPtr peerPtr)
         {
-            WebRTC.Sync(peerPtr, () =>
-            {
-                if (!TryDequeueSet(peerPtr, out var observer))
-                    return;
-                observer.Invoke(RTCErrorType.None, null);
-            });
+            WebRTC.Sync(peerPtr, () => CompleteSet(peerPtr, (int)RTCErrorType.None, null));
         }
 
         [AOT.MonoPInvokeCallback(typeof(DelegateWebGLSetSessionFailure))]
-        public static void OnSetFailure(IntPtr peerPtr, int errorType, string message)
+        public static void OnSetFailure(IntPtr peerPtr, int errorType, IntPtr messagePtr)
         {
-            WebRTC.Sync(peerPtr, () =>
-            {
-                if (!TryDequeueSet(peerPtr, out var observer))
-                    return;
-                observer.Invoke((RTCErrorType)errorType, message);
-            });
+            var message = PtrToUtf8(messagePtr);
+            WebRTC.Sync(peerPtr, () => CompleteSet(peerPtr, errorType, message));
         }
+
+        static void PumpCreate()
+        {
+            if (s_create.Count == 0)
+                return;
+
+            var peers = new IntPtr[s_create.Count];
+            s_create.Keys.CopyTo(peers, 0);
+            foreach (var peer in peers)
+            {
+                var json = NativeMethods.PeerConnectionTakePendingCreateSd(peer);
+                if (string.IsNullOrEmpty(json))
+                    continue;
+
+                var dto = JsonUtility.FromJson<WebGLPendingSessionOpDto>(json);
+                if (dto == null)
+                    continue;
+
+                CompleteCreate(peer, dto.type, dto.sdp, dto.errorType, dto.message);
+            }
+        }
+
+        static void PumpSet()
+        {
+            if (s_set.Count == 0)
+                return;
+
+            var peers = new IntPtr[s_set.Count];
+            s_set.Keys.CopyTo(peers, 0);
+            foreach (var peer in peers)
+            {
+                var json = NativeMethods.PeerConnectionTakePendingSetSd(peer);
+                if (string.IsNullOrEmpty(json))
+                    continue;
+
+                var dto = JsonUtility.FromJson<WebGLPendingSessionOpDto>(json);
+                if (dto == null)
+                    continue;
+
+                CompleteSet(peer, dto.errorType, dto.message);
+            }
+        }
+
+        static void CompleteCreate(IntPtr peerPtr, int sdpType, string sdp, int errorType, string message)
+        {
+            if (!TryDequeueCreate(peerPtr, out var observer))
+                return;
+            observer.Invoke((RTCSdpType)sdpType, sdp, (RTCErrorType)errorType, message);
+        }
+
+        static void CompleteSet(IntPtr peerPtr, int errorType, string message)
+        {
+            if (!TryDequeueSet(peerPtr, out var observer))
+                return;
+            observer.Invoke((RTCErrorType)errorType, message);
+        }
+
+        static string PtrToUtf8(IntPtr ptr)
+            => ptr == IntPtr.Zero ? null : Marshal.PtrToStringAnsi(ptr);
 
         static IntPtr NextHandle()
             => new IntPtr(Interlocked.Increment(ref s_nextHandle));
@@ -235,16 +283,16 @@ namespace Unity.WebRTC
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void DelegateWebGLCreateSessionSuccess(IntPtr peerPtr, int sdpType, [MarshalAs(UnmanagedType.LPStr)] string sdp);
+    internal delegate void DelegateWebGLCreateSessionSuccess(IntPtr peerPtr, int sdpType, IntPtr sdp);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void DelegateWebGLCreateSessionFailure(IntPtr peerPtr, int errorType, [MarshalAs(UnmanagedType.LPStr)] string message);
+    internal delegate void DelegateWebGLCreateSessionFailure(IntPtr peerPtr, int errorType, IntPtr message);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void DelegateWebGLSetSessionSuccess(IntPtr peerPtr);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void DelegateWebGLSetSessionFailure(IntPtr peerPtr, int errorType, [MarshalAs(UnmanagedType.LPStr)] string message);
+    internal delegate void DelegateWebGLSetSessionFailure(IntPtr peerPtr, int errorType, IntPtr message);
 
     [Serializable]
     internal class WebGLTransceiverInitDto
@@ -258,6 +306,15 @@ namespace Unity.WebRTC
     {
         public int type;
         public string sdp;
+    }
+
+    [Serializable]
+    internal class WebGLPendingSessionOpDto
+    {
+        public int type;
+        public string sdp;
+        public int errorType;
+        public string message;
     }
 
     [Serializable]

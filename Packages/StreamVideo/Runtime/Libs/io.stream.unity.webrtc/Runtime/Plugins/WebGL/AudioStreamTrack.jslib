@@ -1,7 +1,12 @@
 var UnityWebRTCAudioStreamTrack = {
+  CreateAudioTrack__deps: ['$uwcom_ensureAutoplayUnlock'],
   CreateAudioTrack: function (labelPtr, sourcePtr) {
     if (!uwcom_audioContext) {
       uwcom_audioContext = new AudioContext();
+    }
+    uwcom_ensureAutoplayUnlock();
+    if (uwcom_audioContext.state === 'suspended') {
+      uwcom_audioContext.resume();
     }
     var dest = uwcom_audioContext.createMediaStreamDestination();
     var audioTrack = dest.stream.getAudioTracks()[0];

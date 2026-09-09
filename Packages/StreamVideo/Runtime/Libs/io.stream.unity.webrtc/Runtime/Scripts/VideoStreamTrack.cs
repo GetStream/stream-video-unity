@@ -175,7 +175,7 @@ namespace Unity.WebRTC
             m_source?.Update();
 #if UNITY_WEBGL && !UNITY_EDITOR
             if (Encoding)
-                NativeMethods.RenderLocalVideotrack(GetSelfOrThrow(), true);
+                NativeMethods.RenderLocalVideotrack(GetSelfOrThrow(), false);
             else if (Decoding && TexturePtr != IntPtr.Zero)
                 NativeMethods.UpdateRendererTexture(GetSelfOrThrow(), TexturePtr, NeedReceivedVideoFlipVertically);
 #else
@@ -319,9 +319,11 @@ namespace Unity.WebRTC
                 platform != RuntimePlatform.OSXEditor &&
                 platform != RuntimePlatform.OSXPlayer)
                 return true;
+#pragma warning disable CS0618 // OpenGLES2 is obsolete in Unity 2023.1+
             if (graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.OpenGLCore &&
                 graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.OpenGLES2 &&
                 graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3)
+#pragma warning restore CS0618
                 return true;
             return false;
         }
@@ -352,7 +354,7 @@ namespace Unity.WebRTC
             source.destTexturePtr_ = dest.GetNativeTexturePtr();
             source.copyTexture_ = CopyTextureHelper.VerticalFlipCopy;
             return WebRTC.Context.CreateVideoTrack(
-                texture.GetNativeTexturePtr(),
+                dest.GetNativeTexturePtr(),
                 dest.GetNativeTexturePtr(),
                 texture.width,
                 texture.height);

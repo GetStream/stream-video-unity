@@ -757,6 +757,12 @@ namespace Unity.WebRTC
         private static Context s_context = null;
         private static SynchronizationContext s_syncContext;
         private static ILogger s_logger;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        static DelegateWebGLCreateSessionSuccess s_webglCreateSessionSuccess;
+        static DelegateWebGLCreateSessionFailure s_webglCreateSessionFailure;
+        static DelegateWebGLSetSessionSuccess s_webglSetSessionSuccess;
+        static DelegateWebGLSetSessionFailure s_webglSetSessionFailure;
+#endif
 
         [RuntimeInitializeOnLoadMethod]
         static void RuntimeInitializeOnLoadMethod()
@@ -781,10 +787,14 @@ namespace Unity.WebRTC
             NativeMethods.RegisterRenderingWebRTCPlugin();
 #endif
 #if UNITY_WEBGL && !UNITY_EDITOR
+            s_webglCreateSessionSuccess = WebGLSessionOps.OnCreateSuccess;
+            s_webglCreateSessionFailure = WebGLSessionOps.OnCreateFailure;
+            s_webglSetSessionSuccess = WebGLSessionOps.OnSetSuccess;
+            s_webglSetSessionFailure = WebGLSessionOps.OnSetFailure;
             NativeMethods.WebGLRegisterCreateSessionCallbacks(
-                WebGLSessionOps.OnCreateSuccess, WebGLSessionOps.OnCreateFailure);
+                s_webglCreateSessionSuccess, s_webglCreateSessionFailure);
             NativeMethods.WebGLRegisterSetSessionCallbacks(
-                WebGLSessionOps.OnSetSuccess, WebGLSessionOps.OnSetFailure);
+                s_webglSetSessionSuccess, s_webglSetSessionFailure);
 #endif
             s_context = Context.Create();
             s_context.limitTextureSize = limitTextureSize;
@@ -806,6 +816,21 @@ namespace Unity.WebRTC
         /// </example>
         public static IEnumerator Update()
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            while (true)
+            {
+                WebGLSessionOps.PumpPendingSessionOps();
+                foreach (var reference in VideoStreamTrack.s_tracks.Values)
+                {
+                    if (!reference.TryGetTarget(out var track))
+                        continue;
+
+                    track.UpdateTexture();
+                }
+
+                yield return null;
+            }
+#else
             var instruction = new WaitForEndOfFrame();
 
             while (true)
@@ -816,15 +841,6 @@ namespace Unity.WebRTC
                     var tempTextureActive = RenderTexture.active;
                     RenderTexture.active = null;
 
-#if UNITY_WEBGL && !UNITY_EDITOR
-                    foreach (var reference in VideoStreamTrack.s_tracks.Values)
-                    {
-                        if (!reference.TryGetTarget(out var track))
-                            continue;
-
-                        track.UpdateTexture();
-                    }
-#else
                     var batch = Context.batch;
                     batch.ResizeCapacity(VideoStreamTrack.s_tracks.Count);
 
@@ -845,11 +861,11 @@ namespace Unity.WebRTC
                     batch.data.tracksCount = trackIndex;
                     if (trackIndex > 0)
                         batch.Submit();
-#endif
 
                     RenderTexture.active = tempTextureActive;
                 }
             }
+#endif
         }
 
         /// <summary>
@@ -1102,7 +1118,9 @@ namespace Unity.WebRTC
                     case GraphicsDeviceType.Vulkan:
                         return GraphicsFormat.B8G8R8A8_SRGB;
                     case GraphicsDeviceType.OpenGLCore:
+#pragma warning disable CS0618 // OpenGLES2 is obsolete in Unity 2023.1+
                     case GraphicsDeviceType.OpenGLES2:
+#pragma warning restore CS0618
                     case GraphicsDeviceType.OpenGLES3:
                         return GraphicsFormat.R8G8B8A8_SRGB;
                     case GraphicsDeviceType.Metal:
@@ -1118,7 +1136,9 @@ namespace Unity.WebRTC
                     case GraphicsDeviceType.Vulkan:
                         return GraphicsFormat.B8G8R8A8_UNorm;
                     case GraphicsDeviceType.OpenGLCore:
+#pragma warning disable CS0618 // OpenGLES2 is obsolete in Unity 2023.1+
                     case GraphicsDeviceType.OpenGLES2:
+#pragma warning restore CS0618
                     case GraphicsDeviceType.OpenGLES3:
                         return GraphicsFormat.R8G8B8A8_UNorm;
                     case GraphicsDeviceType.Metal:
@@ -1571,6 +1591,10 @@ namespace Unity.WebRTC
         public static extern void PeerConnectionCreateOffer(IntPtr ptr, string options);
         [DllImport(WebRTC.Lib)]
         public static extern void PeerConnectionCreateAnswer(IntPtr ptr, string options);
+        [DllImport(WebRTC.Lib)]
+        public static extern string PeerConnectionTakePendingCreateSd(IntPtr ptr);
+        [DllImport(WebRTC.Lib)]
+        public static extern string PeerConnectionTakePendingSetSd(IntPtr ptr);
         [DllImport(WebRTC.Lib)]
         public static extern IntPtr PeerConnectionSetLocalDescription(IntPtr context, IntPtr ptr, RTCSdpType type, string sdp);
         [DllImport(WebRTC.Lib)]

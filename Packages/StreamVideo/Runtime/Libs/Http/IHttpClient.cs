@@ -26,6 +26,11 @@ namespace StreamVideo.Libs.Http
 
         Task<HttpResponse> SendHttpRequestAsync(HttpMethodType methodType, Uri uri, object optionalRequestContent, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Sends a HEAD request without default authentication or custom headers.
+        /// Used for unauthenticated discovery (location hint). Custom headers would
+        /// trigger a CORS preflight that CloudFront/S3 does not allow.
+        /// </summary>
         Task<HttpResponse> HeadAsync(Uri uri,
             ICollection<KeyValuePair<string, IEnumerable<string>>> resultHeaders = null, CancellationToken cancellationToken = default);
     }

@@ -26,10 +26,16 @@ namespace StreamVideo.ExampleProject.UI
         {
 #if UNITY_STANDALONE
             return true;
+#elif UNITY_WEBGL && !UNITY_EDITOR
+            // UnityEngine.Microphone is not in the WebGL player. Camera still uses RequestUserAuthorization.
+            if (permissionType == PermissionType.Microphone)
+                return true;
+            var userAuthorization = PermissionTypeToUserAuthorization(permissionType);
+            return Application.HasUserAuthorization(userAuthorization);
 #elif UNITY_ANDROID
             var androidPermission = PermissionTypeToAndroidPermission(permissionType);
             return Permission.HasUserAuthorizedPermission(androidPermission);
-#elif UNITY_IOS || (UNITY_WEBGL && !UNITY_EDITOR)
+#elif UNITY_IOS
             var userAuthorization = PermissionTypeToUserAuthorization(permissionType);
             return Application.HasUserAuthorization(userAuthorization);
 #else

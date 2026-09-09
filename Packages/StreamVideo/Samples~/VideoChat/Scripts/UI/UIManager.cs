@@ -30,30 +30,40 @@ namespace StreamVideo.ExampleProject.UI
 
             GetCurrentScreenSet().Init(_videoManager, uiManager: this);
 
-            if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Camera))
+#if UNITY_WEBGL && !UNITY_EDITOR
+            Debug.Log("Click the page to allow camera and microphone access.");
+#else
+            TryRequestMediaDevices();
+#endif
+        }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        protected void Update()
+        {
+            if (_webglMediaRequested)
             {
-                _permissionsManager.RequestPermission(PermissionsManager.PermissionType.Camera,
-                    onGranted: () => { SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed(); },
-                    onDenied: ()
-                        => Debug.LogError("Camera permission was not granted. Video capturing will not work."));
-            }
-            else
-            {
-                SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed();
+                return;
             }
 
-            if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Microphone))
+            var touchBegan = false;
+            for (var i = 0; i < Input.touchCount; i++)
             {
-                _permissionsManager.RequestPermission(PermissionsManager.PermissionType.Microphone,
-                    onGranted: SelectFirstMicrophone,
-                    onDenied: ()
-                        => Debug.LogError("Microphone permission was not granted. Audio capturing will not work."));
+                if (Input.GetTouch(i).phase == TouchPhase.Began)
+                {
+                    touchBegan = true;
+                    break;
+                }
             }
-            else
+
+            if (!Input.GetMouseButtonDown(0) && !touchBegan)
             {
-                SelectFirstMicrophone();
+                return;
             }
+
+            _webglMediaRequested = true;
+            TryRequestMediaDevices();
         }
+#endif
 
         protected void Start() => ShowMainScreen();
 
@@ -91,6 +101,9 @@ namespace StreamVideo.ExampleProject.UI
         private bool _forceTestPortraitMode;
 
         private PermissionsManager _permissionsManager;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        private bool _webglMediaRequested;
+#endif
 
         private void OnCallStarted(IStreamCall call) => ShowCallScreen(call);
 
@@ -111,6 +124,33 @@ namespace StreamVideo.ExampleProject.UI
 
             var webCamTexture = _videoManager.Client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
             LocalCameraChanged?.Invoke(webCamTexture);
+        }
+
+        private void TryRequestMediaDevices()
+        {
+            if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Camera))
+            {
+                _permissionsManager.RequestPermission(PermissionsManager.PermissionType.Camera,
+                    onGranted: () => { SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed(); },
+                    onDenied: ()
+                        => Debug.LogError("Camera permission was not granted. Video capturing will not work."));
+            }
+            else
+            {
+                SelectFirstWorkingCameraOrDefaultAsync().LogIfFailed();
+            }
+
+            if (!_permissionsManager.HasPermission(PermissionsManager.PermissionType.Microphone))
+            {
+                _permissionsManager.RequestPermission(PermissionsManager.PermissionType.Microphone,
+                    onGranted: SelectFirstMicrophone,
+                    onDenied: ()
+                        => Debug.LogError("Microphone permission was not granted. Audio capturing will not work."));
+            }
+            else
+            {
+                SelectFirstMicrophone();
+            }
         }
 
         private async Task SelectFirstWorkingCameraOrDefaultAsync()

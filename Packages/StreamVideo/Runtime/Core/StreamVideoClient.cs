@@ -495,7 +495,7 @@ namespace StreamVideo.Core
 #if STREAM_DEBUG_ENABLED
             _logsCollector = new StreamVideo.Core.IssueReporters.LogsCollector();
 
-#if UNITY_IOS || UNITY_ANDROID
+#if UNITY_IOS || UNITY_ANDROID || UNITY_WEBGL
             _logsCollector.Enable();
 #endif
             _feedbackReporter = new StreamVideo.Core.IssueReporters.FeedbackReporterFactory(_logsCollector, serializer, _logs)

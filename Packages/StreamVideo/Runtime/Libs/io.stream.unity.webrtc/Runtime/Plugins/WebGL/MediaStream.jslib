@@ -25,6 +25,7 @@ var UnityWebRTCMediaStream = {
     return stream.managePtr;
   },
 
+  MediaStreamAddUserMedia__deps: ['MediaStreamAddTrack'],
   MediaStreamAddUserMedia: function (streamPtr, constraints){
     if (!uwcom_existsCheck(streamPtr, 'MediaStreamAddUserMedia', 'stream')) return;
     uwcom_debugLog('log', 'MediaStream.jslib', 'AddUserMedia', streamPtr);

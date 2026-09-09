@@ -4,6 +4,15 @@ var UnityWebRTCRtpTransceiver = {
     delete UWManaged[transceiverPtr];
   },
 
+  TransceiverGetMid: function (transceiverPtr) {
+    if (!uwcom_existsCheck(transceiverPtr, 'TransceiverGetMid', 'transceiver')) return 0;
+    var transceiver = UWManaged[transceiverPtr];
+    if (transceiver.mid == null || transceiver.mid === '') {
+      return 0;
+    }
+    return uwcom_strToPtr(transceiver.mid);
+  },
+
   TransceiverGetDirection: function (transceiverPtr) {
     if (!uwcom_existsCheck(transceiverPtr, 'TransceiverGetDirection', 'transceiver')) return;
     var transceiver = UWManaged[transceiverPtr];

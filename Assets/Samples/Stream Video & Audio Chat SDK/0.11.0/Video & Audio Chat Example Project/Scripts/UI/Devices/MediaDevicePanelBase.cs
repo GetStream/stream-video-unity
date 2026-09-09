@@ -29,6 +29,12 @@ namespace StreamVideo.ExampleProject.UI.Devices
         public void SelectDeviceWithoutNotify(TDevice device)
         {
             var index = _devices.IndexOf(device);
+            if (index == -1 && Client != null)
+            {
+                UpdateDevicesDropdown(GetDevices());
+                index = _devices.IndexOf(device);
+            }
+
             if (index == -1)
             {
                 Debug.LogError($"Failed to find index for device: {device}. Available devices: " +

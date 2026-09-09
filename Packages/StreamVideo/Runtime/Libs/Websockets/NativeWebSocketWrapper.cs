@@ -21,7 +21,7 @@ namespace StreamVideo.Libs.Websockets
         public event Action ConnectionFailed;
         
         public int ReceiveQueueCount => _messages.Count;
-        public int SendQueueCount => throw new NotImplementedException();
+        public int SendQueueCount => 0;
         public bool IsConnected => _webSocket.State == WebSocketState.Open;
         public bool IsConnecting => _webSocket.State == WebSocketState.Connecting;
 
@@ -59,9 +59,54 @@ namespace StreamVideo.Libs.Websockets
 
             SubscribeToEvents();
 
+            WebSocketOpenEventHandler openedHandler = null;
+            WebSocketErrorEventHandler errorHandler = null;
+            WebSocketCloseEventHandler closeHandler = null;
+
             try
             {
+                // WebGL Connect() returns before the browser handshake finishes. Wait for Open
+                // before returning so callers can send (coordinator auth) on a live socket.
                 await _webSocket.Connect();
+                await WebsocketConnectGate.WaitUntilOpenAsync(
+                    isOpen: () => _webSocket.State == WebSocketState.Open,
+                    addOnOpen: handler =>
+                    {
+                        openedHandler = () => handler();
+                        _webSocket.OnOpen += openedHandler;
+                    },
+                    removeOnOpen: _ =>
+                    {
+                        if (openedHandler != null)
+                        {
+                            _webSocket.OnOpen -= openedHandler;
+                        }
+                    },
+                    addOnError: handler =>
+                    {
+                        errorHandler = error => handler(error);
+                        _webSocket.OnError += errorHandler;
+                    },
+                    removeOnError: _ =>
+                    {
+                        if (errorHandler != null)
+                        {
+                            _webSocket.OnError -= errorHandler;
+                        }
+                    },
+                    addOnClose: handler =>
+                    {
+                        closeHandler = code => handler(code.ToString());
+                        _webSocket.OnClose += closeHandler;
+                    },
+                    removeOnClose: _ =>
+                    {
+                        if (closeHandler != null)
+                        {
+                            _webSocket.OnClose -= closeHandler;
+                        }
+                    },
+                    cancellationToken: cancellationToken);
             }
             catch (Exception)
             {
@@ -74,7 +119,6 @@ namespace StreamVideo.Libs.Websockets
 
         public void ClearSendQueue()
         {
-            throw new NotImplementedException();
         }
 
         public async Task DisconnectAsync()

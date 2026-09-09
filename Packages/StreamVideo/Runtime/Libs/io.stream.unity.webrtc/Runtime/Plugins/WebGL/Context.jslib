@@ -73,11 +73,13 @@ var UnityWebRTCContext = {
     return encodeTypeIdx;
   },
 
+  ContextCreatePeerConnection__deps: ['CreatePeerConnection'],
   ContextCreatePeerConnection: function (contextPtr, conf) {
     if (!uwcom_existsCheck(contextPtr, 'ContextCreatePeerConnection', 'context')) return;
     return _CreatePeerConnection(conf);
   },
 
+  ContextCreatePeerConnectionWithConfig__deps: ['CreatePeerConnectionWithConfig'],
   ContextCreatePeerConnectionWithConfig: function (contextPtr, confPtr) {
     if (!uwcom_existsCheck(contextPtr, 'ContextCreatePeerConnectionWithConfig', 'context')) return;
     return _CreatePeerConnectionWithConfig(confPtr);
@@ -92,18 +94,21 @@ var UnityWebRTCContext = {
     delete UWManaged[peerPtr];
   },
 
+  PeerConnectionSetLocalDescription__deps: ['PeerConnectionSetDescription'],
   PeerConnectionSetLocalDescription: function (contextPtr, peerPtr, typeIdx, sdpPtr) {
     if (!uwcom_existsCheck(contextPtr, 'PeerConnectionSetLocalDescription', 'context')) return 11; // OperationErrorWithData
     if (!uwcom_existsCheck(peerPtr, 'PeerConnectionSetLocalDescription', 'peer')) return 11; // OperationErrorWithData
     return _PeerConnectionSetDescription(peerPtr, typeIdx, sdpPtr, 'Local');
   },
 
+  PeerConnectionSetRemoteDescription__deps: ['PeerConnectionSetDescription'],
   PeerConnectionSetRemoteDescription: function (contextPtr, peerPtr, typeIdx, sdpPtr) {
     if (!uwcom_existsCheck(contextPtr, 'PeerConnectionSetRemoteDescription', 'context')) return 11; // OperationErrorWithData
     if (!uwcom_existsCheck(peerPtr, 'PeerConnectionSetRemoteDescription', 'peer')) return 11; // OperationErrorWithData
     return _PeerConnectionSetDescription(peerPtr, typeIdx, sdpPtr, 'Remote');
   },
 
+  PeerConnectionSetLocalDescriptionWithoutDescription__deps: ['PeerConnectionSetDescriptionWithoutDescription'],
   PeerConnectionSetLocalDescriptionWithoutDescription: function (contextPtr, peerPtr) {
     if (!uwcom_existsCheck(contextPtr, 'PeerConnectionSetLocalDescriptionWithoutDescription', 'context')) return 11; // OperationErrorWithData
     if (!uwcom_existsCheck(peerPtr, 'PeerConnectionSetLocalDescriptionWithoutDescription', 'peer')) return 11; // OperationErrorWithData
@@ -122,6 +127,7 @@ var UnityWebRTCContext = {
     uwevt_OnSetSessionDescFailure = OnSetSessionDescFailure;
   },
 
+  ContextCreateDataChannel__deps: ['CreateDataChannel'],
   ContextCreateDataChannel: function (contextPtr, peerPtr, labelPtr, optionsJsonPtr) {
     if (!uwcom_existsCheck(contextPtr, 'ContextCreateDataChannel', 'context')) return;
     if (!uwcom_existsCheck(peerPtr, 'ContextCreateDataChannel', 'peer')) return;
@@ -134,11 +140,13 @@ var UnityWebRTCContext = {
     delete UWManaged[dataChannelPtr];
   },
 
+  ContextCreateMediaStream__deps: ['CreateMediaStream'],
   ContextCreateMediaStream: function (contextPtr, labelPtr) {
     if (!uwcom_existsCheck(contextPtr, 'ContextCreateMediaStream', 'context')) return;
     return _CreateMediaStream(labelPtr);
   },
 
+  ContextDeleteMediaStream__deps: ['DeleteMediaStream'],
   ContextDeleteMediaStream: function (contextPtr, streamPtr) {
     //if (!uwcom_existsCheck(contextPtr, 'ContextDeleteMediaStream', 'context')) return;
     if (!uwcom_existsCheck(streamPtr, 'ContextDeleteMediaStream', 'stream')) return;
@@ -195,10 +203,18 @@ var UnityWebRTCContext = {
   SetTransformedFrameRegisterCallback: function(transformedFrameCallback) {
   },
 
+  WebGLRegisterCreateSessionCallbacks__deps: [
+    '$uwevt_OnSuccessCreateSessionDesc',
+    '$uwevt_OnFailureCreateSessionDesc'
+  ],
   WebGLRegisterCreateSessionCallbacks: function(successPtr, failurePtr) {
     uwevt_OnSuccessCreateSessionDesc = successPtr;
     uwevt_OnFailureCreateSessionDesc = failurePtr;
   },
+  WebGLRegisterSetSessionCallbacks__deps: [
+    '$uwevt_OnSetSessionDescSuccess',
+    '$uwevt_OnSetSessionDescFailure'
+  ],
   WebGLRegisterSetSessionCallbacks: function(successPtr, failurePtr) {
     uwevt_OnSetSessionDescSuccess = successPtr;
     uwevt_OnSetSessionDescFailure = failurePtr;
@@ -259,39 +275,33 @@ var UnityWebRTCContext = {
     return 0;
   },
 
+  ContextCreateAudioTrack__deps: ['CreateAudioTrack'],
   ContextCreateAudioTrack: function (contextPtr, labelPtr, sourcePtr) {
     if (!uwcom_existsCheck(contextPtr, 'ContextCreateAudioTrack', 'context')) return;
     return _CreateAudioTrack(labelPtr, sourcePtr);
   },
 
+  ContextCreateVideoTrack__deps: ['CreateVideoTrack'],
   ContextCreateVideoTrack: function (contextPtr, srcTexturePtr, dstTexturePtr, width, height) {
     if (!uwcom_existsCheck(contextPtr, 'ContextCreateVideoTrack', 'context')) return;
     return _CreateVideoTrack(srcTexturePtr, dstTexturePtr, width, height);
   },
 
+  ContextStopMediaStreamTrack__deps: ['$uwcom_releaseMediaTrack'],
   ContextStopMediaStreamTrack: function (contextPtr, trackPtr) {
     if (!uwcom_existsCheck(contextPtr, 'ContextStopMediaStreamTrack', 'context')) return;
     if (!uwcom_existsCheck(trackPtr, 'ContextStopMediaStreamTrack', 'track')) return;
     var track = UWManaged[trackPtr];
-    track.stop();
+    if (track.stop) {
+      track.stop();
+    }
+    uwcom_releaseMediaTrack(trackPtr);
   },
 
+  ContextDeleteMediaStreamTrack__deps: ['$uwcom_releaseMediaTrack'],
   ContextDeleteMediaStreamTrack: function (contextPtr, trackPtr) {
     if (!uwcom_existsCheck(trackPtr, 'ContextDeleteMediaStreamTrack', 'track')) return;
-    var track = UWManaged[trackPtr];
-
-    // Not sure how js garbage collection works, remove/disable/stop all attributes inside the track object?
-    if(track.kind === "video"){
-      if(uwcom_localVideoTracks[trackPtr]){
-        delete uwcom_localVideoTracks[trackPtr];
-      }
-
-      if(uwcom_remoteVideoTracks[trackPtr]){
-        uwcom_remoteVideoTracks[trackPtr].video.remove();
-        uwcom_remoteVideoTracks[trackPtr].track.stop();
-        delete uwcom_remoteVideoTracks[trackPtr];
-      }
-    }
+    uwcom_releaseMediaTrack(trackPtr);
     delete UWManaged[trackPtr];
   },
 
@@ -370,4 +380,11 @@ var UnityWebRTCContext = {
   StatsMemberGetMapStringDouble: function (memberPtr, valuesPtr, lengthPtr) { return 0; }
 };
 autoAddDeps(UnityWebRTCContext, '$UWContextGetCapabilities');
+autoAddDeps(UnityWebRTCContext, '$uwevt_OnSuccessCreateSessionDesc');
+autoAddDeps(UnityWebRTCContext, '$uwevt_OnFailureCreateSessionDesc');
+autoAddDeps(UnityWebRTCContext, '$uwevt_OnSetSessionDescSuccess');
+autoAddDeps(UnityWebRTCContext, '$uwevt_OnSetSessionDescFailure');
+autoAddDeps(UnityWebRTCContext, '$uwevt_MSOnAddTrack');
+autoAddDeps(UnityWebRTCContext, '$uwevt_MSOnRemoveTrack');
+autoAddDeps(UnityWebRTCContext, '$uwevt_OnStatsDeliveredCallback');
 mergeInto(LibraryManager.library, UnityWebRTCContext);

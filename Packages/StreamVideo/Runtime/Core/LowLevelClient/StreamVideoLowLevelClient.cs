@@ -239,8 +239,8 @@ namespace StreamVideo.Core.LowLevelClient
             // StreamTodo: attempt to get location hint if not fetched already + perhaps there's an ongoing request and we can just wait
             if (_locationHint.IsNullOrEmpty())
             {
-                _logs.Error("No location hint");
-                throw new InvalidOperationException("No location hint");
+                _logs.Warning("No location hint, falling back to ERR");
+                return FallbackLocationHint;
             }
 
             return _locationHint;
@@ -310,6 +310,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private const string DefaultStreamAuthType = "jwt";
         private const string LocationHintHeaderKey = "x-amz-cf-pop";
+        private const string FallbackLocationHint = "ERR";
 
         private static readonly Uri ServerBaseUrl = new Uri("wss://video.stream-io-api.com/video/connect");
         private static readonly Uri LocationHintWebUri = new Uri("https://hint.stream-io-video.com/");
@@ -370,20 +371,27 @@ namespace StreamVideo.Core.LowLevelClient
 
         private async Task UpdateLocationHintAsync(CancellationToken cancellationToken)
         {
-            var headers = new List<KeyValuePair<string, IEnumerable<string>>>();
-            await _httpClient.HeadAsync(LocationHintWebUri, headers, cancellationToken);
-
-            var locationHeader = headers.FirstOrDefault(_ => _.Key.ToLower() == LocationHintHeaderKey);
-            if (locationHeader.Key.IsNullOrEmpty() || !locationHeader.Value.Any())
+            try
             {
-                _logs.Error($"Failed to get `{LocationHintHeaderKey}` header from `{LocationHintWebUri}` request");
-                return;
-            }
+                var headers = new List<KeyValuePair<string, IEnumerable<string>>>();
+                await _httpClient.HeadAsync(LocationHintWebUri, headers, cancellationToken);
 
-            _locationHint = locationHeader.Value.First();
+                var locationHeader = headers.FirstOrDefault(_ => _.Key.ToLower() == LocationHintHeaderKey);
+                if (locationHeader.Key.IsNullOrEmpty() || !locationHeader.Value.Any())
+                {
+                    _logs.Warning($"Failed to get `{LocationHintHeaderKey}` header from `{LocationHintWebUri}` request");
+                    return;
+                }
+
+                _locationHint = locationHeader.Value.First();
 #if STREAM_DEBUG_ENABLED
-            _logs.Info("Location Hint: " + _locationHint);
+                _logs.Info("Location Hint: " + _locationHint);
 #endif
+            }
+            catch (Exception e)
+            {
+                _logs.Warning($"Failed to get location hint from `{LocationHintWebUri}`: {e.Message}");
+            }
         }
 
         private async Task RefreshAuthTokenFromProviderAsync(CancellationToken cancellationToken = default)
@@ -617,7 +625,11 @@ namespace StreamVideo.Core.LowLevelClient
         {
             var connectUrl = activeCall.Credentials.Server.Url.Replace("/twirp", "");
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var httpClient = new HttpClient(new UnityWebRequestHttpMessageHandler());
+#else
             var httpClient = new HttpClient();
+#endif
 
             foreach (var header in _defaultHttpRequestHeaders)
             {

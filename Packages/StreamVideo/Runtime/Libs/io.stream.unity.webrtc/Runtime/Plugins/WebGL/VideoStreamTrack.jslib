@@ -3,6 +3,10 @@ var UnityWebRTCVideoStreamTrack = {
     var cnv = document.createElement('canvas');
     cnv.width = width;
     cnv.height = height;
+    cnv.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;bottom:0;';
+    if (document.body) {
+      document.body.appendChild(cnv);
+    }
     var ctx = cnv.getContext('2d');
     var imgData = ctx.createImageData(width, height);
     var stream = cnv.captureStream();
@@ -141,15 +145,16 @@ var UnityWebRTCVideoStreamTrack = {
 
       imgData.data.set(buffer);
       ctx.putImageData(imgData, 0, 0);
-      
-      // For now: Flip every time, since we want the correct image transfered over WebRTC
-      ctx.globalCompositeOperation = 'copy';
-      ctx.scale(1,-1);
-      ctx.translate(0, -imgData.height);
-      ctx.drawImage(cnv,0,0);
-      ctx.setTransform(1,0,0,1,0,0);
-      ctx.globalCompositeOperation = 'source-over';
-      
+
+      if (needFlip) {
+        ctx.globalCompositeOperation = 'copy';
+        ctx.scale(1,-1);
+        ctx.translate(0, -imgData.height);
+        ctx.drawImage(cnv,0,0);
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
       GLctx.bindTexture(GLctx.TEXTURE_2D, dstTexture);
       GLctx.texImage2D(GLctx.TEXTURE_2D, 0, GLctx.RGBA, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
       //GLctx.texSubImage2D(GLctx.TEXTURE_2D, 0, 0, 0, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);

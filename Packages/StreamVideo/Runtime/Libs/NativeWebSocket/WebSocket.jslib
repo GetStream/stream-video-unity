@@ -21,8 +21,36 @@ var LibraryWebSocket = {
 		onError: null,
 		onClose: null,
 
-		/* Debug mode */
 		debug: false
+	},
+
+	$ws_dynCall: function (sig, funcPtr) {
+		if (!funcPtr) return;
+		funcPtr = funcPtr | 0;
+		var args = Array.prototype.slice.call(arguments, 2);
+		try {
+			var named = Module['dynCall_' + sig];
+			if (typeof named === 'function') {
+				return named.apply(null, [funcPtr].concat(args));
+			}
+			if (typeof Module.dynCall === 'function') {
+				try {
+					return Module.dynCall.apply(null, [sig, funcPtr].concat(args));
+				} catch (e1) {
+					return Module.dynCall(sig, funcPtr, args);
+				}
+			}
+			var table = Module['wasmTable'] || (typeof wasmTable !== 'undefined' ? wasmTable : null);
+			if (table && typeof table.get === 'function') {
+				var fn = table.get(funcPtr);
+				if (typeof fn === 'function') {
+					return fn.apply(null, args);
+				}
+			}
+			console.error('[JSLIB WebSocket] dynCall missing, sig=' + sig);
+		} catch (err) {
+			console.error('[JSLIB WebSocket] dynCall failed, sig=' + sig, err);
+		}
 	},
 
 	/**
@@ -132,6 +160,7 @@ var LibraryWebSocket = {
 	 *
 	 * @param instanceId Instance ID
 	 */
+	WebSocketConnect__deps: ['$ws_dynCall'],
 	WebSocketConnect: function(instanceId) {
 
 		var instance = webSocketState.instances[instanceId];
@@ -150,7 +179,7 @@ var LibraryWebSocket = {
 				console.log("[JSLIB WebSocket] Connected.");
 
 			if (webSocketState.onOpen)
-				Module.dynCall_vi(webSocketState.onOpen, instanceId);
+				ws_dynCall('vi', webSocketState.onOpen, instanceId);
 
 		};
 
@@ -170,7 +199,7 @@ var LibraryWebSocket = {
 				HEAPU8.set(dataBuffer, buffer);
 
 				try {
-					Module.dynCall_viii(webSocketState.onMessage, instanceId, buffer, dataBuffer.length);
+					ws_dynCall('viii', webSocketState.onMessage, instanceId, buffer, dataBuffer.length);
 				} finally {
 					_free(buffer);
 				}
@@ -182,7 +211,7 @@ var LibraryWebSocket = {
 				HEAPU8.set(dataBuffer, buffer);
 
 				try {
-					Module.dynCall_viii(webSocketState.onMessage, instanceId, buffer, dataBuffer.length);
+					ws_dynCall('viii', webSocketState.onMessage, instanceId, buffer, dataBuffer.length);
 				} finally {
 					_free(buffer);
 				}
@@ -204,7 +233,7 @@ var LibraryWebSocket = {
 				stringToUTF8(msg, buffer, length);
 
 				try {
-					Module.dynCall_vii(webSocketState.onError, instanceId, buffer);
+					ws_dynCall('vii', webSocketState.onError, instanceId, buffer);
 				} finally {
 					_free(buffer);
 				}
@@ -219,7 +248,7 @@ var LibraryWebSocket = {
 				console.log("[JSLIB WebSocket] Closed.");
 
 			if (webSocketState.onClose)
-				Module.dynCall_vii(webSocketState.onClose, instanceId, ev.code);
+				ws_dynCall('vii', webSocketState.onClose, instanceId, ev.code);
 
 			delete instance.ws;
 
@@ -330,4 +359,5 @@ var LibraryWebSocket = {
 };
 
 autoAddDeps(LibraryWebSocket, '$webSocketState');
+autoAddDeps(LibraryWebSocket, '$ws_dynCall');
 mergeInto(LibraryManager.library, LibraryWebSocket);

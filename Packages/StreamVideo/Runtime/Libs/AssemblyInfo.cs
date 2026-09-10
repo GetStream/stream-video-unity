@@ -1,6 +1,6 @@
-#if UNITY_EDITOR || STREAM_TESTS_ENABLED
 using System.Runtime.CompilerServices;
-#endif
+
+[assembly: InternalsVisibleTo("StreamVideo.Core")]
 
 #if UNITY_EDITOR
 [assembly: InternalsVisibleTo("StreamVideo.Tests.Editor")]

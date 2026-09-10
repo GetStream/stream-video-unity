@@ -77,21 +77,11 @@ namespace StreamVideo.Core.DeviceManagers
                 }
             }
             
-#if UNITY_WEBGL && !UNITY_EDITOR
-            // Lobby preview needs the webcam running even when the publisher track is still disabled.
-            if (_activeCamera != null && !_activeCamera.isPlaying)
+            if (enable && _activeCamera != null && !_activeCamera.isPlaying)
             {
                 _activeCamera.Play();
                 Client.SetCameraInputSource(_activeCamera);
             }
-#else
-            if (IsEnabled && enable && _activeCamera != null && !_activeCamera.isPlaying)
-            {
-                //OnSetEnabled will not trigger because IsEnabled value didn't change
-                _activeCamera.Play();
-                Client.SetCameraInputSource(_activeCamera);
-            }
-#endif
 
             SetEnabled(enable);
         }
@@ -252,8 +242,7 @@ namespace StreamVideo.Core.DeviceManagers
                 _activeCamera.Play();
                 Client.SetCameraInputSource(_activeCamera);
             }
-
-            if (!isEnabled)
+            else if (!isEnabled && _activeCamera.isPlaying)
             {
                 _activeCamera.Stop();
             }

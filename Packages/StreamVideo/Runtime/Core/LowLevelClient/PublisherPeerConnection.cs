@@ -502,7 +502,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             var isTrackLive = (track.ReadyState == TrackState.Live);
 
-            //StreamTODO: verify why this was needed in the past. The JS client just takes the track.id
+            // Native WebRTC can put a different track id in SDP than MediaStreamTrack.Id.
+            // WebGL SDP uses the browser MediaStream.id, which does not match the C# guid.
             var trackId = transceiver.Sender.Track.Kind == TrackKind.Video
                 ? ExtractVideoTrackId(sdp)
                 : transceiver.Sender.Track.Id;
@@ -614,33 +615,89 @@ namespace StreamVideo.Core.LowLevelClient
 
         private string ExtractVideoTrackId(string sdp)
         {
-            try
+            if (TryExtractMsidTrackId(sdp, PublisherVideoMediaStream?.Id, "video", out var trackId))
             {
-                var lines = sdp.Split("\n");
-                var mediaStreamRecord
-                    = lines.Single(l => l.StartsWith($"a=msid:{PublisherVideoMediaStream.Id}"));
-                var parts = mediaStreamRecord.Split(" ");
-                var result = parts[1];
-
-                // StreamTodo: verify if this is needed
-                result = result.Replace("\r\n", "").Replace("\r", "").Replace("\n", "");
-
-                return result;
+                return trackId;
             }
-            catch (Exception e)
+
+            if (TryExtractMsidTrackId(sdp, mediaStreamId: null, "video", out trackId))
             {
-                using (new StringBuilderPoolScope(out var tempSb))
+                Logs.WarningIfDebug(
+                    $"SDP a=msid stream id did not match PublisherVideoMediaStream.Id `{PublisherVideoMediaStream?.Id}`. Using SDP video track id `{trackId}`.");
+                return trackId;
+            }
+
+            var fallback = PublisherVideoTrack?.Id;
+            if (!string.IsNullOrEmpty(fallback))
+            {
+                Logs.WarningIfDebug(
+                    $"SDP had no video a=msid. Falling back to PublisherVideoTrack.Id `{fallback}`.");
+                return fallback;
+            }
+
+            using (new StringBuilderPoolScope(out var tempSb))
+            {
+                tempSb.AppendLine($"Failed searching for: a=msid:{PublisherVideoMediaStream?.Id}");
+                tempSb.AppendLine("In:");
+                tempSb.AppendLine(sdp);
+                Logs.Error(tempSb.ToString());
+            }
+
+            throw new InvalidOperationException(
+                $"Failed to extract video track id from SDP. StreamId={PublisherVideoMediaStream?.Id}");
+        }
+
+        /// <summary>
+        /// Reads the track id from <c>a=msid:&lt;streamId&gt; &lt;trackId&gt;</c> in the given media section.
+        /// </summary>
+        internal static bool TryExtractMsidTrackId(string sdp, string mediaStreamId, string mediaType,
+            out string trackId)
+        {
+            trackId = null;
+            if (string.IsNullOrEmpty(sdp))
+            {
+                return false;
+            }
+
+            var inTargetSection = string.IsNullOrEmpty(mediaType);
+            var streamPrefix = string.IsNullOrEmpty(mediaStreamId) ? null : $"a=msid:{mediaStreamId}";
+
+            foreach (var rawLine in sdp.Split('\n'))
+            {
+                var line = rawLine.TrimEnd('\r');
+                if (line.StartsWith("m=", StringComparison.Ordinal))
                 {
-                    tempSb.AppendLine($"Failed searching for: a=msid:{PublisherVideoMediaStream.Id}");
-                    tempSb.AppendLine("In:");
-                    tempSb.AppendLine(sdp);
-                    tempSb.AppendLine("Error:");
-                    tempSb.AppendLine(e.Message);
-                    Logs.Error(tempSb.ToString());
+                    inTargetSection = string.IsNullOrEmpty(mediaType) ||
+                                      line.StartsWith("m=" + mediaType, StringComparison.Ordinal);
+                    continue;
                 }
 
-                throw;
+                if (!inTargetSection ||
+                    !line.StartsWith("a=msid:", StringComparison.Ordinal) ||
+                    line.StartsWith("a=msid-semantic", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (streamPrefix != null && !line.StartsWith(streamPrefix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var parts = line.Split(' ');
+                if (parts.Length < 2)
+                {
+                    continue;
+                }
+
+                trackId = parts[1].Trim();
+                if (trackId.Length > 0)
+                {
+                    return true;
+                }
             }
+
+            return false;
         }
 
         protected override void OnDisposing()

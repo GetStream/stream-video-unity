@@ -60,7 +60,9 @@ var UnityWebRTCMediaStream = {
   MediaStreamGetID: function (streamPtr) {
     if (!uwcom_existsCheck(streamPtr, 'MediaStreamGetID', 'stream')) return;
     var stream = UWManaged[streamPtr];
-    var id = stream.guid || stream.id;
+    // SDP a=msid uses the browser MediaStream.id. guid is a C# label and cannot be written
+    // onto the read-only id field, so returning guid made ExtractVideoTrackId miss the msid.
+    var id = stream.id || stream.guid;
     var streamIdPtr = uwcom_strToPtr(id);
     return streamIdPtr;
   },

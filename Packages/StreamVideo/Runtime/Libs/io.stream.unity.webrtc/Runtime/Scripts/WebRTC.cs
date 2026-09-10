@@ -1516,7 +1516,7 @@ namespace Unity.WebRTC
     internal delegate void DelegateNativeOnIceGatheringChange(IntPtr ptr, RTCIceGatheringState state);
 #if UNITY_WEBGL && !UNITY_EDITOR
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void DelegateNativeOnIceCandidate(IntPtr ptr, IntPtr iceCandidatePtr, [MarshalAs(UnmanagedType.LPStr)] string candidate, [MarshalAs(UnmanagedType.LPStr)] string sdpMid, int sdpMlineIndex);
+    internal delegate void DelegateNativeOnIceCandidate(IntPtr ptr, IntPtr iceCandidatePtr, IntPtr candidate, IntPtr sdpMid, int sdpMlineIndex);
 #else
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void DelegateNativeOnIceCandidate(IntPtr ptr, [MarshalAs(UnmanagedType.LPStr)] string candidate, [MarshalAs(UnmanagedType.LPStr)] string sdpMid, int sdpMlineIndex);

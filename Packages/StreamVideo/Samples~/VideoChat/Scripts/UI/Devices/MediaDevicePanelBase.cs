@@ -116,6 +116,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
             
         }
         
+        protected void SyncDeviceButton(bool isEnabled) => _deviceButton.UpdateSprite(isEnabled);
+
         protected void UpdateDeviceState(bool isEnabled)
         {
             // Update UI first to reflect the change immediately

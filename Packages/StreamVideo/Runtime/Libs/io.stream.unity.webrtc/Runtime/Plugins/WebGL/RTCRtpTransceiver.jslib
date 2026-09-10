@@ -54,15 +54,37 @@ var UnityWebRTCRtpTransceiver = {
     var codecs = JSON.parse(codecsJson);
 
     const supportsSetCodecPreferences = window.RTCRtpTransceiver && 'setCodecPreferences' in window.RTCRtpTransceiver.prototype;
-    if (supportsSetCodecPreferences) {
-      try {
-        transceiver.setCodecPreferences(codecs);
-      } catch (err) {
-        return UWRTCErrorType.indexOf("InvalidModification");
+    if (!supportsSetCodecPreferences) {
+      return UWRTCErrorType.indexOf("UnsupportedOperation");
+    }
+
+    try {
+      // Chrome rejects reconstructed JSON codecs (extra channels:0, etc). Map back onto
+      // the RTCRtpCodecCapability objects returned by getCapabilities().
+      var kind = (transceiver.sender && transceiver.sender.track && transceiver.sender.track.kind) ||
+                 (transceiver.receiver && transceiver.receiver.track && transceiver.receiver.track.kind) ||
+                 'video';
+      var caps = RTCRtpSender.getCapabilities(kind);
+      var mapped = [];
+      if (caps && caps.codecs && codecs && codecs.length) {
+        for (var i = 0; i < codecs.length; i++) {
+          var want = codecs[i];
+          for (var j = 0; j < caps.codecs.length; j++) {
+            var have = caps.codecs[j];
+            if (have.mimeType === want.mimeType &&
+                have.clockRate === want.clockRate &&
+                (have.sdpFmtpLine || '') === (want.sdpFmtpLine || '')) {
+              mapped.push(have);
+              break;
+            }
+          }
+        }
       }
-    } 
-    else return UWRTCErrorType.indexOf("UnsupportedOperation");
-    return UWRTCErrorType.indexOf("None");
+      transceiver.setCodecPreferences(mapped.length ? mapped : codecs);
+      return UWRTCErrorType.indexOf("None");
+    } catch (err) {
+      return UWRTCErrorType.indexOf("InvalidModification");
+    }
   },
 
   TransceiverStop: function (transceiverPtr) {

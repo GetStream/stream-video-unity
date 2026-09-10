@@ -173,7 +173,7 @@ namespace StreamVideo.ExampleProject.UI
                 var isWorking = await _videoManager.Client.VideoDeviceManager.TestDeviceAsync(device);
                 if (isWorking)
                 {
-                    _videoManager.Client.VideoDeviceManager.SelectDevice(device, SenderVideoResolution, enable: false, _senderVideoFps);
+                    SelectCamera(device);
                     return;
                 }
             }
@@ -182,7 +182,7 @@ namespace StreamVideo.ExampleProject.UI
             var workingDevice = await _videoManager.Client.VideoDeviceManager.TryFindFirstWorkingDeviceAsync();
             if (workingDevice.HasValue)
             {
-                _videoManager.Client.VideoDeviceManager.SelectDevice(workingDevice.Value, SenderVideoResolution, enable: false, _senderVideoFps);
+                SelectCamera(workingDevice.Value);
                 return;
             }
 
@@ -196,7 +196,13 @@ namespace StreamVideo.ExampleProject.UI
                 return;
             }
 
-            _videoManager.Client.VideoDeviceManager.SelectDevice(firstDevice, SenderVideoResolution, enable: false, _senderVideoFps);
+            SelectCamera(firstDevice);
+        }
+
+        private void SelectCamera(CameraDeviceInfo device)
+        {
+            var enable = _videoManager.Client.VideoDeviceManager.IsEnabled;
+            _videoManager.Client.VideoDeviceManager.SelectDevice(device, SenderVideoResolution, enable, _senderVideoFps);
         }
 
         private void SelectFirstMicrophone()
@@ -210,7 +216,8 @@ namespace StreamVideo.ExampleProject.UI
                 return;
             }
 
-            _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice, enable: false);
+            _videoManager.Client.AudioDeviceManager.SelectDevice(microphoneDevice,
+                _videoManager.Client.AudioDeviceManager.IsEnabled);
         }
 
         private UIScreensSet GetCurrentScreenSet()

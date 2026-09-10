@@ -3,7 +3,7 @@ var UnityWebRTCPeerConnection = {
   CreatePeerConnection: function (conf) {
     var label = '';
     if (conf) {
-      label = conf.label;
+      label = conf.label || '';
       delete conf.label;
     }
 
@@ -25,7 +25,12 @@ var UnityWebRTCPeerConnection = {
         uwcom_addManageObj(cnd);
         var candidatePtr = uwcom_strToPtr(cnd.candidate);
         var sdpMidPtr = uwcom_strToPtr(cnd.sdpMid);
-        uwcom_dynCall('viiiii', uwevt_PCOnIceCandidate, peer.managePtr, cnd.managePtr, candidatePtr, sdpMidPtr, cnd.sdpMLineIndex);
+        try {
+          uwcom_dynCall('viiiii', uwevt_PCOnIceCandidate, peer.managePtr, cnd.managePtr, candidatePtr, sdpMidPtr, cnd.sdpMLineIndex);
+        } finally {
+          _free(candidatePtr);
+          _free(sdpMidPtr);
+        }
       }
     };
     peer.oniceconnectionstatechange = function (evt) {
@@ -112,12 +117,23 @@ var UnityWebRTCPeerConnection = {
           track: track,
           video: video
         };
-        video.onloadedmetadata = function (evt) {
+        var fired = false;
+        var fireOnTrack = function () {
+          if (fired) return;
+          fired = true;
           uwcom_dynCall('vii', uwevt_PCOnTrack, peer.managePtr, transceiver.managePtr);
+        };
+        if (video.videoWidth > 0 || video.readyState >= 1) {
+          fireOnTrack();
+        } else {
+          video.onloadedmetadata = fireOnTrack;
+          video.onloadeddata = fireOnTrack;
+          setTimeout(fireOnTrack, 1000);
         }
       }
     };
     uwcom_addManageObj(peer);
+    peer.label = label || ('pc' + peer.managePtr);
     return peer.managePtr;
   },
 

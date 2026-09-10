@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Unity.WebRTC
@@ -428,7 +429,7 @@ namespace Unity.WebRTC
 
         [AOT.MonoPInvokeCallback(typeof(DelegateNativeOnIceCandidate))]
 #if UNITY_WEBGL && !UNITY_EDITOR
-        static void PCOnIceCandidate(IntPtr ptr, IntPtr iceCandidatePtr, string sdp, string sdpMid, int sdpMlineIndex)
+        static void PCOnIceCandidate(IntPtr ptr, IntPtr iceCandidatePtr, IntPtr sdpPtr, IntPtr sdpMidPtr, int sdpMlineIndex)
 #else
         static void PCOnIceCandidate(IntPtr ptr, string sdp, string sdpMid, int sdpMlineIndex)
 #endif
@@ -437,6 +438,10 @@ namespace Unity.WebRTC
             {
                 if (WebRTC.Table[ptr] is RTCPeerConnection connection)
                 {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                    var sdp = sdpPtr == IntPtr.Zero ? null : Marshal.PtrToStringAnsi(sdpPtr);
+                    var sdpMid = sdpMidPtr == IntPtr.Zero ? null : Marshal.PtrToStringAnsi(sdpMidPtr);
+#endif
                     var options = new RTCIceCandidateInit
                     {
                         candidate = sdp,

@@ -47,6 +47,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
         protected override void OnDestroying()
         {
             Client.VideoDeviceManager.SelectedDeviceChanged -= OnSelectedDeviceChanged;
+            Client.VideoDeviceManager.IsEnabledChanged -= OnIsEnabledChanged;
             
             base.OnDestroying();
         }
@@ -54,6 +55,6 @@ namespace StreamVideo.ExampleProject.UI.Devices
         private void OnSelectedDeviceChanged(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice)
             => SelectDeviceWithoutNotify(currentDevice);
         
-        private void OnIsEnabledChanged(bool isEnabled) => UpdateDeviceState(isEnabled);
+        private void OnIsEnabledChanged(bool isEnabled) => SyncDeviceButton(isEnabled);
     }
 }

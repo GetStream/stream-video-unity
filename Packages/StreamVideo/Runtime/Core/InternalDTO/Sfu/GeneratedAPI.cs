@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Google.Protobuf; // For ".ToByteArray()"
+using StreamVideo.Libs.Http;
 
 internal class GeneratedAPI {
   public static readonly MediaTypeWithQualityHeaderValue CONTENT_TYPE_PROTOBUF = new MediaTypeWithQualityHeaderValue("application/protobuf");
@@ -51,8 +52,10 @@ internal class GeneratedAPI {
   private static async Task<Resp> DoRequest<Req, Resp>(HttpClient client, string address, Req req, doParsing<Resp> parserFunc, CancellationToken cancellationToken = default) where Req : IMessage where Resp : IMessage {
     using (var content = new ByteArrayContent(req.ToByteArray())) {
       content.Headers.ContentType = CONTENT_TYPE_PROTOBUF;
-      using (HttpResponseMessage response = await client.PostAsync(address, content, cancellationToken)) {
-        var byteArr = await response.Content.ReadAsByteArrayAsync();
+      // WebGLHttpClient.SendAsync must run; the helper that posts content can skip that override.
+      using (var httpRequest = new HttpRequestMessage(HttpMethod.Post, address) { Content = content })
+      using (HttpResponseMessage response = await client.SendAsync(httpRequest, cancellationToken)) {
+        var byteArr = await HttpContentBytes.ReadAllAsync(response.Content);
         cancellationToken.ThrowIfCancellationRequested();
         if (!response.IsSuccessStatusCode) {
           string errorJSON = System.Text.Encoding.UTF8.GetString(byteArr, 0, byteArr.Length);

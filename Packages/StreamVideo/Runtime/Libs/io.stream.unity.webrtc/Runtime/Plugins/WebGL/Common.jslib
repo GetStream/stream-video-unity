@@ -120,19 +120,20 @@ var UnityWebRTCCommon = {
     enum_.indexOf()
   },
   $uwcom_debugLog: function (level, fileName, member, msg) {
-    if (!level) return;
+    if (!level || !uwevt_DebugLog || !uwcom_logLevel) return;
     var logLevels = ['', '', '', '', '', '', '', 'error', 'warning', 'log', 'verbose'];
     var levelNo = logLevels.indexOf(level);
     if (levelNo === -1) return;
     if ((uwcom_logLevel > 0 && uwcom_logLevel <= 3 && levelNo > 0 && (levelNo - 6) <= uwcom_logLevel) ||
       (uwcom_logLevel > 6 && uwcom_logLevel <= 9 && levelNo > 6 && levelNo <= uwcom_logLevel)) {
-        msg = '[JSLIB] ' + fileName + ' : ' + member + ' : ' + msg; 
+        msg = '[JSLIB] ' + fileName + ' : ' + member + ' : ' + msg;
       var msgPtr = uwcom_strToPtr(msg);
       // shift level number so 9(log) => 1(NativeLoggingSeverity.Info)
-      Module.dynCall_vii(uwevt_DebugLog, msgPtr, Math.min(logLevels.indexOf('log') - levelNo + 1,4));
+      uwcom_dynCall('vii', uwevt_DebugLog, msgPtr, Math.min(logLevels.indexOf('log') - levelNo + 1, 4));
       _free(msgPtr);
     }
   },
+  $uwcom_debugLog__deps: ['$uwcom_dynCall', '$uwcom_strToPtr'],
 
   $uwcom_attachHiddenMediaElement: function (el) {
     el.autoplay = true;
@@ -273,11 +274,15 @@ var UnityWebRTCCommon = {
   $uwevt_OnFailureCreateSessionDesc: null,
   $uwevt_OnStatsDeliveredCallback: null,
 
-  RegisterDebugLog: function (debugLogPtr,enableNativeLog,nativeLoggingSeverity) {
+  RegisterDebugLog: function (debugLogPtr, enableNativeLog, nativeLoggingSeverity) {
+    uwevt_DebugLog = debugLogPtr;
+    if (!enableNativeLog) {
+      uwcom_logLevel = 0;
+      return;
+    }
     var logLevels = ['', '', '', '', '', '', '', 'error', 'warning', 'log', 'verbose'];
     // shift level number so 1(NativeLoggingSeverity.Info) => 9(log)
     uwcom_logLevel = logLevels.indexOf('log') - nativeLoggingSeverity + 1;
-    uwevt_DebugLog = debugLogPtr;
   },
 
 };

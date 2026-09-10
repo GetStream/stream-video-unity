@@ -53,6 +53,6 @@ namespace StreamVideo.ExampleProject.UI.Devices
         private void OnSelectedDeviceChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice) 
             => SelectDeviceWithoutNotify(currentDevice);
         
-        private void OnIsEnabledChanged(bool isEnabled) => UpdateDeviceState(isEnabled);
+        private void OnIsEnabledChanged(bool isEnabled) => SyncDeviceButton(isEnabled);
     }
 }

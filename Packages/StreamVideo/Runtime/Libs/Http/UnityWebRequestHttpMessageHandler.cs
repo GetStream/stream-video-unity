@@ -14,26 +14,40 @@ namespace StreamVideo.Libs.Http
     /// </summary>
     public sealed class UnityWebRequestHttpMessageHandler : HttpMessageHandler
     {
+        // Match UnityWebRequestHttpClient: CORS preflight + POST share one timer.
+        const int RequestTimeoutSeconds = 60;
+
+        internal Task<HttpResponseMessage> Send(HttpRequestMessage request, CancellationToken cancellationToken)
+            => SendAsync(request, cancellationToken);
+
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
+            if (request.RequestUri == null || !request.RequestUri.IsAbsoluteUri || request.RequestUri.IsFile)
+            {
+                throw new InvalidOperationException(
+                    "SFU UnityWebRequest requires an http(s) URL. Relative and file URIs become file:///twirp/... in the WebGL player.");
+            }
+
             var unityRequest = new UnityWebRequest(request.RequestUri.AbsoluteUri, request.Method.Method)
             {
-                downloadHandler = new DownloadHandlerBuffer()
+                downloadHandler = new DownloadHandlerBuffer(),
+                timeout = RequestTimeoutSeconds
             };
 
             if (request.Content != null)
             {
-                var body = await request.Content.ReadAsByteArrayAsync();
+                var body = await HttpContentBytes.ReadAllAsync(request.Content);
                 if (body != null && body.Length > 0)
                 {
                     unityRequest.uploadHandler = new UploadHandlerRaw(body);
-                    if (request.Content.Headers.ContentType != null)
+                    var mediaType = request.Content.Headers.ContentType?.MediaType;
+                    if (!string.IsNullOrEmpty(mediaType))
                     {
-                        unityRequest.uploadHandler.contentType = request.Content.Headers.ContentType.ToString();
+                        unityRequest.uploadHandler.contentType = mediaType;
                     }
                 }
             }

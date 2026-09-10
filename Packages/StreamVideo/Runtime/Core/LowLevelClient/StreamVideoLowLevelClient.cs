@@ -626,7 +626,7 @@ namespace StreamVideo.Core.LowLevelClient
             var connectUrl = activeCall.Credentials.Server.Url.Replace("/twirp", "");
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-            var httpClient = new HttpClient(new UnityWebRequestHttpMessageHandler());
+            var httpClient = new WebGLHttpClient();
 #else
             var httpClient = new HttpClient();
 #endif

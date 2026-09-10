@@ -26,7 +26,8 @@ var UnityWebRTCMediaStreamTrack = {
   MediaStreamTrackGetID: function (trackPtr) {
     if (!uwcom_existsCheck(trackPtr, 'MediaStreamTrackGetID', 'track')) return;
     var track = UWManaged[trackPtr];
-    var id = track.guid || track.id;
+    // SFU SetPublisher track ids must match SDP a=msid track ids (browser track.id).
+    var id = track.id || track.guid;
     var idPtr = uwcom_strToPtr(id);
     return idPtr;
   }

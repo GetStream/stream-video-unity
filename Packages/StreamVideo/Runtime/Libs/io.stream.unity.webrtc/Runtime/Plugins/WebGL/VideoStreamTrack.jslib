@@ -58,7 +58,11 @@ var UnityWebRTCVideoStreamTrack = {
     var dstTexture = data.dstTexture;
     var buf = GLctx.createBuffer();
     GLctx.bindTexture(GLctx.TEXTURE_2D, dstTexture);
-    GLctx.texImage2D(GLctx.TEXTURE_2D, 0, GLctx.RGBA, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+    try {
+      GLctx.texSubImage2D(GLctx.TEXTURE_2D, 0, 0, 0, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+    } catch (err) {
+      GLctx.texImage2D(GLctx.TEXTURE_2D, 0, GLctx.RGBA, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+    }
     GLctx.bindBuffer(GLctx.PIXEL_PACK_BUFFER, buf);
     GLctx.bufferData(GLctx.PIXEL_PACK_BUFFER, buffer.byteLength, GLctx.STREAM_READ);
     GLctx.readPixels(0, 0, w, h, GLctx.RGBA, GLctx.UNSIGNED_BYTE, 0);
@@ -83,11 +87,13 @@ var UnityWebRTCVideoStreamTrack = {
       ctx.putImageData(imgData, 0, 0);
 
       GLctx.bindTexture(GLctx.TEXTURE_2D, dstTexture);
-      GLctx.texImage2D(GLctx.TEXTURE_2D, 0, GLctx.RGBA, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
-      //GLctx.texSubImage2D(GLctx.TEXTURE_2D, 0, 0, 0, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+      try {
+        GLctx.texSubImage2D(GLctx.TEXTURE_2D, 0, 0, 0, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+      } catch (err) {
+        GLctx.texImage2D(GLctx.TEXTURE_2D, 0, GLctx.RGBA, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+      }
       GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_MAG_FILTER, GLctx.LINEAR);
       GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_MIN_FILTER, GLctx.LINEAR);
-      GLctx.generateMipmap(GLctx.TEXTURE_2D);
       GLctx.bindTexture(GLctx.TEXTURE_2D, null);
     });
   },
@@ -156,11 +162,15 @@ var UnityWebRTCVideoStreamTrack = {
       }
 
       GLctx.bindTexture(GLctx.TEXTURE_2D, dstTexture);
-      GLctx.texImage2D(GLctx.TEXTURE_2D, 0, GLctx.RGBA, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
-      //GLctx.texSubImage2D(GLctx.TEXTURE_2D, 0, 0, 0, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+      try {
+        // Unity WebGL2 RenderTextures are immutable (texStorage2D). texImage2D throws
+        // GL_INVALID_OPERATION: Texture is immutable.
+        GLctx.texSubImage2D(GLctx.TEXTURE_2D, 0, 0, 0, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+      } catch (err) {
+        GLctx.texImage2D(GLctx.TEXTURE_2D, 0, GLctx.RGBA, GLctx.RGBA, GLctx.UNSIGNED_BYTE, cnv);
+      }
       GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_MAG_FILTER, GLctx.LINEAR);
       GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_MIN_FILTER, GLctx.LINEAR);
-      GLctx.generateMipmap(GLctx.TEXTURE_2D);
       GLctx.bindTexture(GLctx.TEXTURE_2D, null);
     }
   },

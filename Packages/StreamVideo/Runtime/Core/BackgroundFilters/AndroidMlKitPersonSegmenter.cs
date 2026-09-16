@@ -14,7 +14,8 @@ namespace StreamVideo.Core.BackgroundFilters
     /// <c>processAsync</c> is in flight, then submitted as soon as the segmenter is free.
     /// Does not block <c>OnUpdate</c> and does not ReadPixels the publish texture.
     /// Input is scaled so the short side is <see cref="MinMaskInputSize"/> (ML Kit's 256px floor) while
-    /// keeping the camera aspect. Rotation is not applied; mask and composite stay in WebCamTexture space.
+    /// keeping the camera aspect. The downscaled buffer is rotated upright for ML Kit, then the mask
+    /// is rotated back so compositor UVs match <c>WebCamTexture</c> space.
     /// <see cref="Dispose"/> is non-blocking: in-flight GPU readback and Java <c>process</c>
     /// release their own resources when they finish.
     /// </summary>
@@ -90,6 +91,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
             Graphics.Blit(source, _downscaleRt);
             _lastSource = source;
+            _lastSourceRotation = GetSourceRotationDegrees(source);
 #if STREAM_DEBUG_ENABLED
             LogSubmitOrientation(source);
 #endif
@@ -150,6 +152,7 @@ namespace StreamVideo.Core.BackgroundFilters
 #if UNITY_ANDROID && !UNITY_EDITOR
             _hasPendingRgba = false;
             _pendingRgba = null;
+            _uprightRgba = null;
             _rgbaSbytes = null;
             DestroyNative();
             DestroyTexture(ref _syncReadbackTexture);
@@ -172,10 +175,14 @@ namespace StreamVideo.Core.BackgroundFilters
 
             var width = _native.Call<int>("getMaskWidth");
             var height = _native.Call<int>("getMaskHeight");
+            var rotation = _native.Call<int>("getMaskRotation");
             var maskBytes = _native.Call<sbyte[]>("takeMaskIfNew");
             if (maskBytes != null && width > 0 && height > 0)
             {
-                UploadMask(ToByteArray(maskBytes), width, height);
+                var packed = ToByteArray(maskBytes);
+                var webcamMask = PersonMaskOrientation.UnrotateClockwise(packed, width, height, 1, rotation,
+                    out var webcamWidth, out var webcamHeight);
+                UploadMask(webcamMask, webcamWidth, webcamHeight);
             }
 
             TrySubmitPending();
@@ -192,13 +199,16 @@ namespace StreamVideo.Core.BackgroundFilters
         private Texture2D _maskTexture;
         private RenderTexture _downscaleRt;
         private Texture _lastSource;
+        private int _lastSourceRotation;
 #if UNITY_ANDROID && !UNITY_EDITOR
         private AndroidJavaObject _native;
         private Texture2D _syncReadbackTexture;
         private sbyte[] _rgbaSbytes;
         private byte[] _pendingRgba;
+        private byte[] _uprightRgba;
         private int _pendingWidth;
         private int _pendingHeight;
+        private int _pendingRotation;
         private bool _hasPendingRgba;
 #endif
 
@@ -257,6 +267,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 data.CopyTo(_pendingRgba);
                 _pendingWidth = request.width;
                 _pendingHeight = request.height;
+                _pendingRotation = _lastSourceRotation;
                 _hasPendingRgba = true;
                 TrySubmitPending();
             }
@@ -281,7 +292,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            SubmitRgba(_pendingRgba, _pendingWidth, _pendingHeight);
+            SubmitRgba(_pendingRgba, _pendingWidth, _pendingHeight, _pendingRotation);
             _hasPendingRgba = false;
         }
 
@@ -306,14 +317,31 @@ namespace StreamVideo.Core.BackgroundFilters
             _syncReadbackTexture.Apply(false, false);
             RenderTexture.active = prev;
 
-            SubmitRgba(_syncReadbackTexture.GetRawTextureData(), width, height);
+            SubmitRgba(_syncReadbackTexture.GetRawTextureData(), width, height, _lastSourceRotation);
         }
 
-        private void SubmitRgba(byte[] rgba, int width, int height)
+        private void SubmitRgba(byte[] rgba, int width, int height, int rotationDegrees)
         {
             if (_disposed || rgba == null || _native == null)
             {
                 return;
+            }
+
+            var rotation = PersonMaskOrientation.NormalizeClockwiseDegrees(rotationDegrees);
+            var submitRgba = rgba;
+            var submitWidth = width;
+            var submitHeight = height;
+            if (rotation != 0)
+            {
+                PersonMaskOrientation.GetRotatedSize(width, height, rotation, out submitWidth, out submitHeight);
+                var needed = submitWidth * submitHeight * 4;
+                if (_uprightRgba == null || _uprightRgba.Length < needed)
+                {
+                    _uprightRgba = new byte[needed];
+                }
+
+                PersonMaskOrientation.RotateClockwise(rgba, width, height, 4, rotation, _uprightRgba);
+                submitRgba = _uprightRgba;
             }
 
 #if STREAM_DEBUG_ENABLED
@@ -321,13 +349,25 @@ namespace StreamVideo.Core.BackgroundFilters
             var webcamRot = webcam != null ? webcam.videoRotationAngle : -1;
             CameraOrientationDebug.Log(_logs, "mlkit.submit",
                 "rgba=" + width + "x" + height + " bytes=" + rgba.Length
-                + " mlkitRotationDegrees=0 (webcam space)"
+                + " upright=" + submitWidth + "x" + submitHeight
+                + " mlkitRotationDegrees=0 (pixels rotated CW " + rotation + ")"
                 + " webcamRot=" + webcamRot
                 + " mirrored=" + (webcam != null && webcam.videoVerticallyMirrored)
                 + " gfx=" + SystemInfo.graphicsDeviceType
                 + " asyncReadback=" + SystemInfo.supportsAsyncGPUReadback);
 #endif
-            _native.Call("processAsync", ToSByteArray(rgba), width, height);
+            _native.Call("processAsync", ToSByteArray(submitRgba), submitWidth, submitHeight, rotation);
+        }
+
+        private static int GetSourceRotationDegrees(Texture source)
+        {
+            var webcam = source as WebCamTexture;
+            if (webcam == null)
+            {
+                return 0;
+            }
+
+            return PersonMaskOrientation.NormalizeClockwiseDegrees(webcam.videoRotationAngle);
         }
 
         private void UploadMask(byte[] mask, int width, int height)
@@ -468,7 +508,8 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " | " + (webcam != null
                     ? CameraOrientationDebug.DescribeWebCam(webcam)
                     : "sourceIsWebCam=false")
-                + " blit=Graphics.Blit(source, downscale) no pixel rotation");
+                + " blit=Graphics.Blit(source, downscale) then CPU rotate upright for ML Kit"
+                + " sourceRot=" + _lastSourceRotation);
         }
 #endif
 

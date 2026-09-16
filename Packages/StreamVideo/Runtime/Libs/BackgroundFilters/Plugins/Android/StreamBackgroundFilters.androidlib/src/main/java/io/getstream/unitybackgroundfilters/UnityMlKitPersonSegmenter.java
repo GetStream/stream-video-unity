@@ -36,6 +36,8 @@ public class UnityMlKitPersonSegmenter {
     private int maskWidth;
     private int maskHeight;
     private boolean maskDirty;
+    private int inFlightRotation;
+    private int maskRotation;
 
     public boolean isSupported() {
         try {
@@ -59,8 +61,7 @@ public class UnityMlKitPersonSegmenter {
 
             try {
                 // Do not enableRawSizeMask(): that returns the 256x256 model tensor, which we were
-                // stretching onto the 16:9 camera frame. Let ML Kit rescale the mask to the bitmap size
-                // so composite UVs match. Keep InputImage rotation at 0 so the mask stays in webcam UV space.
+                // stretching onto the 16:9 camera frame. Let ML Kit rescale the mask to the bitmap size.
                 SelfieSegmenterOptions options = new SelfieSegmenterOptions.Builder()
                         .setDetectorMode(SelfieSegmenterOptions.STREAM_MODE)
                         .build();
@@ -83,7 +84,13 @@ public class UnityMlKitPersonSegmenter {
         return inFlight.get();
     }
 
-    public void processAsync(byte[] rgba, int width, int height) {
+    /**
+     * {@code rgba} must already be upright (Unity rotates webcam pixels clockwise by
+     * {@code rotationDegrees} before calling). {@code fromBitmap} stays at 0 so ML Kit
+     * does not swap mask dimensions. {@code rotationDegrees} is stored and returned with
+     * the mask so Unity can inverse-rotate back to webcam UVs.
+     */
+    public void processAsync(byte[] rgba, int width, int height, int rotationDegrees) {
         if (rgba == null || width <= 0 || height <= 0) {
             return;
         }
@@ -98,8 +105,8 @@ public class UnityMlKitPersonSegmenter {
             try {
                 Bitmap bitmap = getBitmapLocked(width, height);
                 copyRgbaToBitmap(rgba, width, height, bitmap);
-                // Do not pass WebCamTexture.videoRotationAngle here: InputImage rotation remaps/swaps
-                // the mask, which misaligns compositor UVs. Display rotation is applied in the UI.
+                inFlightRotation = rotationDegrees;
+                // Pixels are already upright; passing webcam rotation here would swap mask size.
                 image = InputImage.fromBitmap(bitmap, 0);
                 active = segmenter;
             } catch (Throwable t) {
@@ -111,7 +118,8 @@ public class UnityMlKitPersonSegmenter {
 
         try {
             debug("submit", "processAsync bitmap=" + width + "x" + height
-                    + " mlkitRotationDegrees=0 (webcam space) rgbaBytes=" + rgba.length);
+                    + " mlkitRotationDegrees=0 pixelsRotatedCW=" + rotationDegrees
+                    + " rgbaBytes=" + rgba.length);
             active.process(image)
                     .addOnSuccessListener(this::onMaskSuccess)
                     .addOnFailureListener(this::onMaskFailure);
@@ -141,6 +149,12 @@ public class UnityMlKitPersonSegmenter {
     public int getMaskHeight() {
         synchronized (lock) {
             return maskHeight;
+        }
+    }
+
+    public int getMaskRotation() {
+        synchronized (lock) {
+            return maskRotation;
         }
     }
 
@@ -212,6 +226,7 @@ public class UnityMlKitPersonSegmenter {
             latestMask = packed;
             maskWidth = width;
             maskHeight = height;
+            maskRotation = inFlightRotation;
             maskDirty = true;
         }
     }
@@ -241,6 +256,7 @@ public class UnityMlKitPersonSegmenter {
         latestMask = null;
         maskWidth = 0;
         maskHeight = 0;
+        maskRotation = 0;
         maskDirty = false;
     }
 

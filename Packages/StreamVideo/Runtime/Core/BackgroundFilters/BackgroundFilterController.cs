@@ -17,6 +17,8 @@ namespace StreamVideo.Core.BackgroundFilters
 
         public BackgroundFilterPerformance Performance => _scheduler.Performance;
 
+        internal BackgroundFilterCompositePath LastCompositePath { get; private set; }
+
         public BackgroundFilterController(ILogs logs, IPersonSegmenter segmenter = null)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
@@ -50,6 +52,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 CameraOrientationDebug.Log(_logs, "controller.setFilter", "filter=null");
                 _compositor.SetMask(null);
                 _segmenter.Pause();
+                _hasAppliedMask = false;
                 ReleasePreview();
                 if (!_scheduler.ShouldDisable)
                 {
@@ -80,11 +83,21 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            if (ActiveFilter == null || !IsSupported || _paused)
+            if (ActiveFilter == null || !IsSupported)
             {
-                Graphics.Blit(source, destination);
-                SetPreview(destination);
-                LogCompositeOrientation(source, destination, "composite.passthrough");
+                BlitPassthrough(source, destination, "composite.passthrough");
+                return;
+            }
+
+            if (_paused)
+            {
+                if (_hasAppliedMask)
+                {
+                    LastCompositePath = BackgroundFilterCompositePath.Frozen;
+                    return;
+                }
+
+                BlitPassthrough(source, destination, "composite.passthrough");
                 return;
             }
 
@@ -109,15 +122,15 @@ namespace StreamVideo.Core.BackgroundFilters
 
             if (!_segmenter.HasMask)
             {
-                Graphics.Blit(source, destination);
-                SetPreview(destination);
-                LogCompositeOrientation(source, destination, "composite.waitingMask");
+                BlitPassthrough(source, destination, "composite.waitingMask");
                 return;
             }
 
             _compositor.SetMask(_segmenter.MaskTexture);
             _compositor.SetIntensity(_scheduler.EffectiveIntensity);
             _compositor.Apply(source, destination);
+            _hasAppliedMask = true;
+            LastCompositePath = BackgroundFilterCompositePath.Apply;
             SetPreview(destination);
             LogCompositeOrientation(source, destination, "composite.apply");
         }
@@ -161,6 +174,15 @@ namespace StreamVideo.Core.BackgroundFilters
         private int _sampleFrames;
         private float _sampleSeconds;
         private bool _paused;
+        private bool _hasAppliedMask;
+
+        private void BlitPassthrough(Texture source, RenderTexture destination, string checkpoint)
+        {
+            LastCompositePath = BackgroundFilterCompositePath.Passthrough;
+            Graphics.Blit(source, destination);
+            SetPreview(destination);
+            LogCompositeOrientation(source, destination, checkpoint);
+        }
 
         private void LogCompositeOrientation(Texture source, RenderTexture destination, string checkpoint)
         {
@@ -256,5 +278,13 @@ namespace StreamVideo.Core.BackgroundFilters
             _previewTexture = null;
             PreviewTextureChanged?.Invoke(null);
         }
+    }
+
+    internal enum BackgroundFilterCompositePath
+    {
+        None = 0,
+        Passthrough,
+        Apply,
+        Frozen,
     }
 }

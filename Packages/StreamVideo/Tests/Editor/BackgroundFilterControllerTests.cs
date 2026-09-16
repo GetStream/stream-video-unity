@@ -17,6 +17,13 @@ namespace StreamVideo.Tests.Editor
         {
             _controller?.Dispose();
             _controller = null;
+
+            if (_destination != null)
+            {
+                _destination.Release();
+                UnityEngine.Object.DestroyImmediate(_destination);
+                _destination = null;
+            }
         }
 
         [Test]
@@ -79,7 +86,57 @@ namespace StreamVideo.Tests.Editor
                 "Once a mask exists, a resumed active filter should composite.");
         }
 
+        [Test]
+        public void When_paused_with_active_filter_and_mask_expect_composite_does_not_overwrite_destination_with_source()
+        {
+            var segmenter = new EditorStubPersonSegmenter();
+            _controller = new BackgroundFilterController(new UnityLogs(), segmenter);
+            _controller.SetFilter(BackgroundFilter.Blur());
+
+            _destination = CreateDestination();
+            segmenter.RequestSegmentation(Texture2D.whiteTexture);
+            Assert.That(segmenter.HasMask, Is.True,
+                "Stub should produce a mask after RequestSegmentation.");
+
+            _controller.Composite(Texture2D.whiteTexture, _destination);
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Apply),
+                "Composite with an active filter and mask should apply before pause.");
+
+            _controller.Pause();
+            _controller.Composite(Texture2D.blackTexture, _destination);
+
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Frozen),
+                "Paused Composite must freeze the last composited frame and not blit the live camera.");
+
+            _controller.Resume();
+            _controller.Composite(Texture2D.blackTexture, _destination);
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Apply),
+                "Resume should continue compositing without a new SetFilter.");
+        }
+
+        [Test]
+        public void When_filter_disabled_expect_composite_passthrough_still_blits_source()
+        {
+            _controller = new BackgroundFilterController(new UnityLogs(), new EditorStubPersonSegmenter());
+            _destination = CreateDestination();
+
+            _controller.Composite(Texture2D.whiteTexture, _destination);
+
+            Assert.That(_controller.ActiveFilter, Is.Null,
+                "Filter should remain off until SetFilter is called.");
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Passthrough),
+                "Filter-off Composite must still blit source to destination.");
+        }
+
+        private static RenderTexture CreateDestination()
+        {
+            var destination = new RenderTexture(16, 16, 0, RenderTextureFormat.ARGB32);
+            destination.Create();
+            return destination;
+        }
+
         private BackgroundFilterController _controller;
+        private RenderTexture _destination;
     }
 }
 #endif

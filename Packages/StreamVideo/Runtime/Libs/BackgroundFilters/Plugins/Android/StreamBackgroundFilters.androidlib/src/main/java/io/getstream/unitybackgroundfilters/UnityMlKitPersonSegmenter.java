@@ -14,11 +14,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Async ML Kit selfie segmenter for Unity. Reuses the last mask and never blocks the caller.
+ * {@link #destroy()} rejects new work immediately and releases native resources only when
+ * the current {@code process} has finished, so the reusable bitmap is not recycled while
+ * ML Kit still holds it. That deferred release also covers backgrounding, process freeze,
+ * and battery-saver delays: Unity does not wait on the game thread.
  */
 public class UnityMlKitPersonSegmenter {
     private static final String TAG = "StreamBgFilter";
 
+    private final Object lock = new Object();
     private final AtomicBoolean inFlight = new AtomicBoolean(false);
+    private boolean destroyed;
+
     private boolean debugLogs;
     private final java.util.Map<String, String> lastDebugByKey = new java.util.HashMap<String, String>();
     private Segmenter segmenter;
@@ -41,20 +48,29 @@ public class UnityMlKitPersonSegmenter {
     }
 
     public boolean create() {
-        destroy();
-        try {
-            // Do not enableRawSizeMask(): that returns the 256x256 model tensor, which we were
-            // stretching onto the 16:9 camera frame. Let ML Kit rescale the mask to the bitmap size
-            // so composite UVs match. Keep InputImage rotation at 0 so the mask stays in webcam UV space.
-            SelfieSegmenterOptions options = new SelfieSegmenterOptions.Builder()
-                    .setDetectorMode(SelfieSegmenterOptions.STREAM_MODE)
-                    .build();
-            segmenter = Segmentation.getClient(options);
-            return true;
-        } catch (Throwable t) {
-            Log.w(TAG, "Failed to create ML Kit segmenter.", t);
-            segmenter = null;
-            return false;
+        synchronized (lock) {
+            if (inFlight.get()) {
+                Log.w(TAG, "Cannot create ML Kit segmenter while a process is still in flight.");
+                return false;
+            }
+
+            releaseLocked();
+            destroyed = false;
+
+            try {
+                // Do not enableRawSizeMask(): that returns the 256x256 model tensor, which we were
+                // stretching onto the 16:9 camera frame. Let ML Kit rescale the mask to the bitmap size
+                // so composite UVs match. Keep InputImage rotation at 0 so the mask stays in webcam UV space.
+                SelfieSegmenterOptions options = new SelfieSegmenterOptions.Builder()
+                        .setDetectorMode(SelfieSegmenterOptions.STREAM_MODE)
+                        .build();
+                segmenter = Segmentation.getClient(options);
+                return true;
+            } catch (Throwable t) {
+                Log.w(TAG, "Failed to create ML Kit segmenter.", t);
+                segmenter = null;
+                return false;
+            }
         }
     }
 
@@ -68,12 +84,21 @@ public class UnityMlKitPersonSegmenter {
     }
 
     public void processAsync(byte[] rgba, int width, int height) {
-        if (segmenter == null || rgba == null || width <= 0 || height <= 0) {
+        if (rgba == null || width <= 0 || height <= 0) {
             return;
         }
 
-        if (!inFlight.compareAndSet(false, true)) {
-            return;
+        Segmenter active;
+        synchronized (lock) {
+            if (destroyed || segmenter == null) {
+                return;
+            }
+
+            if (!inFlight.compareAndSet(false, true)) {
+                return;
+            }
+
+            active = segmenter;
         }
 
         try {
@@ -84,34 +109,112 @@ public class UnityMlKitPersonSegmenter {
             debug("submit", "processAsync bitmap=" + width + "x" + height
                     + " mlkitRotationDegrees=0 (webcam space) rgbaBytes=" + rgba.length);
             InputImage image = InputImage.fromBitmap(bitmap, 0);
-            segmenter.process(image)
+            active.process(image)
                     .addOnSuccessListener(this::onMaskSuccess)
                     .addOnFailureListener(this::onMaskFailure);
         } catch (Throwable t) {
-            inFlight.set(false);
+            onProcessFinished(null, 0, 0);
             Log.w(TAG, "Failed to submit frame to ML Kit.", t);
         }
     }
 
-    public synchronized byte[] takeMaskIfNew() {
-        if (!maskDirty) {
-            return null;
+    public byte[] takeMaskIfNew() {
+        synchronized (lock) {
+            if (!maskDirty) {
+                return null;
+            }
+
+            maskDirty = false;
+            return latestMask;
+        }
+    }
+
+    public int getMaskWidth() {
+        synchronized (lock) {
+            return maskWidth;
+        }
+    }
+
+    public int getMaskHeight() {
+        synchronized (lock) {
+            return maskHeight;
+        }
+    }
+
+    /**
+     * Rejects new {@link #processAsync} calls. Closes the segmenter and recycles the bitmap
+     * immediately when idle; otherwise the in-flight success/failure listener releases them.
+     * Does not block the caller.
+     */
+    public void destroy() {
+        synchronized (lock) {
+            destroyed = true;
+            clearMaskLocked();
+            if (!inFlight.get()) {
+                releaseLocked();
+            }
+        }
+    }
+
+    private void onMaskSuccess(SegmentationMask mask) {
+        byte[] packed = null;
+        int width = 0;
+        int height = 0;
+        try {
+            width = mask.getWidth();
+            height = mask.getHeight();
+            ByteBuffer buffer = mask.getBuffer();
+            buffer.rewind();
+            int pixelCount = width * height;
+            packed = new byte[pixelCount];
+            for (int i = 0; i < pixelCount; i++) {
+                float confidence = buffer.getFloat();
+                int value = (int) (confidence * 255.0f);
+                if (value < 0) {
+                    value = 0;
+                } else if (value > 255) {
+                    value = 255;
+                }
+                packed[i] = (byte) value;
+            }
+
+            debug("mask", "onMaskSuccess mask=" + width + "x" + height
+                    + " bitmap=" + describeBitmap()
+                    + " aspectMatch=" + bitmapAspectMatches(width, height));
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed to copy ML Kit mask.", t);
+            packed = null;
         }
 
-        maskDirty = false;
-        return latestMask;
+        onProcessFinished(packed, width, height);
     }
 
-    public synchronized int getMaskWidth() {
-        return maskWidth;
+    private void onMaskFailure(Exception e) {
+        Log.w(TAG, "ML Kit segmentation failed.", e);
+        onProcessFinished(null, 0, 0);
     }
 
-    public synchronized int getMaskHeight() {
-        return maskHeight;
+    private void onProcessFinished(byte[] packed, int width, int height) {
+        synchronized (lock) {
+            inFlight.set(false);
+
+            if (destroyed) {
+                releaseLocked();
+                return;
+            }
+
+            if (packed == null || width <= 0 || height <= 0) {
+                return;
+            }
+
+            latestMask = packed;
+            maskWidth = width;
+            maskHeight = height;
+            maskDirty = true;
+        }
     }
 
-    public void destroy() {
-        inFlight.set(false);
+    private void releaseLocked() {
         if (segmenter != null) {
             try {
                 segmenter.close();
@@ -124,16 +227,19 @@ public class UnityMlKitPersonSegmenter {
         if (reusableBitmap != null && !reusableBitmap.isRecycled()) {
             reusableBitmap.recycle();
         }
-        lastDebugByKey.clear();
         reusableBitmap = null;
         argbScratch = null;
 
-        synchronized (this) {
-            latestMask = null;
-            maskWidth = 0;
-            maskHeight = 0;
-            maskDirty = false;
+        synchronized (lastDebugByKey) {
+            lastDebugByKey.clear();
         }
+    }
+
+    private void clearMaskLocked() {
+        latestMask = null;
+        maskWidth = 0;
+        maskHeight = 0;
+        maskDirty = false;
     }
 
     private Bitmap getBitmap(int width, int height) {
@@ -172,45 +278,19 @@ public class UnityMlKitPersonSegmenter {
         bitmap.setPixels(argbScratch, 0, width, 0, 0, width, height);
     }
 
-    private void onMaskSuccess(SegmentationMask mask) {
-        try {
-            int width = mask.getWidth();
-            int height = mask.getHeight();
-            ByteBuffer buffer = mask.getBuffer();
-            buffer.rewind();
-            int pixelCount = width * height;
-            byte[] packed = new byte[pixelCount];
-            for (int i = 0; i < pixelCount; i++) {
-                float confidence = buffer.getFloat();
-                int value = (int) (confidence * 255.0f);
-                if (value < 0) {
-                    value = 0;
-                } else if (value > 255) {
-                    value = 255;
-                }
-                packed[i] = (byte) value;
-            }
-
-            synchronized (this) {
-                latestMask = packed;
-                maskWidth = width;
-                maskHeight = height;
-                maskDirty = true;
-            }
-            debug("mask", "onMaskSuccess mask=" + width + "x" + height
-                    + " bitmap=" + (reusableBitmap != null ? reusableBitmap.getWidth() + "x" + reusableBitmap.getHeight() : "null")
-                    + " aspectMatch=" + (reusableBitmap != null
-                    && width * reusableBitmap.getHeight() == height * reusableBitmap.getWidth()));
-        } catch (Throwable t) {
-            Log.w(TAG, "Failed to copy ML Kit mask.", t);
-        } finally {
-            inFlight.set(false);
+    private String describeBitmap() {
+        Bitmap bitmap = reusableBitmap;
+        if (bitmap == null || bitmap.isRecycled()) {
+            return "null";
         }
+
+        return bitmap.getWidth() + "x" + bitmap.getHeight();
     }
 
-    private void onMaskFailure(Exception e) {
-        Log.w(TAG, "ML Kit segmentation failed.", e);
-        inFlight.set(false);
+    private boolean bitmapAspectMatches(int width, int height) {
+        Bitmap bitmap = reusableBitmap;
+        return bitmap != null && !bitmap.isRecycled()
+                && width * bitmap.getHeight() == height * bitmap.getWidth();
     }
 
     private void debug(String key, String message) {
@@ -218,12 +298,14 @@ public class UnityMlKitPersonSegmenter {
             return;
         }
 
-        String previous = lastDebugByKey.get(key);
-        if (message.equals(previous)) {
-            return;
-        }
+        synchronized (lastDebugByKey) {
+            String previous = lastDebugByKey.get(key);
+            if (message.equals(previous)) {
+                return;
+            }
 
-        lastDebugByKey.put(key, message);
+            lastDebugByKey.put(key, message);
+        }
         Log.i(TAG, message);
     }
 }

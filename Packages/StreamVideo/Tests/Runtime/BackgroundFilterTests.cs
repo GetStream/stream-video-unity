@@ -10,6 +10,9 @@ namespace StreamVideo.Tests.Runtime
 {
     /// <summary>
     /// Tests for <see cref="IStreamCall"/> background filter API.
+    /// Leave does not dispose the native ML Kit segmenter; that happens on client dispose.
+    /// Android GPU/ML Kit teardown while busy (including background / battery saver) is
+    /// device-only and is not covered here.
     /// </summary>
     internal class BackgroundFilterTests : TestsBase
     {

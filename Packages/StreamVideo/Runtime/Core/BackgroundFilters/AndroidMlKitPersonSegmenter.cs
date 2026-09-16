@@ -15,6 +15,9 @@ namespace StreamVideo.Core.BackgroundFilters
     /// Does not block <c>OnUpdate</c> and does not ReadPixels the publish texture.
     /// Input is scaled so the short side is <see cref="MinMaskInputSize"/> (ML Kit's 256px floor) while
     /// keeping the camera aspect. Rotation is not applied; mask and composite stay in WebCamTexture space.
+    /// <see cref="Dispose"/> stops new work immediately and does not block the game thread.
+    /// In-flight GPU readback and Java <c>process</c> release their own resources when they finish,
+    /// so backgrounding, OS freeze, and battery saver cannot hang or crash teardown.
     /// </summary>
     internal sealed class AndroidMlKitPersonSegmenter : IPersonSegmenter
     {
@@ -68,7 +71,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
         public void RequestSegmentation(Texture source)
         {
-            if (_paused || source == null || _readbackInFlight)
+            if (_disposed || _paused || source == null || _readbackInFlight)
             {
                 return;
             }
@@ -84,6 +87,11 @@ namespace StreamVideo.Core.BackgroundFilters
             // latency is max(readback, ML Kit) instead of the sum. That is what
             // falls apart when the camera moves.
             EnsureDownscaleRt(source);
+            if (_downscaleRt == null)
+            {
+                return;
+            }
+
             Graphics.Blit(source, _downscaleRt);
             _lastSource = source;
             LogSubmitOrientation(source);
@@ -91,7 +99,16 @@ namespace StreamVideo.Core.BackgroundFilters
             if (SystemInfo.supportsAsyncGPUReadback)
             {
                 _readbackInFlight = true;
-                AsyncGPUReadback.Request(_downscaleRt, 0, TextureFormat.RGBA32, OnReadback);
+                try
+                {
+                    AsyncGPUReadback.Request(_downscaleRt, 0, TextureFormat.RGBA32, OnReadback);
+                }
+                catch (Exception e)
+                {
+                    _readbackInFlight = false;
+                    _logs?.Warning("Background filter: mask input readback request failed: " + e.Message);
+                }
+
                 return;
             }
 
@@ -110,55 +127,48 @@ namespace StreamVideo.Core.BackgroundFilters
 
         public void Resume()
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             _paused = false;
         }
 
+        /// <summary>
+        /// Stops new submits and Java <c>process</c> calls. Destroys Unity textures that are idle.
+        /// If a GPU readback is still in flight, that callback releases the downscale RT when it
+        /// completes (or errors). Java <c>destroy</c> is the same: idle resources are freed now,
+        /// in-flight <c>process</c> frees them from its listener. Does not wait on the game thread.
+        /// </summary>
         public void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
             _paused = true;
             CameraOrientationDebug.Flush(_logs);
 
-            if (_maskTexture != null)
-            {
-                Object.Destroy(_maskTexture);
-                _maskTexture = null;
-            }
-
-            if (_downscaleRt != null)
-            {
-                if (RenderTexture.active == _downscaleRt)
-                {
-                    RenderTexture.active = null;
-                }
-
-                _downscaleRt.Release();
-                Object.Destroy(_downscaleRt);
-                _downscaleRt = null;
-            }
-
 #if UNITY_ANDROID && !UNITY_EDITOR
             _hasPendingRgba = false;
-            if (_native != null)
-            {
-                try
-                {
-                    _native.Call("destroy");
-                }
-                catch (Exception e)
-                {
-                    _logs?.Warning("Background filter: ML Kit destroy failed: " + e.Message);
-                }
-
-                _native.Dispose();
-                _native = null;
-            }
+            DestroyNative();
+            DestroyTexture(ref _syncReadbackTexture);
 #endif
+            DestroyTexture(ref _maskTexture);
+
+            if (!_readbackInFlight)
+            {
+                ReleaseDownscaleRt();
+            }
         }
 
         internal void PumpPendingMask()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            if (_native == null || _paused)
+            if (_disposed || _native == null || _paused)
             {
                 return;
             }
@@ -178,6 +188,7 @@ namespace StreamVideo.Core.BackgroundFilters
         private const string JavaClass = "io.getstream.unitybackgroundfilters.UnityMlKitPersonSegmenter";
 
         private readonly ILogs _logs;
+        private bool _disposed;
         private bool _paused;
         private bool _hasMask;
         private bool _readbackInFlight;
@@ -228,34 +239,45 @@ namespace StreamVideo.Core.BackgroundFilters
         private void OnReadback(AsyncGPUReadbackRequest request)
         {
             _readbackInFlight = false;
-            if (_paused || _native == null)
-            {
-                return;
-            }
 
-            if (request.hasError)
+            try
             {
-                _logs?.Warning("Background filter: mask input readback failed.");
-                return;
-            }
+                if (_disposed || _paused || _native == null)
+                {
+                    return;
+                }
 
-            var data = request.GetData<byte>();
-            var length = data.Length;
-            if (_pendingRgba == null || _pendingRgba.Length != length)
+                if (request.hasError)
+                {
+                    _logs?.Warning("Background filter: mask input readback failed.");
+                    return;
+                }
+
+                var data = request.GetData<byte>();
+                var length = data.Length;
+                if (_pendingRgba == null || _pendingRgba.Length != length)
+                {
+                    _pendingRgba = new byte[length];
+                }
+
+                data.CopyTo(_pendingRgba);
+                _pendingWidth = request.width;
+                _pendingHeight = request.height;
+                _hasPendingRgba = true;
+                TrySubmitPending();
+            }
+            finally
             {
-                _pendingRgba = new byte[length];
+                if (_disposed)
+                {
+                    ReleaseDownscaleRt();
+                }
             }
-
-            data.CopyTo(_pendingRgba);
-            _pendingWidth = request.width;
-            _pendingHeight = request.height;
-            _hasPendingRgba = true;
-            TrySubmitPending();
         }
 
         private void TrySubmitPending()
         {
-            if (!_hasPendingRgba || _paused || _native == null)
+            if (_disposed || !_hasPendingRgba || _paused || _native == null)
             {
                 return;
             }
@@ -295,7 +317,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
         private void SubmitRgba(byte[] rgba, int width, int height)
         {
-            if (rgba == null || _native == null)
+            if (_disposed || rgba == null || _native == null)
             {
                 return;
             }
@@ -314,7 +336,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
         private void UploadMask(byte[] mask, int width, int height)
         {
-            if (mask == null || mask.Length < width * height)
+            if (_disposed || mask == null || mask.Length < width * height)
             {
                 return;
             }
@@ -390,17 +412,18 @@ namespace StreamVideo.Core.BackgroundFilters
 
         private void EnsureDownscaleRt(Texture source)
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             GetMaskInputSize(source.width, source.height, out var width, out var height);
             if (_downscaleRt != null && _downscaleRt.width == width && _downscaleRt.height == height)
             {
                 return;
             }
 
-            if (_downscaleRt != null)
-            {
-                _downscaleRt.Release();
-                Object.Destroy(_downscaleRt);
-            }
+            ReleaseDownscaleRt();
 
             _downscaleRt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32)
             {
@@ -409,6 +432,34 @@ namespace StreamVideo.Core.BackgroundFilters
                 wrapMode = TextureWrapMode.Clamp,
             };
             _downscaleRt.Create();
+        }
+
+        private void DestroyNative()
+        {
+            if (_native == null)
+            {
+                return;
+            }
+
+            try
+            {
+                _native.Call("destroy");
+            }
+            catch (Exception e)
+            {
+                _logs?.Warning("Background filter: ML Kit destroy failed: " + e.Message);
+            }
+
+            try
+            {
+                _native.Dispose();
+            }
+            catch (Exception e)
+            {
+                _logs?.Warning("Background filter: ML Kit JNI dispose failed: " + e.Message);
+            }
+
+            _native = null;
         }
 
         private void LogSubmitOrientation(Texture source)
@@ -440,5 +491,49 @@ namespace StreamVideo.Core.BackgroundFilters
             height = Mathf.Max(2, Mathf.RoundToInt(sourceHeight * scale));
         }
 #endif
+
+        private void ReleaseDownscaleRt()
+        {
+            if (_downscaleRt == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (RenderTexture.active == _downscaleRt)
+                {
+                    RenderTexture.active = null;
+                }
+
+                _downscaleRt.Release();
+                Object.Destroy(_downscaleRt);
+            }
+            catch (Exception e)
+            {
+                _logs?.Warning("Background filter: failed to release mask input RT: " + e.Message);
+            }
+
+            _downscaleRt = null;
+        }
+
+        private void DestroyTexture(ref Texture2D texture)
+        {
+            if (texture == null)
+            {
+                return;
+            }
+
+            try
+            {
+                Object.Destroy(texture);
+            }
+            catch (Exception e)
+            {
+                _logs?.Warning("Background filter: failed to destroy texture: " + e.Message);
+            }
+
+            texture = null;
+        }
     }
 }

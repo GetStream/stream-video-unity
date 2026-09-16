@@ -3,9 +3,10 @@ using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.BackgroundFilters
 {
-    /// <summary>
-    /// Fake centered-ellipse person mask so the compositor can run in the Editor.
-    /// </summary>
+        /// <summary>
+        /// Fake centered-ellipse person mask for unit tests and compositor bring-up.
+        /// Not used by <see cref="PersonSegmenterFactory"/> in Editor play mode.
+        /// </summary>
     internal sealed class EditorStubPersonSegmenter : IPersonSegmenter
     {
         public bool IsSupported => true;

@@ -16,12 +16,12 @@ namespace StreamVideo.Core.BackgroundFilters
 #endif
             return created;
 #elif UNITY_EDITOR
-            var stub = new EditorStubPersonSegmenter();
+            var unsupported = new NullPersonSegmenter();
 #if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Log(logs, "segmenter.factory",
-                "platform=Editor created=EditorStubPersonSegmenter (static ellipse, not a person mask)");
+                "platform=Editor created=NullPersonSegmenter (Editor has no person segmenter)");
 #endif
-            return stub;
+            return unsupported;
 #else
             var unsupported = new NullPersonSegmenter();
 #if STREAM_DEBUG_ENABLED

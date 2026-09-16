@@ -42,6 +42,25 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
+        public void When_factory_in_editor_expect_unsupported()
+        {
+            var segmenter = PersonSegmenterFactory.Create(new UnityLogs());
+
+            Assert.That(segmenter.IsSupported, Is.False,
+                "Editor factory must not report a person-segmenter backend as supported.");
+            Assert.That(segmenter, Is.InstanceOf<NullPersonSegmenter>(),
+                "Editor factory must return NullPersonSegmenter, not the ellipse stub.");
+
+            _controller = new BackgroundFilterController(new UnityLogs());
+            Assert.That(_controller.IsSupported, Is.False,
+                "Default controller in Editor must report unsupported.");
+
+            _controller.SetFilter(BackgroundFilter.Blur(BlurIntensity.Medium));
+            Assert.That(_controller.ActiveFilter, Is.Null,
+                "SetFilter must no-op when Editor has no person-segmenter backend.");
+        }
+
+        [Test]
         public void When_supported_expect_set_and_clear_filter()
         {
             _controller = new BackgroundFilterController(new UnityLogs(), new EditorStubPersonSegmenter());
@@ -50,7 +69,7 @@ namespace StreamVideo.Tests.Editor
             _controller.SetFilter(filter);
 
             Assert.That(_controller.IsSupported, Is.True,
-                "Editor stub segmenter should be supported.");
+                "Injected stub reports supported");
             Assert.That(_controller.ActiveFilter, Is.SameAs(filter),
                 "Supported controller should keep the requested filter.");
             Assert.That(_controller.ActiveFilter.Intensity, Is.EqualTo(BlurIntensity.Heavy),

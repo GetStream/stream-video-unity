@@ -26,6 +26,10 @@ namespace StreamVideo.Core.BackgroundFilters
             PublishPerformanceIfChanged();
         }
 
+        /// <summary>
+        /// When <paramref name="segmenter"/> is omitted, uses <see cref="PersonSegmenterFactory"/>.
+        /// Android ML Kit <c>getClient</c> is deferred until the first successful <see cref="SetFilter"/>.
+        /// </summary>
         public BackgroundFilterController(ILogs logs, IPersonSegmenter segmenter = null)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
@@ -52,10 +56,9 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            ActiveFilter = filter;
-
             if (filter == null)
             {
+                ActiveFilter = null;
                 BackgroundFilter.DebugView = 0;
 #if STREAM_DEBUG_ENABLED
                 CameraOrientationDebug.Flush(_logs);
@@ -71,10 +74,21 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
+            // Resume triggers lazy ML Kit create on Android. Fail closed: no-op, no throw.
+            _segmenter.Resume();
+            if (!IsSupported)
+            {
+                _logs.Warning(
+                    "Background filter is not supported on this platform or device. The request was ignored.");
+                _segmenter.Pause();
+                ActiveFilter = null;
+                return;
+            }
+
+            ActiveFilter = filter;
             _requestedIntensity = filter.Intensity;
             _scheduler.Reset(_requestedIntensity);
             _compositor.SetIntensity(_scheduler.EffectiveIntensity);
-            _segmenter.Resume();
             _paused = false;
             _frameIndex = 0;
 #if STREAM_DEBUG_ENABLED

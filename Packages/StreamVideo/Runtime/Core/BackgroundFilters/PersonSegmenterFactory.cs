@@ -2,6 +2,11 @@ using StreamVideo.Libs.Logs;
 
 namespace StreamVideo.Core.BackgroundFilters
 {
+    /// <summary>
+    /// Platform person-segmenter. Android returns a deferred ML Kit wrapper that reports
+    /// support from a classpath check; <c>Segmentation.getClient</c> runs on first enable.
+    /// Editor, iOS, and desktop return <see cref="NullPersonSegmenter"/>.
+    /// </summary>
     internal static class PersonSegmenterFactory
     {
         public static IPersonSegmenter Create(ILogs logs)

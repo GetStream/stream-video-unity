@@ -18,6 +18,8 @@ namespace StreamVideo.Core.BackgroundFilters
     /// is rotated back so compositor UVs match <c>WebCamTexture</c> space.
     /// Vulkan AsyncGPUReadback is Y-flipped once into the GLES/Bitmap y-down layout; GLES is not
     /// flipped. Mask upload does not flip again.
+    /// <see cref="TryCreate"/> only checks the ML Kit classpath. <c>Segmentation.getClient</c>
+    /// runs on the first <see cref="Resume"/> / <see cref="RequestSegmentation"/>.
     /// <see cref="Dispose"/> is non-blocking: in-flight GPU readback and Java <c>process</c>
     /// release their own resources when they finish.
     /// </summary>
@@ -25,47 +27,27 @@ namespace StreamVideo.Core.BackgroundFilters
     {
         public const int MinMaskInputSize = 256;
 
+        /// <summary>
+        /// Returns a deferred segmenter when ML Kit is on the classpath. Does not call
+        /// <c>Segmentation.getClient</c>.
+        /// </summary>
         public static bool TryCreate(ILogs logs, out AndroidMlKitPersonSegmenter segmenter)
         {
             segmenter = null;
 #if UNITY_ANDROID && !UNITY_EDITOR
-            try
+            if (!IsMlKitOnClasspath(logs))
             {
-                var native = CreateNative();
-                if (native == null)
-                {
-                    logs?.Warning("Background filter: ML Kit is not available on this device.");
-                    return false;
-                }
-
-                if (!native.Call<bool>("isSupported"))
-                {
-                    native.Dispose();
-                    logs?.Warning("Background filter: ML Kit selfie segmentation is not supported.");
-                    return false;
-                }
-
-                if (!native.Call<bool>("create"))
-                {
-                    native.Dispose();
-                    logs?.Warning("Background filter: failed to create the ML Kit segmenter.");
-                    return false;
-                }
-
-                segmenter = new AndroidMlKitPersonSegmenter(logs, native);
-                return true;
-            }
-            catch (Exception e)
-            {
-                logs?.Warning("Background filter: ML Kit init failed: " + e.Message);
                 return false;
             }
+
+            segmenter = new AndroidMlKitPersonSegmenter(logs);
+            return true;
 #else
             return false;
 #endif
         }
 
-        public bool IsSupported => true;
+        public bool IsSupported => _isSupported;
 
         public bool HasMask => _maskTexture != null && _hasMask;
 
@@ -73,7 +55,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
         public void RequestSegmentation(Texture source)
         {
-            if (_disposed || _paused || source == null || _readbackInFlight)
+            if (_disposed || _paused || source == null || _readbackInFlight || !EnsureCreated())
             {
                 return;
             }
@@ -129,7 +111,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
         public void Resume()
         {
-            if (_disposed)
+            if (_disposed || !EnsureCreated())
             {
                 return;
             }
@@ -197,12 +179,14 @@ namespace StreamVideo.Core.BackgroundFilters
         private bool _disposed;
         private bool _paused;
         private bool _hasMask;
+        private bool _isSupported = true;
         private bool _readbackInFlight;
         private Texture2D _maskTexture;
         private RenderTexture _downscaleRt;
         private Texture _lastSource;
         private int _lastSourceRotation;
 #if UNITY_ANDROID && !UNITY_EDITOR
+        private bool _createAttempted;
         private AndroidJavaObject _native;
         private Texture2D _syncReadbackTexture;
         private sbyte[] _rgbaSbytes;
@@ -214,29 +198,98 @@ namespace StreamVideo.Core.BackgroundFilters
         private bool _hasPendingRgba;
 #endif
 
-        private AndroidMlKitPersonSegmenter(ILogs logs
-#if UNITY_ANDROID && !UNITY_EDITOR
-            , AndroidJavaObject native
-#endif
-        )
+        private AndroidMlKitPersonSegmenter(ILogs logs)
         {
             _logs = logs;
+        }
+
+        private bool EnsureCreated()
+        {
+            if (_disposed)
+            {
+                return false;
+            }
+
 #if UNITY_ANDROID && !UNITY_EDITOR
-            _native = native;
-#if STREAM_DEBUG_ENABLED
+            if (_native != null)
+            {
+                return true;
+            }
+
+            if (_createAttempted)
+            {
+                return false;
+            }
+
+            _createAttempted = true;
             try
             {
-                _native.Call("setDebugLogs", true);
+                _native = CreateNative();
+                if (_native == null)
+                {
+                    FailCreate("Background filter: ML Kit is not available on this device.");
+                    return false;
+                }
+
+                if (!_native.Call<bool>("create"))
+                {
+                    DestroyNative();
+                    FailCreate("Background filter: failed to create the ML Kit segmenter.");
+                    return false;
+                }
+
+#if STREAM_DEBUG_ENABLED
+                try
+                {
+                    _native.Call("setDebugLogs", true);
+                }
+                catch (Exception e)
+                {
+                    _logs?.Warning("Background filter: failed to enable ML Kit debug logs: " + e.Message);
+                }
+#endif
+                return true;
             }
             catch (Exception e)
             {
-                _logs?.Warning("Background filter: failed to enable ML Kit debug logs: " + e.Message);
+                DestroyNative();
+                FailCreate("Background filter: ML Kit init failed: " + e.Message);
+                return false;
             }
-#endif
+#else
+            return true;
 #endif
         }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
+        private void FailCreate(string message)
+        {
+            _isSupported = false;
+            _logs?.Warning(message);
+        }
+
+        private static bool IsMlKitOnClasspath(ILogs logs)
+        {
+            try
+            {
+                using (var clazz = new AndroidJavaClass(JavaClass))
+                {
+                    if (clazz.CallStatic<bool>("isSupported"))
+                    {
+                        return true;
+                    }
+                }
+
+                logs?.Warning("Background filter: ML Kit selfie segmentation is not supported.");
+                return false;
+            }
+            catch (Exception e)
+            {
+                logs?.Warning("Background filter: ML Kit init failed: " + e.Message);
+                return false;
+            }
+        }
+
         private static AndroidJavaObject CreateNative()
         {
             return new AndroidJavaObject(JavaClass);

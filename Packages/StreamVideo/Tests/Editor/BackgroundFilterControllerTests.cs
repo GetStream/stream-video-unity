@@ -61,6 +61,21 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
+        public void When_segmenter_create_fails_on_enable_expect_set_filter_is_noop()
+        {
+            _controller = new BackgroundFilterController(new UnityLogs(), new ResumeFailsPersonSegmenter());
+
+            _controller.SetFilter(BackgroundFilter.Blur(BlurIntensity.Medium));
+
+            Assert.That(_controller.IsSupported, Is.False,
+                "Failed ML Kit create must report unsupported.");
+            Assert.That(_controller.ActiveFilter, Is.Null,
+                "SetFilter must no-op and must not throw when lazy create fails.");
+            Assert.That(_controller.IsCompositing, Is.False,
+                "Failed create must not composite.");
+        }
+
+        [Test]
         public void When_supported_expect_set_and_clear_filter()
         {
             _controller = new BackgroundFilterController(new UnityLogs(), new EditorStubPersonSegmenter());
@@ -190,6 +205,32 @@ namespace StreamVideo.Tests.Editor
             var destination = new RenderTexture(16, 16, 0, RenderTextureFormat.ARGB32);
             destination.Create();
             return destination;
+        }
+
+        private sealed class ResumeFailsPersonSegmenter : IPersonSegmenter
+        {
+            public bool IsSupported { get; private set; } = true;
+
+            public bool HasMask => false;
+
+            public Texture MaskTexture => null;
+
+            public void RequestSegmentation(Texture source)
+            {
+            }
+
+            public void Pause()
+            {
+            }
+
+            public void Resume()
+            {
+                IsSupported = false;
+            }
+
+            public void Dispose()
+            {
+            }
         }
 
         private BackgroundFilterController _controller;

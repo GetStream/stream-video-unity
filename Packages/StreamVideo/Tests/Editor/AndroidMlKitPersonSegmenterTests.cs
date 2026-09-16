@@ -7,7 +7,8 @@ namespace StreamVideo.Tests.Editor
 {
     /// <summary>
     /// Tests for <see cref="AndroidMlKitPersonSegmenter"/>. Native teardown, upright ML Kit
-    /// inference (portrait/landscape, front/back), and GLES vs Vulkan mask Y-origin are
+    /// inference (portrait/landscape, front/back), GLES vs Vulkan mask Y-origin, and lazy
+    /// <c>Segmentation.getClient</c> (join without blur must not create the client) are
     /// Android-player only.
     /// </summary>
     internal sealed class AndroidMlKitPersonSegmenterTests

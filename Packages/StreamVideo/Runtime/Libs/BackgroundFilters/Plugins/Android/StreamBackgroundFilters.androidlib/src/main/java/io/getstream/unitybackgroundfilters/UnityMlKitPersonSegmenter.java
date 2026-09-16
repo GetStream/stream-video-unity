@@ -39,7 +39,10 @@ public class UnityMlKitPersonSegmenter {
     private int inFlightRotation;
     private int maskRotation;
 
-    public boolean isSupported() {
+    /**
+     * Classpath check only. Does not call {@link Segmentation#getClient}.
+     */
+    public static boolean isSupported() {
         try {
             Class.forName("com.google.mlkit.vision.segmentation.Segmentation");
             return true;

@@ -100,19 +100,26 @@ namespace StreamVideo.ExampleProject.UI.Screens
             var current = call.ActiveBackgroundFilter;
             if (current == null)
             {
+#if STREAM_DEBUG_ENABLED
                 BackgroundFilter.DebugView = 0;
+#endif
                 call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Light));
             }
             else if (current.Intensity == BlurIntensity.Light)
             {
+#if STREAM_DEBUG_ENABLED
                 BackgroundFilter.DebugView = 0;
+#endif
                 call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Medium));
             }
             else if (current.Intensity == BlurIntensity.Medium)
             {
+#if STREAM_DEBUG_ENABLED
                 BackgroundFilter.DebugView = 0;
+#endif
                 call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Heavy));
             }
+#if STREAM_DEBUG_ENABLED
             else if (BackgroundFilter.DebugView == 0)
             {
                 BackgroundFilter.DebugView = 1;
@@ -121,9 +128,12 @@ namespace StreamVideo.ExampleProject.UI.Screens
             {
                 BackgroundFilter.DebugView = 2;
             }
+#endif
             else
             {
+#if STREAM_DEBUG_ENABLED
                 BackgroundFilter.DebugView = 0;
+#endif
                 call.SetBackgroundFilter(null);
             }
 
@@ -145,13 +155,26 @@ namespace StreamVideo.ExampleProject.UI.Screens
             }
 
             var current = call.ActiveBackgroundFilter;
-            _backgroundFilterLabel.text = current == null
-                ? "BG Blur: Off"
-                : BackgroundFilter.DebugView == 1
-                    ? "BG Blur: Mask"
-                    : BackgroundFilter.DebugView == 2
-                        ? "BG Blur: Overlay"
-                        : "BG Blur: " + current.Intensity;
+            if (current == null)
+            {
+                _backgroundFilterLabel.text = "BG Blur: Off";
+                return;
+            }
+
+#if STREAM_DEBUG_ENABLED
+            if (BackgroundFilter.DebugView == 1)
+            {
+                _backgroundFilterLabel.text = "BG Blur: Mask";
+                return;
+            }
+
+            if (BackgroundFilter.DebugView == 2)
+            {
+                _backgroundFilterLabel.text = "BG Blur: Overlay";
+                return;
+            }
+#endif
+            _backgroundFilterLabel.text = "BG Blur: " + current.Intensity;
         }
     }
 }

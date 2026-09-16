@@ -95,7 +95,11 @@ namespace StreamVideo.Core.BackgroundFilters
             _blendMaterial.SetFloat(SmoothMinId, DefaultSmoothstepMin);
             _blendMaterial.SetFloat(SmoothMaxId, DefaultSmoothstepMax);
             _blendMaterial.SetFloat(ExpandPixelsId, DefaultMaskExpandPixels);
+#if STREAM_DEBUG_ENABLED
             _blendMaterial.SetFloat(DebugModeId, BackgroundFilter.DebugView);
+#else
+            _blendMaterial.SetFloat(DebugModeId, 0f);
+#endif
             Graphics.Blit(_sourceRt, destination, _blendMaterial);
         }
 

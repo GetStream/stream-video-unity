@@ -59,8 +59,8 @@ namespace StreamVideo.Core.BackgroundFilters
             if (filter == null)
             {
                 ActiveFilter = null;
-                BackgroundFilter.DebugView = 0;
 #if STREAM_DEBUG_ENABLED
+                BackgroundFilter.DebugView = 0;
                 CameraOrientationDebug.Flush(_logs);
                 CameraOrientationDebug.Log(_logs, "controller.setFilter", "filter=null");
 #endif

@@ -12,11 +12,12 @@ namespace StreamVideo.Core
         public static BackgroundFilter Blur(BlurIntensity intensity = BlurIntensity.Heavy)
             => new BlurBackgroundFilter(intensity);
 
+#if STREAM_DEBUG_ENABLED
         /// <summary>
         /// Compositor debug view: 0 = normal, 1 = person mask, 2 = green person / red background overlay.
-        /// Sample More Options cycles this after Heavy. Leave at 0 in product builds.
         /// </summary>
-        public static int DebugView { get; set; }
+        internal static int DebugView { get; set; }
+#endif
 
         /// <summary>
         /// Blur strength when this filter is a blur effect.

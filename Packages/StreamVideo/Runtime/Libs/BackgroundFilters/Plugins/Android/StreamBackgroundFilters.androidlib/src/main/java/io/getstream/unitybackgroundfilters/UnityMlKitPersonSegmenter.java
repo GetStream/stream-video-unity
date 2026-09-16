@@ -10,14 +10,14 @@ import com.google.mlkit.vision.segmentation.Segmenter;
 import com.google.mlkit.vision.segmentation.selfie.SelfieSegmenterOptions;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Async ML Kit selfie segmenter for Unity. Reuses the last mask and never blocks the caller.
- * {@link #destroy()} rejects new work immediately and releases native resources only when
- * the current {@code process} has finished, so the reusable bitmap is not recycled while
- * ML Kit still holds it. That deferred release also covers backgrounding, process freeze,
- * and battery-saver delays: Unity does not wait on the game thread.
+ * {@link #destroy()} is non-blocking: in-flight {@code process} releases native resources from
+ * its listener so the bitmap is not recycled while ML Kit still holds it.
  */
 public class UnityMlKitPersonSegmenter {
     private static final String TAG = "StreamBgFilter";
@@ -27,7 +27,7 @@ public class UnityMlKitPersonSegmenter {
     private boolean destroyed;
 
     private boolean debugLogs;
-    private final java.util.Map<String, String> lastDebugByKey = new java.util.HashMap<String, String>();
+    private final Map<String, String> lastDebugByKey = new HashMap<String, String>();
     private Segmenter segmenter;
     private Bitmap reusableBitmap;
     private int[] argbScratch;
@@ -89,26 +89,29 @@ public class UnityMlKitPersonSegmenter {
         }
 
         Segmenter active;
+        InputImage image;
         synchronized (lock) {
-            if (destroyed || segmenter == null) {
+            if (destroyed || segmenter == null || !inFlight.compareAndSet(false, true)) {
                 return;
             }
 
-            if (!inFlight.compareAndSet(false, true)) {
+            try {
+                Bitmap bitmap = getBitmapLocked(width, height);
+                copyRgbaToBitmap(rgba, width, height, bitmap);
+                // Do not pass WebCamTexture.videoRotationAngle here: InputImage rotation remaps/swaps
+                // the mask, which misaligns compositor UVs. Display rotation is applied in the UI.
+                image = InputImage.fromBitmap(bitmap, 0);
+                active = segmenter;
+            } catch (Throwable t) {
+                inFlight.set(false);
+                Log.w(TAG, "Failed to copy frame for ML Kit.", t);
                 return;
             }
-
-            active = segmenter;
         }
 
         try {
-            Bitmap bitmap = getBitmap(width, height);
-            copyRgbaToBitmap(rgba, width, height, bitmap);
-            // Do not pass WebCamTexture.videoRotationAngle here: InputImage rotation remaps/swaps
-            // the mask, which misaligns compositor UVs. Display rotation is applied in the UI.
             debug("submit", "processAsync bitmap=" + width + "x" + height
                     + " mlkitRotationDegrees=0 (webcam space) rgbaBytes=" + rgba.length);
-            InputImage image = InputImage.fromBitmap(bitmap, 0);
             active.process(image)
                     .addOnSuccessListener(this::onMaskSuccess)
                     .addOnFailureListener(this::onMaskFailure);
@@ -141,11 +144,6 @@ public class UnityMlKitPersonSegmenter {
         }
     }
 
-    /**
-     * Rejects new {@link #processAsync} calls. Closes the segmenter and recycles the bitmap
-     * immediately when idle; otherwise the in-flight success/failure listener releases them.
-     * Does not block the caller.
-     */
     public void destroy() {
         synchronized (lock) {
             destroyed = true;
@@ -161,29 +159,33 @@ public class UnityMlKitPersonSegmenter {
         int width = 0;
         int height = 0;
         try {
-            width = mask.getWidth();
-            height = mask.getHeight();
-            ByteBuffer buffer = mask.getBuffer();
-            buffer.rewind();
-            int pixelCount = width * height;
-            packed = new byte[pixelCount];
-            for (int i = 0; i < pixelCount; i++) {
-                float confidence = buffer.getFloat();
-                int value = (int) (confidence * 255.0f);
-                if (value < 0) {
-                    value = 0;
-                } else if (value > 255) {
-                    value = 255;
+            if (mask != null) {
+                width = mask.getWidth();
+                height = mask.getHeight();
+                ByteBuffer buffer = mask.getBuffer();
+                buffer.rewind();
+                int pixelCount = width * height;
+                packed = new byte[pixelCount];
+                for (int i = 0; i < pixelCount; i++) {
+                    float confidence = buffer.getFloat();
+                    int value = (int) (confidence * 255.0f);
+                    if (value < 0) {
+                        value = 0;
+                    } else if (value > 255) {
+                        value = 255;
+                    }
+                    packed[i] = (byte) value;
                 }
-                packed[i] = (byte) value;
-            }
 
-            debug("mask", "onMaskSuccess mask=" + width + "x" + height
-                    + " bitmap=" + describeBitmap()
-                    + " aspectMatch=" + bitmapAspectMatches(width, height));
+                debug("mask", "onMaskSuccess mask=" + width + "x" + height
+                        + " bitmap=" + describeBitmap()
+                        + " aspectMatch=" + bitmapAspectMatches(width, height));
+            }
         } catch (Throwable t) {
             Log.w(TAG, "Failed to copy ML Kit mask.", t);
             packed = null;
+            width = 0;
+            height = 0;
         }
 
         onProcessFinished(packed, width, height);
@@ -242,7 +244,7 @@ public class UnityMlKitPersonSegmenter {
         maskDirty = false;
     }
 
-    private Bitmap getBitmap(int width, int height) {
+    private Bitmap getBitmapLocked(int width, int height) {
         if (reusableBitmap == null
                 || reusableBitmap.isRecycled()
                 || reusableBitmap.getWidth() != width

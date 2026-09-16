@@ -6,12 +6,7 @@ using StreamVideo.Libs.Logs;
 namespace StreamVideo.Tests.Editor
 {
     /// <summary>
-    /// Tests for <see cref="AndroidMlKitPersonSegmenter"/>.
-    /// Android teardown cannot run here: Dispose must not block the game thread, must not destroy
-    /// a RenderTexture with a pending <c>AsyncGPUReadback</c>, and must not recycle the ML Kit
-    /// bitmap until <c>process</c> finishes. In-flight GPU/Java work releases its own resources.
-    /// Manual: enable blur, go to background / battery saver, dispose or quit while moving,
-    /// confirm no ANR and no crash in logcat.
+    /// Tests for <see cref="AndroidMlKitPersonSegmenter"/>. Native teardown is Android-player only.
     /// </summary>
     internal sealed class AndroidMlKitPersonSegmenterTests
     {

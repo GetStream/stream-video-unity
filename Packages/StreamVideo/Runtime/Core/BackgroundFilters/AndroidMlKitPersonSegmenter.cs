@@ -15,9 +15,8 @@ namespace StreamVideo.Core.BackgroundFilters
     /// Does not block <c>OnUpdate</c> and does not ReadPixels the publish texture.
     /// Input is scaled so the short side is <see cref="MinMaskInputSize"/> (ML Kit's 256px floor) while
     /// keeping the camera aspect. Rotation is not applied; mask and composite stay in WebCamTexture space.
-    /// <see cref="Dispose"/> stops new work immediately and does not block the game thread.
-    /// In-flight GPU readback and Java <c>process</c> release their own resources when they finish,
-    /// so backgrounding, OS freeze, and battery saver cannot hang or crash teardown.
+    /// <see cref="Dispose"/> is non-blocking: in-flight GPU readback and Java <c>process</c>
+    /// release their own resources when they finish.
     /// </summary>
     internal sealed class AndroidMlKitPersonSegmenter : IPersonSegmenter
     {
@@ -82,10 +81,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            // Read back the next camera frame even while ML Kit is busy. The latest
-            // RGBA is queued and submitted as soon as processAsync is free, so mask
-            // latency is max(readback, ML Kit) instead of the sum. That is what
-            // falls apart when the camera moves.
+            // Pipeline GPU readback with ML Kit so mask latency is max(readback, process), not the sum.
             EnsureDownscaleRt(source);
             if (_downscaleRt == null)
             {
@@ -135,12 +131,6 @@ namespace StreamVideo.Core.BackgroundFilters
             _paused = false;
         }
 
-        /// <summary>
-        /// Stops new submits and Java <c>process</c> calls. Destroys Unity textures that are idle.
-        /// If a GPU readback is still in flight, that callback releases the downscale RT when it
-        /// completes (or errors). Java <c>destroy</c> is the same: idle resources are freed now,
-        /// in-flight <c>process</c> frees them from its listener. Does not wait on the game thread.
-        /// </summary>
         public void Dispose()
         {
             if (_disposed)
@@ -150,10 +140,13 @@ namespace StreamVideo.Core.BackgroundFilters
 
             _disposed = true;
             _paused = true;
+            _lastSource = null;
             CameraOrientationDebug.Flush(_logs);
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             _hasPendingRgba = false;
+            _pendingRgba = null;
+            _rgbaSbytes = null;
             DestroyNative();
             DestroyTexture(ref _syncReadbackTexture);
 #endif
@@ -196,16 +189,13 @@ namespace StreamVideo.Core.BackgroundFilters
         private RenderTexture _downscaleRt;
         private Texture _lastSource;
 #if UNITY_ANDROID && !UNITY_EDITOR
+        private AndroidJavaObject _native;
         private Texture2D _syncReadbackTexture;
         private sbyte[] _rgbaSbytes;
         private byte[] _pendingRgba;
         private int _pendingWidth;
         private int _pendingHeight;
         private bool _hasPendingRgba;
-#endif
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-        private AndroidJavaObject _native;
 #endif
 
         private AndroidMlKitPersonSegmenter(ILogs logs

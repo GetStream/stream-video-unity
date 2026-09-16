@@ -9,9 +9,6 @@ namespace StreamVideo.Tests.Editor
 {
     /// <summary>
     /// Tests for <see cref="BackgroundFilterController"/>.
-    /// Android ML Kit teardown is device-only and is not covered here. Dispose must not block
-    /// or hang if GPU/ML Kit are delayed (background, battery saver). Manual: enable blur,
-    /// background or dispose while moving, confirm no ANR and no crash in logcat.
     /// </summary>
     internal sealed class BackgroundFilterControllerTests
     {

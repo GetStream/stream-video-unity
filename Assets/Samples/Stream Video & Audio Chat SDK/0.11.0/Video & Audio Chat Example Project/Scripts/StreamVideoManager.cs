@@ -322,7 +322,7 @@ namespace StreamVideo.ExampleProject
             if (_autoEnableBackgroundFilter && call.IsBackgroundFilterSupported)
             {
 #if STREAM_DEBUG_ENABLED
-                // P1-2: delete this block before merge. Uncheck Auto Enable Background Filter to skip it while testing.
+                // P1-2: owner will delete this block before merge. Uncheck Auto Enable Background Filter to skip it while testing.
                 call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Heavy));
 #endif
             }

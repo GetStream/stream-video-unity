@@ -17,6 +17,9 @@ namespace StreamVideo.Core.BackgroundFilters
 
         public BlurIntensity EffectiveIntensity { get; private set; } = BlurIntensity.Heavy;
 
+        /// <summary>
+        /// True at the lowest quality floor (Light blur, slowest interval). Signal only — does not clear the filter.
+        /// </summary>
         public bool ShouldDisable { get; private set; }
 
         public BackgroundFilterPerformance Performance { get; private set; }

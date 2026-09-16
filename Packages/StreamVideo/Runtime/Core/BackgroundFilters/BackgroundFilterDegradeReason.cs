@@ -1,7 +1,7 @@
 namespace StreamVideo.Core
 {
     /// <summary>
-    /// Why a background filter was marked degraded or disabled.
+        /// Why a background filter was marked degraded.
     /// </summary>
     public enum BackgroundFilterDegradeReason
     {

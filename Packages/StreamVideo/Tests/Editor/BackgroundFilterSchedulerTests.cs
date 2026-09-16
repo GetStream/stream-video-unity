@@ -53,7 +53,13 @@ namespace StreamVideo.Tests.Editor
             _scheduler.RecordFpsRatio(0.5f, FilterFrameScheduler.DegradeHoldSeconds);
 
             Assert.That(_scheduler.ShouldDisable, Is.True,
-                "Third degrade step should disable the filter.");
+                "Third degrade step should signal the floor tier, not turn the filter off.");
+            Assert.That(_scheduler.EffectiveIntensity, Is.EqualTo(BlurIntensity.Light),
+                "Disable tier must floor at Light blur.");
+            Assert.That(_scheduler.SegmentIntervalFrames, Is.EqualTo(3),
+                "Disable tier must keep the slowest segment interval.");
+            Assert.That(_scheduler.Performance.Degraded, Is.True,
+                "Disable tier should still report degraded performance.");
             Assert.That(_scheduler.Performance.Reason, Is.EqualTo(BackgroundFilterDegradeReason.FrameDrop),
                 "Disable should report a frame-drop reason.");
         }

@@ -134,6 +134,44 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
+        public void When_scheduler_reaches_disable_tier_expect_active_filter_remains_and_composite_does_not_passthrough_live_source()
+        {
+            var segmenter = new EditorStubPersonSegmenter();
+            _controller = new BackgroundFilterController(new UnityLogs(), segmenter);
+            var filter = BackgroundFilter.Blur(BlurIntensity.Heavy);
+            _controller.SetFilter(filter);
+
+            _destination = CreateDestination();
+            segmenter.RequestSegmentation(Texture2D.whiteTexture);
+            Assert.That(segmenter.HasMask, Is.True,
+                "Stub should produce a mask after RequestSegmentation.");
+
+            _controller.Composite(Texture2D.whiteTexture, _destination);
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Apply),
+                "Precondition: composite should apply with a mask.");
+
+            var performanceEvents = 0;
+            _controller.PerformanceChanged += _ => performanceEvents++;
+
+            for (var i = 0; i < 3; i++)
+            {
+                _controller.RecordFpsRatio(0.5f, FilterFrameScheduler.DegradeHoldSeconds);
+            }
+
+            Assert.That(_controller.Performance.Degraded, Is.True,
+                "Disable tier must still report degraded performance.");
+            Assert.That(performanceEvents, Is.GreaterThan(0),
+                "BackgroundFilterPerformanceChanged should fire on degrade.");
+
+            _controller.Composite(Texture2D.blackTexture, _destination);
+
+            Assert.That(_controller.ActiveFilter, Is.SameAs(filter),
+                "Scheduler disable tier must not clear the requested filter.");
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Apply),
+                "Disable tier must keep compositing and not blit the live camera.");
+        }
+
+        [Test]
         public void When_filter_disabled_expect_composite_passthrough_still_blits_source()
         {
             _controller = new BackgroundFilterController(new UnityLogs(), new EditorStubPersonSegmenter());

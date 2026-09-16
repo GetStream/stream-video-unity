@@ -19,6 +19,13 @@ namespace StreamVideo.Core.BackgroundFilters
 
         internal BackgroundFilterCompositePath LastCompositePath { get; private set; }
 
+        internal void RecordFpsRatio(float processedToSourceFpsRatio, float deltaSeconds)
+        {
+            _scheduler.RecordFpsRatio(processedToSourceFpsRatio, deltaSeconds);
+            _compositor.SetIntensity(_scheduler.EffectiveIntensity);
+            PublishPerformanceIfChanged();
+        }
+
         public BackgroundFilterController(ILogs logs, IPersonSegmenter segmenter = null)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
@@ -58,10 +65,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 _segmenter.Pause();
                 _hasAppliedMask = false;
                 ReleasePreview();
-                if (!_scheduler.ShouldDisable)
-                {
-                    _scheduler.Reset(BlurIntensity.Heavy);
-                }
+                _scheduler.Reset(BlurIntensity.Heavy);
 
                 PublishPerformanceIfChanged();
                 return;
@@ -116,15 +120,6 @@ namespace StreamVideo.Core.BackgroundFilters
 
             _frameIndex++;
             UpdateSchedulerFromFrameTime();
-
-            if (_scheduler.ShouldDisable)
-            {
-                _logs.Warning("Background filter disabled because publish FPS could not be maintained.");
-                SetFilter(null);
-                Graphics.Blit(source, destination);
-                SetPreview(destination);
-                return;
-            }
 
             if (!_segmenter.HasMask)
             {
@@ -245,12 +240,6 @@ namespace StreamVideo.Core.BackgroundFilters
             _scheduler.RecordFpsRatio(Mathf.Clamp(ratio, 0f, 2f), _sampleSeconds);
             _sampleSeconds = 0f;
             _sampleFrames = 0;
-
-            if (_scheduler.ShouldDisable)
-            {
-                PublishPerformanceIfChanged();
-                return;
-            }
 
             _compositor.SetIntensity(_scheduler.EffectiveIntensity);
             PublishPerformanceIfChanged();

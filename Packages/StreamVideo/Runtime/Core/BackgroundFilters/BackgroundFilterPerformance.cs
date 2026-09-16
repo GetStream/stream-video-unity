@@ -12,7 +12,7 @@ namespace StreamVideo.Core
         }
 
         /// <summary>
-        /// True when the filter dropped quality or disabled itself to protect frame rate.
+        /// True when the filter dropped quality to protect frame rate.
         /// </summary>
         public bool Degraded { get; }
 

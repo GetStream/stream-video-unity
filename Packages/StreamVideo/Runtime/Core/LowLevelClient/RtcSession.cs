@@ -500,7 +500,13 @@ namespace StreamVideo.Core.LowLevelClient
                         $"{nameof(DoJoin)} - Skipped join call request: callExists: {callCredentialsExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
                 }
 
+                if (ActiveCall != null && !ReferenceEquals(ActiveCall, call))
+                {
+                    ActiveCall.DetachBackgroundFilterEvents();
+                }
+
                 ActiveCall = call;
+                ActiveCall.AttachBackgroundFilterEvents();
                 EnsureCallHasJoinCredentials(ActiveCall);
 
                 _httpClient = _httpClientFactory(ActiveCall);
@@ -896,7 +902,12 @@ namespace StreamVideo.Core.LowLevelClient
                 // Set Left before clearing ActiveCall so that CallStateChanged subscribers
                 // can still access the call reference
                 CallState = CallingState.Left;
-                ActiveCall = null;
+                if (ActiveCall != null)
+                {
+                    ActiveCall.DetachBackgroundFilterEvents();
+                    ActiveCall = null;
+                }
+
                 BackgroundFilterController?.SetFilter(null);
             }
         }

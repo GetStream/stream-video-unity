@@ -64,36 +64,20 @@ namespace StreamVideo.Core.StatefulModels
         {
             add
             {
-                if (FilterController != null)
-                {
-                    FilterController.PerformanceChanged += value;
-                }
+                _backgroundFilterPerformanceChanged.Add(value);
+                TryAttachBackgroundFilterEvents();
             }
-            remove
-            {
-                if (FilterController != null)
-                {
-                    FilterController.PerformanceChanged -= value;
-                }
-            }
+            remove => _backgroundFilterPerformanceChanged.Remove(value);
         }
 
         public event Action<Texture> LocalPreviewTextureChanged
         {
             add
             {
-                if (FilterController != null)
-                {
-                    FilterController.PreviewTextureChanged += value;
-                }
+                _localPreviewTextureChanged.Add(value);
+                TryAttachBackgroundFilterEvents();
             }
-            remove
-            {
-                if (FilterController != null)
-                {
-                    FilterController.PreviewTextureChanged -= value;
-                }
-            }
+            remove => _localPreviewTextureChanged.Remove(value);
         }
 
         public BackgroundFilter ActiveBackgroundFilter => FilterController?.ActiveFilter;
@@ -690,6 +674,14 @@ namespace StreamVideo.Core.StatefulModels
             UnifiedSessionId = Guid.NewGuid().ToString();
         }
 
+        internal void AttachBackgroundFilterEvents() => TryAttachBackgroundFilterEvents();
+
+        internal void DetachBackgroundFilterEvents()
+        {
+            _backgroundFilterPerformanceChanged.Detach();
+            _localPreviewTextureChanged.Detach();
+        }
+
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(JoinResponse joinResponse)
         {
@@ -1042,6 +1034,12 @@ namespace StreamVideo.Core.StatefulModels
         private string _id;
         private IStreamVideoCallParticipant _dominantSpeaker;
 
+        private readonly CallScopedControllerEvent<BackgroundFilterPerformance> _backgroundFilterPerformanceChanged
+            = new CallScopedControllerEvent<BackgroundFilterPerformance>();
+
+        private readonly CallScopedControllerEvent<Texture> _localPreviewTextureChanged
+            = new CallScopedControllerEvent<Texture>();
+
         private void OnSessionParticipantAdded(IStreamVideoCallParticipant participant)
         {
             LowLevelClient.RtcSession.NotifyParticipantJoined(participant.SessionId);
@@ -1217,6 +1215,24 @@ namespace StreamVideo.Core.StatefulModels
 
         private BackgroundFilterController FilterController
             => LowLevelClient?.RtcSession?.BackgroundFilterController;
+
+        private bool IsActiveCall => LowLevelClient?.RtcSession?.ActiveCall == this;
+
+        private void TryAttachBackgroundFilterEvents()
+        {
+            var controller = FilterController;
+            if (controller == null || !IsActiveCall)
+            {
+                return;
+            }
+
+            _backgroundFilterPerformanceChanged.Attach(
+                h => controller.PerformanceChanged += h,
+                h => controller.PerformanceChanged -= h);
+            _localPreviewTextureChanged.Attach(
+                h => controller.PreviewTextureChanged += h,
+                h => controller.PreviewTextureChanged -= h);
+        }
 
         private bool IsLocalParticipantIncluded()
         {

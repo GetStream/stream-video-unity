@@ -35,6 +35,30 @@ namespace StreamVideo.Tests.Runtime
 
             await call.LeaveAsync();
         }
+
+        [UnityTest]
+        public IEnumerator When_subscribing_preview_event_then_leave_expect_handler_not_invoked_on_next_call()
+            => ConnectAndExecute(When_subscribing_preview_event_then_leave_expect_handler_not_invoked_on_next_call_Async);
+
+        private async Task When_subscribing_preview_event_then_leave_expect_handler_not_invoked_on_next_call_Async(
+            ITestClient client)
+        {
+            var firstCall = await client.JoinRandomCallAsync();
+            var invocations = 0;
+            firstCall.LocalPreviewTextureChanged += _ => invocations++;
+            firstCall.BackgroundFilterPerformanceChanged += _ => invocations++;
+
+            await firstCall.LeaveAsync();
+
+            var secondCall = await client.JoinRandomCallAsync();
+            secondCall.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Medium));
+            secondCall.SetBackgroundFilter(null);
+
+            Assert.That(invocations, Is.EqualTo(0),
+                "Handlers subscribed on the first call must not fire after Leave or on the next call.");
+
+            await secondCall.LeaveAsync();
+        }
     }
 }
 #endif

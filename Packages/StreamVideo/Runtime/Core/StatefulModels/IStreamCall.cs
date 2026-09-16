@@ -346,11 +346,13 @@ namespace StreamVideo.Core.StatefulModels
 
         /// <summary>
         /// Fired when background-filter performance drops or recovers.
+        /// Call-scoped: does not fire after <see cref="LeaveAsync"/> or for a later call on the same client.
         /// </summary>
         event Action<BackgroundFilterPerformance> BackgroundFilterPerformanceChanged;
 
         /// <summary>
         /// Fired when the local preview texture instance changes (filter enable/disable or publisher RT recreate).
+        /// Call-scoped: does not fire after <see cref="LeaveAsync"/> or for a later call on the same client.
         /// </summary>
         event Action<Texture> LocalPreviewTextureChanged;
 

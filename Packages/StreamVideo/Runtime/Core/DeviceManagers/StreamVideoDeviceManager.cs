@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+#if STREAM_DEBUG_ENABLED
 using StreamVideo.Core.BackgroundFilters;
+#endif
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Libs.Logs;
 using UnityEngine;
@@ -77,11 +79,13 @@ namespace StreamVideo.Core.DeviceManagers
                 Client.SetCameraInputSource(_activeCamera);
             }
 
+#if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Log(Logs, "camera.select",
                 "device=" + device.Name + " front=" + device.IsFrontFacing + " enable=" + enable
                 + " requested=" + requestedResolution.Width + "x" + requestedResolution.Height + "@" + requestedFPS
                 + " | " + CameraOrientationDebug.DescribeWebCam(_activeCamera)
                 + " | " + CameraOrientationDebug.DescribeScreen());
+#endif
 
             SetEnabled(enable);
         }

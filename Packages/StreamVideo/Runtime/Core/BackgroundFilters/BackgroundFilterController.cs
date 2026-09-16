@@ -23,9 +23,11 @@ namespace StreamVideo.Core.BackgroundFilters
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _segmenter = segmenter ?? PersonSegmenterFactory.Create(_logs);
+#if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Log(_logs, "controller.init",
                 "segmenter=" + _segmenter.GetType().Name + " supported=" + _segmenter.IsSupported
                 + " | " + CameraOrientationDebug.DescribeScreen());
+#endif
         }
 
         public void SetFilter(BackgroundFilter filter)
@@ -48,8 +50,10 @@ namespace StreamVideo.Core.BackgroundFilters
             if (filter == null)
             {
                 BackgroundFilter.DebugView = 0;
+#if STREAM_DEBUG_ENABLED
                 CameraOrientationDebug.Flush(_logs);
                 CameraOrientationDebug.Log(_logs, "controller.setFilter", "filter=null");
+#endif
                 _compositor.SetMask(null);
                 _segmenter.Pause();
                 _hasAppliedMask = false;
@@ -69,10 +73,12 @@ namespace StreamVideo.Core.BackgroundFilters
             _segmenter.Resume();
             _paused = false;
             _frameIndex = 0;
+#if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Log(_logs, "controller.setFilter",
                 "filter=" + (filter == null ? "null" : filter.Kind + "/" + filter.Intensity)
                 + " supported=" + IsSupported
                 + " segmenter=" + _segmenter.GetType().Name);
+#endif
             PublishPerformanceIfChanged();
         }
 
@@ -132,7 +138,9 @@ namespace StreamVideo.Core.BackgroundFilters
             _hasAppliedMask = true;
             LastCompositePath = BackgroundFilterCompositePath.Apply;
             SetPreview(destination);
+#if STREAM_DEBUG_ENABLED
             LogCompositeOrientation(source, destination, "composite.apply");
+#endif
         }
 
         public Texture GetPreviewTexture() => _previewTexture;
@@ -181,9 +189,12 @@ namespace StreamVideo.Core.BackgroundFilters
             LastCompositePath = BackgroundFilterCompositePath.Passthrough;
             Graphics.Blit(source, destination);
             SetPreview(destination);
+#if STREAM_DEBUG_ENABLED
             LogCompositeOrientation(source, destination, checkpoint);
+#endif
         }
 
+#if STREAM_DEBUG_ENABLED
         private void LogCompositeOrientation(Texture source, RenderTexture destination, string checkpoint)
         {
             var webcam = source as WebCamTexture;
@@ -203,6 +214,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " mlkitRotationDegrees=0 (webcam space)";
             CameraOrientationDebug.Log(_logs, checkpoint, payload);
         }
+#endif
 
         private void PumpAndroidMask()
         {

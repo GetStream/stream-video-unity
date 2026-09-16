@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+#if STREAM_DEBUG_ENABLED
 using StreamVideo.Core.BackgroundFilters;
+#endif
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models.Sfu;
@@ -448,11 +450,13 @@ namespace StreamVideo.Core.StatefulModels
                 return;
             }
 
+#if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Log(Logs, "publisher.customDataAngle",
                 "publishingAngle=" + angle
                 + " prev=" + (hasPrevAngle ? prevAngle.ToString() : "none")
                 + " | " + CameraOrientationDebug.DescribeWebCam(videoInput)
                 + " | " + CameraOrientationDebug.DescribeScreen());
+#endif
 
             //StreamTodo: there can be potentially multiple video tracks so best to store this by track ID
             CustomData.SetAsync(VideoRotationAngleKey, angle);

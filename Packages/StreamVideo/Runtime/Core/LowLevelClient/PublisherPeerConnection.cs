@@ -165,7 +165,9 @@ namespace StreamVideo.Core.LowLevelClient
                     Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
                 }
 
+#if STREAM_DEBUG_ENABLED
                 LogPublisherOrientation();
+#endif
             }
             
             if (_negotiateRequested && !_isNegotiating)
@@ -946,11 +948,13 @@ namespace StreamVideo.Core.LowLevelClient
 
             var track = new VideoStreamTrack(_publisherVideoTrackTexture);
             track.Enabled = _mediaInputProvider.PublisherVideoTrackIsEnabled;
+#if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Log(Logs, "publisher.createTrack",
                 CameraOrientationDebug.DescribeScreen()
                 + " | " + CameraOrientationDebug.DescribeWebCam(_mediaInputProvider.VideoInput)
                 + " | " + CameraOrientationDebug.DescribeTexture("publisherRT", _publisherVideoTrackTexture)
                 + " | encodeCopy=VerticalFlipCopy after this RT");
+#endif
             return track;
         }
 
@@ -1067,6 +1071,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnVideoInputChanged(WebCamTexture webCamTexture) => ReplacePublisherVideoTrack();
 
+#if STREAM_DEBUG_ENABLED
         private void LogPublisherOrientation()
         {
             var webcam = _mediaInputProvider.VideoInput;
@@ -1080,6 +1085,7 @@ namespace StreamVideo.Core.LowLevelClient
                 + " path=" + (compositing ? "compositor" : "Graphics.Blit")
                 + " | encodeCopy=VerticalFlipCopy");
         }
+#endif
 
         private void OnPublisherVideoTrackIsEnabledChanged(bool isEnabled)
         {

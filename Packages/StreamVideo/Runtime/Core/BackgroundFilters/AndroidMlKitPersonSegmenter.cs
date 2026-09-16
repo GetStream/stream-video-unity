@@ -90,7 +90,9 @@ namespace StreamVideo.Core.BackgroundFilters
 
             Graphics.Blit(source, _downscaleRt);
             _lastSource = source;
+#if STREAM_DEBUG_ENABLED
             LogSubmitOrientation(source);
+#endif
 
             if (SystemInfo.supportsAsyncGPUReadback)
             {
@@ -141,7 +143,9 @@ namespace StreamVideo.Core.BackgroundFilters
             _disposed = true;
             _paused = true;
             _lastSource = null;
+#if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Flush(_logs);
+#endif
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             _hasPendingRgba = false;
@@ -312,6 +316,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
+#if STREAM_DEBUG_ENABLED
             var webcam = _lastSource as WebCamTexture;
             var webcamRot = webcam != null ? webcam.videoRotationAngle : -1;
             CameraOrientationDebug.Log(_logs, "mlkit.submit",
@@ -321,6 +326,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " mirrored=" + (webcam != null && webcam.videoVerticallyMirrored)
                 + " gfx=" + SystemInfo.graphicsDeviceType
                 + " asyncReadback=" + SystemInfo.supportsAsyncGPUReadback);
+#endif
             _native.Call("processAsync", ToSByteArray(rgba), width, height);
         }
 
@@ -452,6 +458,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _native = null;
         }
 
+#if STREAM_DEBUG_ENABLED
         private void LogSubmitOrientation(Texture source)
         {
             var webcam = source as WebCamTexture;
@@ -463,6 +470,7 @@ namespace StreamVideo.Core.BackgroundFilters
                     : "sourceIsWebCam=false")
                 + " blit=Graphics.Blit(source, downscale) no pixel rotation");
         }
+#endif
 
         private static void GetMaskInputSize(int sourceWidth, int sourceHeight, out int width, out int height)
         {

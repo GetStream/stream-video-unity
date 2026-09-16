@@ -60,6 +60,38 @@ namespace StreamVideo.Tests.Editor
             Assert.That(restored, Is.EqualTo(original),
                 "Rotate 180 then unrotate must yield the original webcam-space mask bytes.");
         }
+
+        [Test]
+        public void When_mask_flipped_vertically_expect_rows_reversed()
+        {
+            var original = new byte[] { 10, 20, 30, 40, 50, 60 };
+            PersonMaskOrientation.FlipVertical(original, 2, 3, 1);
+
+            Assert.That(original, Is.EqualTo(new byte[] { 50, 60, 30, 40, 10, 20 }),
+                "Vertical flip must reverse row order without changing width.");
+
+            PersonMaskOrientation.FlipVertical(original, 2, 3, 1);
+            Assert.That(original, Is.EqualTo(new byte[] { 10, 20, 30, 40, 50, 60 }),
+                "Flipping twice must restore the original bytes.");
+        }
+
+        [Test]
+        public void When_async_readback_on_gles_expect_no_y_flip()
+        {
+            Assert.That(PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(false, true), Is.False,
+                "GLES bottom-up readback already matches Bitmap/compositor layout.");
+            Assert.That(PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(true, true), Is.False,
+                "Never Y-flip GLES even if graphicsUVStartsAtTop is reported.");
+        }
+
+        [Test]
+        public void When_async_readback_on_vulkan_expect_y_flip()
+        {
+            Assert.That(PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(true, false), Is.True,
+                "Vulkan top-origin AsyncGPUReadback must be flipped once into y-down layout.");
+            Assert.That(PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(false, false), Is.False,
+                "Do not flip when the GPU origin already matches y-down.");
+        }
     }
 }
 #endif

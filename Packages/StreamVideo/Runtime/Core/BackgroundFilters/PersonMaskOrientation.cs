@@ -5,7 +5,8 @@ namespace StreamVideo.Core.BackgroundFilters
     /// <summary>
     /// Clockwise pixel-buffer rotation for ML Kit input and inverse mapping of the mask
     /// back to <c>WebCamTexture</c> UV space. Uses row-major layout with y increasing downward
-    /// (Android Bitmap / packed RGBA from GPU readback as currently uploaded).
+    /// (Android Bitmap / GLES GPU readback). Vulkan AsyncGPUReadback is flipped into this
+    /// layout once; the mask is not flipped again on upload.
     /// </summary>
     internal static class PersonMaskOrientation
     {
@@ -112,6 +113,57 @@ namespace StreamVideo.Core.BackgroundFilters
                     var destIndex = (destY * destWidth + destX) * bytesPerPixel;
                     Buffer.BlockCopy(source, srcIndex, dest, destIndex, bytesPerPixel);
                 }
+            }
+        }
+
+        /// <summary>
+        /// GLES AsyncGPUReadback matches this y-down layout with no CPU flip. Vulkan
+        /// (graphicsUVStartsAtTop) is the opposite; flip once after readback, never on
+        /// GLES and never a second time on mask upload. ReadPixels is already Unity
+        /// Texture2D bottom-up and must not use this path.
+        /// </summary>
+        public static bool NeedsAsyncGpuReadbackYFlip(bool graphicsUvStartsAtTop, bool isOpenGles)
+        {
+            if (isOpenGles)
+            {
+                return false;
+            }
+
+            return graphicsUvStartsAtTop;
+        }
+
+        public static void FlipVertical(byte[] buffer, int width, int height, int bytesPerPixel)
+        {
+            if (buffer == null)
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
+
+            if (width <= 0 || height <= 0 || bytesPerPixel <= 0)
+            {
+                throw new ArgumentException("width, height, and bytesPerPixel must be positive.");
+            }
+
+            var rowBytes = width * bytesPerPixel;
+            var needed = rowBytes * height;
+            if (buffer.Length < needed)
+            {
+                throw new ArgumentException("Buffer is smaller than width*height*bytesPerPixel.", nameof(buffer));
+            }
+
+            if (height < 2)
+            {
+                return;
+            }
+
+            var temp = new byte[rowBytes];
+            for (var y = 0; y < height / 2; y++)
+            {
+                var top = y * rowBytes;
+                var bottom = (height - 1 - y) * rowBytes;
+                Buffer.BlockCopy(buffer, top, temp, 0, rowBytes);
+                Buffer.BlockCopy(buffer, bottom, buffer, top, rowBytes);
+                Buffer.BlockCopy(temp, 0, buffer, bottom, rowBytes);
             }
         }
 

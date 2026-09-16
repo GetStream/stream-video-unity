@@ -16,6 +16,8 @@ namespace StreamVideo.Core.BackgroundFilters
     /// Input is scaled so the short side is <see cref="MinMaskInputSize"/> (ML Kit's 256px floor) while
     /// keeping the camera aspect. The downscaled buffer is rotated upright for ML Kit, then the mask
     /// is rotated back so compositor UVs match <c>WebCamTexture</c> space.
+    /// Vulkan AsyncGPUReadback is Y-flipped once into the GLES/Bitmap y-down layout; GLES is not
+    /// flipped. Mask upload does not flip again.
     /// <see cref="Dispose"/> is non-blocking: in-flight GPU readback and Java <c>process</c>
     /// release their own resources when they finish.
     /// </summary>
@@ -267,6 +269,15 @@ namespace StreamVideo.Core.BackgroundFilters
                 data.CopyTo(_pendingRgba);
                 _pendingWidth = request.width;
                 _pendingHeight = request.height;
+                var packedBytes = _pendingWidth * _pendingHeight * 4;
+                var isOpenGles = SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES2
+                    || SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3;
+                if (packedBytes > 0 && _pendingRgba.Length >= packedBytes
+                    && PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(SystemInfo.graphicsUVStartsAtTop, isOpenGles))
+                {
+                    PersonMaskOrientation.FlipVertical(_pendingRgba, _pendingWidth, _pendingHeight, 4);
+                }
+
                 _pendingRotation = _lastSourceRotation;
                 _hasPendingRgba = true;
                 TrySubmitPending();
@@ -317,6 +328,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _syncReadbackTexture.Apply(false, false);
             RenderTexture.active = prev;
 
+            // ReadPixels stores Texture2D bottom-up on every API; do not Y-flip this path.
             SubmitRgba(_syncReadbackTexture.GetRawTextureData(), width, height, _lastSourceRotation);
         }
 
@@ -395,6 +407,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _maskTexture.SetPixelData(mask, 0);
             _maskTexture.Apply(false, false);
             _hasMask = true;
+            // Mask bytes stay in the GLES y-down layout (Vulkan readback was already flipped).
 
 #if STREAM_DEBUG_ENABLED
             var hits = 0;

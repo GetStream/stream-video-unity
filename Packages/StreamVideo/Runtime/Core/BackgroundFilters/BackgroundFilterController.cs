@@ -28,7 +28,8 @@ namespace StreamVideo.Core.BackgroundFilters
 
         /// <summary>
         /// When <paramref name="segmenter"/> is omitted, uses <see cref="PersonSegmenterFactory"/>.
-        /// Android ML Kit <c>getClient</c> is deferred until the first successful <see cref="SetFilter"/>.
+        /// Native segmenter create (Android ML Kit / iOS Vision) is deferred until the first
+        /// successful <see cref="SetFilter"/>.
         /// </summary>
         public BackgroundFilterController(ILogs logs, IPersonSegmenter segmenter = null)
         {
@@ -74,7 +75,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            // Resume triggers lazy ML Kit create on Android. Fail closed: no-op, no throw.
+            // Resume triggers lazy native create (ML Kit / Vision). Fail closed: no-op, no throw.
             _segmenter.Resume();
             if (!IsSupported)
             {
@@ -125,7 +126,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            PumpAndroidMask();
+            _segmenter.PumpPendingMask();
 
             if (_scheduler.ShouldSegment(_frameIndex))
             {
@@ -220,18 +221,10 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " hasMask=" + _segmenter.HasMask
                 + " paused=" + _paused
                 + " compositing=" + IsCompositing
-                + " mlkitRotationDegrees=0 (webcam space)";
+                + " nativeRotationDegrees=0 (webcam space)";
             CameraOrientationDebug.Log(_logs, checkpoint, payload);
         }
 #endif
-
-        private void PumpAndroidMask()
-        {
-            if (_segmenter is AndroidMlKitPersonSegmenter androidSegmenter)
-            {
-                androidSegmenter.PumpPendingMask();
-            }
-        }
 
         private void UpdateSchedulerFromFrameTime()
         {

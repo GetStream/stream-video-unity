@@ -16,6 +16,11 @@ namespace StreamVideo.Core.BackgroundFilters
         /// </summary>
         void RequestSegmentation(Texture source);
 
+        /// <summary>
+        /// Drain a completed native mask onto the Unity texture. No-op when the backend is not async.
+        /// </summary>
+        void PumpPendingMask();
+
         void Pause();
 
         void Resume();

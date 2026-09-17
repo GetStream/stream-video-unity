@@ -5,7 +5,8 @@ namespace StreamVideo.Core.BackgroundFilters
     /// <summary>
     /// Platform person-segmenter. Android returns a deferred ML Kit wrapper that reports
     /// support from a classpath check; <c>Segmentation.getClient</c> runs on first enable.
-    /// Editor, iOS, and desktop return <see cref="NullPersonSegmenter"/>.
+    /// iOS returns a deferred Vision wrapper when iOS 15+ is available; the native client
+    /// is created on first enable. Editor and desktop return <see cref="NullPersonSegmenter"/>.
     /// </summary>
     internal static class PersonSegmenterFactory
     {
@@ -20,6 +21,15 @@ namespace StreamVideo.Core.BackgroundFilters
                 "platform=Android created=" + created.GetType().Name + " supported=" + created.IsSupported);
 #endif
             return created;
+#elif UNITY_IOS && !UNITY_EDITOR
+            var created = IosVisionPersonSegmenter.TryCreate(logs, out var segmenter)
+                ? (IPersonSegmenter)segmenter
+                : new NullPersonSegmenter();
+#if STREAM_DEBUG_ENABLED
+            CameraOrientationDebug.Log(logs, "segmenter.factory",
+                "platform=iOS created=" + created.GetType().Name + " supported=" + created.IsSupported);
+#endif
+            return created;
 #elif UNITY_EDITOR
             var unsupported = new NullPersonSegmenter();
 #if STREAM_DEBUG_ENABLED
@@ -31,7 +41,7 @@ namespace StreamVideo.Core.BackgroundFilters
             var unsupported = new NullPersonSegmenter();
 #if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Log(logs, "segmenter.factory",
-                "platform=other created=NullPersonSegmenter (iOS Vision is not implemented yet)");
+                "platform=other created=NullPersonSegmenter");
 #endif
             return unsupported;
 #endif

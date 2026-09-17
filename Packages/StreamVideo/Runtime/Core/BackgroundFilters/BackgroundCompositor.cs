@@ -8,8 +8,8 @@ namespace StreamVideo.Core.BackgroundFilters
     /// Light/Medium/Heavy all blur at half-res. Person pixels are excluded from the
     /// blur kernel so skin/hair does not bleed into the background.
     /// First pass is a default blit so Android OES WebCamTextures become a regular RT.
-    /// Must work on customer Android Vulkan-first and GLES3; do not assume the sample
-    /// project's GLES3-only graphics list.
+    /// Must work on customer Android Vulkan-first and GLES3, and iOS Metal; do not assume
+    /// the sample project's GLES3-only graphics list.
     /// </summary>
     internal sealed class BackgroundCompositor : IVideoFilter
     {

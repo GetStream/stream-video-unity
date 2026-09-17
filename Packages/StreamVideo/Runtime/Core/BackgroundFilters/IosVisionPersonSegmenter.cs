@@ -1,7 +1,8 @@
 using System;
 using StreamVideo.Libs.Logs;
 using UnityEngine;
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
+using System.Runtime.InteropServices;
 using UnityEngine.Rendering;
 #endif
 using Object = UnityEngine.Object;
@@ -9,42 +10,57 @@ using Object = UnityEngine.Object;
 namespace StreamVideo.Core.BackgroundFilters
 {
     /// <summary>
-    /// Android ML Kit selfie segmenter. Async process, last-mask reuse, downscaled input via AsyncGPUReadback.
-    /// GPU readback is pipelined with ML Kit: a new camera frame is read while the previous
-    /// <c>processAsync</c> is in flight, then submitted as soon as the segmenter is free.
-    /// Does not block <c>OnUpdate</c> and does not ReadPixels the publish texture.
-    /// Input is scaled so the short side is <see cref="MinMaskInputSize"/> (ML Kit's 256px floor) while
-    /// keeping the camera aspect. The downscaled buffer is rotated upright for ML Kit, then the mask
-    /// is rotated back so compositor UVs match <c>WebCamTexture</c> space.
-    /// Vulkan AsyncGPUReadback is Y-flipped once into the GLES/Bitmap y-down layout; GLES is not
-    /// flipped. Mask upload does not flip again.
-    /// <see cref="TryCreate"/> only checks the ML Kit classpath. <c>Segmentation.getClient</c>
-    /// runs on the first <see cref="Resume"/> / <see cref="RequestSegmentation"/>.
-    /// <see cref="Dispose"/> is non-blocking: in-flight GPU readback and Java <c>process</c>
-    /// release their own resources when they finish.
+    /// iOS Vision person segmenter (<c>VNGeneratePersonSegmentationRequest</c>, iOS 15+).
+    /// Same pipeline as Android for readback, but Vision is fed webcam-space pixels
+    /// (no CPU rotate). Stream's Swift SDK does the same: the mask size is quality-based
+    /// and typically landscape, so rotating to portrait then stretching the mask onto
+    /// that buffer pins the person to the center. Metal AsyncGPUReadback is Y-flipped
+    /// once into the GLES/Bitmap y-down layout, then flipped again on Texture2D upload
+    /// so compositor UVs match iOS <c>WebCamTexture</c> (regular 2D, UV y=0 at bottom).
+    /// Quality is Balanced on A12+ (8-core Neural Engine) and Fast on older devices,
+    /// matching Stream's Swift SDK. Native <c>perform</c> runs off the Unity thread.
+    /// <see cref="TryCreate"/> only checks the iOS version. The Vision client is created
+    /// on the first <see cref="Resume"/> / <see cref="RequestSegmentation"/>.
     /// </summary>
-    internal sealed class AndroidMlKitPersonSegmenter : IPersonSegmenter
+    internal sealed class IosVisionPersonSegmenter : IPersonSegmenter
     {
         public const int MinMaskInputSize = 256;
 
         /// <summary>
-        /// Returns a deferred segmenter when ML Kit is on the classpath. Does not call
-        /// <c>Segmentation.getClient</c>.
+        /// Returns a deferred segmenter on iOS 15+ device builds. Does not create the
+        /// Vision request until the filter is enabled.
         /// </summary>
-        public static bool TryCreate(ILogs logs, out AndroidMlKitPersonSegmenter segmenter)
+        public static bool TryCreate(ILogs logs, out IosVisionPersonSegmenter segmenter)
         {
             segmenter = null;
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (!IsMlKitOnClasspath(logs))
+#if UNITY_IOS && !UNITY_EDITOR
+            if (!NativeIsSupported())
             {
+                logs?.Warning(
+                    "Background filter: person segmentation requires iOS 15 or later on this device.");
                 return false;
             }
 
-            segmenter = new AndroidMlKitPersonSegmenter(logs);
+            segmenter = new IosVisionPersonSegmenter(logs);
             return true;
 #else
             return false;
 #endif
+        }
+
+        /// <summary>
+        /// Balanced Vision quality on A12+ (iPhone XS / iPad Pro 3rd gen and newer).
+        /// Fast on A11 and below, simulators, and unknown identifiers.
+        /// </summary>
+        internal static bool UsesBalancedQuality(string deviceModel)
+        {
+            if (string.IsNullOrEmpty(deviceModel))
+            {
+                return false;
+            }
+
+            return HasIdentifierMajorAtLeast(deviceModel, "iPhone", 11)
+                || HasIdentifierMajorAtLeast(deviceModel, "iPad", 8);
         }
 
         public bool IsSupported => _isSupported;
@@ -60,13 +76,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (_native == null)
-            {
-                return;
-            }
-
-            // Pipeline GPU readback with ML Kit so mask latency is max(readback, process), not the sum.
+#if UNITY_IOS && !UNITY_EDITOR
             EnsureDownscaleRt(source);
             if (_downscaleRt == null)
             {
@@ -75,8 +85,8 @@ namespace StreamVideo.Core.BackgroundFilters
 
             Graphics.Blit(source, _downscaleRt);
             _lastSource = source;
-            _lastSourceRotation = GetSourceRotationDegrees(source);
 #if STREAM_DEBUG_ENABLED
+            _lastSourceRotation = GetSourceRotationDegrees(source);
             LogSubmitOrientation(source);
 #endif
 
@@ -96,15 +106,46 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            // Last-resort: downscaled input only (never the publish RT).
             ReadbackSynchronouslyAndProcess();
+#endif
+        }
+
+        public void PumpPendingMask()
+        {
+#if UNITY_IOS && !UNITY_EDITOR
+            if (_disposed || _paused || !_nativeCreated)
+            {
+                return;
+            }
+
+            if (_maskScratch == null)
+            {
+                _maskScratch = new byte[MinMaskInputSize * MinMaskInputSize];
+            }
+
+            var copied = NativeTakeMaskIfNew(_maskScratch, _maskScratch.Length, out var width, out var height,
+                out var rotation);
+            if (copied < 0)
+            {
+                _maskScratch = new byte[-copied];
+                copied = NativeTakeMaskIfNew(_maskScratch, _maskScratch.Length, out width, out height, out rotation);
+            }
+
+            if (copied > 0 && width > 0 && height > 0)
+            {
+                var webcamMask = PersonMaskOrientation.UnrotateClockwise(_maskScratch, width, height, 1, rotation,
+                    out var webcamWidth, out var webcamHeight);
+                UploadMask(webcamMask, webcamWidth, webcamHeight);
+            }
+
+            TrySubmitPending();
 #endif
         }
 
         public void Pause()
         {
             _paused = true;
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
             _hasPendingRgba = false;
 #endif
         }
@@ -133,11 +174,10 @@ namespace StreamVideo.Core.BackgroundFilters
             CameraOrientationDebug.Flush(_logs);
 #endif
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
             _hasPendingRgba = false;
             _pendingRgba = null;
-            _uprightRgba = null;
-            _rgbaSbytes = null;
+            _maskScratch = null;
             DestroyNative();
             DestroyTexture(ref _syncReadbackTexture);
 #endif
@@ -149,32 +189,6 @@ namespace StreamVideo.Core.BackgroundFilters
             }
         }
 
-        public void PumpPendingMask()
-        {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (_disposed || _native == null || _paused)
-            {
-                return;
-            }
-
-            var width = _native.Call<int>("getMaskWidth");
-            var height = _native.Call<int>("getMaskHeight");
-            var rotation = _native.Call<int>("getMaskRotation");
-            var maskBytes = _native.Call<sbyte[]>("takeMaskIfNew");
-            if (maskBytes != null && width > 0 && height > 0)
-            {
-                var packed = ToByteArray(maskBytes);
-                var webcamMask = PersonMaskOrientation.UnrotateClockwise(packed, width, height, 1, rotation,
-                    out var webcamWidth, out var webcamHeight);
-                UploadMask(webcamMask, webcamWidth, webcamHeight);
-            }
-
-            TrySubmitPending();
-#endif
-        }
-
-        private const string JavaClass = "io.getstream.unitybackgroundfilters.UnityMlKitPersonSegmenter";
-
         private readonly ILogs _logs;
         private bool _disposed;
         private bool _paused;
@@ -184,21 +198,35 @@ namespace StreamVideo.Core.BackgroundFilters
         private Texture2D _maskTexture;
         private RenderTexture _downscaleRt;
         private Texture _lastSource;
+#if STREAM_DEBUG_ENABLED
         private int _lastSourceRotation;
-#if UNITY_ANDROID && !UNITY_EDITOR
+#endif
+#if UNITY_IOS && !UNITY_EDITOR
         private bool _createAttempted;
-        private AndroidJavaObject _native;
+        private bool _nativeCreated;
         private Texture2D _syncReadbackTexture;
-        private sbyte[] _rgbaSbytes;
         private byte[] _pendingRgba;
-        private byte[] _uprightRgba;
+        private byte[] _maskScratch;
         private int _pendingWidth;
         private int _pendingHeight;
-        private int _pendingRotation;
         private bool _hasPendingRgba;
 #endif
 
-        private AndroidMlKitPersonSegmenter(ILogs logs)
+        private static bool HasIdentifierMajorAtLeast(string identifier, string prefix, int minMajor)
+        {
+            if (identifier.Length <= prefix.Length
+                || !identifier.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var rest = identifier.Substring(prefix.Length);
+            var comma = rest.IndexOf(',');
+            var majorText = comma >= 0 ? rest.Substring(0, comma) : rest;
+            return int.TryParse(majorText, out var major) && major >= minMajor;
+        }
+
+        private IosVisionPersonSegmenter(ILogs logs)
         {
             _logs = logs;
         }
@@ -210,8 +238,8 @@ namespace StreamVideo.Core.BackgroundFilters
                 return false;
             }
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (_native != null)
+#if UNITY_IOS && !UNITY_EDITOR
+            if (_nativeCreated)
             {
                 return true;
             }
@@ -224,36 +252,19 @@ namespace StreamVideo.Core.BackgroundFilters
             _createAttempted = true;
             try
             {
-                _native = CreateNative();
-                if (_native == null)
+                if (!NativeCreate(UsesBalancedQuality(SystemInfo.deviceModel) ? 1 : 0))
                 {
-                    FailCreate("Background filter: ML Kit is not available on this device.");
+                    FailCreate("Background filter: failed to create the Vision person segmenter.");
                     return false;
                 }
 
-                if (!_native.Call<bool>("create"))
-                {
-                    DestroyNative();
-                    FailCreate("Background filter: failed to create the ML Kit segmenter.");
-                    return false;
-                }
-
-#if STREAM_DEBUG_ENABLED
-                try
-                {
-                    _native.Call("setDebugLogs", true);
-                }
-                catch (Exception e)
-                {
-                    _logs?.Warning("Background filter: failed to enable ML Kit debug logs: " + e.Message);
-                }
-#endif
+                _nativeCreated = true;
                 return true;
             }
             catch (Exception e)
             {
                 DestroyNative();
-                FailCreate("Background filter: ML Kit init failed: " + e.Message);
+                FailCreate("Background filter: Vision init failed: " + e.Message);
                 return false;
             }
 #else
@@ -261,38 +272,46 @@ namespace StreamVideo.Core.BackgroundFilters
 #endif
         }
 
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
+        [DllImport("__Internal")]
+        private static extern bool _StreamVisionPersonSegmenter_IsSupported();
+
+        [DllImport("__Internal")]
+        private static extern bool _StreamVisionPersonSegmenter_Create(int useBalanced);
+
+        [DllImport("__Internal")]
+        private static extern void _StreamVisionPersonSegmenter_Destroy();
+
+        [DllImport("__Internal")]
+        private static extern bool _StreamVisionPersonSegmenter_IsBusy();
+
+        [DllImport("__Internal")]
+        private static extern void _StreamVisionPersonSegmenter_ProcessAsync(byte[] rgba, int length, int width,
+            int height, int rotationDegrees);
+
+        [DllImport("__Internal")]
+        private static extern int _StreamVisionPersonSegmenter_TakeMaskIfNew(byte[] dest, int destLength,
+            out int width, out int height, out int rotation);
+
+        private static bool NativeIsSupported() => _StreamVisionPersonSegmenter_IsSupported();
+
+        private static bool NativeCreate(int useBalanced) => _StreamVisionPersonSegmenter_Create(useBalanced);
+
+        private static void NativeDestroy() => _StreamVisionPersonSegmenter_Destroy();
+
+        private static bool NativeIsBusy() => _StreamVisionPersonSegmenter_IsBusy();
+
+        private static void NativeProcessAsync(byte[] rgba, int length, int width, int height, int rotationDegrees)
+            => _StreamVisionPersonSegmenter_ProcessAsync(rgba, length, width, height, rotationDegrees);
+
+        private static int NativeTakeMaskIfNew(byte[] dest, int destLength, out int width, out int height,
+            out int rotation)
+            => _StreamVisionPersonSegmenter_TakeMaskIfNew(dest, destLength, out width, out height, out rotation);
+
         private void FailCreate(string message)
         {
             _isSupported = false;
             _logs?.Warning(message);
-        }
-
-        private static bool IsMlKitOnClasspath(ILogs logs)
-        {
-            try
-            {
-                using (var clazz = new AndroidJavaClass(JavaClass))
-                {
-                    if (clazz.CallStatic<bool>("isSupported"))
-                    {
-                        return true;
-                    }
-                }
-
-                logs?.Warning("Background filter: ML Kit selfie segmentation is not supported.");
-                return false;
-            }
-            catch (Exception e)
-            {
-                logs?.Warning("Background filter: ML Kit init failed: " + e.Message);
-                return false;
-            }
-        }
-
-        private static AndroidJavaObject CreateNative()
-        {
-            return new AndroidJavaObject(JavaClass);
         }
 
         private void OnReadback(AsyncGPUReadbackRequest request)
@@ -301,7 +320,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
             try
             {
-                if (_disposed || _paused || _native == null)
+                if (_disposed || _paused || !_nativeCreated)
                 {
                     return;
                 }
@@ -331,7 +350,6 @@ namespace StreamVideo.Core.BackgroundFilters
                     PersonMaskOrientation.FlipVertical(_pendingRgba, _pendingWidth, _pendingHeight, 4);
                 }
 
-                _pendingRotation = _lastSourceRotation;
                 _hasPendingRgba = true;
                 TrySubmitPending();
             }
@@ -346,17 +364,17 @@ namespace StreamVideo.Core.BackgroundFilters
 
         private void TrySubmitPending()
         {
-            if (_disposed || !_hasPendingRgba || _paused || _native == null)
+            if (_disposed || !_hasPendingRgba || _paused || !_nativeCreated)
             {
                 return;
             }
 
-            if (_native.Call<bool>("isBusy"))
+            if (NativeIsBusy())
             {
                 return;
             }
 
-            SubmitRgba(_pendingRgba, _pendingWidth, _pendingHeight, _pendingRotation);
+            SubmitRgba(_pendingRgba, _pendingWidth, _pendingHeight);
             _hasPendingRgba = false;
         }
 
@@ -381,49 +399,34 @@ namespace StreamVideo.Core.BackgroundFilters
             _syncReadbackTexture.Apply(false, false);
             RenderTexture.active = prev;
 
-            // ReadPixels stores Texture2D bottom-up on every API; do not Y-flip this path.
-            SubmitRgba(_syncReadbackTexture.GetRawTextureData(), width, height, _lastSourceRotation);
+            SubmitRgba(_syncReadbackTexture.GetRawTextureData(), width, height);
         }
 
-        private void SubmitRgba(byte[] rgba, int width, int height, int rotationDegrees)
+        private void SubmitRgba(byte[] rgba, int width, int height)
         {
-            if (_disposed || rgba == null || _native == null)
+            if (_disposed || rgba == null || !_nativeCreated)
             {
                 return;
             }
 
-            var rotation = PersonMaskOrientation.NormalizeClockwiseDegrees(rotationDegrees);
-            var submitRgba = rgba;
-            var submitWidth = width;
-            var submitHeight = height;
-            if (rotation != 0)
-            {
-                PersonMaskOrientation.GetRotatedSize(width, height, rotation, out submitWidth, out submitHeight);
-                var needed = submitWidth * submitHeight * 4;
-                if (_uprightRgba == null || _uprightRgba.Length < needed)
-                {
-                    _uprightRgba = new byte[needed];
-                }
-
-                PersonMaskOrientation.RotateClockwise(rgba, width, height, 4, rotation, _uprightRgba);
-                submitRgba = _uprightRgba;
-            }
-
+            // Keep webcam UVs. Vision's output size follows qualityLevel, not the input
+            // aspect; rotating upright (Android ML Kit path) stretches a landscape mask
+            // onto a portrait buffer and the cutout sticks to the center.
 #if STREAM_DEBUG_ENABLED
             var webcam = _lastSource as WebCamTexture;
             var webcamRot = webcam != null ? webcam.videoRotationAngle : -1;
-            CameraOrientationDebug.Log(_logs, "mlkit.submit",
+            CameraOrientationDebug.Log(_logs, "vision.submit",
                 "rgba=" + width + "x" + height + " bytes=" + rgba.Length
-                + " upright=" + submitWidth + "x" + submitHeight
-                + " mlkitRotationDegrees=0 (pixels rotated CW " + rotation + ")"
+                + " visionRotationDegrees=0 (webcam space, not rotated)"
                 + " webcamRot=" + webcamRot
                 + " mirrored=" + (webcam != null && webcam.videoVerticallyMirrored)
                 + " gfx=" + SystemInfo.graphicsDeviceType
                 + " asyncReadback=" + SystemInfo.supportsAsyncGPUReadback);
 #endif
-            _native.Call("processAsync", ToSByteArray(submitRgba), submitWidth, submitHeight, rotation);
+            NativeProcessAsync(rgba, width * height * 4, width, height, 0);
         }
 
+#if STREAM_DEBUG_ENABLED
         private static int GetSourceRotationDegrees(Texture source)
         {
             var webcam = source as WebCamTexture;
@@ -434,6 +437,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
             return PersonMaskOrientation.NormalizeClockwiseDegrees(webcam.videoRotationAngle);
         }
+#endif
 
         private void UploadMask(byte[] mask, int width, int height)
         {
@@ -453,14 +457,20 @@ namespace StreamVideo.Core.BackgroundFilters
                 {
                     filterMode = FilterMode.Bilinear,
                     wrapMode = TextureWrapMode.Clamp,
-                    name = "StreamMlKitPersonMask",
+                    name = "StreamVisionPersonMask",
                 };
+            }
+
+            var isOpenGles = SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES2
+                || SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3;
+            if (PersonMaskOrientation.NeedsYFlipFromBitmapLayoutToTexture2D(isOpenGles))
+            {
+                PersonMaskOrientation.FlipVertical(mask, width, height, 1);
             }
 
             _maskTexture.SetPixelData(mask, 0);
             _maskTexture.Apply(false, false);
             _hasMask = true;
-            // Mask bytes stay in the GLES y-down layout (Vulkan readback was already flipped).
 
 #if STREAM_DEBUG_ENABLED
             var hits = 0;
@@ -482,34 +492,6 @@ namespace StreamVideo.Core.BackgroundFilters
                 + " | " + CameraOrientationDebug.DescribeWebCam(_lastSource as WebCamTexture),
                 hits / (float)Mathf.Max(1, needed));
 #endif
-        }
-
-        private static byte[] ToByteArray(sbyte[] source)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            var dest = new byte[source.Length];
-            Buffer.BlockCopy(source, 0, dest, 0, source.Length);
-            return dest;
-        }
-
-        private sbyte[] ToSByteArray(byte[] source)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            if (_rgbaSbytes == null || _rgbaSbytes.Length < source.Length)
-            {
-                _rgbaSbytes = new sbyte[source.Length];
-            }
-
-            Buffer.BlockCopy(source, 0, _rgbaSbytes, 0, source.Length);
-            return _rgbaSbytes;
         }
 
         private void EnsureDownscaleRt(Texture source)
@@ -538,43 +520,34 @@ namespace StreamVideo.Core.BackgroundFilters
 
         private void DestroyNative()
         {
-            if (_native == null)
+            if (!_nativeCreated)
             {
                 return;
             }
 
             try
             {
-                _native.Call("destroy");
+                NativeDestroy();
             }
             catch (Exception e)
             {
-                _logs?.Warning("Background filter: ML Kit destroy failed: " + e.Message);
+                _logs?.Warning("Background filter: Vision destroy failed: " + e.Message);
             }
 
-            try
-            {
-                _native.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logs?.Warning("Background filter: ML Kit JNI dispose failed: " + e.Message);
-            }
-
-            _native = null;
+            _nativeCreated = false;
         }
 
 #if STREAM_DEBUG_ENABLED
         private void LogSubmitOrientation(Texture source)
         {
             var webcam = source as WebCamTexture;
-            CameraOrientationDebug.Log(_logs, "mlkit.downscale",
+            CameraOrientationDebug.Log(_logs, "vision.downscale",
                 CameraOrientationDebug.DescribeTexture("source", source)
                 + " | " + CameraOrientationDebug.DescribeTexture("downscale", _downscaleRt)
                 + " | " + (webcam != null
                     ? CameraOrientationDebug.DescribeWebCam(webcam)
                     : "sourceIsWebCam=false")
-                + " blit=Graphics.Blit(source, downscale) then CPU rotate upright for ML Kit"
+                + " blit=Graphics.Blit(source, downscale); Vision runs in webcam space"
                 + " sourceRot=" + _lastSourceRotation);
         }
 #endif

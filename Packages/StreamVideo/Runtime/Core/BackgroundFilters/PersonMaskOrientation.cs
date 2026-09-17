@@ -3,10 +3,11 @@ using System;
 namespace StreamVideo.Core.BackgroundFilters
 {
     /// <summary>
-    /// Clockwise pixel-buffer rotation for ML Kit input and inverse mapping of the mask
-    /// back to <c>WebCamTexture</c> UV space. Uses row-major layout with y increasing downward
-    /// (Android Bitmap / GLES GPU readback). Vulkan AsyncGPUReadback is flipped into this
-    /// layout once; the mask is not flipped again on upload.
+    /// Clockwise pixel-buffer rotation for native segmenter input and inverse mapping of the
+    /// mask back to <c>WebCamTexture</c> UV space. Uses row-major layout with y increasing
+    /// downward (Android Bitmap / GLES GPU readback). Vulkan and Metal AsyncGPUReadback are
+    /// flipped into this layout once. iOS Metal flips again on Texture2D upload so the mask
+    /// matches a regular 2D <c>WebCamTexture</c>; Android GLES does not.
     /// </summary>
     internal static class PersonMaskOrientation
     {
@@ -117,10 +118,11 @@ namespace StreamVideo.Core.BackgroundFilters
         }
 
         /// <summary>
-        /// GLES AsyncGPUReadback matches this y-down layout with no CPU flip. Vulkan
-        /// (graphicsUVStartsAtTop) is the opposite; flip once after readback, never on
-        /// GLES and never a second time on mask upload. ReadPixels is already Unity
-        /// Texture2D bottom-up and must not use this path.
+        /// GLES AsyncGPUReadback matches this y-down layout with no CPU flip. Vulkan and
+        /// Metal (graphicsUVStartsAtTop) are the opposite; flip once after readback.
+        /// ReadPixels is already Unity Texture2D bottom-up and must not use this path.
+        /// iOS Metal still needs <see cref="NeedsYFlipFromBitmapLayoutToTexture2D"/> on
+        /// mask upload: a regular 2D WebCamTexture has UV y=0 at the bottom, unlike GLES OES.
         /// </summary>
         public static bool NeedsAsyncGpuReadbackYFlip(bool graphicsUvStartsAtTop, bool isOpenGles)
         {
@@ -131,6 +133,16 @@ namespace StreamVideo.Core.BackgroundFilters
 
             return graphicsUvStartsAtTop;
         }
+
+        /// <summary>
+        /// Bitmap y-down row 0 is the top of the image. <c>Texture2D.SetPixelData</c> row 0
+        /// is the bottom. GLES OES <c>WebCamTexture</c> sampling matches y-down bytes in a
+        /// Texture2D, so Android does not flip on upload. iOS Metal <c>WebCamTexture</c> is a
+        /// regular 2D texture (UV y=0 = bottom), so the mask must be flipped on upload.
+        /// Without that, a vertical mismatch in sensor space shows up as a left/right shift
+        /// after a 90° portrait preview rotation and only lines up when the head is centered.
+        /// </summary>
+        public static bool NeedsYFlipFromBitmapLayoutToTexture2D(bool isOpenGles) => !isOpenGles;
 
         public static void FlipVertical(byte[] buffer, int width, int height, int bytesPerPixel)
         {

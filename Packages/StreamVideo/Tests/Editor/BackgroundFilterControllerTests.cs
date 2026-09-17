@@ -219,6 +219,10 @@ namespace StreamVideo.Tests.Editor
             {
             }
 
+            public void PumpPendingMask()
+            {
+            }
+
             public void Pause()
             {
             }

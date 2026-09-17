@@ -85,12 +85,21 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
-        public void When_async_readback_on_vulkan_expect_y_flip()
+        public void When_async_readback_on_vulkan_or_metal_expect_y_flip()
         {
             Assert.That(PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(true, false), Is.True,
-                "Vulkan top-origin AsyncGPUReadback must be flipped once into y-down layout.");
+                "Vulkan and Metal top-origin AsyncGPUReadback must be flipped once into y-down layout.");
             Assert.That(PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(false, false), Is.False,
                 "Do not flip when the GPU origin already matches y-down.");
+        }
+
+        [Test]
+        public void When_uploading_bitmap_layout_mask_expect_texture2d_flip_on_metal_only()
+        {
+            Assert.That(PersonMaskOrientation.NeedsYFlipFromBitmapLayoutToTexture2D(true), Is.False,
+                "GLES OES WebCamTexture already matches Bitmap y-down bytes in a Texture2D.");
+            Assert.That(PersonMaskOrientation.NeedsYFlipFromBitmapLayoutToTexture2D(false), Is.True,
+                "iOS Metal WebCamTexture is a regular 2D texture; flip Bitmap-layout mask bytes on upload.");
         }
     }
 }

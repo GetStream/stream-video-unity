@@ -363,7 +363,9 @@ namespace StreamVideo.Core.StatefulModels
 
         /// <summary>
         /// True when a person-segmenter backend is available on this platform/device.
-        /// Unsupported devices no-op <see cref="SetBackgroundFilter"/> and do not throw.
+        /// Android uses ML Kit; iOS 15+ uses Vision. Older iOS versions and other
+        /// platforms report false. Unsupported devices no-op <see cref="SetBackgroundFilter"/>
+        /// and do not throw.
         /// </summary>
         bool IsBackgroundFilterSupported { get; }
 

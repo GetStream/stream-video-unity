@@ -27,6 +27,10 @@ namespace StreamVideo.Core.BackgroundFilters
             EnsureMask(width, height);
         }
 
+        public void PumpPendingMask()
+        {
+        }
+
         public void Pause()
         {
         }

@@ -149,6 +149,35 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
+        public void When_paused_and_destination_released_expect_composite_passthroughs()
+        {
+            var segmenter = new EditorStubPersonSegmenter();
+            _controller = new BackgroundFilterController(new UnityLogs(), segmenter);
+            _controller.SetFilter(BackgroundFilter.Blur());
+
+            _destination = CreateDestination();
+            segmenter.RequestSegmentation(Texture2D.whiteTexture);
+            Assert.That(segmenter.HasMask, Is.True,
+                "Stub should produce a mask after RequestSegmentation.");
+
+            _controller.Composite(Texture2D.whiteTexture, _destination);
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Apply),
+                "Precondition: composite should apply with a mask.");
+
+            _controller.Pause();
+            _destination.Release();
+            _controller.Composite(Texture2D.blackTexture, _destination);
+
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Passthrough),
+                "Paused Composite must blit when the publisher RT was lost so video can restart.");
+
+            _controller.Resume();
+            _controller.Composite(Texture2D.blackTexture, _destination);
+            Assert.That(_controller.LastCompositePath, Is.EqualTo(BackgroundFilterCompositePath.Apply),
+                "Resume after a lost publisher RT should composite again.");
+        }
+
+        [Test]
         public void When_scheduler_reaches_disable_tier_expect_active_filter_remains_and_composite_does_not_passthrough_live_source()
         {
             var segmenter = new EditorStubPersonSegmenter();

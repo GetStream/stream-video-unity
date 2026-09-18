@@ -101,6 +101,54 @@ namespace StreamVideo.Tests.Editor
                 "Supported GPU must composite rather than passthrough.");
         }
 
+        [Test]
+        public void When_apply_expect_destination_size_is_unchanged()
+        {
+            IgnoreIfBackgroundFilterShadersUnsupported();
+
+            _compositor = new BackgroundCompositor();
+            _destination = CreateDestination();
+            const int width = 16;
+            const int height = 16;
+
+            _compositor.Apply(Texture2D.whiteTexture, _destination);
+
+            Assert.That(_destination.width, Is.EqualTo(width),
+                "Composite must keep publisher RT width so receivers still apply videoRotationAngle.");
+            Assert.That(_destination.height, Is.EqualTo(height),
+                "Composite must keep publisher RT height so receivers still apply videoRotationAngle.");
+            Assert.That(_compositor.LastApplyWasPassthrough, Is.False,
+                "Size-preserving apply must still composite.");
+        }
+
+        [Test]
+        public void When_copy_args_missing_expect_can_copy_texture_is_false()
+        {
+            Assert.That(BackgroundCompositor.CanCopyTexture(null, null), Is.False,
+                "CopyTexture requires both RTs.");
+
+            _destination = CreateDestination();
+            Assert.That(BackgroundCompositor.CanCopyTexture(null, _destination), Is.False,
+                "CopyTexture requires a source RT.");
+            Assert.That(BackgroundCompositor.CanCopyTexture(_destination, null), Is.False,
+                "CopyTexture requires a destination RT.");
+        }
+
+        [Test]
+        public void When_copy_args_not_created_expect_can_copy_texture_is_false()
+        {
+            _destination = CreateDestination();
+            var released = CreateDestination();
+            released.Release();
+
+            Assert.That(BackgroundCompositor.CanCopyTexture(released, _destination), Is.False,
+                "CopyTexture must not run on a released source so Apply can blit after GPU context loss.");
+            Assert.That(BackgroundCompositor.CanCopyTexture(_destination, released), Is.False,
+                "CopyTexture must not run on a released destination so Apply can blit after GPU context loss.");
+
+            UnityEngine.Object.DestroyImmediate(released);
+        }
+
         private static void IgnoreIfBackgroundFilterShadersUnsupported()
         {
             var shader = Shader.Find("Hidden/StreamVideo/BackgroundMaskBlend")

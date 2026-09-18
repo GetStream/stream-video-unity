@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.BackgroundFilters
@@ -7,7 +8,11 @@ namespace StreamVideo.Core.BackgroundFilters
     /// GPU composite: temporal mask EMA, downscaled separable blur, mask blend.
     /// Light/Medium/Heavy all blur at half-res. Person pixels are excluded from the
     /// blur kernel so skin/hair does not bleed into the background.
-    /// First pass is a default blit so Android OES WebCamTextures become a regular RT.
+    /// First pass is a default blit into <c>destination</c> so sampling matches the
+    /// unfiltered publisher path (Android OES and iOS Metal <c>WebCamTexture</c>).
+    /// Custom-shader blits stay on internal RTs; the last hop back to the publisher
+    /// RT is a bit copy (or default blit). Custom blits into the WebRTC RT on iOS
+    /// Metal showed up 90° CCW on Android receivers.
     /// Must work on customer Android Vulkan-first and GLES3, and iOS Metal; do not assume
     /// the sample project's GLES3-only graphics list.
     /// </summary>
@@ -46,6 +51,11 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
+            if (!destination.IsCreated())
+            {
+                destination.Create();
+            }
+
             EnsureResources(destination.width, destination.height, destination.format);
 
             if (!IsReady)
@@ -57,7 +67,10 @@ namespace StreamVideo.Core.BackgroundFilters
 
             LastApplyWasPassthrough = false;
 
-            Graphics.Blit(source, _sourceRt);
+            // Same WebCamTexture sampling as unfiltered publish. Custom shaders into
+            // this WebRTC RT on iOS Metal were 90° CCW vs that blit on Android.
+            Graphics.Blit(source, destination);
+            CopyCompatibleRt(destination, _sourceRt);
 
             if (_mask != null)
             {
@@ -100,12 +113,14 @@ namespace StreamVideo.Core.BackgroundFilters
 #else
             _blendMaterial.SetFloat(DebugModeId, 0f);
 #endif
-            Graphics.Blit(_sourceRt, destination, _blendMaterial);
+            Graphics.Blit(_sourceRt, _outputRt, _blendMaterial);
+            CopyCompatibleRt(_outputRt, destination);
         }
 
         public void Release()
         {
             ReleaseRt(ref _sourceRt);
+            ReleaseRt(ref _outputRt);
             ReleaseRt(ref _blurRt);
             ReleaseRt(ref _blurPingRt);
             ReleaseRt(ref _maskRt);
@@ -130,13 +145,14 @@ namespace StreamVideo.Core.BackgroundFilters
         private bool HasMaterials =>
             _temporalMaterial != null && _blurMaterial != null && _blendMaterial != null;
 
-        private bool HasRts => IsUsable(_sourceRt) && IsUsable(_blurRt) && IsUsable(_blurPingRt)
-            && IsUsable(_maskRt) && IsUsable(_prevMaskRt);
+        private bool HasRts => IsUsable(_sourceRt) && IsUsable(_outputRt) && IsUsable(_blurRt)
+            && IsUsable(_blurPingRt) && IsUsable(_maskRt) && IsUsable(_prevMaskRt);
 
         private Texture _mask;
         private BlurIntensity _intensity = BlurIntensity.Heavy;
 
         private RenderTexture _sourceRt;
+        private RenderTexture _outputRt;
         private RenderTexture _blurRt;
         private RenderTexture _blurPingRt;
         private RenderTexture _maskRt;
@@ -184,6 +200,7 @@ namespace StreamVideo.Core.BackgroundFilters
             var blurH = Mathf.Max(2, height / 2);
 
             _sourceRt = EnsureColorRt(_sourceRt, width, height, format, "StreamBgFilterSource");
+            _outputRt = EnsureColorRt(_outputRt, width, height, format, "StreamBgFilterOutput");
             _blurRt = EnsureColorRt(_blurRt, blurW, blurH, format, "StreamBgFilterBlur");
             _blurPingRt = EnsureColorRt(_blurPingRt, blurW, blurH, format, "StreamBgFilterBlurPing");
             var maskFormat = MaskRtFormatOverride ?? ChooseMaskRtFormat();
@@ -193,6 +210,7 @@ namespace StreamVideo.Core.BackgroundFilters
             if (!HasRts)
             {
                 ReleaseRt(ref _sourceRt);
+                ReleaseRt(ref _outputRt);
                 ReleaseRt(ref _blurRt);
                 ReleaseRt(ref _blurPingRt);
                 ReleaseRt(ref _maskRt);
@@ -243,6 +261,27 @@ namespace StreamVideo.Core.BackgroundFilters
         }
 
         internal static bool IsUsable(RenderTexture rt) => rt != null && rt.IsCreated();
+
+        internal static bool CanCopyTexture(RenderTexture source, RenderTexture destination)
+        {
+            return IsUsable(source) && IsUsable(destination)
+                && source.width == destination.width
+                && source.height == destination.height
+                && source.antiAliasing == destination.antiAliasing
+                && source.graphicsFormat == destination.graphicsFormat
+                && (SystemInfo.copyTextureSupport & CopyTextureSupport.Basic) != 0;
+        }
+
+        private static void CopyCompatibleRt(RenderTexture source, RenderTexture destination)
+        {
+            if (CanCopyTexture(source, destination))
+            {
+                Graphics.CopyTexture(source, destination);
+                return;
+            }
+
+            Graphics.Blit(source, destination);
+        }
 
         private static RenderTexture EnsureColorRt(RenderTexture current, int width, int height,
             RenderTextureFormat format, string name)

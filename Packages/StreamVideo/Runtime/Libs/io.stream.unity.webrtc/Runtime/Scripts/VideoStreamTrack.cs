@@ -383,7 +383,19 @@ namespace Unity.WebRTC
             //  - duplicate RenderTexture from its source texture
             //  - call Graphics.Blit command with flip material every frame
             //  - it might be better to implement this if possible
+            if (destTexture_ != null && !destTexture_.IsCreated())
+            {
+                destTexture_.Create();
+            }
+
             copyTexture_(sourceTexture_, destTexture_);
+
+            // GPU context restore (app background) can replace the native texture
+            // without changing this C# object. Re-read so UpdateTexture rebinds encode.
+            if (destTexture_ != null)
+            {
+                destTexturePtr_ = destTexture_.GetNativeTexturePtr();
+            }
         }
 
         public override void Dispose()

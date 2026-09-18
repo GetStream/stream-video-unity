@@ -116,7 +116,9 @@ namespace StreamVideo.Core.BackgroundFilters
 
             if (_paused)
             {
-                if (_hasAppliedMask)
+                // After a GPU context loss the last composited frame is gone. Freezing
+                // would leave a black publisher RT until an explicit Resume.
+                if (_hasAppliedMask && destination.IsCreated())
                 {
                     LastCompositePath = BackgroundFilterCompositePath.Frozen;
                     return;
@@ -159,6 +161,8 @@ namespace StreamVideo.Core.BackgroundFilters
         {
             _paused = true;
             _segmenter.Pause();
+            // Drop GPU RTs so the next Apply recreates them after a context loss.
+            _compositor.Release();
         }
 
         public void Resume()

@@ -2632,10 +2632,10 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 BackgroundFilterController?.Resume();
             }
-            else
-            {
-                BackgroundFilterController?.Pause();
-            }
+
+            // Do not Pause on unfocus. iOS can leave isFocused false after returning
+            // from background; Pause would freeze the last frame forever. Camera
+            // disable already pauses via OnBackgroundFilterVideoEnabledChanged.
         }
 
         private void DisposePublisher()

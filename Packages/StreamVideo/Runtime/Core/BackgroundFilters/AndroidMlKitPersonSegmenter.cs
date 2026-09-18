@@ -104,6 +104,8 @@ namespace StreamVideo.Core.BackgroundFilters
         public void Pause()
         {
             _paused = true;
+            // Suspended GPU readbacks may never callback; do not block Resume.
+            _readbackInFlight = false;
 #if UNITY_ANDROID && !UNITY_EDITOR
             _hasPendingRgba = false;
 #endif
@@ -522,6 +524,11 @@ namespace StreamVideo.Core.BackgroundFilters
             GetMaskInputSize(source.width, source.height, out var width, out var height);
             if (_downscaleRt != null && _downscaleRt.width == width && _downscaleRt.height == height)
             {
+                if (!_downscaleRt.IsCreated())
+                {
+                    _downscaleRt.Create();
+                }
+
                 return;
             }
 

@@ -92,6 +92,20 @@ namespace StreamVideo.Core.LowLevelClient
         // Full: 704×576  -> half: 352×288 -> quarter: 176×144 <- We want the smallest resolution to be above 96x96
         public static VideoResolution MinimumSafeTargetResolution => new VideoResolution(704, 576);
 
+        /// <summary>
+        /// Unity WebCamTexture reports 16x16 until the capture session has started.
+        /// </summary>
+        internal static bool HasUsableCaptureSize(int width, int height) => width > 16 && height > 16;
+
+        /// <summary>
+        /// After a mobile camera restart the new WebCamTexture is still 16x16, but the existing
+        /// encode track is bound to GPU textures from before backgrounding. Replace it immediately;
+        /// <see cref="PublisherTargetResolution"/> uses MaxResolution until capture size is real.
+        /// Skip only the first bind (no track yet) while Unity is still reporting the placeholder.
+        /// </summary>
+        internal static bool ShouldReplacePublisherVideoTrackOnInputChanged(bool hasExistingTrack, int width, int height)
+            => hasExistingTrack || HasUsableCaptureSize(width, height);
+
         public RenderTexture PublisherVideoTrackTexture => _publisherVideoTrackTexture;
 
         public PublisherPeerConnection(ILogs logs, IEnumerable<ICEServer> iceServers,
@@ -154,8 +168,14 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTodo: investigate if this Blit is necessary
             // One reason was to easy control target resolution -> we don't accept every target resolution because small res can crash Android video encoder
             // We should check if WebCamTexture allows setting any resolution
-            if (_publisherVideoTrackTexture != null && _mediaInputProvider.VideoInput != null)
+            if (_publisherVideoTrackTexture != null && _mediaInputProvider.VideoInput != null
+                && HasUsableCaptureSize(_mediaInputProvider.VideoInput.width, _mediaInputProvider.VideoInput.height))
             {
+                if (!_publisherVideoTrackTexture.IsCreated())
+                {
+                    _publisherVideoTrackTexture.Create();
+                }
+
                 if (_backgroundFilterController != null && _backgroundFilterController.ActiveFilter != null)
                 {
                     _backgroundFilterController.Composite(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
@@ -682,8 +702,14 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 if (_mediaInputProvider.VideoInput != null)
                 {
-                    var preferred = new VideoResolution(_mediaInputProvider.VideoInput.width,
-                        _mediaInputProvider.VideoInput.height);
+                    var inputWidth = _mediaInputProvider.VideoInput.width;
+                    var inputHeight = _mediaInputProvider.VideoInput.height;
+                    if (!HasUsableCaptureSize(inputWidth, inputHeight))
+                    {
+                        return _publisherVideoSettings.MaxResolution;
+                    }
+
+                    var preferred = new VideoResolution(inputWidth, inputHeight);
 
                     // Requesting too small resolution can cause crashes in the Android video encoder
                     // The target resolution is used to calculate 3 layers of video encoding (full, half, quarter)
@@ -1069,7 +1095,17 @@ namespace StreamVideo.Core.LowLevelClient
             SetPublisherActiveAudioTrack(newAudioTrack);
         }
 
-        private void OnVideoInputChanged(WebCamTexture webCamTexture) => ReplacePublisherVideoTrack();
+        private void OnVideoInputChanged(WebCamTexture webCamTexture)
+        {
+            var width = webCamTexture != null ? webCamTexture.width : 0;
+            var height = webCamTexture != null ? webCamTexture.height : 0;
+            if (!ShouldReplacePublisherVideoTrackOnInputChanged(PublisherVideoTrack != null, width, height))
+            {
+                return;
+            }
+
+            ReplacePublisherVideoTrack();
+        }
 
 #if STREAM_DEBUG_ENABLED
         private void LogPublisherOrientation()

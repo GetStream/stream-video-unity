@@ -15,7 +15,9 @@ using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
 using StreamVideo.Core.State.Caches;
 using StreamVideo.Core.StatefulModels.Tracks;
+using StreamVideo.Core.BackgroundFilters;
 using StreamVideo.Core.Utils;
+using UnityEngine;
 using TrackType = StreamVideo.Core.Models.Sfu.TrackType;
 using ParticipantCount = StreamVideo.Core.Models.Sfu.ParticipantCount;
 
@@ -57,6 +59,30 @@ namespace StreamVideo.Core.StatefulModels
         public event Action<CallEvent> EventReceived;
 
         public event Action Updated;
+
+        public event Action<BackgroundFilterPerformance> BackgroundFilterPerformanceChanged
+        {
+            add
+            {
+                _backgroundFilterPerformanceChanged.Add(value);
+                TryAttachBackgroundFilterEvents();
+            }
+            remove => _backgroundFilterPerformanceChanged.Remove(value);
+        }
+
+        public event Action<Texture> LocalPreviewTextureChanged
+        {
+            add
+            {
+                _localPreviewTextureChanged.Add(value);
+                TryAttachBackgroundFilterEvents();
+            }
+            remove => _localPreviewTextureChanged.Remove(value);
+        }
+
+        public BackgroundFilter ActiveBackgroundFilter => FilterController?.ActiveFilter;
+
+        public bool IsBackgroundFilterSupported => FilterController != null && FilterController.IsSupported;
 
         public IStreamCustomData CustomData => InternalCustomData;
 
@@ -465,6 +491,20 @@ namespace StreamVideo.Core.StatefulModels
             return UploadCustomDataAsync();
         }
 
+        public void SetBackgroundFilter(BackgroundFilter filter)
+            => FilterController?.SetFilter(filter);
+
+        public Texture GetLocalPreviewTexture()
+        {
+            var filtered = FilterController?.GetPreviewTexture();
+            if (filtered != null)
+            {
+                return filtered;
+            }
+
+            return LowLevelClient?.RtcSession?.VideoInput;
+        }
+
         public IStreamVideoCallParticipant GetLocalParticipant()
         {
             if (Participants.Count == 0)
@@ -632,6 +672,14 @@ namespace StreamVideo.Core.StatefulModels
             : base(uniqueId, repository, context)
         {
             UnifiedSessionId = Guid.NewGuid().ToString();
+        }
+
+        internal void AttachBackgroundFilterEvents() => TryAttachBackgroundFilterEvents();
+
+        internal void DetachBackgroundFilterEvents()
+        {
+            _backgroundFilterPerformanceChanged.Detach();
+            _localPreviewTextureChanged.Detach();
         }
 
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
@@ -986,6 +1034,12 @@ namespace StreamVideo.Core.StatefulModels
         private string _id;
         private IStreamVideoCallParticipant _dominantSpeaker;
 
+        private readonly CallScopedControllerEvent<BackgroundFilterPerformance> _backgroundFilterPerformanceChanged
+            = new CallScopedControllerEvent<BackgroundFilterPerformance>();
+
+        private readonly CallScopedControllerEvent<Texture> _localPreviewTextureChanged
+            = new CallScopedControllerEvent<Texture>();
+
         private void OnSessionParticipantAdded(IStreamVideoCallParticipant participant)
         {
             LowLevelClient.RtcSession.NotifyParticipantJoined(participant.SessionId);
@@ -1157,6 +1211,27 @@ namespace StreamVideo.Core.StatefulModels
             }
 
             participantCustomData = allParticipantsCustomData[participant.SessionId];
+        }
+
+        private BackgroundFilterController FilterController
+            => LowLevelClient?.RtcSession?.BackgroundFilterController;
+
+        private bool IsActiveCall => LowLevelClient?.RtcSession?.ActiveCall == this;
+
+        private void TryAttachBackgroundFilterEvents()
+        {
+            var controller = FilterController;
+            if (controller == null || !IsActiveCall)
+            {
+                return;
+            }
+
+            _backgroundFilterPerformanceChanged.Attach(
+                h => controller.PerformanceChanged += h,
+                h => controller.PerformanceChanged -= h);
+            _localPreviewTextureChanged.Attach(
+                h => controller.PreviewTextureChanged += h,
+                h => controller.PreviewTextureChanged -= h);
         }
 
         private bool IsLocalParticipantIncluded()

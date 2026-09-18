@@ -280,6 +280,9 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private bool _autoEnableMicrophone = false;
 
+        [SerializeField]
+        private bool _autoEnableBackgroundFilter = true;
+
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
 
@@ -315,6 +318,14 @@ namespace StreamVideo.ExampleProject
         {
             _activeCall = call;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
+            if (_autoEnableBackgroundFilter && call.IsBackgroundFilterSupported)
+            {
+#if STREAM_DEBUG_ENABLED
+                // P1-2: owner will delete this block before merge. Uncheck Auto Enable Background Filter to skip it while testing.
+                call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Heavy));
+#endif
+            }
 
             CallStarted?.Invoke(call);
         }

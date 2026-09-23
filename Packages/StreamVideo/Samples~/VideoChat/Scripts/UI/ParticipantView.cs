@@ -109,18 +109,18 @@ namespace StreamVideo.ExampleProject.UI
 
                 localAngle = sourceWebCamTexture.videoRotationAngle;
                 _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-localAngle, Vector3.forward);
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
                 LogOrientationDebug(sourceWebCamTexture, previewTex, localAngle, remoteAngle, isLocal: true);
 #endif
                 return;
             }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             LogOrientationDebug(previewTex as WebCamTexture, previewTex, localAngle, remoteAngle, isLocal: false);
 #endif
         }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
         private void LogOrientationDebug(WebCamTexture webcam, Texture preview, int localAngle, int remoteAngle,
             bool isLocal)
         {
@@ -146,8 +146,10 @@ namespace StreamVideo.ExampleProject.UI
                 + " appliedZ=" + appliedZ.ToString("0.0")
                 + (webcam != null
                     ? " webcam=" + webcam.width + "x" + webcam.height
-                      + " rot=" + webcam.videoRotationAngle
-                      + " mirrored=" + webcam.videoVerticallyMirrored
+                      + (webcam.width > 16
+                          ? " rot=" + webcam.videoRotationAngle
+                            + " mirrored=" + webcam.videoVerticallyMirrored
+                          : " rot=pending mirrored=pending")
                       + " frontDevice=" + IsFrontFacing(webcam)
                     : "");
             if (payload == _lastOrientationDebug)

@@ -450,7 +450,7 @@ namespace StreamVideo.Core.StatefulModels
                 return;
             }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(Logs, "publisher.customDataAngle",
                 "publishingAngle=" + angle
                 + " prev=" + (hasPrevAngle ? prevAngle.ToString() : "none")

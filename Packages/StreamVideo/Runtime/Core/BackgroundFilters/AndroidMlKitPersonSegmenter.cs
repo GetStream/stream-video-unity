@@ -76,7 +76,7 @@ namespace StreamVideo.Core.BackgroundFilters
             Graphics.Blit(source, _downscaleRt);
             _lastSource = source;
             _lastSourceRotation = GetSourceRotationDegrees(source);
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             LogSubmitOrientation(source);
 #endif
 
@@ -411,15 +411,16 @@ namespace StreamVideo.Core.BackgroundFilters
                 submitRgba = _uprightRgba;
             }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             var webcam = _lastSource as WebCamTexture;
-            var webcamRot = webcam != null ? webcam.videoRotationAngle : -1;
+            var canRead = CameraOrientationDebug.CanReadWebCamOrientation(webcam);
+            var webcamRot = canRead ? webcam.videoRotationAngle : -1;
             CameraOrientationDebug.Log(_logs, "mlkit.submit",
                 "rgba=" + width + "x" + height + " bytes=" + rgba.Length
                 + " upright=" + submitWidth + "x" + submitHeight
                 + " mlkitRotationDegrees=0 (pixels rotated CW " + rotation + ")"
                 + " webcamRot=" + webcamRot
-                + " mirrored=" + (webcam != null && webcam.videoVerticallyMirrored)
+                + " mirrored=" + (canRead && webcam.videoVerticallyMirrored)
                 + " gfx=" + SystemInfo.graphicsDeviceType
                 + " asyncReadback=" + SystemInfo.supportsAsyncGPUReadback);
 #endif
@@ -464,7 +465,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _hasMask = true;
             // Mask bytes stay in the GLES y-down layout (Vulkan readback was already flipped).
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             var hits = 0;
             var needed = width * height;
             for (var i = 0; i < needed; i++)
@@ -571,7 +572,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _native = null;
         }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
         private void LogSubmitOrientation(Texture source)
         {
             var webcam = source as WebCamTexture;

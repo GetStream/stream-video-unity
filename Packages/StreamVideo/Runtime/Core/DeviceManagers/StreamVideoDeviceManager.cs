@@ -79,7 +79,7 @@ namespace StreamVideo.Core.DeviceManagers
                 Client.SetCameraInputSource(_activeCamera);
             }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(Logs, "camera.select",
                 "device=" + device.Name + " front=" + device.IsFrontFacing + " enable=" + enable
                 + " requested=" + requestedResolution.Width + "x" + requestedResolution.Height + "@" + requestedFPS

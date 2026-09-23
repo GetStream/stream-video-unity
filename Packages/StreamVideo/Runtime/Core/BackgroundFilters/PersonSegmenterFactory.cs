@@ -16,7 +16,7 @@ namespace StreamVideo.Core.BackgroundFilters
             var created = AndroidMlKitPersonSegmenter.TryCreate(logs, out var segmenter)
                 ? (IPersonSegmenter)segmenter
                 : new NullPersonSegmenter();
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(logs, "segmenter.factory",
                 "platform=Android created=" + created.GetType().Name + " supported=" + created.IsSupported);
 #endif
@@ -25,21 +25,21 @@ namespace StreamVideo.Core.BackgroundFilters
             var created = IosVisionPersonSegmenter.TryCreate(logs, out var segmenter)
                 ? (IPersonSegmenter)segmenter
                 : new NullPersonSegmenter();
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(logs, "segmenter.factory",
                 "platform=iOS created=" + created.GetType().Name + " supported=" + created.IsSupported);
 #endif
             return created;
 #elif UNITY_EDITOR
             var unsupported = new NullPersonSegmenter();
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(logs, "segmenter.factory",
                 "platform=Editor created=NullPersonSegmenter (Editor has no person segmenter)");
 #endif
             return unsupported;
 #else
             var unsupported = new NullPersonSegmenter();
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(logs, "segmenter.factory",
                 "platform=other created=NullPersonSegmenter");
 #endif

@@ -35,7 +35,7 @@ namespace StreamVideo.Core.BackgroundFilters
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
             _segmenter = segmenter ?? PersonSegmenterFactory.Create(_logs);
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(_logs, "controller.init",
                 "segmenter=" + _segmenter.GetType().Name + " supported=" + _segmenter.IsSupported
                 + " | " + CameraOrientationDebug.DescribeScreen());
@@ -62,6 +62,8 @@ namespace StreamVideo.Core.BackgroundFilters
                 ActiveFilter = null;
 #if STREAM_DEBUG_ENABLED
                 BackgroundFilter.DebugView = 0;
+#endif
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
                 CameraOrientationDebug.Flush(_logs);
                 CameraOrientationDebug.Log(_logs, "controller.setFilter", "filter=null");
 #endif
@@ -92,7 +94,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _compositor.SetIntensity(_scheduler.EffectiveIntensity);
             _paused = false;
             _frameIndex = 0;
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(_logs, "controller.setFilter",
                 "filter=" + (filter == null ? "null" : filter.Kind + "/" + filter.Intensity)
                 + " supported=" + IsSupported
@@ -150,7 +152,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _hasAppliedMask = true;
             LastCompositePath = BackgroundFilterCompositePath.Apply;
             SetPreview(destination);
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             LogCompositeOrientation(source, destination, "composite.apply");
 #endif
         }
@@ -203,12 +205,12 @@ namespace StreamVideo.Core.BackgroundFilters
             LastCompositePath = BackgroundFilterCompositePath.Passthrough;
             Graphics.Blit(source, destination);
             SetPreview(destination);
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             LogCompositeOrientation(source, destination, checkpoint);
 #endif
         }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
         private void LogCompositeOrientation(Texture source, RenderTexture destination, string checkpoint)
         {
             var webcam = source as WebCamTexture;

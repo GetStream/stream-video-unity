@@ -185,7 +185,7 @@ namespace StreamVideo.Core.LowLevelClient
                     Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
                 }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
                 LogPublisherOrientation();
 #endif
             }
@@ -974,7 +974,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             var track = new VideoStreamTrack(_publisherVideoTrackTexture);
             track.Enabled = _mediaInputProvider.PublisherVideoTrackIsEnabled;
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             CameraOrientationDebug.Log(Logs, "publisher.createTrack",
                 CameraOrientationDebug.DescribeScreen()
                 + " | " + CameraOrientationDebug.DescribeWebCam(_mediaInputProvider.VideoInput)
@@ -1107,7 +1107,7 @@ namespace StreamVideo.Core.LowLevelClient
             ReplacePublisherVideoTrack();
         }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
         private void LogPublisherOrientation()
         {
             var webcam = _mediaInputProvider.VideoInput;

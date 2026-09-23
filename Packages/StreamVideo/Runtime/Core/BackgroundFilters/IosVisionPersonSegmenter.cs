@@ -85,7 +85,7 @@ namespace StreamVideo.Core.BackgroundFilters
 
             Graphics.Blit(source, _downscaleRt);
             _lastSource = source;
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             _lastSourceRotation = GetSourceRotationDegrees(source);
             LogSubmitOrientation(source);
 #endif
@@ -200,7 +200,7 @@ namespace StreamVideo.Core.BackgroundFilters
         private Texture2D _maskTexture;
         private RenderTexture _downscaleRt;
         private Texture _lastSource;
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
         private int _lastSourceRotation;
 #endif
 #if UNITY_IOS && !UNITY_EDITOR
@@ -414,25 +414,26 @@ namespace StreamVideo.Core.BackgroundFilters
             // Keep webcam UVs. Vision's output size follows qualityLevel, not the input
             // aspect; rotating upright (Android ML Kit path) stretches a landscape mask
             // onto a portrait buffer and the cutout sticks to the center.
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             var webcam = _lastSource as WebCamTexture;
-            var webcamRot = webcam != null ? webcam.videoRotationAngle : -1;
+            var canRead = CameraOrientationDebug.CanReadWebCamOrientation(webcam);
+            var webcamRot = canRead ? webcam.videoRotationAngle : -1;
             CameraOrientationDebug.Log(_logs, "vision.submit",
                 "rgba=" + width + "x" + height + " bytes=" + rgba.Length
                 + " visionRotationDegrees=0 (webcam space, not rotated)"
                 + " webcamRot=" + webcamRot
-                + " mirrored=" + (webcam != null && webcam.videoVerticallyMirrored)
+                + " mirrored=" + (canRead && webcam.videoVerticallyMirrored)
                 + " gfx=" + SystemInfo.graphicsDeviceType
                 + " asyncReadback=" + SystemInfo.supportsAsyncGPUReadback);
 #endif
             NativeProcessAsync(rgba, width * height * 4, width, height, 0);
         }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
         private static int GetSourceRotationDegrees(Texture source)
         {
             var webcam = source as WebCamTexture;
-            if (webcam == null)
+            if (!CameraOrientationDebug.CanReadWebCamOrientation(webcam))
             {
                 return 0;
             }
@@ -474,7 +475,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _maskTexture.Apply(false, false);
             _hasMask = true;
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             var hits = 0;
             var needed = width * height;
             for (var i = 0; i < needed; i++)
@@ -544,7 +545,7 @@ namespace StreamVideo.Core.BackgroundFilters
             _nativeCreated = false;
         }
 
-#if STREAM_DEBUG_ENABLED
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
         private void LogSubmitOrientation(Texture source)
         {
             var webcam = source as WebCamTexture;

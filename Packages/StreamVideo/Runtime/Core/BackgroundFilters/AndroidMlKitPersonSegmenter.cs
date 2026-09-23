@@ -74,7 +74,9 @@ namespace StreamVideo.Core.BackgroundFilters
             }
 
             Graphics.Blit(source, _downscaleRt);
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             _lastSource = source;
+#endif
             _lastSourceRotation = GetSourceRotationDegrees(source);
 #if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             LogSubmitOrientation(source);
@@ -130,12 +132,14 @@ namespace StreamVideo.Core.BackgroundFilters
 
             _disposed = true;
             _paused = true;
-            _lastSource = null;
 #if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Flush(_logs);
 #endif
 
 #if UNITY_ANDROID && !UNITY_EDITOR
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
+            _lastSource = null;
+#endif
             _hasPendingRgba = false;
             _pendingRgba = null;
             _uprightRgba = null;
@@ -185,9 +189,11 @@ namespace StreamVideo.Core.BackgroundFilters
         private bool _readbackInFlight;
         private Texture2D _maskTexture;
         private RenderTexture _downscaleRt;
-        private Texture _lastSource;
         private int _lastSourceRotation;
 #if UNITY_ANDROID && !UNITY_EDITOR
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
+        private Texture _lastSource;
+#endif
         private bool _createAttempted;
         private AndroidJavaObject _native;
         private Texture2D _syncReadbackTexture;

@@ -84,8 +84,8 @@ namespace StreamVideo.Core.BackgroundFilters
             }
 
             Graphics.Blit(source, _downscaleRt);
-            _lastSource = source;
 #if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
+            _lastSource = source;
             _lastSourceRotation = GetSourceRotationDegrees(source);
             LogSubmitOrientation(source);
 #endif
@@ -171,12 +171,14 @@ namespace StreamVideo.Core.BackgroundFilters
 
             _disposed = true;
             _paused = true;
-            _lastSource = null;
 #if STREAM_DEBUG_ENABLED
             CameraOrientationDebug.Flush(_logs);
 #endif
 
 #if UNITY_IOS && !UNITY_EDITOR
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
+            _lastSource = null;
+#endif
             _hasPendingRgba = false;
             _pendingRgba = null;
             _maskScratch = null;
@@ -199,11 +201,11 @@ namespace StreamVideo.Core.BackgroundFilters
         private bool _readbackInFlight;
         private Texture2D _maskTexture;
         private RenderTexture _downscaleRt;
-        private Texture _lastSource;
+#if UNITY_IOS && !UNITY_EDITOR
 #if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
+        private Texture _lastSource;
         private int _lastSourceRotation;
 #endif
-#if UNITY_IOS && !UNITY_EDITOR
         private bool _createAttempted;
         private bool _nativeCreated;
         private Texture2D _syncReadbackTexture;

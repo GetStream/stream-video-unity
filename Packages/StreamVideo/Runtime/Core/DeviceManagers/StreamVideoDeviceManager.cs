@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+#if STREAM_DEBUG_ENABLED
+using StreamVideo.Core.BackgroundFilters;
+#endif
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Libs.Logs;
 using UnityEngine;
@@ -75,6 +78,14 @@ namespace StreamVideo.Core.DeviceManagers
                 _activeCamera.Play();
                 Client.SetCameraInputSource(_activeCamera);
             }
+
+#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
+            CameraOrientationDebug.Log(Logs, "camera.select",
+                "device=" + device.Name + " front=" + device.IsFrontFacing + " enable=" + enable
+                + " requested=" + requestedResolution.Width + "x" + requestedResolution.Height + "@" + requestedFPS
+                + " | " + CameraOrientationDebug.DescribeWebCam(_activeCamera)
+                + " | " + CameraOrientationDebug.DescribeScreen());
+#endif
 
             SetEnabled(enable);
         }
@@ -190,6 +201,8 @@ namespace StreamVideo.Core.DeviceManagers
 
         private WebCamTexture _activeCamera;
         private Stopwatch _stopwatch;
+        private bool _restartingCamera;
+        private bool _recreateOnNextEnable;
 
         private bool IsNewInstanceNeeded(CameraDeviceInfo device, VideoResolution resolution, int fps = 30)
         {
@@ -216,23 +229,97 @@ namespace StreamVideo.Core.DeviceManagers
             return true;
         }
         
+        /// <summary>
+        /// Recreate only after a playing capture was Stop()'d (background). First enable must Play()
+        /// the existing WebCamTexture; recreating it yields 16x16 until the session starts.
+        /// </summary>
+        internal static bool ShouldRecreateWebCamTexture(bool isMobilePlayer, bool isPlaying, bool captureWasStopped)
+            => isMobilePlayer && !isPlaying && captureWasStopped;
+
         private void UpdateVideoHandling()
         {
-            if (_activeCamera == null)
+            if (_restartingCamera || _activeCamera == null)
             {
                 return;
             }
-            
-            var isEnabled = RtcSession.PublisherVideoTrackIsEnabled;
-            if (isEnabled && !_activeCamera.isPlaying)
-            {
-                _activeCamera.Play();
-                Client.SetCameraInputSource(_activeCamera);
-            }
 
+            var isEnabled = RtcSession.PublisherVideoTrackIsEnabled;
             if (!isEnabled)
             {
-                _activeCamera.Stop();
+                if (_activeCamera.isPlaying)
+                {
+                    _activeCamera.Stop();
+                }
+
+                // Sample Pause may Stop() before SetEnabled(false). Recreate on the next
+                // enable regardless of isPlaying — iOS Play() after Stop() does not restore frames.
+                _recreateOnNextEnable = IsMobilePlayer;
+                return;
+            }
+
+            if (_activeCamera.isPlaying)
+            {
+                return;
+            }
+
+            // iOS/Android capture sessions do not survive backgrounding. Play() on the
+            // same WebCamTexture reports isPlaying but never delivers frames.
+            if (ShouldRecreateWebCamTexture(IsMobilePlayer, _activeCamera.isPlaying, _recreateOnNextEnable))
+            {
+                _recreateOnNextEnable = false;
+                RestartActiveCamera();
+                return;
+            }
+
+            _activeCamera.Play();
+            Client.SetCameraInputSource(_activeCamera);
+        }
+
+        private void RestartActiveCamera()
+        {
+            if (_restartingCamera)
+            {
+                return;
+            }
+
+            _restartingCamera = true;
+            try
+            {
+                var deviceName = _activeCamera.deviceName;
+                var width = _activeCamera.requestedWidth;
+                var height = _activeCamera.requestedHeight;
+                var fps = (int)_activeCamera.requestedFPS;
+                if (fps <= 0)
+                {
+                    fps = 30;
+                }
+
+                if (_activeCamera.isPlaying)
+                {
+                    _activeCamera.Stop();
+                }
+
+                Object.Destroy(_activeCamera);
+                _activeCamera = new WebCamTexture(deviceName, width, height, fps);
+                _activeCamera.Play();
+                Client.SetCameraInputSource(_activeCamera);
+                RaiseSelectedDeviceChanged(SelectedDevice, SelectedDevice);
+            }
+            finally
+            {
+                _restartingCamera = false;
+            }
+        }
+
+        private static bool IsMobilePlayer
+        {
+            get
+            {
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+                return true;
+#else
+                return false;
+#endif
             }
         }
 

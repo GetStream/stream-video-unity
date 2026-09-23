@@ -1,0 +1,3 @@
+-keep class io.getstream.unitybackgroundfilters.** { *; }
+-keep class com.google.mlkit.vision.segmentation.** { *; }
+-keep class com.google.mlkit.vision.common.** { *; }

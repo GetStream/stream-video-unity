@@ -1,0 +1,110 @@
+apply plugin: 'com.android.library'
+
+// Unity 6 writes unity.* into gradle.properties. Unity 2022.3 does not.
+// Fall back to :unityLibrary Player Settings, then to safe defaults.
+def unityInt(String name, Integer fallback = null) {
+    project.hasProperty(name) ? project.property(name).toString().toInteger() : fallback
+}
+
+def unityString(String name, String fallback = null) {
+    project.hasProperty(name) ? project.property(name).toString() : fallback
+}
+
+def unityLibraryAndroid() {
+    def lib = findProject(':unityLibrary')
+    if (lib == null && project.parent != null && project.parent != project) {
+        lib = project.parent.extensions.findByName('android') != null ? project.parent : null
+        if (lib != null) {
+            return lib.extensions.findByName('android')
+        }
+    }
+    return lib?.extensions?.findByName('android')
+}
+
+def apiLevel(value, int fallback) {
+    if (value == null) {
+        return fallback
+    }
+    if (value instanceof Integer) {
+        return value
+    }
+    if (value.metaClass.hasProperty(value, 'apiLevel') && value.apiLevel != null) {
+        return value.apiLevel
+    }
+    def digits = value.toString().replaceAll("[^0-9]", "")
+    return digits.isEmpty() ? fallback : digits.toInteger()
+}
+
+def compileSdkVal = unityInt("unity.compileSdkVersion", 34)
+def minSdkVal = unityInt("unity.minSdkVersion", 23)
+def targetSdkVal = unityInt("unity.targetSdkVersion", 34)
+def buildToolsVal = unityString("unity.buildToolsVersion")
+
+if (!project.hasProperty("unity.compileSdkVersion")) {
+    def unityAndroid = unityLibraryAndroid()
+    if (unityAndroid != null) {
+        try {
+            compileSdkVal = unityAndroid.hasProperty("compileSdk") && unityAndroid.compileSdk != null
+                ? apiLevel(unityAndroid.compileSdk, compileSdkVal)
+                : apiLevel(unityAndroid.compileSdkVersion, compileSdkVal)
+        } catch (Exception ignored) {
+        }
+        try {
+            def dc = unityAndroid.defaultConfig
+            minSdkVal = dc.hasProperty("minSdk") && dc.minSdk != null
+                ? apiLevel(dc.minSdk, minSdkVal)
+                : apiLevel(dc.minSdkVersion, minSdkVal)
+            targetSdkVal = dc.hasProperty("targetSdk") && dc.targetSdk != null
+                ? apiLevel(dc.targetSdk, targetSdkVal)
+                : apiLevel(dc.targetSdkVersion, targetSdkVal)
+        } catch (Exception ignored) {
+        }
+    }
+}
+
+minSdkVal = Math.max(23, minSdkVal)
+
+def javaVersion = JavaVersion.VERSION_11
+["unity.javaCompatibilityVersion", "unity.javaCompatabilityVersion"].each { name ->
+    if (project.hasProperty(name)) {
+        javaVersion = JavaVersion.valueOf(project.property(name).toString())
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.google.mlkit:segmentation-selfie:16.0.0-beta6'
+}
+
+android {
+    namespace "io.getstream.unitybackgroundfilters"
+
+    compileOptions {
+        sourceCompatibility javaVersion
+        targetCompatibility javaVersion
+    }
+
+    defaultConfig {
+        consumerProguardFiles 'proguard-rules.pro'
+    }
+}
+
+// AGP 7 (Unity 2022.3) uses *Version; AGP 8+ (Unity 6) prefers compileSdk/minSdk.
+def androidExt = project.extensions.getByName("android")
+if (androidExt.hasProperty("compileSdk")) {
+    androidExt.compileSdk compileSdkVal
+} else {
+    androidExt.compileSdkVersion compileSdkVal
+}
+if (buildToolsVal) {
+    androidExt.buildToolsVersion buildToolsVal
+}
+
+def defaultConfig = androidExt.defaultConfig
+if (defaultConfig.hasProperty("minSdk")) {
+    defaultConfig.minSdk minSdkVal
+    defaultConfig.targetSdk targetSdkVal
+} else {
+    defaultConfig.minSdkVersion minSdkVal
+    defaultConfig.targetSdkVersion targetSdkVal
+}

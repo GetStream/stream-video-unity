@@ -1,0 +1,389 @@
+using UnityEngine;
+using UnityEngine.Rendering;
+using Object = UnityEngine.Object;
+
+namespace StreamVideo.Core.BackgroundFilters
+{
+    /// <summary>
+    /// GPU composite: temporal mask EMA, downscaled separable blur, mask blend.
+    /// Light/Medium/Heavy all blur at half-res. Person pixels are excluded from the
+    /// blur kernel so skin/hair does not bleed into the background.
+    /// First pass is a default blit into <c>destination</c> so sampling matches the
+    /// unfiltered publisher path (Android OES and iOS Metal <c>WebCamTexture</c>).
+    /// Custom-shader blits stay on internal RTs; the last hop back to the publisher
+    /// RT is a bit copy (or default blit). Custom blits into the WebRTC RT on iOS
+    /// Metal showed up 90° CCW on Android receivers.
+    /// Must work on customer Android Vulkan-first and GLES3, and iOS Metal; do not assume
+    /// the sample project's GLES3-only graphics list.
+    /// </summary>
+    internal sealed class BackgroundCompositor : IVideoFilter
+    {
+        public const float DefaultSmoothing = 0.9f;
+        public const float DefaultSmoothstepMin = 0.45f;
+        public const float DefaultSmoothstepMax = 0.8f;
+        public const float DefaultMaskExpandPixels = 3f;
+
+        public bool IsReady => HasMaterials && HasRts;
+
+        internal bool LastApplyWasPassthrough { get; private set; }
+
+        internal RenderTextureFormat? MaskRtFormatOverride { get; set; }
+
+        internal static RenderTextureFormat ChooseMaskRtFormat(bool r8Supported)
+        {
+            return r8Supported ? RenderTextureFormat.R8 : RenderTextureFormat.ARGB32;
+        }
+
+        public void SetMask(Texture mask)
+        {
+            _mask = mask;
+        }
+
+        public void SetIntensity(BlurIntensity intensity)
+        {
+            _intensity = intensity;
+        }
+
+        public void Apply(Texture source, RenderTexture destination)
+        {
+            if (source == null || destination == null)
+            {
+                return;
+            }
+
+            if (!destination.IsCreated())
+            {
+                destination.Create();
+            }
+
+            EnsureResources(destination.width, destination.height, destination.format);
+
+            if (!IsReady)
+            {
+                LastApplyWasPassthrough = true;
+                Graphics.Blit(source, destination);
+                return;
+            }
+
+            LastApplyWasPassthrough = false;
+
+            // Same WebCamTexture sampling as unfiltered publish. Custom shaders into
+            // this WebRTC RT on iOS Metal were 90° CCW vs that blit on Android.
+            Graphics.Blit(source, destination);
+            CopyCompatibleRt(destination, _sourceRt);
+
+            if (_mask != null)
+            {
+                _temporalMaterial.SetTexture(PrevMaskId, _prevMaskRt);
+                _temporalMaterial.SetFloat(SmoothingId, DefaultSmoothing);
+                Graphics.Blit(_mask, _maskRt, _temporalMaterial);
+                Graphics.Blit(_maskRt, _prevMaskRt);
+            }
+            else
+            {
+                Graphics.Blit(Texture2D.blackTexture, _maskRt);
+                Graphics.Blit(Texture2D.blackTexture, _prevMaskRt);
+            }
+
+            Graphics.Blit(_sourceRt, _blurRt);
+
+            var iterations = GetBlurIterations(_intensity);
+            var spread = GetBlurSpread(_intensity);
+            var blurSource = _blurRt;
+            var blurDest = _blurPingRt;
+
+            _blurMaterial.SetTexture(MaskId, _maskRt);
+            for (var i = 0; i < iterations; i++)
+            {
+                _blurMaterial.SetFloat(SpreadId, spread);
+                _blurMaterial.SetVector(DirectionId, new Vector4(1f, 0f, 0f, 0f));
+                Graphics.Blit(blurSource, blurDest, _blurMaterial);
+
+                _blurMaterial.SetVector(DirectionId, new Vector4(0f, 1f, 0f, 0f));
+                Graphics.Blit(blurDest, blurSource, _blurMaterial);
+            }
+
+            _blendMaterial.SetTexture(BlurredId, blurSource);
+            _blendMaterial.SetTexture(MaskId, _maskRt);
+            _blendMaterial.SetFloat(SmoothMinId, DefaultSmoothstepMin);
+            _blendMaterial.SetFloat(SmoothMaxId, DefaultSmoothstepMax);
+            _blendMaterial.SetFloat(ExpandPixelsId, DefaultMaskExpandPixels);
+#if STREAM_DEBUG_ENABLED
+            _blendMaterial.SetFloat(DebugModeId, BackgroundFilter.DebugView);
+#else
+            _blendMaterial.SetFloat(DebugModeId, 0f);
+#endif
+            Graphics.Blit(_sourceRt, _outputRt, _blendMaterial);
+            CopyCompatibleRt(_outputRt, destination);
+        }
+
+        public void Release()
+        {
+            ReleaseRt(ref _sourceRt);
+            ReleaseRt(ref _outputRt);
+            ReleaseRt(ref _blurRt);
+            ReleaseRt(ref _blurPingRt);
+            ReleaseRt(ref _maskRt);
+            ReleaseRt(ref _prevMaskRt);
+            DestroyMaterial(ref _temporalMaterial);
+            DestroyMaterial(ref _blurMaterial);
+            DestroyMaterial(ref _blendMaterial);
+            _mask = null;
+        }
+
+        private static readonly int PrevMaskId = Shader.PropertyToID("_PrevMask");
+        private static readonly int SmoothingId = Shader.PropertyToID("_Smoothing");
+        private static readonly int DirectionId = Shader.PropertyToID("_Direction");
+        private static readonly int SpreadId = Shader.PropertyToID("_Spread");
+        private static readonly int BlurredId = Shader.PropertyToID("_Blurred");
+        private static readonly int MaskId = Shader.PropertyToID("_Mask");
+        private static readonly int SmoothMinId = Shader.PropertyToID("_SmoothMin");
+        private static readonly int SmoothMaxId = Shader.PropertyToID("_SmoothMax");
+        private static readonly int ExpandPixelsId = Shader.PropertyToID("_ExpandPixels");
+        private static readonly int DebugModeId = Shader.PropertyToID("_DebugMode");
+
+        private bool HasMaterials =>
+            _temporalMaterial != null && _blurMaterial != null && _blendMaterial != null;
+
+        private bool HasRts => IsUsable(_sourceRt) && IsUsable(_outputRt) && IsUsable(_blurRt)
+            && IsUsable(_blurPingRt) && IsUsable(_maskRt) && IsUsable(_prevMaskRt);
+
+        private Texture _mask;
+        private BlurIntensity _intensity = BlurIntensity.Heavy;
+
+        private RenderTexture _sourceRt;
+        private RenderTexture _outputRt;
+        private RenderTexture _blurRt;
+        private RenderTexture _blurPingRt;
+        private RenderTexture _maskRt;
+        private RenderTexture _prevMaskRt;
+
+        private Material _temporalMaterial;
+        private Material _blurMaterial;
+        private Material _blendMaterial;
+
+        private static int GetBlurIterations(BlurIntensity intensity)
+        {
+            switch (intensity)
+            {
+                case BlurIntensity.Light:
+                    return 1;
+                case BlurIntensity.Heavy:
+                    return 4;
+                default:
+                    return 2;
+            }
+        }
+
+        private static float GetBlurSpread(BlurIntensity intensity)
+        {
+            switch (intensity)
+            {
+                case BlurIntensity.Light:
+                    return 1f;
+                case BlurIntensity.Heavy:
+                    return 2f;
+                default:
+                    return 1.25f;
+            }
+        }
+
+        private void EnsureResources(int width, int height, RenderTextureFormat format)
+        {
+            EnsureMaterials();
+            if (!HasMaterials)
+            {
+                return;
+            }
+
+            var blurW = Mathf.Max(2, width / 2);
+            var blurH = Mathf.Max(2, height / 2);
+
+            _sourceRt = EnsureColorRt(_sourceRt, width, height, format, "StreamBgFilterSource");
+            _outputRt = EnsureColorRt(_outputRt, width, height, format, "StreamBgFilterOutput");
+            _blurRt = EnsureColorRt(_blurRt, blurW, blurH, format, "StreamBgFilterBlur");
+            _blurPingRt = EnsureColorRt(_blurPingRt, blurW, blurH, format, "StreamBgFilterBlurPing");
+            var maskFormat = MaskRtFormatOverride ?? ChooseMaskRtFormat();
+            _maskRt = EnsureMaskRt(_maskRt, width, height, maskFormat, "StreamBgFilterMask");
+            _prevMaskRt = EnsureMaskRt(_prevMaskRt, width, height, maskFormat, "StreamBgFilterPrevMask");
+
+            if (!HasRts)
+            {
+                ReleaseRt(ref _sourceRt);
+                ReleaseRt(ref _outputRt);
+                ReleaseRt(ref _blurRt);
+                ReleaseRt(ref _blurPingRt);
+                ReleaseRt(ref _maskRt);
+                ReleaseRt(ref _prevMaskRt);
+            }
+        }
+
+        private void EnsureMaterials()
+        {
+            if (_temporalMaterial == null)
+            {
+                _temporalMaterial = CreateMaterial("Hidden/StreamVideo/BackgroundMaskTemporal",
+                    "StreamVideo/BackgroundFilters/BackgroundMaskTemporal");
+            }
+
+            if (_blurMaterial == null)
+            {
+                _blurMaterial = CreateMaterial("Hidden/StreamVideo/BackgroundSeparableBlur",
+                    "StreamVideo/BackgroundFilters/BackgroundSeparableBlur");
+            }
+
+            if (_blendMaterial == null)
+            {
+                _blendMaterial = CreateMaterial("Hidden/StreamVideo/BackgroundMaskBlend",
+                    "StreamVideo/BackgroundFilters/BackgroundMaskBlend");
+            }
+        }
+
+        internal static Material CreateMaterial(string shaderName, string resourcesPath)
+        {
+            var shader = Shader.Find(shaderName);
+            if (shader == null)
+            {
+                shader = Resources.Load<Shader>(resourcesPath);
+            }
+
+            if (shader == null || !shader.isSupported)
+            {
+                return null;
+            }
+
+            return new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+        }
+
+        internal static RenderTextureFormat ChooseMaskRtFormat()
+        {
+            return ChooseMaskRtFormat(SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.R8));
+        }
+
+        internal static bool IsUsable(RenderTexture rt) => rt != null && rt.IsCreated();
+
+        internal static bool CanCopyTexture(RenderTexture source, RenderTexture destination)
+        {
+            return IsUsable(source) && IsUsable(destination)
+                && source.width == destination.width
+                && source.height == destination.height
+                && source.antiAliasing == destination.antiAliasing
+                && source.graphicsFormat == destination.graphicsFormat
+                && (SystemInfo.copyTextureSupport & CopyTextureSupport.Basic) != 0;
+        }
+
+        private static void CopyCompatibleRt(RenderTexture source, RenderTexture destination)
+        {
+            if (CanCopyTexture(source, destination))
+            {
+                Graphics.CopyTexture(source, destination);
+                return;
+            }
+
+            Graphics.Blit(source, destination);
+        }
+
+        private static RenderTexture EnsureColorRt(RenderTexture current, int width, int height,
+            RenderTextureFormat format, string name)
+        {
+            if (IsUsable(current) && current.width == width && current.height == height
+                && current.format == format)
+            {
+                return current;
+            }
+
+            ReleaseRt(ref current);
+
+            var rt = new RenderTexture(width, height, 0, format)
+            {
+                name = name,
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                useMipMap = false,
+                autoGenerateMips = false,
+            };
+            if (!TryCreateRt(rt))
+            {
+                return null;
+            }
+
+            return rt;
+        }
+
+        private static RenderTexture EnsureMaskRt(RenderTexture current, int width, int height,
+            RenderTextureFormat format, string name)
+        {
+            if (IsUsable(current) && current.width == width && current.height == height
+                && current.format == format)
+            {
+                return current;
+            }
+
+            ReleaseRt(ref current);
+
+            // Linear so Unity requests R8_UNorm when R8 is supported. Default R8 is sRGB,
+            // which GLES often rejects. ARGB32 Linear is the fallback when R8 is missing.
+            var rt = new RenderTexture(width, height, 0, format, RenderTextureReadWrite.Linear)
+            {
+                name = name,
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            if (!TryCreateRt(rt))
+            {
+                return null;
+            }
+
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            GL.Clear(true, true, Color.black);
+            RenderTexture.active = prev;
+            return rt;
+        }
+
+        private static bool TryCreateRt(RenderTexture rt)
+        {
+            if (rt == null)
+            {
+                return false;
+            }
+
+            rt.Create();
+            if (rt.IsCreated())
+            {
+                return true;
+            }
+
+            ReleaseRt(ref rt);
+            return false;
+        }
+
+        private static void ReleaseRt(ref RenderTexture rt)
+        {
+            if (rt == null)
+            {
+                return;
+            }
+
+            if (RenderTexture.active == rt)
+            {
+                RenderTexture.active = null;
+            }
+
+            rt.Release();
+            Object.Destroy(rt);
+            rt = null;
+        }
+
+        private static void DestroyMaterial(ref Material material)
+        {
+            if (material == null)
+            {
+                return;
+            }
+
+            Object.Destroy(material);
+            material = null;
+        }
+    }
+}

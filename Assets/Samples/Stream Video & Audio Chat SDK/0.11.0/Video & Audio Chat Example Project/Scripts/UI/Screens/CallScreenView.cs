@@ -132,6 +132,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _activeCall.DominantSpeakerChanged += OnDominantSpeakerChanged;
 
             _activeCall.SortedParticipantsUpdated += SortParticipantViews;
+            _activeCall.LocalPreviewTextureChanged += OnLocalPreviewTextureChanged;
 
             UIManager.LocalCameraChanged += OnLocalCameraChanged;
 
@@ -151,6 +152,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 _activeCall.ParticipantLeft -= OnParticipantLeft;
                 _activeCall.DominantSpeakerChanged -= OnDominantSpeakerChanged;
                 _activeCall.SortedParticipantsUpdated -= SortParticipantViews;
+                _activeCall.LocalPreviewTextureChanged -= OnLocalPreviewTextureChanged;
                 _activeCall = null;
             }
 
@@ -205,8 +207,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             if (participant.IsLocalParticipant)
             {
                 // Set input camera as a video source for local participant - we won't receive TrackAdded event for local participant
-                var webCamTexture = VideoManager.Client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
-                view.SetLocalCameraSource(webCamTexture);
+                view.SetLocalCameraSource(_activeCall.GetLocalPreviewTexture());
                 //StreamTodo: this will invalidate each time WebCamTexture is internally replaced so we need a better way to expose this
             }
 
@@ -277,14 +278,21 @@ namespace StreamVideo.ExampleProject.UI.Screens
         }
 
         private void OnLocalCameraChanged(WebCamTexture activeCamera)
+            => RefreshLocalPreview();
+
+        private void OnLocalPreviewTextureChanged(Texture previewTexture)
+            => RefreshLocalPreview();
+
+        private void RefreshLocalPreview()
         {
-            // Input Camera changed so let's update the preview for local participant
             var localParticipant
                 = _participantSessionIdToView.Values.FirstOrDefault(p => p.Participant.IsLocalParticipant);
-            if (localParticipant != null)
+            if (localParticipant == null || _activeCall == null)
             {
-                localParticipant.SetLocalCameraSource(activeCamera);
+                return;
             }
+
+            localParticipant.SetLocalCameraSource(_activeCall.GetLocalPreviewTexture());
         }
         
 #if AUDIO_PROCESSING_ENABLED

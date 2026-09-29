@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
@@ -29,7 +30,8 @@ namespace StreamVideo.ExampleProject.UI
             // Tracks can be received before this view is created (e.g. during joining the call)
             foreach (var track in Participant.GetTracks())
             {
-                OnParticipantTrackAdded(Participant, track);
+                Debug.Log($"[ParticipantView] Existing track from GetTracks for `{Participant.UserId}` ({Participant.SessionId}), type: {track.GetType().Name}");
+                HandleTrack(Participant, track, source: "GetTracks");
             }
             
             Participant.TrackAdded += OnParticipantTrackAdded;
@@ -236,10 +238,20 @@ namespace StreamVideo.ExampleProject.UI
         private Vector2 _lastRequestedResolution;
         private Quaternion _baseVideoRotation;
         private StreamVideoManager _videoManager;
+        private readonly HashSet<IStreamTrack> _processedTracks = new HashSet<IStreamTrack>();
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
+            => HandleTrack(participant, track, source: "TrackAdded");
+
+        private void HandleTrack(IStreamVideoCallParticipant participant, IStreamTrack track, string source)
         {
-            Debug.Log($"Track received from `{participant.UserId}`, type: {track.GetType()}");
+            if (!_processedTracks.Add(track))
+            {
+                Debug.LogWarning($"[ParticipantView] Skipping already processed track from `{participant.UserId}` ({participant.SessionId}), source: {source}, type: {track.GetType().Name}");
+                return;
+            }
+
+            Debug.Log($"Track received from `{participant.UserId}`, type: {track.GetType()}, source: {source}");
             switch (track)
             {
                 case StreamAudioTrack streamAudioTrack:

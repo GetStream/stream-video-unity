@@ -25,6 +25,12 @@ namespace StreamVideo.ExampleProject.UI
             
             OnIsSpeakingChanged(Participant.IsSpeaking);
             OnAudioLevelChanged(Participant.AudioLevel);
+
+            // Tracks can be received before this view is created (e.g. during joining the call)
+            foreach (var track in Participant.GetTracks())
+            {
+                OnParticipantTrackAdded(Participant, track);
+            }
             
             Participant.TrackAdded += OnParticipantTrackAdded;
             Participant.AudioLevelChanged += OnAudioLevelChanged;

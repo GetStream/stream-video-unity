@@ -217,6 +217,50 @@ namespace StreamVideo.Core
             _audioDeviceManager?.Update();
         }
 
+        public void OnApplicationPause(bool pauseStatus)
+        {
+            if (!IsMobilePlayer)
+            {
+                return;
+            }
+
+            if (pauseStatus)
+            {
+                PauseMobileAudioPlayback();
+                _restoreAudioOnResume = _audioDeviceManager.IsEnabled;
+                _restoreVideoOnResume = _videoDeviceManager.IsEnabled;
+                _audioDeviceManager.SetEnabled(false);
+                _videoDeviceManager.SetEnabled(false);
+                return;
+            }
+
+            ResumeMobileAudioPlayback();
+
+            if (_restoreAudioOnResume)
+            {
+                _audioDeviceManager.SetEnabled(true);
+                _restoreAudioOnResume = false;
+            }
+
+            if (_restoreVideoOnResume)
+            {
+                _videoDeviceManager.SetEnabled(true);
+                _restoreVideoOnResume = false;
+            }
+        }
+
+        private static bool IsMobilePlayer
+        {
+            get
+            {
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
         //StreamTodo: change public to explicit interface
         public IEnumerator WebRTCUpdateCoroutine() => WebRTC.Update();
 
@@ -442,6 +486,8 @@ namespace StreamVideo.Core
 
         private readonly StreamVideoDeviceManager _videoDeviceManager;
         private readonly StreamAudioDeviceManager _audioDeviceManager;
+        private bool _restoreAudioOnResume;
+        private bool _restoreVideoOnResume;
 
         private event Action Destroyed;
 

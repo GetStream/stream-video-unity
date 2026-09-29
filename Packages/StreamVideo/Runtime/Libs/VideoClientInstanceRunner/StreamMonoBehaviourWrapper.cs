@@ -60,6 +60,11 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
                 _streamVideoInstance = null;
             }
 
+            private void OnApplicationPause(bool pauseStatus)
+            {
+                _streamVideoInstance?.OnApplicationPause(pauseStatus);
+            }
+
             private IEnumerator UpdateCoroutine()
             {
                 while (_streamVideoInstance != null)

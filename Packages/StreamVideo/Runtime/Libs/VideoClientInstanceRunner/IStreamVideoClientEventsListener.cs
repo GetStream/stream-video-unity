@@ -27,6 +27,12 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
         void Update();
 
         /// <summary>
+        /// Call when the player pauses or resumes. The SDK stops and restores camera, microphone, and mobile audio playback.
+        /// E.g. for Unity call when MonoBehaviour.OnApplicationPause is called by the engine.
+        /// </summary>
+        void OnApplicationPause(bool pauseStatus);
+
+        /// <summary>
         /// This method exposes the WebRTC.Update(). In Unity, call it once with StartCoroutine(instance.WebRTCUpdateCoroutine());
         /// </summary>
         IEnumerator WebRTCUpdateCoroutine();

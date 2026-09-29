@@ -293,6 +293,20 @@ namespace StreamVideo.Core.Stats
                 if (GetEnumStringValue(stat.Type) != "outbound-rtp") continue;
                 if (!GetStringValue(stat.Dict, "kind").Equals("video")) continue;
 
+#if STREAM_DEBUG_ENABLED
+                UnityEngine.Debug.Log("[PublisherStats] encode rid=" + GetStringValue(stat.Dict, "rid")
+                    + " active=" + GetStringValue(stat.Dict, "active")
+                    + " framesEncoded=" + GetLongValue(stat.Dict, "framesEncoded")
+                    + " framesSent=" + GetLongValue(stat.Dict, "framesSent")
+                    + " keyFrames=" + GetLongValue(stat.Dict, "keyFramesEncoded")
+                    + " pli=" + GetLongValue(stat.Dict, "pliCount")
+                    + " fir=" + GetLongValue(stat.Dict, "firCount")
+                    + " size=" + GetIntValue(stat.Dict, "frameWidth") + "x" + GetIntValue(stat.Dict, "frameHeight")
+                    + " fps=" + GetDoubleValue(stat.Dict, "framesPerSecond")
+                    + " encoder=" + GetStringValue(stat.Dict, "encoderImplementation")
+                    + " limit=" + GetStringValue(stat.Dict, "qualityLimitationReason"));
+#endif
+
                 if (!_previousPublisherStats.ContainsKey(entry.Key)) continue;
 
                 var prevStat = _previousPublisherStats[entry.Key];

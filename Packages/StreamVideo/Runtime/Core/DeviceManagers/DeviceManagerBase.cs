@@ -32,7 +32,7 @@ namespace StreamVideo.Core.DeviceManagers
                 var prev = _selectedDevice;
                 _selectedDevice = value;
                 OnDeviceChanging(prev, value);
-                RaiseSelectedDeviceChanged(prev, value);
+                SelectedDeviceChanged?.Invoke(prev, value);
             }
         }
 
@@ -113,11 +113,6 @@ namespace StreamVideo.Core.DeviceManagers
         
         protected virtual void OnDeviceChanging(TDeviceInfo prev, TDeviceInfo current)
         {
-        }
-
-        protected void RaiseSelectedDeviceChanged(TDeviceInfo previousDevice, TDeviceInfo currentDevice)
-        {
-            SelectedDeviceChanged?.Invoke(previousDevice, currentDevice);
         }
 
         private TDeviceInfo _selectedDevice;

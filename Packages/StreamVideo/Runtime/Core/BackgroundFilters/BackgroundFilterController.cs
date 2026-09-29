@@ -165,6 +165,9 @@ namespace StreamVideo.Core.BackgroundFilters
             _segmenter.Pause();
             // Drop GPU RTs so the next Apply recreates them after a context loss.
             _compositor.Release();
+            // The preview RT is the publisher target and is released with the compositor.
+            // Clear it so callers fall back to the webcam until the next composite.
+            ReleasePreview();
         }
 
         public void Resume()

@@ -1177,6 +1177,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private bool _publisherAudioTrackIsEnabled;
         private bool _publisherVideoTrackIsEnabled;
+        private int _audioMuteGeneration;
+        private int _videoMuteGeneration;
         private bool _wasApplicationFocused;
 
         private AudioSource _audioInput;
@@ -1932,6 +1934,51 @@ namespace StreamVideo.Core.LowLevelClient
             TryExecuteSubscribeToTracks();
         }
 
+        private void SendLatestMuteState(TrackType trackType, bool isEnabled)
+        {
+            var generation = trackType == TrackType.Video ? ++_videoMuteGeneration : ++_audioMuteGeneration;
+            SendMuteStateIfLatestAsync(trackType, isEnabled, generation).LogIfFailed();
+        }
+
+        /// <summary>
+        /// A background mute can complete after the foreground unmute. Only the newest
+        /// generation is sent, and a stale response re-sends the current state.
+        /// </summary>
+        private async Task SendMuteStateIfLatestAsync(TrackType trackType, bool isEnabled, int generation)
+        {
+            if (!IsLatestMuteGeneration(trackType, generation))
+            {
+                return;
+            }
+
+            _logs.InfoIfDebug("[Mute] Sending " + trackType + " muted=" + !isEnabled + " generation="
+                              + generation);
+            await UpdateMuteStateAsync(trackType, isEnabled);
+
+            if (IsLatestMuteGeneration(trackType, generation))
+            {
+                _logs.InfoIfDebug("[Mute] Sent " + trackType + " muted=" + !isEnabled + " generation="
+                                  + generation);
+                return;
+            }
+
+            _logs.InfoIfDebug("[Mute] Stale " + trackType + " mute response for generation " + generation
+                              + ", re-sending latest state.");
+
+            var latestEnabled = trackType == TrackType.Video
+                ? PublisherVideoTrackIsEnabled
+                : PublisherAudioTrackIsEnabled;
+            var latestGeneration = trackType == TrackType.Video ? _videoMuteGeneration : _audioMuteGeneration;
+            await SendMuteStateIfLatestAsync(trackType, latestEnabled, latestGeneration);
+        }
+
+        internal static bool IsLatestMuteGeneration(int requestGeneration, int latestGeneration)
+            => requestGeneration == latestGeneration;
+
+        private bool IsLatestMuteGeneration(TrackType trackType, int generation)
+            => IsLatestMuteGeneration(generation,
+                trackType == TrackType.Video ? _videoMuteGeneration : _audioMuteGeneration);
+
         private async Task UpdateMuteStateAsync(TrackType trackType, bool isEnabled)
         {
             if (ActiveCall == null)
@@ -1965,12 +2012,12 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTODO: combine into single API call
             if (_publisherAudioTrackIsEnabled)
             {
-                await UpdateMuteStateAsync(TrackType.Audio, PublisherAudioTrackIsEnabled);
+                await SendMuteStateIfLatestAsync(TrackType.Audio, PublisherAudioTrackIsEnabled, ++_audioMuteGeneration);
             }
 
             if (_publisherVideoTrackIsEnabled)
             {
-                await UpdateMuteStateAsync(TrackType.Video, PublisherVideoTrackIsEnabled);
+                await SendMuteStateIfLatestAsync(TrackType.Video, PublisherVideoTrackIsEnabled, ++_videoMuteGeneration);
             }
         }
 
@@ -1988,7 +2035,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             Publisher.PublisherAudioTrack.Enabled = isEnabled;
 
-            UpdateMuteStateAsync(TrackType.Audio, isEnabled).LogIfFailed();
+            SendLatestMuteState(TrackType.Audio, isEnabled);
 
             UpdateAudioRecording();
         }
@@ -2002,7 +2049,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             Publisher.PublisherVideoTrack.Enabled = isEnabled;
 
-            UpdateMuteStateAsync(TrackType.Video, isEnabled).LogIfFailed();
+            SendLatestMuteState(TrackType.Video, isEnabled);
         }
 
         private void OnSfuParticipantJoined(ParticipantJoined participantJoined)
@@ -2724,7 +2771,7 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (audioTrack != null && _publisherAudioTrackIsEnabled)
             {
-                UpdateMuteStateAsync(TrackType.Audio, true).LogIfFailed();
+                SendLatestMuteState(TrackType.Audio, true);
             }
 
             UpdateAudioRecording();
@@ -2737,7 +2784,7 @@ namespace StreamVideo.Core.LowLevelClient
             // so UpdateMuteStates must be sent once the publisher track is actually created.
             if (videoTrack != null && _publisherVideoTrackIsEnabled)
             {
-                UpdateMuteStateAsync(TrackType.Video, true).LogIfFailed();
+                SendLatestMuteState(TrackType.Video, true);
             }
 
             PublisherVideoTrackChanged?.Invoke();

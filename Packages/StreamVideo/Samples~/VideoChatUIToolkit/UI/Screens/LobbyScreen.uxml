@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/LobbyScreen.uss" />
+    <ui:Template name="AccountHeader" src="../Components/AccountHeader.uxml" />
+    <ui:Template name="ParticipantTile" src="../Components/ParticipantTile.uxml" />
+    <ui:VisualElement name="lobby-screen" class="lobby">
+        <ui:Instance template="AccountHeader" name="header" />
+        <ui:VisualElement name="body" class="lobby__body">
+            <ui:VisualElement class="lobby__intro lobby__intro--portrait">
+                <ui:VisualElement class="icon icon--globe lobby__globe" />
+                <ui:Label name="title-portrait" text="Set up your call" class="lobby__title font-semibold" />
+            </ui:VisualElement>
+            <ui:VisualElement name="main" class="lobby__main">
+                <ui:VisualElement name="preview-area" class="lobby__preview-area">
+                    <ui:Instance template="ParticipantTile" name="preview" class="lobby__preview" />
+                </ui:VisualElement>
+                <ui:VisualElement name="side" class="lobby__side">
+                    <ui:VisualElement class="lobby__intro lobby__intro--landscape">
+                        <ui:VisualElement class="icon icon--globe lobby__globe" />
+                        <ui:Label name="title-landscape" text="Set up your call" class="lobby__title font-semibold" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="lobby__controls">
+                        <ui:Button name="mic-button" text="" class="btn btn-circle">
+                            <ui:VisualElement name="mic-icon" class="icon icon--mic" />
+                        </ui:Button>
+                        <ui:Button name="camera-button" text="" class="btn btn-circle">
+                            <ui:VisualElement name="camera-icon" class="icon icon--videocam" />
+                        </ui:Button>
+                    </ui:VisualElement>
+                    <ui:Label name="error-label" text="" class="lobby__error hidden" />
+                    <ui:Button name="join-button" text="Start Call" class="btn btn-primary lobby__join" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

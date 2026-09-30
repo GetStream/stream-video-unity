@@ -1,0 +1,134 @@
+.call {
+    flex-grow: 1;
+}
+
+.call__bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 8px;
+    flex-shrink: 0;
+}
+
+.call__bar-group {
+    flex-direction: row;
+    align-items: center;
+}
+
+.app-root .call__bar-group .btn-circle {
+    margin: 0 4px;
+}
+
+.call__timer {
+    position: absolute;
+    left: 50%;
+    top: 14px;
+    height: 28px;
+    width: 88px;
+    margin-left: -44px;
+    border-radius: 14px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-control);
+}
+
+.app-root .call__timer-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    -unity-background-image-tint-color: var(--color-success);
+}
+
+.call__timer-label {
+    font-size: 13px;
+}
+
+.call__stage {
+    flex-grow: 1;
+    margin: 0 8px;
+    border-radius: 16px;
+    overflow: hidden;
+    background-color: var(--color-surface);
+    align-items: center;
+    justify-content: center;
+}
+
+.call__joining {
+    font-size: 17px;
+    color: var(--color-text-secondary);
+}
+
+.call__tiles {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Tiles are positioned absolutely from code */
+.call__tile {
+    position: absolute;
+}
+
+/* "Your Meeting is Live!" accordion, shown while the local participant is alone */
+.meeting-live {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    border-radius: 12px;
+    background-color: #FFFFFF;
+    padding: 0 16px;
+}
+
+.app-root .meeting-live__header,
+.app-root .meeting-live__header:hover,
+.app-root .meeting-live__header:active {
+    height: 48px;
+    justify-content: space-between;
+}
+
+.meeting-live__title {
+    font-size: 15px;
+}
+
+.meeting-live__details {
+    padding-bottom: 14px;
+}
+
+.meeting-live__hint {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: normal;
+    margin-bottom: 10px;
+}
+
+.meeting-live__id-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 44px;
+    padding: 0 4px 0 14px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: var(--color-border);
+}
+
+.meeting-live__id {
+    font-size: 15px;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-root .meeting-live__id-row .btn-circle {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.landscape .meeting-live {
+    left: auto;
+    width: 360px;
+}

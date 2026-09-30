@@ -1,0 +1,102 @@
+.lobby {
+    flex-grow: 1;
+}
+
+.lobby__body {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 0 16px 48px 16px;
+}
+
+.lobby__intro {
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.app-root .lobby__globe {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 12px;
+    -unity-background-image-tint-color: var(--color-accent);
+}
+
+.lobby__title {
+    font-size: 19px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.lobby__main {
+    width: 100%;
+    max-width: 420px;
+    flex-direction: column;
+}
+
+.lobby__preview-area {
+    align-items: center;
+    justify-content: center;
+}
+
+/* Width and height are set from code to keep the preview aspect ratio */
+.lobby__preview {
+    flex-shrink: 0;
+}
+
+.lobby__side {
+    align-items: stretch;
+}
+
+.lobby__controls {
+    flex-direction: row;
+    justify-content: center;
+    margin: 12px 0 28px 0;
+}
+
+.app-root .lobby__controls .btn-circle {
+    margin: 0 4px;
+}
+
+.lobby__error {
+    color: var(--color-danger);
+    font-size: 13px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-bottom: 12px;
+}
+
+.app-root .lobby__intro--landscape {
+    display: none;
+}
+
+/* Landscape: preview on the left, title and actions on the right */
+.app-root.landscape .lobby__intro--portrait {
+    display: none;
+}
+
+.app-root.landscape .lobby__intro--landscape {
+    display: flex;
+}
+
+.landscape .lobby__body {
+    padding-bottom: 16px;
+}
+
+.landscape .lobby__main {
+    flex-grow: 1;
+    max-width: 960px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.landscape .lobby__preview-area {
+    flex-grow: 1;
+    flex-basis: 0;
+    align-self: stretch;
+}
+
+.landscape .lobby__side {
+    width: 300px;
+    margin-left: 24px;
+    justify-content: center;
+}

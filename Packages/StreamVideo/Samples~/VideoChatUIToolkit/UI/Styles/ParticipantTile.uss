@@ -1,0 +1,118 @@
+.participant-tile {
+    flex-grow: 1;
+    overflow: hidden;
+    border-radius: 16px;
+    background-color: #2B2E36;
+}
+
+.participant-tile__video {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.participant-tile__placeholder {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.participant-tile__avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 36px;
+    background-color: #DDE6FF;
+    align-items: center;
+    justify-content: center;
+}
+
+.participant-tile__initials {
+    font-size: 28px;
+    color: var(--color-accent);
+}
+
+.participant-tile__badge {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    height: 26px;
+    max-width: 70%;
+    padding: 0 8px;
+    border-radius: 8px;
+    flex-direction: row;
+    align-items: center;
+    background-color: rgba(26, 27, 37, 0.75);
+}
+
+.participant-tile__name {
+    color: #FFFFFF;
+    font-size: 12px;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-root .participant-tile__audio-indicator {
+    width: 14px;
+    height: 14px;
+    margin-left: 6px;
+    -unity-background-image-tint-color: rgba(255, 255, 255, 0.5);
+}
+
+.app-root .participant-tile--speaking .participant-tile__audio-indicator {
+    -unity-background-image-tint-color: #5B8CFF;
+}
+
+.app-root .participant-tile--muted .participant-tile__audio-indicator {
+    background-image: url("../Icons/icon_mic_off.png");
+    -unity-background-image-tint-color: #FF6B61;
+}
+
+.participant-tile__quality {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(26, 27, 37, 0.75);
+}
+
+.app-root .participant-tile__quality-icon {
+    width: 14px;
+    height: 14px;
+    -unity-background-image-tint-color: var(--color-success);
+}
+
+.app-root .participant-tile__quality--good .participant-tile__quality-icon {
+    -unity-background-image-tint-color: #F2B233;
+}
+
+.app-root .participant-tile__quality--poor .participant-tile__quality-icon {
+    -unity-background-image-tint-color: #FF6B61;
+}
+
+.participant-tile__frame {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 16px;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+}
+
+.participant-tile--highlighted .participant-tile__frame {
+    border-color: var(--color-accent);
+}

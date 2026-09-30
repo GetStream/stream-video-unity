@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="Styles/Common.uss" />
+    <ui:Template name="StartCallScreen" src="Screens/StartCallScreen.uxml" />
+    <ui:Template name="LobbyScreen" src="Screens/LobbyScreen.uxml" />
+    <ui:Template name="CallScreen" src="Screens/CallScreen.uxml" />
+    <ui:VisualElement name="app-root" class="app-root portrait">
+        <ui:VisualElement name="safe-area" class="safe-area">
+            <ui:Instance template="StartCallScreen" name="start-call" class="screen" />
+            <ui:Instance template="LobbyScreen" name="lobby" class="screen hidden" />
+            <ui:Instance template="CallScreen" name="call" class="screen hidden" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

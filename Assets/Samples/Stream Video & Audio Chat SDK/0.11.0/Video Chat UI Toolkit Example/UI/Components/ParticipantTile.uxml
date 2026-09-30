@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/ParticipantTile.uss" />
+    <ui:VisualElement name="participant-tile" class="participant-tile">
+        <ui:VisualElement name="video" picking-mode="Ignore" class="participant-tile__video" />
+        <ui:VisualElement name="placeholder" picking-mode="Ignore" class="participant-tile__placeholder">
+            <ui:VisualElement class="participant-tile__avatar">
+                <ui:Label name="initials" text="" class="participant-tile__initials font-semibold" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="name-badge" picking-mode="Ignore" class="participant-tile__badge">
+            <ui:Label name="name" text="" class="participant-tile__name" />
+            <ui:VisualElement name="audio-indicator" class="icon icon--speaking participant-tile__audio-indicator" />
+        </ui:VisualElement>
+        <ui:VisualElement name="quality-badge" picking-mode="Ignore" class="participant-tile__quality hidden">
+            <ui:VisualElement name="quality-icon" class="icon icon--signal participant-tile__quality-icon" />
+        </ui:VisualElement>
+        <ui:VisualElement name="frame" picking-mode="Ignore" class="participant-tile__frame" />
+    </ui:VisualElement>
+</ui:UXML>

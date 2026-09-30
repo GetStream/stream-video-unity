@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="account-header" class="account-header">
+        <ui:VisualElement name="avatar" class="account-header__avatar">
+            <ui:Label name="avatar-initials" text="" class="account-header__initials font-semibold" />
+        </ui:VisualElement>
+        <ui:Label name="user-name" text="Connecting..." class="account-header__name font-semibold" />
+        <ui:Button name="close-button" text="" class="btn btn-icon">
+            <ui:VisualElement class="icon icon--close" />
+        </ui:Button>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,50 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/CallScreen.uss" />
+    <ui:VisualElement name="call-screen" class="call">
+        <ui:VisualElement class="call__bar call__bar--top">
+            <ui:VisualElement class="call__bar-group">
+                <ui:Button name="flip-camera-button" text="" class="btn btn-circle">
+                    <ui:VisualElement class="icon icon--flip-camera" />
+                </ui:Button>
+            </ui:VisualElement>
+            <ui:VisualElement class="call__timer" picking-mode="Ignore">
+                <ui:VisualElement class="icon icon--shield call__timer-icon" />
+                <ui:Label name="timer-label" text="00:00" class="call__timer-label font-semibold" />
+            </ui:VisualElement>
+            <ui:VisualElement class="call__bar-group">
+                <ui:Button name="leave-button" text="" class="btn btn-circle btn-circle--danger">
+                    <ui:VisualElement class="icon icon--call-end" />
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="stage" class="call__stage">
+            <ui:Label name="joining-label" text="Joining..." class="call__joining font-semibold" />
+            <ui:VisualElement name="tiles" picking-mode="Ignore" class="call__tiles" />
+            <ui:VisualElement name="meeting-live" class="meeting-live hidden">
+                <ui:Button name="meeting-live-toggle" text="" class="btn meeting-live__header">
+                    <ui:Label text="Your Meeting is Live!" class="meeting-live__title font-semibold" />
+                    <ui:VisualElement name="meeting-live-chevron" class="icon icon--expand-more" />
+                </ui:Button>
+                <ui:VisualElement name="meeting-live-details" class="meeting-live__details hidden">
+                    <ui:Label text="Share the call ID with others so they can join this call." class="meeting-live__hint" />
+                    <ui:VisualElement class="meeting-live__id-row">
+                        <ui:Label name="call-id-label" text="" class="meeting-live__id font-semibold" />
+                        <ui:Button name="copy-call-id-button" text="" class="btn btn-circle">
+                            <ui:VisualElement class="icon icon--copy" />
+                        </ui:Button>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="call__bar call__bar--bottom">
+            <ui:VisualElement class="call__bar-group">
+                <ui:Button name="mic-button" text="" class="btn btn-circle">
+                    <ui:VisualElement name="mic-icon" class="icon icon--mic" />
+                </ui:Button>
+                <ui:Button name="camera-button" text="" class="btn btn-circle">
+                    <ui:VisualElement name="camera-icon" class="icon icon--videocam" />
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

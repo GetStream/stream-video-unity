@@ -1,0 +1,194 @@
+/* Design tokens */
+.app-root {
+    --color-bg: #FFFFFF;
+    --color-surface: #F4F5F7;
+    --color-control: #EDEEF1;
+    --color-border: #D5D8DE;
+    --color-divider: #E8EAED;
+    --color-text-primary: #1A1B25;
+    --color-text-secondary: #545A68;
+    --color-text-tertiary: #A4AAB5;
+    --color-accent: #2F66F6;
+    --color-accent-pressed: #2552D1;
+    --color-danger: #D92F26;
+    --color-danger-bg: #FCE8E6;
+    --color-success: #33B679;
+
+    flex-grow: 1;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-size: 14px;
+}
+
+/* Fonts. font-definition is reset so the theme's default font does not take precedence over -unity-font */
+.app-root,
+.app-root * {
+    -unity-font-definition: initial;
+    -unity-font: url("../Fonts/Inter-Regular.ttf");
+}
+
+.app-root .font-medium {
+    -unity-font: url("../Fonts/Inter-Medium.ttf");
+}
+
+.app-root .font-semibold {
+    -unity-font: url("../Fonts/Inter-SemiBold.ttf");
+}
+
+/* Margins are set from code to match Screen.safeArea */
+.safe-area {
+    flex-grow: 1;
+}
+
+/* Screens */
+.screen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.app-root .hidden {
+    display: none;
+}
+
+/* Icons are white PNGs tinted per usage */
+.icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: var(--color-text-primary);
+}
+
+.icon--mic { background-image: url("../Icons/icon_mic.png"); }
+.icon--mic-off { background-image: url("../Icons/icon_mic_off.png"); }
+.icon--videocam { background-image: url("../Icons/icon_videocam.png"); }
+.icon--videocam-off { background-image: url("../Icons/icon_videocam_off.png"); }
+.icon--call-end { background-image: url("../Icons/icon_call_end.png"); }
+.icon--flip-camera { background-image: url("../Icons/icon_flip_camera_ios.png"); }
+.icon--globe { background-image: url("../Icons/icon_public.png"); }
+.icon--close { background-image: url("../Icons/icon_close.png"); }
+.icon--error { background-image: url("../Icons/icon_error_outline.png"); }
+.icon--expand-more { background-image: url("../Icons/icon_expand_more.png"); }
+.icon--expand-less { background-image: url("../Icons/icon_expand_less.png"); }
+.icon--copy { background-image: url("../Icons/icon_content_copy.png"); }
+.icon--shield { background-image: url("../Icons/icon_verified_user.png"); }
+.icon--signal { background-image: url("../Icons/icon_signal_cellular_alt.png"); }
+.icon--speaking { background-image: url("../Icons/icon_graphic_eq.png"); }
+
+/* Buttons. Selectors are scoped to .app-root so they win over the default theme's button states */
+.app-root .btn {
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.app-root .btn-primary,
+.app-root .btn-primary:hover {
+    height: 46px;
+    border-radius: 23px;
+    background-color: var(--color-accent);
+    color: #FFFFFF;
+    font-size: 15px;
+    -unity-font: url("../Fonts/Inter-SemiBold.ttf");
+}
+
+.app-root .btn-primary:active {
+    background-color: var(--color-accent-pressed);
+}
+
+.app-root .btn-primary.is-busy {
+    opacity: 0.6;
+}
+
+.app-root .btn-text,
+.app-root .btn-text:hover,
+.app-root .btn-text:active {
+    height: 46px;
+    padding: 0 12px;
+    color: var(--color-accent);
+    font-size: 15px;
+    -unity-font: url("../Fonts/Inter-SemiBold.ttf");
+}
+
+.app-root .btn-text.is-disabled {
+    color: var(--color-text-tertiary);
+}
+
+/* Round icon button used in the lobby and the call bars */
+.app-root .btn-circle,
+.app-root .btn-circle:hover {
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background-color: var(--color-control);
+}
+
+.app-root .btn-circle:active {
+    background-color: var(--color-border);
+}
+
+.app-root .btn-circle.is-off {
+    background-color: var(--color-danger-bg);
+}
+
+.app-root .btn-circle.is-off .icon {
+    -unity-background-image-tint-color: var(--color-danger);
+}
+
+.app-root .btn-circle--danger,
+.app-root .btn-circle--danger:hover,
+.app-root .btn-circle--danger:active {
+    background-color: #DC433B;
+}
+
+.app-root .btn-circle--danger .icon {
+    -unity-background-image-tint-color: #FFFFFF;
+}
+
+.app-root .btn-icon,
+.app-root .btn-icon:hover,
+.app-root .btn-icon:active {
+    width: 36px;
+    height: 36px;
+}
+
+/* Account header (sample-only, not part of the SDK UI) */
+.account-header {
+    flex-direction: row;
+    align-items: center;
+    height: 60px;
+    padding: 0 16px;
+    flex-shrink: 0;
+}
+
+.account-header__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background-color: #DDE6FF;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+
+.account-header__initials {
+    color: var(--color-accent);
+    font-size: 15px;
+}
+
+.account-header__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

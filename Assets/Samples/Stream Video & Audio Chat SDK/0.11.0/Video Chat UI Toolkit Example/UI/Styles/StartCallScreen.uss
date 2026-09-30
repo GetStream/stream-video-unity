@@ -1,0 +1,165 @@
+.start-call {
+    flex-grow: 1;
+}
+
+.start-call__body {
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 16px 48px 16px;
+}
+
+.start-call__intro {
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+}
+
+.start-call__hero {
+    width: 220px;
+    height: 158px;
+    background-image: url("../Images/hero.png");
+    -unity-background-scale-mode: scale-to-fit;
+    margin-bottom: 20px;
+}
+
+.start-call__title {
+    font-size: 19px;
+    margin-bottom: 12px;
+    -unity-text-align: middle-center;
+}
+
+.start-call__subtitle {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    white-space: normal;
+    -unity-text-align: middle-center;
+    max-width: 300px;
+}
+
+.start-call__form {
+    width: 100%;
+    max-width: 420px;
+    margin-top: 40px;
+}
+
+.start-call__join-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.app-root .start-call__join-row .btn-text {
+    width: 104px;
+}
+
+/* Call ID input */
+.call-id-field {
+    flex-grow: 1;
+    height: 46px;
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: 14px;
+    justify-content: center;
+}
+
+.call-id-field.is-focused {
+    border-color: var(--color-accent);
+}
+
+.call-id-field.is-error {
+    border-color: var(--color-danger);
+}
+
+.app-root .call-id-field__input {
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+}
+
+.app-root .call-id-field__input .unity-base-field__input,
+.app-root .call-id-field__input:hover .unity-base-field__input,
+.app-root .call-id-field__input:focus .unity-base-field__input {
+    margin: 0;
+    padding: 0 15px;
+    border-width: 0;
+    border-radius: 14px;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--color-text-primary);
+    font-size: 15px;
+    -unity-text-align: middle-left;
+    --unity-cursor-color: var(--color-accent);
+    --unity-selection-color: rgba(47, 102, 246, 0.25);
+}
+
+.call-id-field__placeholder {
+    position: absolute;
+    left: 16px;
+    top: 0;
+    bottom: 0;
+    -unity-text-align: middle-left;
+    color: var(--color-text-tertiary);
+    font-size: 15px;
+}
+
+.call-id-error {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 8px;
+    margin-left: 4px;
+}
+
+.app-root .call-id-error__icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    -unity-background-image-tint-color: var(--color-danger);
+}
+
+.call-id-error__label {
+    color: var(--color-danger);
+    font-size: 13px;
+}
+
+/* OR divider */
+.or-divider {
+    flex-direction: row;
+    align-items: center;
+    margin: 24px 0;
+}
+
+.or-divider__line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: var(--color-divider);
+}
+
+.or-divider__label {
+    margin: 0 16px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+}
+
+/* Landscape: intro on the left, form on the right */
+.landscape .start-call__body {
+    flex-direction: row;
+    padding-bottom: 16px;
+}
+
+.landscape .start-call__intro {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin-right: 24px;
+}
+
+.landscape .start-call__form {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin-top: 0;
+}
+
+.landscape .start-call__hero {
+    width: 180px;
+    height: 129px;
+    margin-bottom: 12px;
+}

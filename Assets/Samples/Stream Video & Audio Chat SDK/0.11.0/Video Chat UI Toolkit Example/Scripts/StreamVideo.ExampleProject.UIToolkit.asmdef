@@ -1,0 +1,19 @@
+{
+    "name": "StreamVideo.ExampleProject.UIToolkit",
+    "rootNamespace": "StreamVideo.ExampleProject.UIToolkit",
+    "references": [
+        "StreamVideo.Libs",
+        "StreamVideo.Core",
+        "Unity.WebRTC",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

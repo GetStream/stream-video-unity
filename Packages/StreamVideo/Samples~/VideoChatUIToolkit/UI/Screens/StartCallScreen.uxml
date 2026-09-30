@@ -1,0 +1,33 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/StartCallScreen.uss" />
+    <ui:Template name="AccountHeader" src="../Components/AccountHeader.uxml" />
+    <ui:VisualElement name="start-call-screen" class="start-call">
+        <ui:Instance template="AccountHeader" name="header" />
+        <ui:VisualElement class="start-call__body">
+            <ui:VisualElement class="start-call__intro">
+                <ui:VisualElement class="start-call__hero" />
+                <ui:Label text="Stream Video Calling" class="start-call__title font-semibold" />
+                <ui:Label text="Start a new call or join a meeting by entering the call ID." class="start-call__subtitle" />
+            </ui:VisualElement>
+            <ui:VisualElement class="start-call__form">
+                <ui:VisualElement class="start-call__join-row">
+                    <ui:VisualElement name="call-id-field" class="call-id-field">
+                        <ui:TextField name="call-id-input" class="call-id-field__input" />
+                        <ui:Label name="call-id-placeholder" text="Enter Call ID" picking-mode="Ignore" class="call-id-field__placeholder" />
+                    </ui:VisualElement>
+                    <ui:Button name="join-button" text="Join Call" class="btn btn-text is-disabled" />
+                </ui:VisualElement>
+                <ui:VisualElement name="call-id-error" class="call-id-error hidden">
+                    <ui:VisualElement class="icon icon--error call-id-error__icon" />
+                    <ui:Label name="call-id-error-label" text="Incorrect Call ID. Try again." class="call-id-error__label" />
+                </ui:VisualElement>
+                <ui:VisualElement class="or-divider">
+                    <ui:VisualElement class="or-divider__line" />
+                    <ui:Label text="OR" class="or-divider__label font-semibold" />
+                    <ui:VisualElement class="or-divider__line" />
+                </ui:VisualElement>
+                <ui:Button name="start-new-call-button" text="Start New Call" class="btn btn-primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

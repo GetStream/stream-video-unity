@@ -26,6 +26,16 @@
                             <ui:VisualElement name="camera-icon" class="icon icon--videocam" />
                         </ui:Button>
                     </ui:VisualElement>
+                    <ui:VisualElement class="lobby__devices">
+                        <ui:VisualElement class="lobby__device">
+                            <ui:DropdownField name="microphone-dropdown" class="lobby__device-dropdown" />
+                            <ui:VisualElement picking-mode="Ignore" class="icon icon--mic lobby__device-icon" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="lobby__device lobby__device--last">
+                            <ui:DropdownField name="camera-dropdown" class="lobby__device-dropdown" />
+                            <ui:VisualElement picking-mode="Ignore" class="icon icon--videocam lobby__device-icon" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
                     <ui:Label name="error-label" text="" class="lobby__error hidden" />
                     <ui:Button name="join-button" text="Start Call" class="btn btn-primary lobby__join" />
                 </ui:VisualElement>

@@ -59,7 +59,7 @@ namespace StreamVideo.ExampleProject.UIToolkit
                 return;
             }
 
-#if UNITY_ANDROID || UNITY_IOS
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
             foreach (var device in videoDeviceManager.EnumerateDevices())
             {
                 if (!device.IsFrontFacing)

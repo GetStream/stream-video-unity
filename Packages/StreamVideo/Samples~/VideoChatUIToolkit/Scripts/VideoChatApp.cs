@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using StreamVideo.Core;
 using StreamVideo.Core.Configs;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.Exceptions;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.ExampleProject.UIToolkit.Screens;
@@ -181,7 +182,16 @@ namespace StreamVideo.ExampleProject.UIToolkit
                 }
             }
 
-            videoDeviceManager.SelectDevice(next, SenderVideoResolution, videoDeviceManager.IsEnabled,
+            SelectCamera(next);
+        }
+
+        /// <summary>
+        /// Select the camera using the configured sender resolution and FPS. The camera enabled state is preserved.
+        /// </summary>
+        public void SelectCamera(CameraDeviceInfo device)
+        {
+            var videoDeviceManager = Client.VideoDeviceManager;
+            videoDeviceManager.SelectDevice(device, SenderVideoResolution, videoDeviceManager.IsEnabled,
                 _senderVideoFps);
         }
 

@@ -50,11 +50,71 @@
 .lobby__controls {
     flex-direction: row;
     justify-content: center;
-    margin: 12px 0 28px 0;
+    margin: 12px 0 16px 0;
 }
 
 .app-root .lobby__controls .btn-circle {
     margin: 0 4px;
+}
+
+/* Device dropdowns. Selectors are scoped to .app-root so they win over the default theme's field states */
+.lobby__devices {
+    flex-direction: row;
+    margin-bottom: 28px;
+}
+
+.lobby__device {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-right: 12px;
+}
+
+.lobby__device--last {
+    margin-right: 0;
+}
+
+.app-root .lobby__device-icon {
+    position: absolute;
+    left: 12px;
+    top: 10px;
+    -unity-background-image-tint-color: var(--color-text-secondary);
+}
+
+.app-root .lobby__device-dropdown {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.app-root .lobby__device-dropdown > .unity-base-popup-field__input,
+.app-root .lobby__device-dropdown:hover > .unity-base-popup-field__input,
+.app-root .lobby__device-dropdown:focus > .unity-base-popup-field__input,
+.app-root .lobby__device-dropdown:hover:enabled > .unity-base-popup-field__input,
+.app-root .lobby__device-dropdown:focus:enabled > .unity-base-popup-field__input {
+    height: 40px;
+    margin: 0;
+    padding: 0 10px 0 38px;
+    border-width: 1px;
+    border-radius: 10px;
+    border-color: var(--color-border);
+    background-color: var(--color-bg);
+}
+
+.app-root .lobby__device-dropdown .unity-base-popup-field__text {
+    flex-shrink: 1;
+    color: var(--color-text-primary);
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-root .lobby__device-dropdown .unity-base-popup-field__arrow {
+    width: 20px;
+    height: 20px;
+    margin-left: 4px;
+    background-image: url("../Icons/icon_expand_more.png");
+    -unity-background-image-tint-color: var(--color-text-secondary);
 }
 
 .lobby__error {

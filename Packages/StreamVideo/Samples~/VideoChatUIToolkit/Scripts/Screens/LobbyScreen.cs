@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using StreamVideo.Core.DeviceManagers;
 using StreamVideo.ExampleProject.UIToolkit.Views;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -5,7 +8,7 @@ using UnityEngine.UIElements;
 namespace StreamVideo.ExampleProject.UIToolkit.Screens
 {
     /// <summary>
-    /// Shown before starting or joining a call. Displays the local camera preview and lets the user toggle the microphone and camera.
+    /// Shown before starting or joining a call. Displays the local camera preview and lets the user toggle and pick the microphone and camera.
     /// The device state carries over into the call.
     /// </summary>
     internal sealed class LobbyScreen : ScreenBase
@@ -38,6 +41,12 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             _micButton.clicked += () => App.Client.AudioDeviceManager.SetEnabled(!App.Client.AudioDeviceManager.IsEnabled);
             _cameraButton.clicked += () => App.Client.VideoDeviceManager.SetEnabled(!App.Client.VideoDeviceManager.IsEnabled);
             _joinButton.clicked += OnJoinClicked;
+
+            _microphoneDropdown = root.Q<DropdownField>("microphone-dropdown");
+            _cameraDropdown = root.Q<DropdownField>("camera-dropdown");
+
+            _microphoneDropdown.RegisterValueChangedCallback(_ => OnMicrophonePicked());
+            _cameraDropdown.RegisterValueChangedCallback(_ => OnCameraPicked());
         }
 
         public void Show(string callId, bool isNewCall, string error)
@@ -53,7 +62,22 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             _errorLabel.text = error ?? string.Empty;
             _errorLabel.EnableInClassList(HiddenClass, string.IsNullOrEmpty(error));
 
+            if (!IsVisible)
+            {
+                App.Client.AudioDeviceManager.SelectedDeviceChanged += OnMicrophoneChanged;
+                App.Client.VideoDeviceManager.SelectedDeviceChanged += OnCameraChanged;
+            }
+
+            RefreshMicrophones();
+            RefreshCameras();
+
             SetVisible();
+        }
+
+        protected override void OnHide()
+        {
+            App.Client.AudioDeviceManager.SelectedDeviceChanged -= OnMicrophoneChanged;
+            App.Client.VideoDeviceManager.SelectedDeviceChanged -= OnCameraChanged;
         }
 
         protected override void OnUpdate()
@@ -97,6 +121,10 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
         private readonly Button _cameraButton;
         private readonly VisualElement _cameraIcon;
         private readonly ParticipantTileView _previewView;
+        private readonly DropdownField _microphoneDropdown;
+        private readonly DropdownField _cameraDropdown;
+        private readonly List<MicrophoneDeviceInfo> _microphones = new List<MicrophoneDeviceInfo>();
+        private readonly List<CameraDeviceInfo> _cameras = new List<CameraDeviceInfo>();
 
         private string _callId;
         private bool _isNewCall;
@@ -110,6 +138,75 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             }
 
             App.JoinCallAsync(_callId, create: _isNewCall);
+        }
+
+        private void OnMicrophoneChanged(MicrophoneDeviceInfo previousDevice, MicrophoneDeviceInfo currentDevice)
+            => RefreshMicrophones();
+
+        private void OnCameraChanged(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice)
+            => RefreshCameras();
+
+        private void OnMicrophonePicked()
+        {
+            var index = _microphoneDropdown.index;
+            if (index < 0 || index >= _microphones.Count)
+            {
+                return;
+            }
+
+            var audioDeviceManager = App.Client.AudioDeviceManager;
+            audioDeviceManager.SelectDevice(_microphones[index], audioDeviceManager.IsEnabled);
+        }
+
+        private void OnCameraPicked()
+        {
+            var index = _cameraDropdown.index;
+            if (index < 0 || index >= _cameras.Count)
+            {
+                return;
+            }
+
+            App.SelectCamera(_cameras[index]);
+        }
+
+        private void RefreshMicrophones()
+        {
+            var audioDeviceManager = App.Client.AudioDeviceManager;
+            _microphones.Clear();
+            _microphones.AddRange(audioDeviceManager.EnumerateDevices());
+            SetDropdownChoices(_microphoneDropdown, _microphones.Select(d => d.Name),
+                _microphones.IndexOf(audioDeviceManager.SelectedDevice));
+        }
+
+        private void RefreshCameras()
+        {
+            var videoDeviceManager = App.Client.VideoDeviceManager;
+            _cameras.Clear();
+            _cameras.AddRange(videoDeviceManager.EnumerateDevices());
+            SetDropdownChoices(_cameraDropdown, _cameras.Select(d => d.Name),
+                _cameras.IndexOf(videoDeviceManager.SelectedDevice));
+        }
+
+        /// <summary>
+        /// Duplicate device names get a numeric suffix because the dropdown resolves the selected index by value
+        /// </summary>
+        private static void SetDropdownChoices(DropdownField dropdown, IEnumerable<string> names, int selectedIndex)
+        {
+            var choices = new List<string>();
+            foreach (var name in names)
+            {
+                var choice = name;
+                for (var i = 2; choices.Contains(choice); i++)
+                {
+                    choice = name + " (" + i + ")";
+                }
+
+                choices.Add(choice);
+            }
+
+            dropdown.choices = choices;
+            dropdown.SetValueWithoutNotify(selectedIndex >= 0 ? choices[selectedIndex] : string.Empty);
+            dropdown.SetEnabled(choices.Count > 0);
         }
 
         /// <summary>

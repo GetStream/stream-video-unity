@@ -41,14 +41,14 @@ namespace StreamVideo.Tests.Shared
         }
 
         [OneTimeTearDown]
-        public async void OneTimeTearDown()
+        public async Task OneTimeTearDown()
         {
             Debug.LogWarning("[One Time] TearDown");
             await StreamTestClientProvider.Instance.ReleaseLockAsync(this);
         }
 
         [TearDown]
-        public async void TearDown()
+        public async Task TearDown()
         {
             Debug.LogWarning("[Per Test] TearDown");
 

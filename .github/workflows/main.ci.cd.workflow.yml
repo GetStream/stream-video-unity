@@ -114,6 +114,8 @@ jobs:
           echo "RUNNER_ID=$RUNNER_ID" >> $GITHUB_ENV
           echo "BUILD_NAME=$BUILD_NAME" >> $GITHUB_ENV
 
+      # cliVersion is pinned: game-ci CLI v0.1.55+ rejects the Personal .ulf on hosted runners.
+      # v0.1.53 is the last release that was current while the daily CI still passed (2026-09-09).
       - name: Enable Tests
         uses: game-ci/unity-builder@v4
         env:
@@ -121,6 +123,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
+          cliVersion: v0.1.53
           buildMethod: StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag
           customImage: ${{ env.DOCKER_TAG }}
           allowDirtyBuild: true
@@ -134,6 +137,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
+          cliVersion: v0.1.53
           testMode: all
           customParameters: -streamBase64TestDataSet "${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }}" -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }}
           customImage: ${{ env.DOCKER_TAG }}
@@ -154,6 +158,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
+          cliVersion: v0.1.53
           testMode: all
           customParameters: -streamBase64TestDataSet "${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }}" -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }}
           customImage: ${{ env.DOCKER_TAG }}
@@ -174,6 +179,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
+          cliVersion: v0.1.53
           testMode: all
           customParameters: -streamBase64TestDataSet "${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }}" -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }}
           customImage: ${{ env.DOCKER_TAG }}
@@ -209,6 +215,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
+          cliVersion: v0.1.53
           buildMethod: StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp
           customParameters: -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }} -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }} -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath SampleAppBuild/${{ env.BUILD_NAME }}
           customImage: ${{ env.DOCKER_TAG }}

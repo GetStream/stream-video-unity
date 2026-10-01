@@ -23,6 +23,11 @@
       "displayName": "Video & Audio Chat Example Project",
       "description": "Sample project showing a Video & Audio Chat",
       "path": "Samples~/VideoChat"
+    },
+    {
+      "displayName": "Video Chat UI Toolkit Example",
+      "description": "Video calling sample built with UI Toolkit. Start or join a call, set up the camera and microphone in the lobby, and talk with other participants. Supports portrait and landscape.",
+      "path": "Samples~/VideoChatUIToolkit"
     }
   ],
   "author": {

@@ -8,8 +8,8 @@ using UnityEngine.UIElements;
 namespace StreamVideo.ExampleProject.UIToolkit.Screens
 {
     /// <summary>
-    /// Shown before starting or joining a call. Displays the local camera preview and lets the user toggle and pick the microphone and camera.
-    /// The device state carries over into the call.
+    /// Shown before starting or joining a call. Displays the local camera preview and lets the user toggle the microphone and camera.
+    /// Desktop and the Editor also show device lists. A mobile player does not. The device state carries over into the call.
     /// </summary>
     internal sealed class LobbyScreen : ScreenBase
     {
@@ -47,6 +47,10 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
 
             _microphoneDropdown.RegisterValueChangedCallback(_ => OnMicrophonePicked());
             _cameraDropdown.RegisterValueChangedCallback(_ => OnCameraPicked());
+
+            // UnityEngine.Application stays false in the Editor, including the Device Simulator.
+            // Device.Application would hide the lists while simulating a phone.
+            root.Q(className: "lobby__devices").EnableInClassList(HiddenClass, Application.isMobilePlatform);
         }
 
         public void Show(string callId, bool isNewCall, string error)

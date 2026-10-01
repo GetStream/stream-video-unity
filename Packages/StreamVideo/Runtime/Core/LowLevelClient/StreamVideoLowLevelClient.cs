@@ -349,6 +349,7 @@ namespace StreamVideo.Core.LowLevelClient
             if (current == ConnectionState.Connected)
             {
                 _connectionId = _coordinatorWS.ConnectionId;
+                LocalUserDto = _coordinatorWS.LocalUserDto;
                 Connected?.Invoke();
             }
 

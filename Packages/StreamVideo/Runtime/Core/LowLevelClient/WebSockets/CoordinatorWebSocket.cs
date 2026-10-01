@@ -156,10 +156,10 @@ namespace StreamVideo.Core.LowLevelClient.WebSockets
         private void HandleConnectedEvent(ConnectedEventInternalDTO connectedEvent)
         {
             ConnectionId = connectedEvent.ConnectionId;
+            // Assign before ConnectionState. Setting Connected raises ConnectionStateChanged synchronously.
+            LocalUserDto = connectedEvent.Me;
 
             ConnectionState = ConnectionState.Connected;
-
-            LocalUserDto = connectedEvent.Me;
             
             _connectUserTaskSource.SetResult(true);
             _connectUserTaskSource = null;

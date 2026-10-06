@@ -47,12 +47,14 @@ namespace StreamVideo.Tests.Shared
             await StreamTestClientProvider.Instance.ReleaseLockAsync(this);
         }
 
-        [TearDown]
-        public async Task TearDown()
+        // NUnit 3.5 (Unity 2021.3 / 2022.3) rejects [TearDown] methods that return Task.
+        // [UnityTearDown] is awaited as a coroutine on every supported editor.
+        [UnityTearDown]
+        public IEnumerator TearDown()
         {
             Debug.LogWarning("[Per Test] TearDown");
 
-            await StreamTestClientProvider.Instance.LeaveAllActiveCallsAsync();
+            yield return StreamTestClientProvider.Instance.LeaveAllActiveCallsAsync().RunAsIEnumerator();
             DisposableAssetsProvider.DisposeInstances();
         }
 

@@ -114,8 +114,11 @@ jobs:
           echo "RUNNER_ID=$RUNNER_ID" >> $GITHUB_ENV
           echo "BUILD_NAME=$BUILD_NAME" >> $GITHUB_ENV
 
-      # cliVersion is pinned: game-ci CLI v0.1.55+ rejects the Personal .ulf on hosted runners.
-      # v0.1.53 is the last release that was current while the daily CI still passed (2026-09-09).
+      # unity-builder@v4 still resolves to v4.8.2 (pre-CLI). cliVersion is not an input there.
+      # unity-test-runner@v4 was moved to v4.4.0 on 2026-09-09 (thin wrapper around game-ci/cli).
+      # That path fails Personal .ulf activation on hosted runners: "Machine bindings don't match".
+      # Test steps are pinned to v4.3.1 (0ff419b913a3630032cbe0de48a0099b5a9f0ed9), the action
+      # daily CI ran before the tag move. v4.3.1 has no cliVersion input.
       - name: Enable Tests
         uses: game-ci/unity-builder@v4
         env:
@@ -123,7 +126,6 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          cliVersion: v0.1.53
           buildMethod: StreamVideo.EditorTools.StreamEditorTools.EnableStreamTestsEnabledCompilerFlag
           customImage: ${{ env.DOCKER_TAG }}
           allowDirtyBuild: true
@@ -131,13 +133,12 @@ jobs:
       # Editor + Runtime assemblies. Chat is editmode-only; do not copy that.
       - name: Run Tests (Attempt 1)
         id: run_tests_1
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          cliVersion: v0.1.53
           testMode: all
           customParameters: -streamBase64TestDataSet "${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }}" -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }}
           customImage: ${{ env.DOCKER_TAG }}
@@ -152,13 +153,12 @@ jobs:
       - name: Run Tests (Attempt 2)
         id: run_tests_2
         if: steps.run_tests_1.outcome == 'failure'
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          cliVersion: v0.1.53
           testMode: all
           customParameters: -streamBase64TestDataSet "${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }}" -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }}
           customImage: ${{ env.DOCKER_TAG }}
@@ -173,13 +173,12 @@ jobs:
       - name: Run Tests (Attempt 3)
         id: run_tests_3
         if: steps.run_tests_2.outcome == 'failure'
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          cliVersion: v0.1.53
           testMode: all
           customParameters: -streamBase64TestDataSet "${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }}" -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }}
           customImage: ${{ env.DOCKER_TAG }}
@@ -215,7 +214,6 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          cliVersion: v0.1.53
           buildMethod: StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp
           customParameters: -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }} -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }} -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath SampleAppBuild/${{ env.BUILD_NAME }}
           customImage: ${{ env.DOCKER_TAG }}

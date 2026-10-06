@@ -40,15 +40,15 @@ namespace StreamVideo.Tests.Shared
             StreamTestClientProvider.Instance.AddLock(this);
         }
 
-        [OneTimeTearDown]
-        public async Task OneTimeTearDown()
+        // NUnit 3.5 (Unity 2021.3 / 2022.3) rejects [TearDown] and [OneTimeTearDown]
+        // methods that return Task. These Unity attributes run the same cleanup as a coroutine.
+        [UnityOneTimeTearDown]
+        public IEnumerator OneTimeTearDown()
         {
             Debug.LogWarning("[One Time] TearDown");
-            await StreamTestClientProvider.Instance.ReleaseLockAsync(this);
+            yield return StreamTestClientProvider.Instance.ReleaseLockAsync(this).RunAsIEnumerator();
         }
 
-        // NUnit 3.5 (Unity 2021.3 / 2022.3) rejects [TearDown] methods that return Task.
-        // [UnityTearDown] is awaited as a coroutine on every supported editor.
         [UnityTearDown]
         public IEnumerator TearDown()
         {

@@ -40,19 +40,28 @@ namespace StreamVideo.Tests.Shared
             StreamTestClientProvider.Instance.AddLock(this);
         }
 
+        // NUnit 3.5 rejects [OneTimeTearDown] methods that return Task.
+        // UnityOneTimeTearDown exists only in Unity 6's test framework.
+        // ReleaseLockAsync does not disconnect until the run-finished callback, so the
+        // task is already complete here and GetResult does not block the editor thread.
         [OneTimeTearDown]
-        public async void OneTimeTearDown()
+        public void OneTimeTearDown()
         {
             Debug.LogWarning("[One Time] TearDown");
-            await StreamTestClientProvider.Instance.ReleaseLockAsync(this);
+
+            var release = StreamTestClientProvider.Instance.ReleaseLockAsync(this);
+            if (release.IsCompleted)
+            {
+                release.GetAwaiter().GetResult();
+            }
         }
 
-        [TearDown]
-        public async void TearDown()
+        [UnityTearDown]
+        public IEnumerator TearDown()
         {
             Debug.LogWarning("[Per Test] TearDown");
 
-            await StreamTestClientProvider.Instance.LeaveAllActiveCallsAsync();
+            yield return StreamTestClientProvider.Instance.LeaveAllActiveCallsAsync().RunAsIEnumerator();
             DisposableAssetsProvider.DisposeInstances();
         }
 

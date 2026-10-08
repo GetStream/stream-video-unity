@@ -67,8 +67,9 @@ namespace StreamVideo.Core.BackgroundFilters
                 CameraOrientationDebug.Flush(_logs);
                 CameraOrientationDebug.Log(_logs, "controller.setFilter", "filter=null");
 #endif
-                _compositor.SetMask(null);
                 _segmenter.Pause();
+                _segmenter.ReleaseResources();
+                _compositor.Release();
                 _hasAppliedMask = false;
                 ReleasePreview();
                 _scheduler.Reset(BlurIntensity.Heavy);

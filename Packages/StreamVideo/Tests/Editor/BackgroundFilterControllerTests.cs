@@ -99,6 +99,23 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
+        public void When_filter_cleared_expect_segmenter_mask_released()
+        {
+            var segmenter = new EditorStubPersonSegmenter();
+            _controller = new BackgroundFilterController(new UnityLogs(), segmenter);
+            _controller.SetFilter(BackgroundFilter.Blur());
+            segmenter.RequestSegmentation(Texture2D.whiteTexture);
+            Assert.That(segmenter.HasMask, Is.True,
+                "Stub should produce a mask after RequestSegmentation.");
+
+            _controller.SetFilter(null);
+
+            Assert.That(segmenter.HasMask, Is.False,
+                "Clearing the filter (also done on leaving a call) must release the mask so the next call "
+                + "does not hold or reuse the previous call's resources.");
+        }
+
+        [Test]
         public void When_pause_then_resume_expect_compositing_requires_mask()
         {
             var segmenter = new EditorStubPersonSegmenter();
@@ -259,6 +276,10 @@ namespace StreamVideo.Tests.Editor
             public void Resume()
             {
                 IsSupported = false;
+            }
+
+            public void ReleaseResources()
+            {
             }
 
             public void Dispose()

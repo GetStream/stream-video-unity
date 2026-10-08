@@ -39,7 +39,9 @@ namespace StreamVideo.Core.BackgroundFilters
         {
         }
 
-        public void Dispose()
+        public void Dispose() => ReleaseResources();
+
+        public void ReleaseResources()
         {
             if (_maskTexture == null)
             {

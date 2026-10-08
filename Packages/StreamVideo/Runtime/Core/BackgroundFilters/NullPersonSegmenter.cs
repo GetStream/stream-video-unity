@@ -26,6 +26,10 @@ namespace StreamVideo.Core.BackgroundFilters
         {
         }
 
+        public void ReleaseResources()
+        {
+        }
+
         public void Dispose()
         {
         }

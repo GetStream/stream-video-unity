@@ -20,8 +20,8 @@ namespace StreamVideo.Core.BackgroundFilters
     /// flipped. Mask upload does not flip again.
     /// <see cref="TryCreate"/> only checks the ML Kit classpath. <c>Segmentation.getClient</c>
     /// runs on the first <see cref="Resume"/> / <see cref="RequestSegmentation"/>.
-    /// <see cref="Dispose"/> is non-blocking: in-flight GPU readback and Java <c>process</c>
-    /// release their own resources when they finish.
+    /// <see cref="Dispose"/> is non-blocking: an in-flight Java <c>process</c> releases its own resources
+    /// when it finishes.
     /// </summary>
     internal sealed class AndroidMlKitPersonSegmenter : IPersonSegmenter
     {
@@ -85,9 +85,14 @@ namespace StreamVideo.Core.BackgroundFilters
             if (SystemInfo.supportsAsyncGPUReadback)
             {
                 _readbackInFlight = true;
+                if (_readbackCallback == null)
+                {
+                    _readbackCallback = CreateReadbackCallback();
+                }
+
                 try
                 {
-                    AsyncGPUReadback.Request(_downscaleRt, 0, TextureFormat.RGBA32, OnReadback);
+                    AsyncGPUReadback.Request(_downscaleRt, 0, TextureFormat.RGBA32, _readbackCallback);
                 }
                 catch (Exception e)
                 {
@@ -109,6 +114,8 @@ namespace StreamVideo.Core.BackgroundFilters
             // Suspended GPU readbacks may never callback; do not block Resume.
             _readbackInFlight = false;
 #if UNITY_ANDROID && !UNITY_EDITOR
+            // A late callback from before the pause must not upload or clear a newer request's flag.
+            _readbackCallback = null;
             _hasPendingRgba = false;
 #endif
         }
@@ -140,19 +147,23 @@ namespace StreamVideo.Core.BackgroundFilters
 #if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             _lastSource = null;
 #endif
+            DestroyNative();
+#endif
+            ReleaseResources();
+        }
+
+        public void ReleaseResources()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
             _hasPendingRgba = false;
             _pendingRgba = null;
             _uprightRgba = null;
             _rgbaSbytes = null;
-            DestroyNative();
             DestroyTexture(ref _syncReadbackTexture);
 #endif
+            _hasMask = false;
             DestroyTexture(ref _maskTexture);
-
-            if (!_readbackInFlight)
-            {
-                ReleaseDownscaleRt();
-            }
+            ReleaseDownscaleRt();
         }
 
         public void PumpPendingMask()
@@ -196,6 +207,7 @@ namespace StreamVideo.Core.BackgroundFilters
 #endif
         private bool _createAttempted;
         private AndroidJavaObject _native;
+        private Action<AsyncGPUReadbackRequest> _readbackCallback;
         private Texture2D _syncReadbackTexture;
         private sbyte[] _rgbaSbytes;
         private byte[] _pendingRgba;
@@ -303,53 +315,59 @@ namespace StreamVideo.Core.BackgroundFilters
             return new AndroidJavaObject(JavaClass);
         }
 
-        private void OnReadback(AsyncGPUReadbackRequest request)
+        /// <summary>
+        /// Reused for every request until <see cref="Pause"/> drops it, so a stale callback is detected by identity
+        /// without allocating per readback.
+        /// </summary>
+        private Action<AsyncGPUReadbackRequest> CreateReadbackCallback()
         {
+            Action<AsyncGPUReadbackRequest> callback = null;
+            callback = request => OnReadback(request, callback);
+            return callback;
+        }
+
+        private void OnReadback(AsyncGPUReadbackRequest request, Action<AsyncGPUReadbackRequest> callback)
+        {
+            if (callback != _readbackCallback)
+            {
+                return;
+            }
+
             _readbackInFlight = false;
 
-            try
+            if (_disposed || _paused || _native == null)
             {
-                if (_disposed || _paused || _native == null)
-                {
-                    return;
-                }
-
-                if (request.hasError)
-                {
-                    _logs?.Warning("Background filter: mask input readback failed.");
-                    return;
-                }
-
-                var data = request.GetData<byte>();
-                var length = data.Length;
-                if (_pendingRgba == null || _pendingRgba.Length != length)
-                {
-                    _pendingRgba = new byte[length];
-                }
-
-                data.CopyTo(_pendingRgba);
-                _pendingWidth = request.width;
-                _pendingHeight = request.height;
-                var packedBytes = _pendingWidth * _pendingHeight * 4;
-                var isOpenGles = SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES2
-                    || SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3;
-                if (packedBytes > 0 && _pendingRgba.Length >= packedBytes
-                    && PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(SystemInfo.graphicsUVStartsAtTop, isOpenGles))
-                {
-                    PersonMaskOrientation.FlipVertical(_pendingRgba, _pendingWidth, _pendingHeight, 4);
-                }
-
-                _pendingRotation = _lastSourceRotation;
-                _hasPendingRgba = true;
-                TrySubmitPending();
+                return;
             }
-            finally
+
+            if (request.hasError)
             {
-                if (_disposed)
-                {
-                    ReleaseDownscaleRt();
-                }
+                _logs?.Warning("Background filter: mask input readback failed.");
+                return;
             }
+
+            var data = request.GetData<byte>();
+            var length = data.Length;
+            if (_pendingRgba == null || _pendingRgba.Length != length)
+            {
+                _pendingRgba = new byte[length];
+            }
+
+            data.CopyTo(_pendingRgba);
+            _pendingWidth = request.width;
+            _pendingHeight = request.height;
+            var packedBytes = _pendingWidth * _pendingHeight * 4;
+            var isOpenGles = SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES2
+                || SystemInfo.graphicsDeviceType == GraphicsDeviceType.OpenGLES3;
+            if (packedBytes > 0 && _pendingRgba.Length >= packedBytes
+                && PersonMaskOrientation.NeedsAsyncGpuReadbackYFlip(SystemInfo.graphicsUVStartsAtTop, isOpenGles))
+            {
+                PersonMaskOrientation.FlipVertical(_pendingRgba, _pendingWidth, _pendingHeight, 4);
+            }
+
+            _pendingRotation = _lastSourceRotation;
+            _hasPendingRgba = true;
+            TrySubmitPending();
         }
 
         private void TrySubmitPending()

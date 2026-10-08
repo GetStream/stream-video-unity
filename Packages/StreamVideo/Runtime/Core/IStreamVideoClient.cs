@@ -135,8 +135,7 @@ namespace StreamVideo.Core
 
         /// <summary>
         /// Mutes native SDK audio playback (silences remote participants on the device's
-        /// speakers). Call from app lifecycle events such as <c>OnApplicationPause(true)</c>.
-        /// The native audio device stays open so resume is instant. No-op on platforms
+        /// speakers). The native audio device stays open so resume is instant. No-op on platforms
         /// that don't use the native audio pipeline (Editor, Standalone).
         /// </summary>
         void PauseMobileAudioPlayback();

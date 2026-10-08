@@ -27,7 +27,9 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
         void Update();
 
         /// <summary>
-        /// Call when the player pauses or resumes. The SDK stops and restores camera, microphone, and mobile audio playback.
+        /// Call when the player pauses or resumes. On mobile player builds the SDK stops the camera
+        /// while paused. Microphone capture and speaker playback keep running unless
+        /// <see cref="StreamVideo.Core.Configs.IStreamAudioConfig.SuspendAudioOnBackground"/> is set.
         /// E.g. for Unity call when MonoBehaviour.OnApplicationPause is called by the engine.
         /// </summary>
         void OnApplicationPause(bool pauseStatus);

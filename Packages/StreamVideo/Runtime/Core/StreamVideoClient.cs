@@ -224,29 +224,12 @@ namespace StreamVideo.Core
                 return;
             }
 
-            if (pauseStatus)
-            {
-                PauseMobileAudioPlayback();
-                _restoreAudioOnResume = _audioDeviceManager.IsEnabled;
-                _restoreVideoOnResume = _videoDeviceManager.IsEnabled;
-                _audioDeviceManager.SetEnabled(false);
-                _videoDeviceManager.SetEnabled(false);
-                return;
-            }
+            var rtcSession = InternalLowLevelClient.RtcSession;
+            rtcSession.SetPublisherVideoSuspended(pauseStatus);
 
-            ResumeMobileAudioPlayback();
-
-            if (_restoreAudioOnResume)
-            {
-                _audioDeviceManager.SetEnabled(true);
-                _restoreAudioOnResume = false;
-            }
-
-            if (_restoreVideoOnResume)
-            {
-                _videoDeviceManager.SetEnabled(true);
-                _restoreVideoOnResume = false;
-            }
+            var suspendAudio = pauseStatus && _config.Audio.SuspendAudioOnBackground;
+            rtcSession.SetPublisherAudioSuspended(suspendAudio);
+            rtcSession.SetAudioPlaybackSuspended(suspendAudio);
         }
 
         private static bool IsMobilePlayer
@@ -486,8 +469,7 @@ namespace StreamVideo.Core
 
         private readonly StreamVideoDeviceManager _videoDeviceManager;
         private readonly StreamAudioDeviceManager _audioDeviceManager;
-        private bool _restoreAudioOnResume;
-        private bool _restoreVideoOnResume;
+        private readonly IStreamClientConfig _config;
 
         private event Action Destroyed;
 
@@ -525,6 +507,7 @@ namespace StreamVideo.Core
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
+            _config = config ?? throw new ArgumentNullException(nameof(config));
 
             InternalLowLevelClient = new StreamVideoLowLevelClient(coordinatorWebSocket, webSocketFactory, httpClient,
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);

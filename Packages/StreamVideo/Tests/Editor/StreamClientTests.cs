@@ -26,11 +26,12 @@ namespace StreamVideo.Tests.Editor
 
         private Task When_connecting_user_expect_no_errors_Async(ITestClient client)
         {
-            Assert.IsTrue(client.Client.IsConnected);
+            Assert.IsTrue(client.Client.IsConnected, "Client should be connected after ConnectUserAsync.");
+            Assert.IsNotNull(client.Client.LocalUser, "LocalUser should be populated when the client connects.");
+            Assert.AreEqual("DemoUser", client.Client.LocalUser.Id,
+                "LocalUser.Id should match the user id used to connect.");
             return Task.CompletedTask;
         }
-
-        //StreamTodo: ensure that LocalUser is populated when connected is triggered
     }
 }
 #endif

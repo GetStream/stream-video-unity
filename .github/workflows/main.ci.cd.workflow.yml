@@ -114,6 +114,11 @@ jobs:
           echo "RUNNER_ID=$RUNNER_ID" >> $GITHUB_ENV
           echo "BUILD_NAME=$BUILD_NAME" >> $GITHUB_ENV
 
+      # unity-builder@v4 still resolves to v4.8.2 (pre-CLI). cliVersion is not an input there.
+      # unity-test-runner@v4 was moved to v4.4.0 on 2026-09-09 (thin wrapper around game-ci/cli).
+      # That path fails Personal .ulf activation on hosted runners: "Machine bindings don't match".
+      # Test steps are pinned to v4.3.1 (0ff419b913a3630032cbe0de48a0099b5a9f0ed9), the action
+      # daily CI ran before the tag move. v4.3.1 has no cliVersion input.
       - name: Enable Tests
         uses: game-ci/unity-builder@v4
         env:
@@ -128,7 +133,7 @@ jobs:
       # Editor + Runtime assemblies. Chat is editmode-only; do not copy that.
       - name: Run Tests (Attempt 1)
         id: run_tests_1
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -148,7 +153,7 @@ jobs:
       - name: Run Tests (Attempt 2)
         id: run_tests_2
         if: steps.run_tests_1.outcome == 'failure'
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -168,7 +173,7 @@ jobs:
       - name: Run Tests (Attempt 3)
         id: run_tests_3
         if: steps.run_tests_2.outcome == 'failure'
-        uses: game-ci/unity-test-runner@v4
+        uses: game-ci/unity-test-runner@v4.3.1
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}

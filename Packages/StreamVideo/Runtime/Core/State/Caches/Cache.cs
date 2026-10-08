@@ -27,6 +27,7 @@ namespace StreamVideo.Core.State.Caches
             Calls.RegisterDtoIdMapping<StreamCall, CallStateResponseFieldsInternalDTO>(dto => dto.Call.Cid);
             
             Users.RegisterDtoIdMapping<StreamVideoUser, UserResponseInternalDTO>(dto => dto.Id);
+            Users.RegisterDtoIdMapping<StreamVideoUser, OwnUserResponseInternalDTO>(dto => dto.Id);
             
             CallParticipants.RegisterDtoIdMapping<StreamVideoCallParticipant, CallParticipantResponseInternalDTO>(dto => dto.UserSessionId);
             CallParticipants.RegisterDtoIdMapping<StreamVideoCallParticipant, Participant>(dto => dto.SessionId);

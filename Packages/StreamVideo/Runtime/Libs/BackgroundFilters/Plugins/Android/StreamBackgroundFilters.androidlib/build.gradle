@@ -77,8 +77,6 @@ dependencies {
 }
 
 android {
-    namespace "io.getstream.unitybackgroundfilters"
-
     compileOptions {
         sourceCompatibility javaVersion
         targetCompatibility javaVersion
@@ -89,8 +87,13 @@ android {
     }
 }
 
-// AGP 7 (Unity 2022.3) uses *Version; AGP 8+ (Unity 6) prefers compileSdk/minSdk.
+// AGP 4 (Unity 2021.3 through 2021.3.40) has no namespace DSL. The manifest package
+// attribute is the namespace there. AGP 7+ (Unity 2021.3.41, 2022.3, Unity 6) has it.
+// AGP 7 uses *Version; AGP 8+ prefers compileSdk/minSdk.
 def androidExt = project.extensions.getByName("android")
+if (androidExt.hasProperty("namespace")) {
+    androidExt.namespace = "io.getstream.unitybackgroundfilters"
+}
 if (androidExt.hasProperty("compileSdk")) {
     androidExt.compileSdk compileSdkVal
 } else {

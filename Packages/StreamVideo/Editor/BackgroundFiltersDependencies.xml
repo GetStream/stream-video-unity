@@ -1,5 +1,0 @@
-<dependencies>
-  <androidPackages>
-    <androidPackage spec="com.google.mlkit:segmentation-selfie:16.0.0-beta6" />
-  </androidPackages>
-</dependencies>

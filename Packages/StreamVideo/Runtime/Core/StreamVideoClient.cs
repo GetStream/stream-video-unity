@@ -217,6 +217,33 @@ namespace StreamVideo.Core
             _audioDeviceManager?.Update();
         }
 
+        public void OnApplicationPause(bool pauseStatus)
+        {
+            if (!IsMobilePlayer)
+            {
+                return;
+            }
+
+            var rtcSession = InternalLowLevelClient.RtcSession;
+            rtcSession.SetPublisherVideoSuspended(pauseStatus);
+
+            var suspendAudio = pauseStatus && _config.Audio.SuspendAudioOnBackground;
+            rtcSession.SetPublisherAudioSuspended(suspendAudio);
+            rtcSession.SetAudioPlaybackSuspended(suspendAudio);
+        }
+
+        private static bool IsMobilePlayer
+        {
+            get
+            {
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
         //StreamTodo: change public to explicit interface
         public IEnumerator WebRTCUpdateCoroutine() => WebRTC.Update();
 
@@ -442,6 +469,7 @@ namespace StreamVideo.Core
 
         private readonly StreamVideoDeviceManager _videoDeviceManager;
         private readonly StreamAudioDeviceManager _audioDeviceManager;
+        private readonly IStreamClientConfig _config;
 
         private event Action Destroyed;
 
@@ -479,6 +507,7 @@ namespace StreamVideo.Core
             IApplicationInfo applicationInfo, ILogs logs, IStreamClientConfig config)
         {
             _logs = logs ?? throw new ArgumentNullException(nameof(logs));
+            _config = config ?? throw new ArgumentNullException(nameof(config));
 
             InternalLowLevelClient = new StreamVideoLowLevelClient(coordinatorWebSocket, webSocketFactory, httpClient,
                 serializer, timeService, networkMonitor, applicationInfo, logs, config);

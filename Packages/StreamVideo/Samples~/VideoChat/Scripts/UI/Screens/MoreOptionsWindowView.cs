@@ -1,4 +1,6 @@
 using System;
+using StreamVideo.Core;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,6 +19,7 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _muteSelfVideoBtn.onClick.AddListener(() => _streamVideoManager.ActiveCall?.MuteSelf(audio: false, video: true, screenShare: false));
             _muteOthersVideoBtn.onClick.AddListener(() => _streamVideoManager.ActiveCall?.MuteOthers(audio: false, video: true, screenShare: false));
             _toggleMusicBtn.onClick.AddListener(() => _streamVideoManager.ToggleMusic());
+            AddBackgroundFilterToggle();
         }
         
         public void Show()
@@ -58,7 +61,120 @@ namespace StreamVideo.ExampleProject.UI.Screens
         private Button _hideBtn;
 
         private StreamVideoManager _streamVideoManager;
+        private TMP_Text _backgroundFilterLabel;
 
         private void OnCloseButtonClicked() => Hide();
+
+        private void AddBackgroundFilterToggle()
+        {
+            if (_toggleMusicBtn == null)
+            {
+                return;
+            }
+
+            var buttonObject = Instantiate(_toggleMusicBtn.gameObject, _toggleMusicBtn.transform.parent);
+            buttonObject.name = "BackgroundFilterToggle";
+            _backgroundFilterLabel = buttonObject.GetComponentInChildren<TMP_Text>();
+            UpdateBackgroundFilterLabel();
+
+            var button = buttonObject.GetComponent<Button>();
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(CycleBackgroundFilter);
+        }
+
+        private void CycleBackgroundFilter()
+        {
+            var call = _streamVideoManager.ActiveCall;
+            if (call == null)
+            {
+                return;
+            }
+
+            if (!call.IsBackgroundFilterSupported)
+            {
+                Debug.Log("Background filter is not supported on this device.");
+                UpdateBackgroundFilterLabel();
+                return;
+            }
+
+            var current = call.ActiveBackgroundFilter;
+            if (current == null)
+            {
+#if STREAM_DEBUG_ENABLED
+                BackgroundFilter.DebugView = 0;
+#endif
+                call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Light));
+            }
+            else if (current.Intensity == BlurIntensity.Light)
+            {
+#if STREAM_DEBUG_ENABLED
+                BackgroundFilter.DebugView = 0;
+#endif
+                call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Medium));
+            }
+            else if (current.Intensity == BlurIntensity.Medium)
+            {
+#if STREAM_DEBUG_ENABLED
+                BackgroundFilter.DebugView = 0;
+#endif
+                call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Heavy));
+            }
+#if STREAM_DEBUG_ENABLED
+            else if (BackgroundFilter.DebugView == 0)
+            {
+                BackgroundFilter.DebugView = 1;
+            }
+            else if (BackgroundFilter.DebugView == 1)
+            {
+                BackgroundFilter.DebugView = 2;
+            }
+#endif
+            else
+            {
+#if STREAM_DEBUG_ENABLED
+                BackgroundFilter.DebugView = 0;
+#endif
+                call.SetBackgroundFilter(null);
+            }
+
+            UpdateBackgroundFilterLabel();
+        }
+
+        private void UpdateBackgroundFilterLabel()
+        {
+            if (_backgroundFilterLabel == null)
+            {
+                return;
+            }
+
+            var call = _streamVideoManager.ActiveCall;
+            if (call == null || !call.IsBackgroundFilterSupported)
+            {
+                _backgroundFilterLabel.text = "BG Blur: N/A";
+                return;
+            }
+
+            var current = call.ActiveBackgroundFilter;
+            if (current == null)
+            {
+                _backgroundFilterLabel.text = "BG Blur: Off";
+                return;
+            }
+
+#if STREAM_DEBUG_ENABLED
+            if (BackgroundFilter.DebugView == 1)
+            {
+                _backgroundFilterLabel.text = "BG Blur: Mask";
+                return;
+            }
+
+            if (BackgroundFilter.DebugView == 2)
+            {
+                _backgroundFilterLabel.text = "BG Blur: Overlay";
+                return;
+            }
+#endif
+            _backgroundFilterLabel.text = "BG Blur: " + current.Intensity;
+        }
     }
 }

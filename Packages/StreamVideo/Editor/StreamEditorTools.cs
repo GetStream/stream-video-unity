@@ -30,6 +30,14 @@ namespace StreamVideo.EditorTools
         public static void ToggleStreamAudioBenchmarkCompilerFlag()
             => ToggleCompilerFlag(StreamAudioBenchmarkEnabledCompilerFlag);
 
+        [MenuItem(MenuPrefix + "Toggle " + StreamLogBgFilterCompilerFlag + " compiler flag")]
+        public static void ToggleStreamLogBgFilterCompilerFlag()
+            => ToggleCompilerFlag(StreamLogBgFilterCompilerFlag);
+
+        [MenuItem(MenuPrefix + "Toggle " + StreamLogHealthEventsCompilerFlag + " compiler flag")]
+        public static void ToggleStreamLogHealthEventsCompilerFlag()
+            => ToggleCompilerFlag(StreamLogHealthEventsCompilerFlag);
+
         public static void BuildSampleApp()
         {
             var parser = new BuildSettingsCommandLineParser();
@@ -165,5 +173,7 @@ namespace StreamVideo.EditorTools
         private const string StreamDebugModeEnabledCompilerFlag = "STREAM_DEBUG_ENABLED";
         private const string StreamLocalSfuModeEnabledCompilerFlag = "STREAM_LOCAL_SFU";
         private const string StreamAudioBenchmarkEnabledCompilerFlag = "STREAM_AUDIO_BENCHMARK_ENABLED";
+        private const string StreamLogBgFilterCompilerFlag = "STREAM_LOG_BG_FILTER";
+        private const string StreamLogHealthEventsCompilerFlag = "STREAM_LOG_HEALTH_EVENTS";
     }
 }

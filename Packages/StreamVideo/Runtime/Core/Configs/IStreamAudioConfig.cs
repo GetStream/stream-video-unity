@@ -24,5 +24,11 @@
         /// Not suitable for music streaming. DTX is optimized for human speech and may disrupt music audio quality.
         /// </summary>
         public bool EnableDtx { get; set; }
+
+        /// <summary>
+        /// When true, a mobile player suspends microphone capture and speaker playback while backgrounded.
+        /// The microphone enabled state is left unchanged. Default is false.
+        /// </summary>
+        public bool SuspendAudioOnBackground { get; set; }
     }
 }

@@ -7,6 +7,7 @@ using StreamVideo.Core.Models.Sfu;
 using StreamVideo.Core.QueryBuilders.Filters;
 using StreamVideo.Core.QueryBuilders.Sort;
 using StreamVideo.Core.State;
+using UnityEngine;
 
 namespace StreamVideo.Core.StatefulModels
 {
@@ -342,5 +343,40 @@ namespace StreamVideo.Core.StatefulModels
         /// Helper function to get the local participant object for the current user in this call
         /// </summary>
         IStreamVideoCallParticipant GetLocalParticipant();
+
+        /// <summary>
+        /// Fired when background-filter performance drops or recovers.
+        /// Call-scoped: does not fire after <see cref="LeaveAsync"/> or for a later call on the same client.
+        /// </summary>
+        event Action<BackgroundFilterPerformance> BackgroundFilterPerformanceChanged;
+
+        /// <summary>
+        /// Active local background filter, or <see langword="null"/> when disabled.
+        /// </summary>
+        BackgroundFilter ActiveBackgroundFilter { get; }
+
+        /// <summary>
+        /// True when a person-segmenter backend is available on this platform/device.
+        /// Android uses ML Kit; iOS 15+ uses Vision. Older iOS versions and other
+        /// platforms report false. Unsupported devices no-op <see cref="SetBackgroundFilter"/>
+        /// and do not throw.
+        /// </summary>
+        bool IsBackgroundFilterSupported { get; }
+
+        /// <summary>
+        /// Enable a local pre-encode background filter, or pass <see langword="null"/> to disable.
+        /// Remote peers receive the composited camera frames. Unsupported devices log and no-op.
+        /// </summary>
+        void SetBackgroundFilter(BackgroundFilter filter);
+
+        /// <summary>
+        /// Texture showing the local camera, with the background filter applied when one is active.
+        /// Assign it once (e.g. to a RawImage) when setting up the call UI; no rebinding is needed for filter
+        /// changes or camera switches. The same instance is returned until <see cref="LeaveAsync"/>, which destroys it.
+        /// It is black until the camera delivers frames and is resized in place when the camera resolution changes.
+        /// The image is in camera space, so apply the camera's videoRotationAngle as for the raw camera texture.
+        /// Returns <see langword="null"/> when this is not the active call. Call from the main thread.
+        /// </summary>
+        Texture GetLocalPreviewTexture();
     }
 }

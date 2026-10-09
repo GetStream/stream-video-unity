@@ -42,9 +42,12 @@ jobs:
       # Patch releases must be public LTS/tech builds from the Unity archive, not
       # Extended LTS (xLTS) patches that require Industry/Enterprise licenses in CI.
       # dataset_index must be unique per row and within 0-15 (test data set count).
+      # 2021.3 has two rows because its Android toolchain changed mid-LTS:
+      # 2021.3.36f1 = Gradle 6.1.1 / AGP 4.0.1 / JDK 8, 2021.3.41f1+ = Gradle 7.5.1 / AGP 7.4.2 / JDK 11.
       matrix:
         include:
           - { unity_version: "2021.3", target_platform: android, dotnet_version: STANDARD_2_x, compiler: il2cpp, dataset_index: 0, image: "unityci/editor:ubuntu-2021.3.36f1-android-3.1.0" }
+          - { unity_version: "2021.3.45", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 6, image: "unityci/editor:ubuntu-2021.3.45f2-android-3.2.2" }
           - { unity_version: "2022.3", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 1, image: "unityci/editor:ubuntu-2022.3.62f2-android-3.2.2" }
           - { unity_version: "2023.2", target_platform: android, dotnet_version: STANDARD_2_x, compiler: il2cpp, dataset_index: 2, image: "unityci/editor:ubuntu-2023.2.20f1-android-3.2.2" }
           - { unity_version: "6000.0", target_platform: android, dotnet_version: NET_4_x, compiler: il2cpp, dataset_index: 3, image: "unityci/editor:ubuntu-6000.0.63f1-android-3.2.2" }
@@ -214,6 +217,12 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
+          # targetPlatform Android makes the container run sdkmanager for androidTargetSdkVersion before Unity starts.
+          # The SDK requires compile SDK 33+ (AndroidCompileSdkValidator). Unity 2021.3.40 and older images bundle only
+          # API 30, and with Target API Level on Automatic Unity compiles against the highest installed platform.
+          # BuildSampleApp does not apply -androidTargetSdkVersion, so the project's Target API Level is unchanged.
+          targetPlatform: ${{ matrix.target_platform == 'android' && 'Android' || '' }}
+          androidTargetSdkVersion: ${{ matrix.target_platform == 'android' && 'AndroidApiLevel33' || '' }}
           buildMethod: StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp
           customParameters: -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }} -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }} -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath SampleAppBuild/${{ env.BUILD_NAME }}
           customImage: ${{ env.DOCKER_TAG }}

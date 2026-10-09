@@ -1,5 +1,5 @@
+using StreamVideo.Libs.Utils;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.BackgroundFilters
 {
@@ -48,7 +48,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            Object.Destroy(_maskTexture);
+            _maskTexture.SmartDestroy();
             _maskTexture = null;
         }
 
@@ -61,10 +61,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            if (_maskTexture != null)
-            {
-                Object.Destroy(_maskTexture);
-            }
+            _maskTexture.SmartDestroy();
 
             _maskTexture = new Texture2D(width, height, TextureFormat.R8, false)
             {

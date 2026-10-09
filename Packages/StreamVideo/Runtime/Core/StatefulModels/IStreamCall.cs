@@ -351,12 +351,6 @@ namespace StreamVideo.Core.StatefulModels
         event Action<BackgroundFilterPerformance> BackgroundFilterPerformanceChanged;
 
         /// <summary>
-        /// Fired when the local preview texture instance changes (filter enable/disable or publisher RT recreate).
-        /// Call-scoped: does not fire after <see cref="LeaveAsync"/> or for a later call on the same client.
-        /// </summary>
-        event Action<Texture> LocalPreviewTextureChanged;
-
-        /// <summary>
         /// Active local background filter, or <see langword="null"/> when disabled.
         /// </summary>
         BackgroundFilter ActiveBackgroundFilter { get; }
@@ -376,7 +370,12 @@ namespace StreamVideo.Core.StatefulModels
         void SetBackgroundFilter(BackgroundFilter filter);
 
         /// <summary>
-        /// Texture for the local participant preview. Filtered publisher RT when a filter is active, otherwise the camera.
+        /// Texture showing the local camera, with the background filter applied when one is active.
+        /// Assign it once (e.g. to a RawImage) when setting up the call UI; no rebinding is needed for filter
+        /// changes or camera switches. The same instance is returned until <see cref="LeaveAsync"/>, which destroys it.
+        /// It is black until the camera delivers frames and is resized in place when the camera resolution changes.
+        /// The image is in camera space, so apply the camera's videoRotationAngle as for the raw camera texture.
+        /// Returns <see langword="null"/> when this is not the active call. Call from the main thread.
         /// </summary>
         Texture GetLocalPreviewTexture();
     }

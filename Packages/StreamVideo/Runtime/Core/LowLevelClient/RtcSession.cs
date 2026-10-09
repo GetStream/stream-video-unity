@@ -213,6 +213,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         internal BackgroundFilterController BackgroundFilterController { get; }
 
+        internal LocalPreviewRenderer LocalPreview { get; } = new LocalPreviewRenderer();
+
         public SubscriberPeerConnection Subscriber { get; private set; }
         public PublisherPeerConnection Publisher { get; private set; }
 
@@ -339,6 +341,7 @@ namespace StreamVideo.Core.LowLevelClient
 
             PublisherVideoTrackIsEnabledChanged -= OnBackgroundFilterVideoEnabledChanged;
             BackgroundFilterController?.Dispose();
+            LocalPreview.Dispose();
 
             DisposeSfuWebSocket();
 
@@ -357,6 +360,7 @@ namespace StreamVideo.Core.LowLevelClient
             _networkMonitor.Update();
             _sfuWebSocket?.Update();
             Publisher?.Update();
+            UpdateLocalPreview();
             _statsSender.Update();
             _videoAudioSyncBenchmark?.Update();
 
@@ -569,6 +573,7 @@ namespace StreamVideo.Core.LowLevelClient
                 if (ActiveCall != null && !ReferenceEquals(ActiveCall, call))
                 {
                     ActiveCall.DetachBackgroundFilterEvents();
+                    LocalPreview.Release();
                 }
 
                 ActiveCall = call;
@@ -975,6 +980,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 BackgroundFilterController?.SetFilter(null);
+                LocalPreview.Release();
             }
         }
 
@@ -2735,6 +2741,17 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private void OnBackgroundFilterVideoEnabledChanged(bool isEnabled) => UpdateBackgroundFilterState();
+
+        private void UpdateLocalPreview()
+        {
+            var publisherTexture = Publisher?.PublisherVideoTrackTexture;
+            var showFiltered = BackgroundFilterController != null
+                               && BackgroundFilterController.IsCompositing
+                               && publisherTexture != null
+                               && publisherTexture.IsCreated();
+
+            LocalPreview.Render(VideoInput, showFiltered ? publisherTexture : null);
+        }
 
         private void UpdateBackgroundFilterState()
         {

@@ -7,7 +7,6 @@ namespace StreamVideo.Core.BackgroundFilters
     internal sealed class BackgroundFilterController : IDisposable
     {
         public event Action<BackgroundFilterPerformance> PerformanceChanged;
-        public event Action<Texture> PreviewTextureChanged;
 
         public BackgroundFilter ActiveFilter { get; private set; }
 
@@ -71,7 +70,6 @@ namespace StreamVideo.Core.BackgroundFilters
                 _segmenter.ReleaseResources();
                 _compositor.Release();
                 _hasAppliedMask = false;
-                ReleasePreview();
                 _scheduler.Reset(BlurIntensity.Heavy);
 
                 PublishPerformanceIfChanged();
@@ -152,13 +150,10 @@ namespace StreamVideo.Core.BackgroundFilters
             _compositor.Apply(source, destination);
             _hasAppliedMask = true;
             LastCompositePath = BackgroundFilterCompositePath.Apply;
-            SetPreview(destination);
 #if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             LogCompositeOrientation(source, destination, "composite.apply");
 #endif
         }
-
-        public Texture GetPreviewTexture() => _previewTexture;
 
         public void Pause()
         {
@@ -166,9 +161,6 @@ namespace StreamVideo.Core.BackgroundFilters
             _segmenter.Pause();
             // Drop GPU RTs so the next Apply recreates them after a context loss.
             _compositor.Release();
-            // The preview RT is the publisher target and is released with the compositor.
-            // Clear it so callers fall back to the webcam until the next composite.
-            ReleasePreview();
         }
 
         public void Resume()
@@ -185,7 +177,6 @@ namespace StreamVideo.Core.BackgroundFilters
             SetFilter(null);
             _compositor.Release();
             _segmenter.Dispose();
-            ReleasePreview();
         }
 
         private readonly ILogs _logs;
@@ -197,7 +188,6 @@ namespace StreamVideo.Core.BackgroundFilters
 
         private BlurIntensity _requestedIntensity = BlurIntensity.Heavy;
         private BackgroundFilterPerformance _lastPublishedPerformance;
-        private Texture _previewTexture;
         private int _frameIndex;
         private int _sampleFrames;
         private float _sampleSeconds;
@@ -208,7 +198,6 @@ namespace StreamVideo.Core.BackgroundFilters
         {
             LastCompositePath = BackgroundFilterCompositePath.Passthrough;
             Graphics.Blit(source, destination);
-            SetPreview(destination);
 #if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
             LogCompositeOrientation(source, destination, checkpoint);
 #endif
@@ -273,28 +262,6 @@ namespace StreamVideo.Core.BackgroundFilters
 
             _lastPublishedPerformance = current;
             PerformanceChanged?.Invoke(current);
-        }
-
-        private void SetPreview(Texture texture)
-        {
-            if (_previewTexture == texture)
-            {
-                return;
-            }
-
-            _previewTexture = texture;
-            PreviewTextureChanged?.Invoke(texture);
-        }
-
-        private void ReleasePreview()
-        {
-            if (_previewTexture == null)
-            {
-                return;
-            }
-
-            _previewTexture = null;
-            PreviewTextureChanged?.Invoke(null);
         }
     }
 

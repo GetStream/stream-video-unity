@@ -36,7 +36,7 @@ def apiLevel(value, int fallback) {
 }
 
 def compileSdkVal = unityInt("unity.compileSdkVersion", 34)
-def minSdkVal = unityInt("unity.minSdkVersion", 23)
+def minSdkVal = unityInt("unity.minSdkVersion", 21)
 def targetSdkVal = unityInt("unity.targetSdkVersion", 34)
 def buildToolsVal = unityString("unity.buildToolsVersion")
 
@@ -62,9 +62,11 @@ if (!project.hasProperty("unity.compileSdkVersion")) {
     }
 }
 
-minSdkVal = Math.max(23, minSdkVal)
+// ML Kit's floor. Must not exceed the app's minSdk or the manifest merge fails.
+minSdkVal = Math.max(21, minSdkVal)
 
-def javaVersion = JavaVersion.VERSION_11
+// Unity 2021.3 up to 2021.3.40 ships JDK 8 and does not write unity.javaCompatibilityVersion.
+def javaVersion = JavaVersion.VERSION_1_8
 ["unity.javaCompatibilityVersion", "unity.javaCompatabilityVersion"].each { name ->
     if (project.hasProperty(name)) {
         javaVersion = JavaVersion.valueOf(project.property(name).toString())

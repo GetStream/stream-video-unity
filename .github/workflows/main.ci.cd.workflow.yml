@@ -217,6 +217,12 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
+          # targetPlatform Android makes the container run sdkmanager for androidTargetSdkVersion before Unity starts.
+          # The SDK requires compile SDK 33+ (AndroidCompileSdkValidator). Unity 2021.3.40 and older images bundle only
+          # API 30, and with Target API Level on Automatic Unity compiles against the highest installed platform.
+          # BuildSampleApp does not apply -androidTargetSdkVersion, so the project's Target API Level is unchanged.
+          targetPlatform: ${{ matrix.target_platform == 'android' && 'Android' || '' }}
+          androidTargetSdkVersion: ${{ matrix.target_platform == 'android' && 'AndroidApiLevel33' || '' }}
           buildMethod: StreamVideo.EditorTools.StreamEditorTools.BuildSampleApp
           customParameters: -streamBase64TestDataSet ${{ secrets.STREAM_AUTH_TEST_DATA_BASE64 }} -testDataSetIndex ${{ env.SEQUENTIAL_INDEX }} -apiCompatibility ${{ matrix.dotnet_version }} -scriptingBackend ${{ matrix.compiler }} -buildTargetPlatform ${{ matrix.target_platform }} -buildTargetPath SampleAppBuild/${{ env.BUILD_NAME }}
           customImage: ${{ env.DOCKER_TAG }}

@@ -2744,7 +2744,7 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void UpdateLocalPreview()
         {
-            var publisherTexture = Publisher?.PublisherVideoTrackTexture;
+            var publisherTexture = Publisher?.CameraSpaceVideoTexture;
             var showFiltered = BackgroundFilterController != null
                                && BackgroundFilterController.IsCompositing
                                && publisherTexture != null

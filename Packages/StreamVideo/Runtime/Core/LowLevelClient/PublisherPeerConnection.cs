@@ -92,7 +92,11 @@ namespace StreamVideo.Core.LowLevelClient
         // Full: 704×576  -> half: 352×288 -> quarter: 176×144 <- We want the smallest resolution to be above 96x96
         public static VideoResolution MinimumSafeTargetResolution => new VideoResolution(704, 576);
 
-        public RenderTexture PublisherVideoTrackTexture => _publisherVideoTrackTexture;
+        /// <summary>
+        /// Last published frame before the upright rotation, i.e. in the camera's sensor orientation.
+        /// </summary>
+        public RenderTexture CameraSpaceVideoTexture
+            => _publisherVideoRotation == 0 ? _publisherVideoTrackTexture : _videoRotator.CameraSpaceTexture;
 
         public PublisherPeerConnection(ILogs logs, IEnumerable<ICEServer> iceServers,
             IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig,
@@ -122,7 +126,7 @@ namespace StreamVideo.Core.LowLevelClient
                     $"{nameof(_publisherVideoSettings)} is null in {nameof(GetLatestVideoSettings)}");
             }
 
-            _publisherVideoSettings.MaxResolution = PublisherTargetResolution;
+            _publisherVideoSettings.MaxResolution = CameraSpaceTargetResolution;
             _publisherVideoSettings.FrameRate = PublisherTargetFrameRate;
             return _publisherVideoSettings;
         }
@@ -156,14 +160,7 @@ namespace StreamVideo.Core.LowLevelClient
             // We should check if WebCamTexture allows setting any resolution
             if (_publisherVideoTrackTexture != null && _mediaInputProvider.VideoInput != null)
             {
-                if (_backgroundFilterController != null && _backgroundFilterController.ActiveFilter != null)
-                {
-                    _backgroundFilterController.Composite(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
-                }
-                else
-                {
-                    Graphics.Blit(_mediaInputProvider.VideoInput, _publisherVideoTrackTexture);
-                }
+                BlitPublisherVideoFrame();
 
 #if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
                 LogPublisherOrientation();
@@ -177,6 +174,67 @@ namespace StreamVideo.Core.LowLevelClient
                 _negotiateRequestedWithIceRestart = false;
                 Negotiate(iceRestart).LogIfFailed();
             }
+        }
+
+        private void BlitPublisherVideoFrame()
+        {
+            var rotation = GetUprightVideoRotation();
+
+            if (PublisherVideoRotator.IsSideways(rotation) != PublisherVideoRotator.IsSideways(_publisherVideoRotation))
+            {
+                if (_videoTransceiver == null || PublisherVideoTrack == null)
+                {
+                    return;
+                }
+
+                // Width and height swap, which needs a new RT and track. ReplaceTrack does not renegotiate.
+                var newVideoTrack = CreatePublisherVideoTrack();
+                TryClearVideoTrack();
+                ReplaceActiveVideoTrack(newVideoTrack);
+            }
+
+            _publisherVideoRotation = rotation;
+
+            var cameraSpaceTarget = rotation == 0
+                ? _publisherVideoTrackTexture
+                : _videoRotator.GetCameraSpaceTexture(_publisherVideoTrackTexture, rotation);
+            if (cameraSpaceTarget == null)
+            {
+                return;
+            }
+
+            var videoInput = _mediaInputProvider.VideoInput;
+            if (_backgroundFilterController != null && _backgroundFilterController.ActiveFilter != null)
+            {
+                _backgroundFilterController.Composite(videoInput, cameraSpaceTarget);
+            }
+            else
+            {
+                Graphics.Blit(videoInput, cameraSpaceTarget);
+            }
+
+            if (rotation != 0)
+            {
+                _videoRotator.TryRotate(cameraSpaceTarget, _publisherVideoTrackTexture, rotation);
+            }
+        }
+
+        private int GetUprightVideoRotation()
+        {
+            var rotation = PublisherVideoRotator.GetUprightRotation(_mediaInputProvider.VideoInput);
+            if (rotation == 0 || _videoRotator.IsSupported)
+            {
+                return rotation;
+            }
+
+            if (!_videoRotationUnsupportedLogged)
+            {
+                _videoRotationUnsupportedLogged = true;
+                Logs.Error(
+                    $"Shader `{PublisherVideoRotator.ShaderName}` is not available. Video is published in the camera sensor orientation and may appear rotated to other participants.");
+            }
+
+            return 0;
         }
 
         public override Task RestartIce()
@@ -556,7 +614,8 @@ namespace StreamVideo.Core.LowLevelClient
             foreach (var encoding in encodings)
             {
                 var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
-                var resolution = GetLatestVideoSettings().MaxResolution;
+                var resolution
+                    = PublisherVideoRotator.Rotate(GetLatestVideoSettings().MaxResolution, _publisherVideoRotation);
                 var width = (uint)(resolution.Width / scaleBy);
                 var height = (uint)(resolution.Height / scaleBy);
 
@@ -669,6 +728,7 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider.PublisherVideoTrackIsEnabledChanged -= OnPublisherVideoTrackIsEnabledChanged;
 
             ReleasePublisherVideoTrackTexture();
+            _videoRotator.Dispose();
 
             TryClearPublisherAudioTrack();
             TryClearVideoTrack();
@@ -677,6 +737,9 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         private VideoResolution PublisherTargetResolution
+            => PublisherVideoRotator.Rotate(CameraSpaceTargetResolution, _publisherVideoRotation);
+
+        private VideoResolution CameraSpaceTargetResolution
         {
             get
             {
@@ -723,6 +786,7 @@ namespace StreamVideo.Core.LowLevelClient
         private readonly IMediaInputProvider _mediaInputProvider;
         private readonly IStreamAudioConfig _audioConfig;
         private readonly BackgroundFilterController _backgroundFilterController;
+        private readonly PublisherVideoRotator _videoRotator = new PublisherVideoRotator();
 
         private readonly List<TrackType> _publishedTrackOrder = new List<TrackType>();
         
@@ -731,6 +795,9 @@ namespace StreamVideo.Core.LowLevelClient
         private bool _negotiateRequestedWithIceRestart;
 
         private RenderTexture _publisherVideoTrackTexture;
+        // Clockwise rotation baked into _publisherVideoTrackTexture; its size is swapped when sideways
+        private int _publisherVideoRotation;
+        private bool _videoRotationUnsupportedLogged;
         private VideoStreamTrack _publisherVideoTrack;
         private AudioStreamTrack _publisherAudioTrack;
 
@@ -938,6 +1005,7 @@ namespace StreamVideo.Core.LowLevelClient
             var gfxType = SystemInfo.graphicsDeviceType;
             var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
 
+            _publisherVideoRotation = GetUprightVideoRotation();
             var res = PublisherTargetResolution;
             _publisherVideoTrackTexture = new RenderTexture((int)res.Width, (int)res.Height, 0, format);
 

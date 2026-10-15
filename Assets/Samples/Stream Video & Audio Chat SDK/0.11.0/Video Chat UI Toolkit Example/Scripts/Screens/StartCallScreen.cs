@@ -40,12 +40,24 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             SetError(null);
         }
 
-        protected override void OnUpdate() => _header.SetUser(App.LocalUserName);
+        protected override void OnHide()
+        {
+            // Leaving the field open keeps the keyboard up and the next screen inset.
+            _callIdInput.Blur();
+            ResetKeyboardShift();
+        }
+
+        protected override void OnUpdate()
+        {
+            _header.SetUser(App.LocalUserName);
+            KeepCallIdAboveKeyboard();
+        }
 
         private const string FocusedClass = "is-focused";
         private const string ErrorClass = "is-error";
         private const string DisabledClass = "is-disabled";
         private const string BusyClass = "is-busy";
+        private const float KeyboardClearance = 12f;
 
         private readonly AccountHeaderView _header;
         private readonly VisualElement _callIdField;
@@ -57,6 +69,8 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
         private readonly Button _startNewCallButton;
 
         private bool _isBusy;
+        private float _keyboardShift;
+        private float _keyboardLastFrame;
 
         private string CallId => _callIdInput.value?.Trim() ?? string.Empty;
 
@@ -130,6 +144,60 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             {
                 SetBusy(_startNewCallButton, false);
             }
+        }
+
+        /// <summary>
+        /// The bottom inset recenters this screen in the space above the keyboard.
+        /// When the centered content is taller than that space, slide the screen up until the call ID field is visible.
+        /// </summary>
+        private void KeepCallIdAboveKeyboard()
+        {
+            var keyboard = MobileKeyboard.CoverageFromBottom();
+            if (keyboard <= 0f || Root.parent == null || _callIdField.layout.height <= 0f)
+            {
+                _keyboardLastFrame = 0f;
+                ResetKeyboardShift();
+                return;
+            }
+
+            // ScreenAdapter applies the inset during this Update, but the layout still reflects the previous frame.
+            var layoutIncludesKeyboard = _keyboardLastFrame > 0f;
+            _keyboardLastFrame = keyboard;
+            if (!layoutIncludesKeyboard)
+            {
+                return;
+            }
+
+            // worldBound includes the shift from earlier frames. Adding it back is the centered position.
+            var visibleBottom = Root.parent.worldBound.yMax - KeyboardClearance;
+            var restingFieldBottom = _callIdField.worldBound.yMax + _keyboardShift;
+            var needed = Mathf.Max(0f, restingFieldBottom - visibleBottom);
+
+            var visibleTop = Root.parent.worldBound.yMin + KeyboardClearance;
+            var restingFieldTop = _callIdField.worldBound.yMin + _keyboardShift;
+            if (restingFieldTop - needed < visibleTop)
+            {
+                needed = Mathf.Max(0f, restingFieldTop - visibleTop);
+            }
+
+            if (Mathf.Abs(needed - _keyboardShift) < 0.5f)
+            {
+                return;
+            }
+
+            _keyboardShift = needed;
+            Root.style.translate = new Translate(0f, -needed, 0f);
+        }
+
+        private void ResetKeyboardShift()
+        {
+            if (_keyboardShift <= 0f)
+            {
+                return;
+            }
+
+            _keyboardShift = 0f;
+            Root.style.translate = new Translate(0f, 0f, 0f);
         }
 
         private void SetBusy(VisualElement button, bool isBusy)

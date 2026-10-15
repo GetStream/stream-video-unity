@@ -24,5 +24,11 @@ namespace StreamVideo.Core.BackgroundFilters
         void Pause();
 
         void Resume();
+
+        /// <summary>
+        /// Free textures, buffers, and the last mask while the filter is off. Keeps the native segmenter
+        /// for reuse. Call after <see cref="Pause"/>.
+        /// </summary>
+        void ReleaseResources();
     }
 }

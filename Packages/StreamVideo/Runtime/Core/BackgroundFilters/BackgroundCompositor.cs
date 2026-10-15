@@ -1,6 +1,6 @@
+using StreamVideo.Libs.Utils;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Object = UnityEngine.Object;
 
 namespace StreamVideo.Core.BackgroundFilters
 {
@@ -371,7 +371,7 @@ namespace StreamVideo.Core.BackgroundFilters
             }
 
             rt.Release();
-            Object.Destroy(rt);
+            rt.SmartDestroy();
             rt = null;
         }
 
@@ -382,7 +382,7 @@ namespace StreamVideo.Core.BackgroundFilters
                 return;
             }
 
-            Object.Destroy(material);
+            material.SmartDestroy();
             material = null;
         }
     }

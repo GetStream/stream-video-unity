@@ -104,7 +104,7 @@ namespace StreamVideo.ExampleProject.UI
                 _videoRectTransform.rotation = _baseVideoRotation * Quaternion.AngleAxis(-remoteAngle, Vector3.forward);
             }
             
-            // Local preview may be a compositor RT; rotation still comes from the camera, not the RT.
+            // Local preview is an SDK render texture in camera space; rotation comes from the camera, not the RT.
             if (Participant != null && Participant.IsLocalParticipant)
             {
                 var sourceWebCamTexture = _videoManager != null

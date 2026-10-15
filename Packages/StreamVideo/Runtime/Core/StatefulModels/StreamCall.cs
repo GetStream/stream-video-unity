@@ -70,16 +70,6 @@ namespace StreamVideo.Core.StatefulModels
             remove => _backgroundFilterPerformanceChanged.Remove(value);
         }
 
-        public event Action<Texture> LocalPreviewTextureChanged
-        {
-            add
-            {
-                _localPreviewTextureChanged.Add(value);
-                TryAttachBackgroundFilterEvents();
-            }
-            remove => _localPreviewTextureChanged.Remove(value);
-        }
-
         public BackgroundFilter ActiveBackgroundFilter => FilterController?.ActiveFilter;
 
         public bool IsBackgroundFilterSupported => FilterController != null && FilterController.IsSupported;
@@ -495,15 +485,7 @@ namespace StreamVideo.Core.StatefulModels
             => FilterController?.SetFilter(filter);
 
         public Texture GetLocalPreviewTexture()
-        {
-            var filtered = FilterController?.GetPreviewTexture();
-            if (filtered != null)
-            {
-                return filtered;
-            }
-
-            return LowLevelClient?.RtcSession?.VideoInput;
-        }
+            => IsActiveCall ? LowLevelClient.RtcSession.LocalPreview.GetOrCreate() : null;
 
         public IStreamVideoCallParticipant GetLocalParticipant()
         {
@@ -679,7 +661,6 @@ namespace StreamVideo.Core.StatefulModels
         internal void DetachBackgroundFilterEvents()
         {
             _backgroundFilterPerformanceChanged.Detach();
-            _localPreviewTextureChanged.Detach();
         }
 
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
@@ -1037,9 +1018,6 @@ namespace StreamVideo.Core.StatefulModels
         private readonly CallScopedControllerEvent<BackgroundFilterPerformance> _backgroundFilterPerformanceChanged
             = new CallScopedControllerEvent<BackgroundFilterPerformance>();
 
-        private readonly CallScopedControllerEvent<Texture> _localPreviewTextureChanged
-            = new CallScopedControllerEvent<Texture>();
-
         private void OnSessionParticipantAdded(IStreamVideoCallParticipant participant)
         {
             LowLevelClient.RtcSession.NotifyParticipantJoined(participant.SessionId);
@@ -1229,9 +1207,6 @@ namespace StreamVideo.Core.StatefulModels
             _backgroundFilterPerformanceChanged.Attach(
                 h => controller.PerformanceChanged += h,
                 h => controller.PerformanceChanged -= h);
-            _localPreviewTextureChanged.Attach(
-                h => controller.PreviewTextureChanged += h,
-                h => controller.PreviewTextureChanged -= h);
         }
 
         private bool IsLocalParticipantIncluded()

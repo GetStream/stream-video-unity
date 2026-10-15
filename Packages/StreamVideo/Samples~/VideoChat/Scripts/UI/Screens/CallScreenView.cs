@@ -3,7 +3,6 @@
 #endif
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.ExampleProject.UI.Devices;
 using TMPro;
@@ -132,9 +131,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
             _activeCall.DominantSpeakerChanged += OnDominantSpeakerChanged;
 
             _activeCall.SortedParticipantsUpdated += SortParticipantViews;
-            _activeCall.LocalPreviewTextureChanged += OnLocalPreviewTextureChanged;
-
-            UIManager.LocalCameraChanged += OnLocalCameraChanged;
 
             // Show active call ID so user can copy it and send others to join
             _joinCallIdInput.text = _activeCall.Id;
@@ -152,13 +148,10 @@ namespace StreamVideo.ExampleProject.UI.Screens
                 _activeCall.ParticipantLeft -= OnParticipantLeft;
                 _activeCall.DominantSpeakerChanged -= OnDominantSpeakerChanged;
                 _activeCall.SortedParticipantsUpdated -= SortParticipantViews;
-                _activeCall.LocalPreviewTextureChanged -= OnLocalPreviewTextureChanged;
                 _activeCall = null;
             }
 
             RemoveAllParticipants();
-
-            UIManager.LocalCameraChanged -= OnLocalCameraChanged;
             
             // Notify child components
             _cameraPanel.NotifyParentHide();
@@ -206,9 +199,9 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
             if (participant.IsLocalParticipant)
             {
-                // Set input camera as a video source for local participant - we won't receive TrackAdded event for local participant
+                // We won't receive TrackAdded event for the local participant. The preview texture instance stays
+                // the same for the whole call (filter toggles, camera switches), so assigning it once is enough
                 view.SetLocalCameraSource(_activeCall.GetLocalPreviewTexture());
-                //StreamTodo: this will invalidate each time WebCamTexture is internally replaced so we need a better way to expose this
             }
 
             if (sortParticipantViews)
@@ -275,24 +268,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
             }
 
             _participantSessionIdToView.Clear();
-        }
-
-        private void OnLocalCameraChanged(WebCamTexture activeCamera)
-            => RefreshLocalPreview();
-
-        private void OnLocalPreviewTextureChanged(Texture previewTexture)
-            => RefreshLocalPreview();
-
-        private void RefreshLocalPreview()
-        {
-            var localParticipant
-                = _participantSessionIdToView.Values.FirstOrDefault(p => p.Participant.IsLocalParticipant);
-            if (localParticipant == null || _activeCall == null)
-            {
-                return;
-            }
-
-            localParticipant.SetLocalCameraSource(_activeCall.GetLocalPreviewTexture());
         }
         
 #if AUDIO_PROCESSING_ENABLED

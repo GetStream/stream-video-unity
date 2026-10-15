@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using StreamVideo.Libs.Utils;
 using UnityEngine;
 
 namespace StreamVideo.Libs.VideoClientInstanceRunner
@@ -20,7 +21,7 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
                 {
                     Debug.LogWarning($"Application is not playing. The MonoBehaviour {nameof(UnityStreamVideoClientRunner)} wrapper will not execute." +
                               $" You need to call Stream Video Client's {nameof(IStreamVideoClientEventsListener.Update)} and {nameof(IStreamVideoClientEventsListener.Destroy)} by yourself");
-                    DestroyImmediate(gameObject);
+                    gameObject.SmartDestroy();
                     return;
                 }
                 
@@ -90,18 +91,7 @@ namespace StreamVideo.Libs.VideoClientInstanceRunner
 #if STREAM_DEBUG_ENABLED
                 Debug.Log($"Stream Video Client Disposed - destroy {nameof(UnityStreamVideoClientRunner)} instance");
 #endif
-                #if UNITY_EDITOR
-                if (Application.isPlaying)
-                {
-                    Destroy(gameObject);
-                }
-                else
-                {
-                    DestroyImmediate(gameObject);
-                }
-                #else
-                    Destroy(gameObject);
-                #endif
+                gameObject.SmartDestroy();
             }
 
         }

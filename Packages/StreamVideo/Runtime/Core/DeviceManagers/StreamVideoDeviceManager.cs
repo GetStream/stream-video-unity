@@ -72,7 +72,7 @@ namespace StreamVideo.Core.DeviceManagers
                 }
             }
             
-            if (IsEnabled && enable && _activeCamera != null && !_activeCamera.isPlaying)
+            if (RtcSession.IsPublisherVideoPublished && enable && _activeCamera != null && !_activeCamera.isPlaying)
             {
                 //OnSetEnabled will not trigger because IsEnabled value didn't change
                 _activeCamera.Play();
@@ -103,6 +103,7 @@ namespace StreamVideo.Core.DeviceManagers
         {
             RtcSession.PublisherVideoTrackIsEnabledChanged += OnPublisherVideoTrackIsEnabledChanged;
             RtcSession.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
+            RtcSession.PublisherVideoSuspendedChanged += OnPublisherVideoSuspendedChanged;
         }
 
         protected override async Task<bool> OnTestDeviceAsync(CameraDeviceInfo device, int msTimeout)
@@ -184,6 +185,7 @@ namespace StreamVideo.Core.DeviceManagers
         {
             RtcSession.PublisherVideoTrackIsEnabledChanged -= OnPublisherVideoTrackIsEnabledChanged;
             RtcSession.PublisherVideoTrackChanged -= OnPublisherVideoTrackChanged;
+            RtcSession.PublisherVideoSuspendedChanged -= OnPublisherVideoSuspendedChanged;
 
             
             if (_activeCamera != null)
@@ -234,14 +236,14 @@ namespace StreamVideo.Core.DeviceManagers
                 return;
             }
             
-            var isEnabled = RtcSession.PublisherVideoTrackIsEnabled;
-            if (isEnabled && !_activeCamera.isPlaying)
+            var capture = RtcSession.IsPublisherVideoPublished;
+            if (capture && !_activeCamera.isPlaying)
             {
                 _activeCamera.Play();
                 Client.SetCameraInputSource(_activeCamera);
             }
 
-            if (!isEnabled)
+            if (!capture)
             {
                 _activeCamera.Stop();
             }
@@ -266,7 +268,9 @@ namespace StreamVideo.Core.DeviceManagers
             UpdateVideoHandling();
             IsEnabledChanged?.Invoke(isEnabled);
         }
-        
+
         private void OnPublisherVideoTrackChanged() => UpdateVideoHandling();
+
+        private void OnPublisherVideoSuspendedChanged() => UpdateVideoHandling();
     }
 }

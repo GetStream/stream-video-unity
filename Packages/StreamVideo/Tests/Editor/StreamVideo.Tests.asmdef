@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "StreamVideo.Core",
+        "StreamVideo.EditorTools",
         "StreamVideo.Libs",
         "StreamVideo.Tests.Shared",
         "Stream.Unity.WebRTC",

@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-#if STREAM_DEBUG_ENABLED
-using StreamVideo.Core.BackgroundFilters;
-#endif
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models.Sfu;
@@ -242,8 +239,6 @@ namespace StreamVideo.Core.StatefulModels
             _audioTrack?.Update();
             _videoTrack?.Update();
             _screenShareTrack?.Update();
-
-            UploadLocalParticipantPublishedVideoRotationAngle();
         }
 
         //StreamTodo: solve this better. IL2CPP fails to generate C++ code for TryConvertTo and fails with
@@ -388,6 +383,8 @@ namespace StreamVideo.Core.StatefulModels
         protected override Task UploadCustomDataAsync()
             => Client.SetParticipantCustomDataAsync(this, InternalCustomData.InternalDictionary);
 
+        // Written only by SDK versions that published camera-oriented frames. Current publishers send upright
+        // frames and never set it, so receivers keep reading it to display those older publishers correctly.
         private const string VideoRotationAngleKey = "videoRotationAngle";
 
         #region Tracks
@@ -424,42 +421,5 @@ namespace StreamVideo.Core.StatefulModels
             }
         }
 
-        private void UploadLocalParticipantPublishedVideoRotationAngle()
-        {
-            if (Client.InternalLowLevelClient.RtcSession == null ||
-                Client.InternalLowLevelClient.RtcSession.VideoInput == null)
-            {
-                return;
-            }
-
-            if (!IsLocalParticipant)
-            {
-                return;
-            }
-
-            var videoInput = Client.InternalLowLevelClient.RtcSession.VideoInput;
-            if (!videoInput.isPlaying || videoInput.width <= 16)
-            {
-                return;
-            }
-
-            var angle = videoInput.videoRotationAngle;
-            var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);
-            if (hasPrevAngle && Mathf.Abs(angle - prevAngle) <= 0)
-            {
-                return;
-            }
-
-#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
-            CameraOrientationDebug.Log(Logs, "publisher.customDataAngle",
-                "publishingAngle=" + angle
-                + " prev=" + (hasPrevAngle ? prevAngle.ToString() : "none")
-                + " | " + CameraOrientationDebug.DescribeWebCam(videoInput)
-                + " | " + CameraOrientationDebug.DescribeScreen());
-#endif
-
-            //StreamTodo: there can be potentially multiple video tracks so best to store this by track ID
-            CustomData.SetAsync(VideoRotationAngleKey, angle);
-        }
     }
 }

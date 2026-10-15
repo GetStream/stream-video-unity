@@ -114,9 +114,9 @@ namespace StreamVideo.Tests.Editor
             _compositor.Apply(Texture2D.whiteTexture, _destination);
 
             Assert.That(_destination.width, Is.EqualTo(width),
-                "Composite must keep publisher RT width so receivers still apply videoRotationAngle.");
+                "Composite must keep the camera-space RT width so the upright rotation pass maps it 1:1.");
             Assert.That(_destination.height, Is.EqualTo(height),
-                "Composite must keep publisher RT height so receivers still apply videoRotationAngle.");
+                "Composite must keep the camera-space RT height so the upright rotation pass maps it 1:1.");
             Assert.That(_compositor.LastApplyWasPassthrough, Is.False,
                 "Size-preserving apply must still composite.");
         }

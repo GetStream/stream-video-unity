@@ -9,6 +9,10 @@ namespace StreamVideo.Core.StatefulModels.Tracks
     {
         public event Action VideoRotationAngleChanged;
 
+        /// <summary>
+        /// Clockwise rotation required to display the video upright. Video is published upright, so this is 0
+        /// except for participants using older Unity SDK versions that published the camera sensor orientation.
+        /// </summary>
         public int VideoRotationAngle
         {
             get => _videoRotationAngle;

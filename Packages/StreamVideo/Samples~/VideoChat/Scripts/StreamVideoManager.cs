@@ -205,44 +205,6 @@ namespace StreamVideo.ExampleProject
             Client = null;
         }
 
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-        protected void OnApplicationPause(bool pauseStatus)
-        {
-            if (Client == null)
-            {
-                return;
-            }
-
-            if (pauseStatus)
-            {
-                // App is going to background
-                Client.PauseMobileAudioPlayback();
-                _wasAudioPublishEnabledOnPause = Client.AudioDeviceManager.IsEnabled;
-                _wasVideoPublishEnabledOnPause = Client.VideoDeviceManager.IsEnabled;
-
-                Client.AudioDeviceManager.SetEnabled(false);
-                Client.VideoDeviceManager.SetEnabled(false);
-            }
-            else
-            {
-                // App is coming to foreground
-                Client.ResumeMobileAudioPlayback();
-
-                if (_wasAudioPublishEnabledOnPause)
-                {
-                    Client.AudioDeviceManager.SetEnabled(true);
-                    _wasAudioPublishEnabledOnPause = false;
-                }
-
-                if (_wasVideoPublishEnabledOnPause)
-                {
-                    Client.VideoDeviceManager.SetEnabled(true);
-                    _wasVideoPublishEnabledOnPause = false;
-                }
-            }
-        }
-#endif
-
 #pragma warning disable CS0414 //Disable warning that _info is unused. It's purpose is to display info box in the Unity Inspector only
 
         [SerializeField]
@@ -280,15 +242,15 @@ namespace StreamVideo.ExampleProject
         [SerializeField]
         private bool _autoEnableMicrophone = false;
 
+        [SerializeField]
+        private bool _autoEnableBackgroundFilter = true;
+
         private StreamClientConfig _clientConfig;
         private IStreamCall _activeCall;
 
         private StreamCallType CallType => _environment == StreamEnvironment.Pronto
             ? StreamCallType.Custom("default-no-recording")
             : StreamCallType.Default;
-
-        private bool _wasAudioPublishEnabledOnPause;
-        private bool _wasVideoPublishEnabledOnPause;
 
         // We mute by user ID because Session ID will change every time the user reconnects
         private readonly Dictionary<string, bool> _isUserMutedLocally = new Dictionary<string, bool>();
@@ -315,6 +277,14 @@ namespace StreamVideo.ExampleProject
         {
             _activeCall = call;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
+            if (_autoEnableBackgroundFilter && call.IsBackgroundFilterSupported)
+            {
+#if STREAM_DEBUG_ENABLED
+                // P1-2: owner will delete this block before merge. Uncheck Auto Enable Background Filter to skip it while testing.
+                call.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Heavy));
+#endif
+            }
 
             CallStarted?.Invoke(call);
         }

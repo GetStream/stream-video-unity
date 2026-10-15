@@ -31,8 +31,15 @@ namespace StreamVideo.ExampleProject.UI.Devices
             var index = _devices.IndexOf(device);
             if (index == -1)
             {
-                Debug.LogError($"Failed to find index for device: {device}. Available devices: " +
-                               string.Join(", ", _devices));
+                // The list can be stale, e.g. devices become visible only after camera permission is granted
+                UpdateDevicesDropdown(GetDevices().ToList());
+                index = _devices.IndexOf(device);
+            }
+
+            if (index == -1)
+            {
+                Debug.LogError($"Failed to find index for device: {GetDeviceName(device)}. Available devices: " +
+                               DescribeDevices(_devices));
                 return;
             }
 
@@ -150,7 +157,7 @@ namespace StreamVideo.ExampleProject.UI.Devices
             if (device.Equals(default))
             {
                 Debug.LogError($"Failed to select device with index: {optionIndex}. Available devices: " +
-                               string.Join(", ", _devices));
+                               DescribeDevices(_devices));
                 return;
             }
 
@@ -178,8 +185,8 @@ namespace StreamVideo.ExampleProject.UI.Devices
                 var devicesChanged = !_devices.SequenceEqual(availableDevices);
                 if (devicesChanged)
                 {
-                    var prevDevicesLog = string.Join(", ", _devices);
-                    var newDevicesLog = string.Join(", ", availableDevices);
+                    var prevDevicesLog = DescribeDevices(_devices);
+                    var newDevicesLog = DescribeDevices(availableDevices);
                     Debug.Log($"Device list changed. Previous: {prevDevicesLog}, Current: {newDevicesLog}");
 
                     UpdateDevicesDropdown(availableDevices);
@@ -199,9 +206,21 @@ namespace StreamVideo.ExampleProject.UI.Devices
 
             if (!EqualityComparer<TDevice>.Default.Equals(SelectedDevice, default) && !devices.Contains(SelectedDevice))
             {
-                Debug.LogError($"Previously active device was unplugged: {SelectedDevice}. Devices: " + string.Join(", ", devices));
+                Debug.LogError($"Previously active device was unplugged: {GetDeviceName(SelectedDevice)}. Devices: " + DescribeDevices(devices));
                 //StreamTodo: handle case when user unplugged active device
             }
+        }
+
+        // Avoids string.Join<TDevice>: IL2CPP on iOS crashed in its shared generic code for device structs
+        private string DescribeDevices(IEnumerable<TDevice> devices)
+        {
+            var names = new List<string>();
+            foreach (var device in devices)
+            {
+                names.Add(GetDeviceName(device));
+            }
+
+            return string.Join(", ", names);
         }
     }
 }

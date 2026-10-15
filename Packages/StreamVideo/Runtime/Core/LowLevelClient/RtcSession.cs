@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using StreamVideo.v1.Sfu.Events;
 using StreamVideo.v1.Sfu.Models;
 using StreamVideo.v1.Sfu.Signal;
+using StreamVideo.Core.BackgroundFilters;
 using StreamVideo.Core.Configs;
 using StreamVideo.Core.DeviceManagers;
 using StreamVideo.Core.Exceptions;
@@ -103,7 +104,7 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 _publisherAudioTrackIsEnabled = value;
-                InternalExecuteSetPublisherAudioTrackEnabled(value);
+                ApplyPublisherAudioOutputState();
 
                 PublisherAudioTrackIsEnabledChanged?.Invoke(value);
             }
@@ -120,9 +121,75 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 _publisherVideoTrackIsEnabled = value;
-                InternalExecuteSetPublisherVideoTrackEnabled(value);
+                ApplyPublisherVideoOutputState();
                 PublisherVideoTrackIsEnabledChanged?.Invoke(value);
             }
+        }
+
+        /// <summary>
+        /// Raised when <see cref="IsPublisherVideoPublished"/> changes due to <see cref="SetPublisherVideoSuspended"/>.
+        /// </summary>
+        internal event Action PublisherVideoSuspendedChanged;
+
+        internal bool IsPublisherAudioPublished
+            => _publisherAudioTrackIsEnabled && !_publisherAudioSuspended;
+
+        internal bool IsPublisherVideoPublished
+            => _publisherVideoTrackIsEnabled && !_publisherVideoSuspended;
+
+        /// <summary>
+        /// Temporarily stops publishing audio without changing <see cref="PublisherAudioTrackIsEnabled"/>.
+        /// </summary>
+        internal void SetPublisherAudioSuspended(bool suspended)
+        {
+            if (_publisherAudioSuspended == suspended)
+            {
+                return;
+            }
+
+            var wasPublished = IsPublisherAudioPublished;
+            _publisherAudioSuspended = suspended;
+            if (wasPublished != IsPublisherAudioPublished)
+            {
+                ApplyPublisherAudioOutputState();
+            }
+        }
+
+        /// <summary>
+        /// Temporarily stops publishing video without changing <see cref="PublisherVideoTrackIsEnabled"/>.
+        /// </summary>
+        internal void SetPublisherVideoSuspended(bool suspended)
+        {
+            if (_publisherVideoSuspended == suspended)
+            {
+                return;
+            }
+
+            var wasPublished = IsPublisherVideoPublished;
+            _publisherVideoSuspended = suspended;
+            if (wasPublished == IsPublisherVideoPublished)
+            {
+                return;
+            }
+
+            ApplyPublisherVideoOutputState();
+            UpdateBackgroundFilterState();
+            PublisherVideoSuspendedChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Temporarily silences mobile audio playback. Independent of <see cref="PauseMobileAudioPlayback"/>;
+        /// playback stays muted while either is active.
+        /// </summary>
+        internal void SetAudioPlaybackSuspended(bool suspended)
+        {
+            if (_audioPlaybackSuspended == suspended)
+            {
+                return;
+            }
+
+            _audioPlaybackSuspended = suspended;
+            ApplyAudioPlaybackState();
         }
 
         public CallingState CallState
@@ -143,6 +210,10 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         public StreamCall ActiveCall { get; internal set; }
+
+        internal BackgroundFilterController BackgroundFilterController { get; }
+
+        internal LocalPreviewRenderer LocalPreview { get; } = new LocalPreviewRenderer();
 
         public SubscriberPeerConnection Subscriber { get; private set; }
         public PublisherPeerConnection Publisher { get; private set; }
@@ -249,6 +320,8 @@ namespace StreamVideo.Core.LowLevelClient
 
             var statsCollector = new UnityWebRtcStatsCollector(this, _serializer, _tracerManager);
             _statsSender = new WebRtcStatsSender(this, statsCollector, _timeService, _logs);
+            BackgroundFilterController = new BackgroundFilterController(_logs);
+            PublisherVideoTrackIsEnabledChanged += OnBackgroundFilterVideoEnabledChanged;
 
             //StreamTodo: enable this only if a special mode e.g. compiler flag 
 #if STREAM_AUDIO_BENCHMARK_ENABLED
@@ -259,11 +332,16 @@ namespace StreamVideo.Core.LowLevelClient
             _networkMonitor.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
 
             _mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            _wasApplicationFocused = Application.isFocused;
         }
 
         public void Dispose()
         {
             StopAsync("Video Client is being disposed").LogIfFailed();
+
+            PublisherVideoTrackIsEnabledChanged -= OnBackgroundFilterVideoEnabledChanged;
+            BackgroundFilterController?.Dispose();
+            LocalPreview.Dispose();
 
             DisposeSfuWebSocket();
 
@@ -278,9 +356,11 @@ namespace StreamVideo.Core.LowLevelClient
         //StreamTodo: to make updates more explicit we could make an UpdateService, that we could tell such dependency by constructor and component would self-register for updates
         public void Update()
         {
+            UpdateBackgroundFilterApplicationFocus();
             _networkMonitor.Update();
             _sfuWebSocket?.Update();
             Publisher?.Update();
+            UpdateLocalPreview();
             _statsSender.Update();
             _videoAudioSyncBenchmark?.Update();
 
@@ -490,7 +570,14 @@ namespace StreamVideo.Core.LowLevelClient
                         $"{nameof(DoJoin)} - Skipped join call request: callExists: {callCredentialsExists}, isRejoin: {isRejoin}, isMigration: {isMigration}");
                 }
 
+                if (ActiveCall != null && !ReferenceEquals(ActiveCall, call))
+                {
+                    ActiveCall.DetachBackgroundFilterEvents();
+                    LocalPreview.Release();
+                }
+
                 ActiveCall = call;
+                ActiveCall.AttachBackgroundFilterEvents();
                 EnsureCallHasJoinCredentials(ActiveCall);
 
                 _httpClient = _httpClientFactory(ActiveCall);
@@ -886,7 +973,14 @@ namespace StreamVideo.Core.LowLevelClient
                 // Set Left before clearing ActiveCall so that CallStateChanged subscribers
                 // can still access the call reference
                 CallState = CallingState.Left;
-                ActiveCall = null;
+                if (ActiveCall != null)
+                {
+                    ActiveCall.DetachBackgroundFilterEvents();
+                    ActiveCall = null;
+                }
+
+                BackgroundFilterController?.SetFilter(null);
+                LocalPreview.Release();
             }
         }
 
@@ -963,15 +1057,27 @@ namespace StreamVideo.Core.LowLevelClient
         // unit alive so unmuting is instant and does not need a session reconfigure.
         public void PauseMobileAudioPlayback()
         {
-#if STREAM_NATIVE_AUDIO
-            WebRTC.MuteAudioPlayback();
-#endif
+            _audioPlaybackPausedByUser = true;
+            ApplyAudioPlaybackState();
         }
 
         public void ResumeMobileAudioPlayback()
         {
+            _audioPlaybackPausedByUser = false;
+            ApplyAudioPlaybackState();
+        }
+
+        private void ApplyAudioPlaybackState()
+        {
 #if STREAM_NATIVE_AUDIO
-            WebRTC.UnmuteAudioPlayback();
+            if (_audioPlaybackPausedByUser || _audioPlaybackSuspended)
+            {
+                WebRTC.MuteAudioPlayback();
+            }
+            else
+            {
+                WebRTC.UnmuteAudioPlayback();
+            }
 #endif
         }
 
@@ -1154,7 +1260,15 @@ namespace StreamVideo.Core.LowLevelClient
         private int _trackSubscriptionGeneration;
 
         private bool _publisherAudioTrackIsEnabled;
+        private bool _publisherAudioSuspended;
         private bool _publisherVideoTrackIsEnabled;
+        private bool _publisherVideoSuspended;
+        private bool _audioPlaybackPausedByUser;
+        private bool _audioPlaybackSuspended;
+
+        private int _audioMuteGeneration;
+        private int _videoMuteGeneration;
+        private bool _wasApplicationFocused;
 
         private AudioSource _audioInput;
         private WebCamTexture _videoInput;
@@ -1487,7 +1601,7 @@ namespace StreamVideo.Core.LowLevelClient
             }
 
 #if STREAM_NATIVE_AUDIO
-            var shouldRecord = _activeAudioRecordingDevice.IsValid && _publisherAudioTrackIsEnabled;
+            var shouldRecord = _activeAudioRecordingDevice.IsValid && IsPublisherAudioPublished;
 
             if (shouldRecord)
             {
@@ -1909,6 +2023,51 @@ namespace StreamVideo.Core.LowLevelClient
             TryExecuteSubscribeToTracks();
         }
 
+        private void SendLatestMuteState(TrackType trackType, bool isEnabled)
+        {
+            var generation = trackType == TrackType.Video ? ++_videoMuteGeneration : ++_audioMuteGeneration;
+            SendMuteStateIfLatestAsync(trackType, isEnabled, generation).LogIfFailed();
+        }
+
+        /// <summary>
+        /// A background mute can complete after the foreground unmute. Only the newest
+        /// generation is sent, and a stale response re-sends the current state.
+        /// </summary>
+        private async Task SendMuteStateIfLatestAsync(TrackType trackType, bool isEnabled, int generation)
+        {
+            if (!IsLatestMuteGeneration(trackType, generation))
+            {
+                return;
+            }
+
+            _logs.InfoIfDebug("[Mute] Sending " + trackType + " muted=" + !isEnabled + " generation="
+                              + generation);
+            await UpdateMuteStateAsync(trackType, isEnabled);
+
+            if (IsLatestMuteGeneration(trackType, generation))
+            {
+                _logs.InfoIfDebug("[Mute] Sent " + trackType + " muted=" + !isEnabled + " generation="
+                                  + generation);
+                return;
+            }
+
+            _logs.InfoIfDebug("[Mute] Stale " + trackType + " mute response for generation " + generation
+                              + ", re-sending latest state.");
+
+            var latestEnabled = trackType == TrackType.Video
+                ? IsPublisherVideoPublished
+                : IsPublisherAudioPublished;
+            var latestGeneration = trackType == TrackType.Video ? _videoMuteGeneration : _audioMuteGeneration;
+            await SendMuteStateIfLatestAsync(trackType, latestEnabled, latestGeneration);
+        }
+
+        internal static bool IsLatestMuteGeneration(int requestGeneration, int latestGeneration)
+            => requestGeneration == latestGeneration;
+
+        private bool IsLatestMuteGeneration(TrackType trackType, int generation)
+            => IsLatestMuteGeneration(generation,
+                trackType == TrackType.Video ? _videoMuteGeneration : _audioMuteGeneration);
+
         private async Task UpdateMuteStateAsync(TrackType trackType, bool isEnabled)
         {
             if (ActiveCall == null)
@@ -1942,44 +2101,41 @@ namespace StreamVideo.Core.LowLevelClient
             //StreamTODO: combine into single API call
             if (_publisherAudioTrackIsEnabled)
             {
-                await UpdateMuteStateAsync(TrackType.Audio, PublisherAudioTrackIsEnabled);
+                await SendMuteStateIfLatestAsync(TrackType.Audio, IsPublisherAudioPublished, ++_audioMuteGeneration);
             }
 
             if (_publisherVideoTrackIsEnabled)
             {
-                await UpdateMuteStateAsync(TrackType.Video, PublisherVideoTrackIsEnabled);
+                await SendMuteStateIfLatestAsync(TrackType.Video, IsPublisherVideoPublished, ++_videoMuteGeneration);
             }
         }
 
-        private void InternalExecuteSetPublisherAudioTrackEnabled(bool isEnabled)
+        private void ApplyPublisherAudioOutputState()
         {
             if (Publisher?.PublisherAudioTrack == null)
             {
-                _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " +
-                                     isEnabled + " -> track not available yet");
+                _logs.WarningIfDebug("[Audio] ApplyPublisherAudioOutputState -> track not available yet");
                 return;
             }
 
-            _logs.WarningIfDebug("[Audio] RtcSession.InternalExecuteSetPublisherAudioTrackEnabled isEnabled: " +
-                                 isEnabled);
+            var published = IsPublisherAudioPublished;
+            _logs.WarningIfDebug("[Audio] ApplyPublisherAudioOutputState published: " + published);
 
-            Publisher.PublisherAudioTrack.Enabled = isEnabled;
-
-            UpdateMuteStateAsync(TrackType.Audio, isEnabled).LogIfFailed();
-
+            Publisher.PublisherAudioTrack.Enabled = published;
+            SendLatestMuteState(TrackType.Audio, published);
             UpdateAudioRecording();
         }
 
-        private void InternalExecuteSetPublisherVideoTrackEnabled(bool isEnabled)
+        private void ApplyPublisherVideoOutputState()
         {
             if (Publisher?.PublisherVideoTrack == null)
             {
                 return;
             }
 
-            Publisher.PublisherVideoTrack.Enabled = isEnabled;
-
-            UpdateMuteStateAsync(TrackType.Video, isEnabled).LogIfFailed();
+            var published = IsPublisherVideoPublished;
+            Publisher.PublisherVideoTrack.Enabled = published;
+            SendLatestMuteState(TrackType.Video, published);
         }
 
         private void OnSfuParticipantJoined(ParticipantJoined participantJoined)
@@ -2576,12 +2732,54 @@ namespace StreamVideo.Core.LowLevelClient
 
             //StreamTODO: pass factory for WS creation. We may need two WS clients for migration so we can't rely on the same one
             Publisher = new PublisherPeerConnection(_logs, iceServers, this, _config.Audio, _publisherVideoSettings,
-                sfuClient: this, _publisherTracer, _serializer);
+                sfuClient: this, _publisherTracer, _serializer, BackgroundFilterController);
             Publisher.IceTrickled += OnIceTrickled;
             Publisher.PublisherAudioTrackChanged += OnPublisherAudioTrackChanged;
             Publisher.PublisherVideoTrackChanged += OnPublisherVideoTrackChanged;
             Publisher.ReconnectionNeeded += OnReconnectionNeeded;
             Publisher.Disconnected += PublisherOnDisconnected;
+        }
+
+        private void OnBackgroundFilterVideoEnabledChanged(bool isEnabled) => UpdateBackgroundFilterState();
+
+        private void UpdateLocalPreview()
+        {
+            var publisherTexture = Publisher?.PublisherVideoTrackTexture;
+            var showFiltered = BackgroundFilterController != null
+                               && BackgroundFilterController.IsCompositing
+                               && publisherTexture != null
+                               && publisherTexture.IsCreated();
+
+            LocalPreview.Render(VideoInput, showFiltered ? publisherTexture : null);
+        }
+
+        private void UpdateBackgroundFilterState()
+        {
+            if (IsPublisherVideoPublished)
+            {
+                BackgroundFilterController?.Resume();
+            }
+            else
+            {
+                BackgroundFilterController?.Pause();
+            }
+        }
+
+        private void UpdateBackgroundFilterApplicationFocus()
+        {
+            var isFocused = Application.isFocused;
+            if (isFocused == _wasApplicationFocused)
+            {
+                return;
+            }
+
+            _wasApplicationFocused = isFocused;
+            if (isFocused)
+            {
+                UpdateBackgroundFilterState();
+            }
+
+            // iOS can stay unfocused after resume, so losing focus must not pause the filter.
         }
 
         private void DisposePublisher()
@@ -2670,7 +2868,9 @@ namespace StreamVideo.Core.LowLevelClient
         {
             if (audioTrack != null && _publisherAudioTrackIsEnabled)
             {
-                UpdateMuteStateAsync(TrackType.Audio, true).LogIfFailed();
+                var published = IsPublisherAudioPublished;
+                audioTrack.Enabled = published;
+                SendLatestMuteState(TrackType.Audio, published);
             }
 
             UpdateAudioRecording();
@@ -2679,11 +2879,11 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void OnPublisherVideoTrackChanged(VideoStreamTrack videoTrack)
         {
-            // InternalExecuteSetPublisherVideoTrackEnabled runs before the track exists on first enable,
-            // so UpdateMuteStates must be sent once the publisher track is actually created.
             if (videoTrack != null && _publisherVideoTrackIsEnabled)
             {
-                UpdateMuteStateAsync(TrackType.Video, true).LogIfFailed();
+                var published = IsPublisherVideoPublished;
+                videoTrack.Enabled = published;
+                SendLatestMuteState(TrackType.Video, published);
             }
 
             PublisherVideoTrackChanged?.Invoke();

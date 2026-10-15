@@ -6,8 +6,8 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    height: 56px;
-    padding: 0 8px;
+    height: 72px;
+    padding: 0 12px;
     flex-shrink: 0;
 }
 
@@ -23,11 +23,11 @@
 .call__timer {
     position: absolute;
     left: 50%;
-    top: 14px;
-    height: 28px;
-    width: 88px;
-    margin-left: -44px;
-    border-radius: 14px;
+    top: 20px;
+    height: 32px;
+    width: 85px;
+    margin-left: -42.5px;
+    border-radius: 16px;
     flex-direction: row;
     align-items: center;
     justify-content: center;
@@ -35,20 +35,20 @@
 }
 
 .app-root .call__timer-icon {
-    width: 16px;
-    height: 16px;
-    margin-right: 6px;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
     -unity-background-image-tint-color: var(--color-success);
 }
 
 .call__timer-label {
-    font-size: 13px;
+    font-size: 16px;
 }
 
 .call__stage {
     flex-grow: 1;
     margin: 0 8px;
-    border-radius: 16px;
+    border-radius: 20px;
     overflow: hidden;
     background-color: var(--color-surface);
     align-items: center;
@@ -87,12 +87,12 @@
 .app-root .meeting-live__header,
 .app-root .meeting-live__header:hover,
 .app-root .meeting-live__header:active {
-    height: 48px;
+    height: 52px;
     justify-content: space-between;
 }
 
 .meeting-live__title {
-    font-size: 15px;
+    font-size: 16px;
 }
 
 .meeting-live__details {

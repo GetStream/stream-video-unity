@@ -93,11 +93,11 @@
 
 .app-root .btn-primary,
 .app-root .btn-primary:hover {
-    height: 46px;
-    border-radius: 23px;
+    height: 48px;
+    border-radius: 24px;
     background-color: var(--color-accent);
     color: #FFFFFF;
-    font-size: 15px;
+    font-size: 17px;
     -unity-font: url("../Fonts/Inter-SemiBold.ttf");
 }
 
@@ -112,10 +112,10 @@
 .app-root .btn-text,
 .app-root .btn-text:hover,
 .app-root .btn-text:active {
-    height: 46px;
+    height: 48px;
     padding: 0 12px;
     color: var(--color-accent);
-    font-size: 15px;
+    font-size: 17px;
     -unity-font: url("../Fonts/Inter-SemiBold.ttf");
 }
 
@@ -126,9 +126,9 @@
 /* Round icon button used in the lobby and the call bars */
 .app-root .btn-circle,
 .app-root .btn-circle:hover {
-    width: 36px;
-    height: 36px;
-    border-radius: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
     background-color: var(--color-control);
 }
 
@@ -157,27 +157,27 @@
 .app-root .btn-icon,
 .app-root .btn-icon:hover,
 .app-root .btn-icon:active {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
 }
 
 /* Account header (sample-only, not part of the SDK UI) */
 .account-header {
     flex-direction: row;
     align-items: center;
-    height: 60px;
-    padding: 0 16px;
+    height: 72px;
+    padding: 0 12px;
     flex-shrink: 0;
 }
 
 .account-header__avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
     background-color: #DDE6FF;
     align-items: center;
     justify-content: center;
-    margin-right: 10px;
+    margin-right: 12px;
 }
 
 .account-header__initials {
@@ -188,7 +188,7 @@
 .account-header__name {
     flex-grow: 1;
     flex-shrink: 1;
-    font-size: 14px;
+    font-size: 15px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

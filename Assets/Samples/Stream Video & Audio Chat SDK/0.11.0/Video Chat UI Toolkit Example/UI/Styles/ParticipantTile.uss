@@ -1,7 +1,7 @@
 .participant-tile {
     flex-grow: 1;
     overflow: hidden;
-    border-radius: 16px;
+    border-radius: 20px;
     background-color: #2B2E36;
 }
 
@@ -42,10 +42,10 @@
     position: absolute;
     left: 8px;
     bottom: 8px;
-    height: 26px;
+    height: 32px;
     max-width: 70%;
-    padding: 0 8px;
-    border-radius: 8px;
+    padding: 4px 4px 4px 12px;
+    border-radius: 12px;
     flex-direction: row;
     align-items: center;
     background-color: rgba(26, 27, 37, 0.75);
@@ -53,7 +53,7 @@
 
 .participant-tile__name {
     color: #FFFFFF;
-    font-size: 12px;
+    font-size: 13px;
     flex-shrink: 1;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -61,9 +61,9 @@
 }
 
 .app-root .participant-tile__audio-indicator {
-    width: 14px;
-    height: 14px;
-    margin-left: 6px;
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
     -unity-background-image-tint-color: rgba(255, 255, 255, 0.5);
 }
 
@@ -80,17 +80,17 @@
     position: absolute;
     right: 8px;
     bottom: 8px;
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
     align-items: center;
     justify-content: center;
     background-color: rgba(26, 27, 37, 0.75);
 }
 
 .app-root .participant-tile__quality-icon {
-    width: 14px;
-    height: 14px;
+    width: 24px;
+    height: 24px;
     -unity-background-image-tint-color: var(--color-success);
 }
 
@@ -108,7 +108,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    border-radius: 16px;
+    border-radius: 20px;
     border-width: 2px;
     border-color: rgba(0, 0, 0, 0);
 }

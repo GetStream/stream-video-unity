@@ -11,18 +11,18 @@
 
 .lobby__intro {
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
 }
 
 .app-root .lobby__globe {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
     margin-bottom: 12px;
     -unity-background-image-tint-color: var(--color-accent);
 }
 
 .lobby__title {
-    font-size: 19px;
+    font-size: 22px;
     white-space: normal;
     -unity-text-align: middle-center;
 }
@@ -50,7 +50,7 @@
 .lobby__controls {
     flex-direction: row;
     justify-content: center;
-    margin: 12px 0 16px 0;
+    margin: 16px 0 16px 0;
 }
 
 .app-root .lobby__controls .btn-circle {

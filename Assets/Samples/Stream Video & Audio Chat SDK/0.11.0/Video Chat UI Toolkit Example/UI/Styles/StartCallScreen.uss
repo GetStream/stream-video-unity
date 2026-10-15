@@ -17,25 +17,25 @@
 }
 
 .start-call__hero {
-    width: 220px;
-    height: 158px;
+    width: 234px;
+    height: 160px;
     background-image: url("../Images/hero.png");
     -unity-background-scale-mode: scale-to-fit;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .start-call__title {
-    font-size: 19px;
+    font-size: 22px;
     margin-bottom: 12px;
     -unity-text-align: middle-center;
 }
 
 .start-call__subtitle {
-    font-size: 15px;
+    font-size: 17px;
     color: var(--color-text-secondary);
     white-space: normal;
     -unity-text-align: middle-center;
-    max-width: 300px;
+    max-width: 290px;
 }
 
 .start-call__form {
@@ -51,15 +51,16 @@
 
 .app-root .start-call__join-row .btn-text {
     width: 104px;
+    margin-left: 8px;
 }
 
 /* Call ID input */
 .call-id-field {
     flex-grow: 1;
-    height: 46px;
+    height: 48px;
     border-width: 1px;
     border-color: var(--color-border);
-    border-radius: 14px;
+    border-radius: 16px;
     justify-content: center;
 }
 
@@ -81,12 +82,12 @@
 .app-root .call-id-field__input:hover .unity-base-field__input,
 .app-root .call-id-field__input:focus .unity-base-field__input {
     margin: 0;
-    padding: 0 15px;
+    padding: 0 16px;
     border-width: 0;
-    border-radius: 14px;
+    border-radius: 16px;
     background-color: rgba(0, 0, 0, 0);
     color: var(--color-text-primary);
-    font-size: 15px;
+    font-size: 17px;
     -unity-text-align: middle-left;
     --unity-cursor-color: var(--color-accent);
     --unity-selection-color: rgba(47, 102, 246, 0.25);
@@ -99,7 +100,7 @@
     bottom: 0;
     -unity-text-align: middle-left;
     color: var(--color-text-tertiary);
-    font-size: 15px;
+    font-size: 17px;
 }
 
 .call-id-error {
@@ -125,7 +126,7 @@
 .or-divider {
     flex-direction: row;
     align-items: center;
-    margin: 24px 0;
+    margin: 32px 0;
 }
 
 .or-divider__line {
@@ -135,8 +136,8 @@
 }
 
 .or-divider__label {
-    margin: 0 16px;
-    font-size: 11px;
+    margin: 0 12px;
+    font-size: 13px;
     color: var(--color-text-tertiary);
 }
 
@@ -159,7 +160,7 @@
 }
 
 .landscape .start-call__hero {
-    width: 180px;
-    height: 129px;
+    width: 192px;
+    height: 131px;
     margin-bottom: 12px;
 }

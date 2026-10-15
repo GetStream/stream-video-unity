@@ -105,8 +105,8 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             UpdatePreviewSize();
         }
 
-        // Height to width ratio of the camera preview
-        private const float PreviewAspect = 0.72f;
+        // Height to width ratio of the lobby preview tile (370×264)
+        private const float PreviewAspect = 264f / 370f;
         private const float MinPreviewHeight = 140;
 
         private readonly AccountHeaderView _header;

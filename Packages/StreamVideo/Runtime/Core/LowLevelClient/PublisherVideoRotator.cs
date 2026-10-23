@@ -33,13 +33,22 @@ namespace StreamVideo.Core.LowLevelClient
         public RenderTexture CameraSpaceTexture => _cameraSpaceRt;
 
         /// <summary>
-        /// Clockwise rotation (0, 90, 180, 270) that makes the camera image upright.
-        /// Returns 0 until the camera delivers its first frame.
+        /// Clockwise rotation (0, 90, 180, 270) and vertical flip that make the camera image upright.
+        /// Returns false while the camera is stopped or has not delivered its first frame.
         /// </summary>
-        public static int GetUprightRotation(WebCamTexture camera)
-            => CameraOrientationDebug.CanReadWebCamOrientation(camera)
-                ? PersonMaskOrientation.NormalizeClockwiseDegrees(camera.videoRotationAngle)
-                : 0;
+        public static bool TryGetUprightOrientation(WebCamTexture camera, out int rotation, out bool verticallyMirrored)
+        {
+            if (!CameraOrientationDebug.CanReadWebCamOrientation(camera))
+            {
+                rotation = 0;
+                verticallyMirrored = false;
+                return false;
+            }
+
+            rotation = PersonMaskOrientation.NormalizeClockwiseDegrees(camera.videoRotationAngle);
+            verticallyMirrored = camera.videoVerticallyMirrored;
+            return true;
+        }
 
         public static bool IsSideways(int rotation) => rotation == 90 || rotation == 270;
 
@@ -48,16 +57,26 @@ namespace StreamVideo.Core.LowLevelClient
 
         /// <summary>
         /// 2x2 row-major matrix mapping destination UV to source UV around the texture center.
+        /// The vertical flip is applied in camera space, before the rotation.
         /// </summary>
-        public static Vector4 GetUvTransform(int rotation)
+        public static Vector4 GetUvTransform(int rotation, bool verticallyMirrored = false)
         {
+            Vector4 transform;
             switch (PersonMaskOrientation.NormalizeClockwiseDegrees(rotation))
             {
-                case 90: return new Vector4(0f, -1f, 1f, 0f);
-                case 180: return new Vector4(-1f, 0f, 0f, -1f);
-                case 270: return new Vector4(0f, 1f, -1f, 0f);
-                default: return new Vector4(1f, 0f, 0f, 1f);
+                case 90: transform = new Vector4(0f, -1f, 1f, 0f); break;
+                case 180: transform = new Vector4(-1f, 0f, 0f, -1f); break;
+                case 270: transform = new Vector4(0f, 1f, -1f, 0f); break;
+                default: transform = new Vector4(1f, 0f, 0f, 1f); break;
             }
+
+            if (verticallyMirrored)
+            {
+                transform.z = -transform.z;
+                transform.w = -transform.w;
+            }
+
+            return transform;
         }
 
         /// <summary>
@@ -74,9 +93,10 @@ namespace StreamVideo.Core.LowLevelClient
 
         /// <summary>
         /// Writes <paramref name="source"/> rotated clockwise by <paramref name="rotation"/> into
-        /// <paramref name="destination"/>. The destination must already have the rotated size.
+        /// <paramref name="destination"/>, flipping it vertically first if <paramref name="verticallyMirrored"/>.
+        /// The destination must already have the rotated size.
         /// </summary>
-        public bool TryRotate(Texture source, RenderTexture destination, int rotation)
+        public bool TryRotate(Texture source, RenderTexture destination, int rotation, bool verticallyMirrored = false)
         {
             if (source == null || destination == null || !IsSupported)
             {
@@ -90,7 +110,7 @@ namespace StreamVideo.Core.LowLevelClient
                 return false;
             }
 
-            _material.SetVector(UvTransformId, GetUvTransform(rotation));
+            _material.SetVector(UvTransformId, GetUvTransform(rotation, verticallyMirrored));
             Graphics.Blit(source, _rotatedRt, _material);
 
             if (BackgroundCompositor.CanCopyTexture(_rotatedRt, destination))

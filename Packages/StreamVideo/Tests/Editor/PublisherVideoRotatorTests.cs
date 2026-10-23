@@ -69,6 +69,42 @@ namespace StreamVideo.Tests.Editor
                 $"Destination top-left must sample the expected source V for {rotation} degrees clockwise.");
         }
 
+        [TestCase(0, 0f, 1f, 0f, 0f)]
+        [TestCase(90, 0f, 1f, 0f, 1f)]
+        [TestCase(270, 0f, 1f, 1f, 0f)]
+        public void When_uv_transform_is_vertically_mirrored_expect_source_v_flipped_before_rotation(int rotation,
+            float destU, float destV, float expectedSourceU, float expectedSourceV)
+        {
+            var source = MapUv(PublisherVideoRotator.GetUvTransform(rotation, verticallyMirrored: true),
+                new Vector2(destU, destV));
+
+            Assert.That(source.x, Is.EqualTo(expectedSourceU).Within(0.0001f),
+                $"Mirroring must not change the source U for {rotation} degrees clockwise.");
+            Assert.That(source.y, Is.EqualTo(expectedSourceV).Within(0.0001f),
+                $"Mirroring must flip the source V in camera space for {rotation} degrees clockwise.");
+        }
+
+        [Test]
+        public void When_vertically_mirrored_without_rotation_expect_bottom_and_top_swapped()
+        {
+            IgnoreIfRotationUnsupported();
+
+            _rotator = new PublisherVideoRotator();
+            _source = new Texture2D(1, 2, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            _source.SetPixels(new[] { Color.red, Color.green });
+            _source.Apply();
+            _destination = CreateRt(1, 2);
+
+            Assert.That(_rotator.TryRotate(_source, _destination, 0, verticallyMirrored: true), Is.True,
+                "Mirroring must succeed when the shader is supported.");
+            Assert.That(ReadPixel(0, 0), Is.EqualTo(Color.green), "Mirroring must move the top row to the bottom.");
+            Assert.That(ReadPixel(0, 1), Is.EqualTo(Color.red), "Mirroring must move the bottom row to the top.");
+        }
+
         [Test]
         public void When_rotating_90_clockwise_expect_left_edge_on_top()
         {

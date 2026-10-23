@@ -11,8 +11,6 @@ namespace StreamVideo.ExampleProject.UI
 {
     public class UIManager : MonoBehaviour
     {
-        public event Action<WebCamTexture> LocalCameraChanged;
-
         public VideoResolution SenderVideoResolution => new VideoResolution(_senderVideoWidth, _senderVideoHeight);
         public int SenderVideoFps => _senderVideoFps;
 
@@ -108,9 +106,6 @@ namespace StreamVideo.ExampleProject.UI
         private void OnCameraDeviceChanged(CameraDeviceInfo previousDevice, CameraDeviceInfo currentDevice)
         {
             Debug.Log($"Changed active CAMERA from `{previousDevice}` to `{currentDevice}`");
-
-            var webCamTexture = _videoManager.Client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
-            LocalCameraChanged?.Invoke(webCamTexture);
         }
 
         private async Task SelectFirstWorkingCameraOrDefaultAsync()

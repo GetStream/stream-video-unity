@@ -93,10 +93,10 @@ namespace StreamVideo.Core.LowLevelClient
         public static VideoResolution MinimumSafeTargetResolution => new VideoResolution(704, 576);
 
         /// <summary>
-        /// Last published frame before the upright rotation, i.e. in the camera's sensor orientation.
+        /// Upright frame read by the encoder, or null before the first video track is created.
+        /// Replaced when its size changes, so read it again every frame.
         /// </summary>
-        public RenderTexture CameraSpaceVideoTexture
-            => IsPublisherVideoUprightPassActive ? _videoRotator.CameraSpaceTexture : _publisherVideoTrackTexture;
+        public RenderTexture PublishedVideoTexture => _publisherVideoTrackTexture;
 
         public PublisherPeerConnection(ILogs logs, IEnumerable<ICEServer> iceServers,
             IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig,
@@ -254,7 +254,9 @@ namespace StreamVideo.Core.LowLevelClient
                 $"[{PeerType}] Resized publisher video to {_publisherVideoTrackTexture.width}x{_publisherVideoTrackTexture.height}, rotation: {_publisherVideoRotation}");
 
             // SetPublisher is the only request that carries the layer dimensions announced to the SFU
-            if (PublisherVideoTrack != null && (_isNegotiating || SfuClient.CallState == CallingState.Joined))
+            // Joining covers a resize after the initial negotiation completed but before the state became Joined
+            if (PublisherVideoTrack != null && (_isNegotiating || SfuClient.CallState == CallingState.Joined ||
+                                                SfuClient.CallState == CallingState.Joining))
             {
                 _negotiateRequested = true;
             }

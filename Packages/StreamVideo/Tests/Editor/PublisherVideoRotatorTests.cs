@@ -148,8 +148,6 @@ namespace StreamVideo.Tests.Editor
             Assert.That(cameraSpace, Is.Not.Null, "Camera-space RT must be created.");
             Assert.That(cameraSpace.width, Is.EqualTo(1280), "Camera-space RT must keep the camera width.");
             Assert.That(cameraSpace.height, Is.EqualTo(720), "Camera-space RT must keep the camera height.");
-            Assert.That(_rotator.CameraSpaceTexture, Is.SameAs(cameraSpace),
-                "The local preview must read the same camera-space RT the publisher writes.");
         }
 
         private PublisherVideoRotator _rotator;

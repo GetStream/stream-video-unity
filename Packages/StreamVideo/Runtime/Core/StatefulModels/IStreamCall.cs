@@ -368,15 +368,5 @@ namespace StreamVideo.Core.StatefulModels
         /// Remote peers receive the composited camera frames. Unsupported devices log and no-op.
         /// </summary>
         void SetBackgroundFilter(BackgroundFilter filter);
-
-        /// <summary>
-        /// Texture showing the local camera, with the background filter applied when one is active.
-        /// Assign it once (e.g. to a RawImage) when setting up the call UI; no rebinding is needed for filter
-        /// changes or camera switches. The same instance is returned until <see cref="LeaveAsync"/>, which destroys it.
-        /// It is black until the camera delivers frames and is resized in place when the camera resolution changes.
-        /// The image is in camera space, so apply the camera's videoRotationAngle as for the raw camera texture.
-        /// Returns <see langword="null"/> when this is not the active call. Call from the main thread.
-        /// </summary>
-        Texture GetLocalPreviewTexture();
     }
 }

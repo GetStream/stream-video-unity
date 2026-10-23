@@ -32,12 +32,13 @@ namespace StreamVideo.ExampleProject.UI.Screens
             
             _cameraPanel.Init(VideoManager.Client, UIManager);
             _microphonePanel.Init(VideoManager.Client, UIManager);
+
+            // Upright camera preview that stays valid across camera switches and calls, so assigning it once is enough
+            _localCameraImage.texture = VideoManager.Client.VideoDeviceManager.GetLocalPreviewTexture();
         }
         
         protected override void OnShow(CallScreenView.ShowArgs showArgs)
         {
-            UIManager.LocalCameraChanged += OnLocalCameraChanged;
-            
             // Notify child components
             _cameraPanel.NotifyParentShow();
             _microphonePanel.NotifyParentShow();
@@ -45,8 +46,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
 
         protected override void OnHide()
         {
-            UIManager.LocalCameraChanged -= OnLocalCameraChanged;
-            
             // Notify child components
             _cameraPanel.NotifyParentHide();
             _microphonePanel.NotifyParentHide();
@@ -131,11 +130,6 @@ namespace StreamVideo.ExampleProject.UI.Screens
             {
                 _isProcessing = false;
             }
-        }
-
-        private void OnLocalCameraChanged(WebCamTexture activeCamera)
-        {
-            _localCameraImage.texture = activeCamera;
         }
 
         private async Task<string> CreateRandomCallId()

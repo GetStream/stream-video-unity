@@ -484,9 +484,6 @@ namespace StreamVideo.Core.StatefulModels
         public void SetBackgroundFilter(BackgroundFilter filter)
             => FilterController?.SetFilter(filter);
 
-        public Texture GetLocalPreviewTexture()
-            => IsActiveCall ? LowLevelClient.RtcSession.LocalPreview.GetOrCreate() : null;
-
         public IStreamVideoCallParticipant GetLocalParticipant()
         {
             if (Participants.Count == 0)

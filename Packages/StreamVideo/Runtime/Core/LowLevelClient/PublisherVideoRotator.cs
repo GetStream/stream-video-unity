@@ -28,11 +28,6 @@ namespace StreamVideo.Core.LowLevelClient
         }
 
         /// <summary>
-        /// Camera-space frame written by the last <see cref="GetCameraSpaceTexture"/> caller, or null.
-        /// </summary>
-        public RenderTexture CameraSpaceTexture => _cameraSpaceRt;
-
-        /// <summary>
         /// Clockwise rotation (0, 90, 180, 270) and vertical flip that make the camera image upright.
         /// Returns false while the camera is stopped or has not delivered its first frame.
         /// </summary>

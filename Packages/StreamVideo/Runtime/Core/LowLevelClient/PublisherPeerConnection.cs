@@ -126,7 +126,6 @@ namespace StreamVideo.Core.LowLevelClient
                     $"{nameof(_publisherVideoSettings)} is null in {nameof(GetLatestVideoSettings)}");
             }
 
-            _publisherVideoSettings.MaxResolution = CameraSpaceTargetResolution;
             _publisherVideoSettings.FrameRate = PublisherTargetFrameRate;
             return _publisherVideoSettings;
         }
@@ -178,12 +177,15 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void BlitPublisherVideoFrame()
         {
-            var wasSideways = PublisherVideoRotator.IsSideways(_publisherVideoRotation);
-            UpdatePublisherVideoOrientation();
-
-            if (PublisherVideoRotator.IsSideways(_publisherVideoRotation) != wasSideways)
+            // The track is usually created before the camera delivers its first frame, so its size is only a guess
+            if (UpdatePublisherVideoOrientation())
             {
-                ResizePublisherVideoTrackTexture();
+                var target = PublisherTargetResolution;
+                if (_publisherVideoTrackTexture.width != (int)target.Width
+                    || _publisherVideoTrackTexture.height != (int)target.Height)
+                {
+                    ResizePublisherVideoTrackTexture();
+                }
             }
 
             var isUprightPassActive = IsPublisherVideoUprightPassActive;
@@ -214,13 +216,14 @@ namespace StreamVideo.Core.LowLevelClient
 
         /// <summary>
         /// Keeps the last known orientation while the camera is stopped or starting, so pause/resume does not resize.
+        /// Returns false while the camera orientation and size cannot be read.
         /// </summary>
-        private void UpdatePublisherVideoOrientation()
+        private bool UpdatePublisherVideoOrientation()
         {
             if (!PublisherVideoRotator.TryGetUprightOrientation(_mediaInputProvider.VideoInput, out var rotation,
                     out var verticallyMirrored))
             {
-                return;
+                return false;
             }
 
             if ((rotation != 0 || verticallyMirrored) && !_videoRotator.IsSupported)
@@ -238,10 +241,12 @@ namespace StreamVideo.Core.LowLevelClient
 
             _publisherVideoRotation = rotation;
             _publisherVideoVerticallyMirrored = verticallyMirrored;
+            return true;
         }
 
         /// <summary>
-        /// Width and height swap. The track and RTCRtpSender are kept and only the source texture is replaced.
+        /// Recreates the texture with <see cref="PublisherTargetResolution"/>. The track and RTCRtpSender are kept and
+        /// only the source texture is replaced.
         /// </summary>
         private void ResizePublisherVideoTrackTexture()
         {
@@ -674,10 +679,10 @@ namespace StreamVideo.Core.LowLevelClient
         /// </summary>
         private VideoResolution GetPublishedVideoResolution()
         {
-            var settings = GetLatestVideoSettings();
+            GetLatestVideoSettings();
             return _publisherVideoTrackTexture != null
                 ? new VideoResolution(_publisherVideoTrackTexture.width, _publisherVideoTrackTexture.height)
-                : PublisherVideoRotator.Rotate(settings.MaxResolution, _publisherVideoRotation);
+                : PublisherTargetResolution;
         }
 
         private static VideoQuality EncodingsToVideoQuality(RTCRtpEncodingParameters encodings)
@@ -781,24 +786,55 @@ namespace StreamVideo.Core.LowLevelClient
         {
             get
             {
-                if (_mediaInputProvider.VideoInput != null)
+                var camera = _mediaInputProvider.VideoInput;
+                if (camera == null)
                 {
-                    var preferred = new VideoResolution(_mediaInputProvider.VideoInput.width,
-                        _mediaInputProvider.VideoInput.height);
-
-                    // Requesting too small resolution can cause crashes in the Android video encoder
-                    // The target resolution is used to calculate 3 layers of video encoding (full, half, quarter)
-                    // For very small values of quarter resolution (not sure exact but ~100x100) the encoder crashes 
-
-                    if (preferred.Width < MinimumSafeTargetResolution.Width ||
-                        preferred.Height < MinimumSafeTargetResolution.Height)
-                    {
-                        return MinimumSafeTargetResolution;
-                    }
+                    return _publisherVideoSettings.MaxResolution;
                 }
 
-                return _publisherVideoSettings.MaxResolution;
+                // WebCamTexture reports 16x16 until the device delivers its first frame. The requested size is only
+                // a hint (the device picks its closest mode), so it's used as a guess until then
+                var isSizeKnown = camera.width > 16 && camera.height > 16;
+                var width = isSizeKnown ? camera.width : camera.requestedWidth;
+                var height = isSizeKnown ? camera.height : camera.requestedHeight;
+                if (width <= 0 || height <= 0)
+                {
+                    return _publisherVideoSettings.MaxResolution;
+                }
+
+                // Requesting too small resolution can cause crashes in the Android video encoder
+                // The target resolution is used to calculate 3 layers of video encoding (full, half, quarter)
+                // For very small values of quarter resolution (not sure exact but ~100x100) the encoder crashes 
+                return FitCameraResolution(new VideoResolution(width, height), _publisherVideoSettings.MaxResolution,
+                    MinimumSafeTargetResolution);
             }
+        }
+
+        /// <summary>
+        /// Scales <paramref name="camera"/> down to fit <paramref name="max"/> and up to cover <paramref name="min"/>,
+        /// keeping its aspect ratio. <paramref name="max"/> and <paramref name="min"/> are landscape and are swapped
+        /// for portrait cameras. When the aspect ratio can't satisfy both, the edges are clamped and
+        /// <paramref name="min"/> wins.
+        /// </summary>
+        internal static VideoResolution FitCameraResolution(VideoResolution camera, VideoResolution max,
+            VideoResolution min)
+        {
+            var isPortrait = camera.Height > camera.Width;
+            double longEdge = isPortrait ? camera.Height : camera.Width;
+            double shortEdge = isPortrait ? camera.Width : camera.Height;
+
+            var scale = Math.Min(1.0, Math.Min(max.Width / longEdge, max.Height / shortEdge));
+            scale = Math.Max(scale, Math.Max(min.Width / longEdge, min.Height / shortEdge));
+
+            var width = AlignAndClamp(longEdge * scale, min.Width, max.Width);
+            var height = AlignAndClamp(shortEdge * scale, min.Height, max.Height);
+            return isPortrait ? new VideoResolution(height, width) : new VideoResolution(width, height);
+        }
+
+        private static uint AlignAndClamp(double value, uint min, uint max)
+        {
+            var aligned = (uint)Math.Round(value / ResolutionAlignment) * ResolutionAlignment;
+            return Math.Max(Math.Min(aligned, max), min);
         }
 
         private uint PublisherTargetFrameRate
@@ -818,7 +854,10 @@ namespace StreamVideo.Core.LowLevelClient
         private const string VideoCodecKeyVP8 = "vp8";
         private const string AudioCodecKeyRed = "red";
 
-        //StreamTOdo: Finish implementation. This currently is not exposed to the user + it doesn't take into account VideoInput resolution. We need publisher resolution to match with WebCamTexture size
+        // Some hardware encoders (e.g. older Android MediaCodec ones) expect dimensions that are multiples of 16
+        private const uint ResolutionAlignment = 16;
+
+        //StreamTOdo: Finish implementation. This currently is not exposed to the user. MaxResolution caps the camera resolution
         private readonly PublisherVideoSettings _publisherVideoSettings;
 
         private readonly IMediaInputProvider _mediaInputProvider;

@@ -66,6 +66,8 @@ namespace StreamVideo.ExampleProject.UI
         // Called by Unity Engine
         protected void Update()
         {
+            CropVideoToFillRect();
+
             var rect = _videoRectTransform.rect;
             var videoRenderedSize = new Vector2(rect.width, rect.height);
             var forcedRequestedSize = new Vector2(_forceRequestedResolutionWidth, _forceRequestedResolutionHeight);
@@ -134,6 +136,29 @@ namespace StreamVideo.ExampleProject.UI
         private Vector2 _lastRequestedResolution;
         private StreamVideoManager _videoManager;
         private readonly HashSet<IStreamTrack> _processedTracks = new HashSet<IStreamTrack>();
+
+        /// <summary>
+        /// Video is upright, so its aspect ratio changes at runtime (e.g. when a mobile user rotates the device or switches cameras).
+        /// The texture can also be resized in place, so we check its size every frame instead of only when it's assigned.
+        /// We crop the video edges so it fills the whole rect without being stretched
+        /// </summary>
+        private void CropVideoToFillRect()
+        {
+            var texture = _video.texture;
+            var rect = _videoRectTransform.rect;
+            if (texture == null || texture.width <= 0 || texture.height <= 0 || rect.width <= 0 || rect.height <= 0)
+            {
+                return;
+            }
+
+            var textureAspectRatio = (float)texture.width / texture.height;
+            var rectAspectRatio = rect.width / rect.height;
+            var visibleSize = textureAspectRatio > rectAspectRatio
+                ? new Vector2(rectAspectRatio / textureAspectRatio, 1)
+                : new Vector2(1, textureAspectRatio / rectAspectRatio);
+
+            _video.uvRect = new Rect((Vector2.one - visibleSize) / 2, visibleSize);
+        }
 
         private void OnParticipantTrackAdded(IStreamVideoCallParticipant participant, IStreamTrack track)
             => HandleTrack(participant, track, source: "TrackAdded");

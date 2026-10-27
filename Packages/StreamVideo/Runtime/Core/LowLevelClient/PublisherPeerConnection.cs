@@ -93,10 +93,10 @@ namespace StreamVideo.Core.LowLevelClient
         public static VideoResolution MinimumSafeTargetResolution => new VideoResolution(704, 576);
 
         /// <summary>
-        /// Last published frame before the upright rotation, i.e. in the camera's sensor orientation.
+        /// Upright frame read by the encoder, or null before the first video track is created.
+        /// Replaced when its size changes, so read it again every frame.
         /// </summary>
-        public RenderTexture CameraSpaceVideoTexture
-            => _publisherVideoRotation == 0 ? _publisherVideoTrackTexture : _videoRotator.CameraSpaceTexture;
+        public RenderTexture PublishedVideoTexture => _publisherVideoTrackTexture;
 
         public PublisherPeerConnection(ILogs logs, IEnumerable<ICEServer> iceServers,
             IMediaInputProvider mediaInputProvider, IStreamAudioConfig audioConfig,
@@ -126,7 +126,6 @@ namespace StreamVideo.Core.LowLevelClient
                     $"{nameof(_publisherVideoSettings)} is null in {nameof(GetLatestVideoSettings)}");
             }
 
-            _publisherVideoSettings.MaxResolution = CameraSpaceTargetResolution;
             _publisherVideoSettings.FrameRate = PublisherTargetFrameRate;
             return _publisherVideoSettings;
         }
@@ -178,26 +177,21 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void BlitPublisherVideoFrame()
         {
-            var rotation = GetUprightVideoRotation();
-
-            if (PublisherVideoRotator.IsSideways(rotation) != PublisherVideoRotator.IsSideways(_publisherVideoRotation))
+            // The track is usually created before the camera delivers its first frame, so its size is only a guess
+            if (UpdatePublisherVideoOrientation())
             {
-                if (_videoTransceiver == null || PublisherVideoTrack == null)
+                var target = PublisherTargetResolution;
+                if (_publisherVideoTrackTexture.width != (int)target.Width
+                    || _publisherVideoTrackTexture.height != (int)target.Height)
                 {
-                    return;
+                    ResizePublisherVideoTrackTexture();
                 }
-
-                // Width and height swap, which needs a new RT and track. ReplaceTrack does not renegotiate.
-                var newVideoTrack = CreatePublisherVideoTrack();
-                TryClearVideoTrack();
-                ReplaceActiveVideoTrack(newVideoTrack);
             }
 
-            _publisherVideoRotation = rotation;
-
-            var cameraSpaceTarget = rotation == 0
-                ? _publisherVideoTrackTexture
-                : _videoRotator.GetCameraSpaceTexture(_publisherVideoTrackTexture, rotation);
+            var isUprightPassActive = IsPublisherVideoUprightPassActive;
+            var cameraSpaceTarget = isUprightPassActive
+                ? _videoRotator.GetCameraSpaceTexture(_publisherVideoTrackTexture, _publisherVideoRotation)
+                : _publisherVideoTrackTexture;
             if (cameraSpaceTarget == null)
             {
                 return;
@@ -213,28 +207,64 @@ namespace StreamVideo.Core.LowLevelClient
                 Graphics.Blit(videoInput, cameraSpaceTarget);
             }
 
-            if (rotation != 0)
+            if (isUprightPassActive)
             {
-                _videoRotator.TryRotate(cameraSpaceTarget, _publisherVideoTrackTexture, rotation);
+                _videoRotator.TryRotate(cameraSpaceTarget, _publisherVideoTrackTexture, _publisherVideoRotation,
+                    _publisherVideoVerticallyMirrored);
             }
         }
 
-        private int GetUprightVideoRotation()
+        /// <summary>
+        /// Keeps the last known orientation while the camera is stopped or starting, so pause/resume does not resize.
+        /// Returns false while the camera orientation and size cannot be read.
+        /// </summary>
+        private bool UpdatePublisherVideoOrientation()
         {
-            var rotation = PublisherVideoRotator.GetUprightRotation(_mediaInputProvider.VideoInput);
-            if (rotation == 0 || _videoRotator.IsSupported)
+            if (!PublisherVideoRotator.TryGetUprightOrientation(_mediaInputProvider.VideoInput, out var rotation,
+                    out var verticallyMirrored))
             {
-                return rotation;
+                return false;
             }
 
-            if (!_videoRotationUnsupportedLogged)
+            if ((rotation != 0 || verticallyMirrored) && !_videoRotator.IsSupported)
             {
-                _videoRotationUnsupportedLogged = true;
-                Logs.Error(
-                    $"Shader `{PublisherVideoRotator.ShaderName}` is not available. Video is published in the camera sensor orientation and may appear rotated to other participants.");
+                if (!_videoRotationUnsupportedLogged)
+                {
+                    _videoRotationUnsupportedLogged = true;
+                    Logs.Error(
+                        $"Shader `{PublisherVideoRotator.ShaderName}` is not available. Video is published in the camera sensor orientation and may appear rotated to other participants.");
+                }
+
+                rotation = 0;
+                verticallyMirrored = false;
             }
 
-            return 0;
+            _publisherVideoRotation = rotation;
+            _publisherVideoVerticallyMirrored = verticallyMirrored;
+            return true;
+        }
+
+        /// <summary>
+        /// Recreates the texture with <see cref="PublisherTargetResolution"/>. The track and RTCRtpSender are kept and
+        /// only the source texture is replaced.
+        /// </summary>
+        private void ResizePublisherVideoTrackTexture()
+        {
+            var previousTexture = _publisherVideoTrackTexture;
+            _publisherVideoTrackTexture = CreatePublisherVideoTrackTexture();
+            PublisherVideoTrack?.ReplaceSourceTexture(_publisherVideoTrackTexture);
+            DestroyRenderTexture(previousTexture);
+
+            Logs.InfoIfDebug(
+                $"[{PeerType}] Resized publisher video to {_publisherVideoTrackTexture.width}x{_publisherVideoTrackTexture.height}, rotation: {_publisherVideoRotation}");
+
+            // SetPublisher is the only request that carries the layer dimensions announced to the SFU
+            // Joining covers a resize after the initial negotiation completed but before the state became Joined
+            if (PublisherVideoTrack != null && (_isNegotiating || SfuClient.CallState == CallingState.Joined ||
+                                                SfuClient.CallState == CallingState.Joining))
+            {
+                _negotiateRequested = true;
+            }
         }
 
         public override Task RestartIce()
@@ -611,11 +641,10 @@ namespace StreamVideo.Core.LowLevelClient
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("GetPublisherVideoLayers:");
 #endif
+            var resolution = GetPublishedVideoResolution();
             foreach (var encoding in encodings)
             {
                 var scaleBy = encoding.scaleResolutionDownBy ?? 1.0;
-                var resolution
-                    = PublisherVideoRotator.Rotate(GetLatestVideoSettings().MaxResolution, _publisherVideoRotation);
                 var width = (uint)(resolution.Width / scaleBy);
                 var height = (uint)(resolution.Height / scaleBy);
 
@@ -643,6 +672,17 @@ namespace StreamVideo.Core.LowLevelClient
 #if STREAM_DEBUG_ENABLED
             Logs.Warning(sb.ToString());
 #endif
+        }
+
+        /// <summary>
+        /// Size of the texture the encoder reads, so the announced layers match the encoded stream.
+        /// </summary>
+        private VideoResolution GetPublishedVideoResolution()
+        {
+            GetLatestVideoSettings();
+            return _publisherVideoTrackTexture != null
+                ? new VideoResolution(_publisherVideoTrackTexture.width, _publisherVideoTrackTexture.height)
+                : PublisherTargetResolution;
         }
 
         private static VideoQuality EncodingsToVideoQuality(RTCRtpEncodingParameters encodings)
@@ -727,14 +767,17 @@ namespace StreamVideo.Core.LowLevelClient
             _mediaInputProvider.PublisherAudioTrackIsEnabledChanged -= OnPublisherAudioTrackIsEnabledChanged;
             _mediaInputProvider.PublisherVideoTrackIsEnabledChanged -= OnPublisherVideoTrackIsEnabledChanged;
 
-            ReleasePublisherVideoTrackTexture();
-            _videoRotator.Dispose();
-
             TryClearPublisherAudioTrack();
             TryClearVideoTrack();
+
+            ReleasePublisherVideoTrackTexture();
+            _videoRotator.Dispose();
             
             base.OnDisposing();
         }
+
+        private bool IsPublisherVideoUprightPassActive
+            => _publisherVideoRotation != 0 || _publisherVideoVerticallyMirrored;
 
         private VideoResolution PublisherTargetResolution
             => PublisherVideoRotator.Rotate(CameraSpaceTargetResolution, _publisherVideoRotation);
@@ -743,24 +786,55 @@ namespace StreamVideo.Core.LowLevelClient
         {
             get
             {
-                if (_mediaInputProvider.VideoInput != null)
+                var camera = _mediaInputProvider.VideoInput;
+                if (camera == null)
                 {
-                    var preferred = new VideoResolution(_mediaInputProvider.VideoInput.width,
-                        _mediaInputProvider.VideoInput.height);
-
-                    // Requesting too small resolution can cause crashes in the Android video encoder
-                    // The target resolution is used to calculate 3 layers of video encoding (full, half, quarter)
-                    // For very small values of quarter resolution (not sure exact but ~100x100) the encoder crashes 
-
-                    if (preferred.Width < MinimumSafeTargetResolution.Width ||
-                        preferred.Height < MinimumSafeTargetResolution.Height)
-                    {
-                        return MinimumSafeTargetResolution;
-                    }
+                    return _publisherVideoSettings.MaxResolution;
                 }
 
-                return _publisherVideoSettings.MaxResolution;
+                // WebCamTexture reports 16x16 until the device delivers its first frame. The requested size is only
+                // a hint (the device picks its closest mode), so it's used as a guess until then
+                var isSizeKnown = camera.width > 16 && camera.height > 16;
+                var width = isSizeKnown ? camera.width : camera.requestedWidth;
+                var height = isSizeKnown ? camera.height : camera.requestedHeight;
+                if (width <= 0 || height <= 0)
+                {
+                    return _publisherVideoSettings.MaxResolution;
+                }
+
+                // Requesting too small resolution can cause crashes in the Android video encoder
+                // The target resolution is used to calculate 3 layers of video encoding (full, half, quarter)
+                // For very small values of quarter resolution (not sure exact but ~100x100) the encoder crashes 
+                return FitCameraResolution(new VideoResolution(width, height), _publisherVideoSettings.MaxResolution,
+                    MinimumSafeTargetResolution);
             }
+        }
+
+        /// <summary>
+        /// Scales <paramref name="camera"/> down to fit <paramref name="max"/> and up to cover <paramref name="min"/>,
+        /// keeping its aspect ratio. <paramref name="max"/> and <paramref name="min"/> are landscape and are swapped
+        /// for portrait cameras. When the aspect ratio can't satisfy both, the edges are clamped and
+        /// <paramref name="min"/> wins.
+        /// </summary>
+        internal static VideoResolution FitCameraResolution(VideoResolution camera, VideoResolution max,
+            VideoResolution min)
+        {
+            var isPortrait = camera.Height > camera.Width;
+            double longEdge = isPortrait ? camera.Height : camera.Width;
+            double shortEdge = isPortrait ? camera.Width : camera.Height;
+
+            var scale = Math.Min(1.0, Math.Min(max.Width / longEdge, max.Height / shortEdge));
+            scale = Math.Max(scale, Math.Max(min.Width / longEdge, min.Height / shortEdge));
+
+            var width = AlignAndClamp(longEdge * scale, min.Width, max.Width);
+            var height = AlignAndClamp(shortEdge * scale, min.Height, max.Height);
+            return isPortrait ? new VideoResolution(height, width) : new VideoResolution(width, height);
+        }
+
+        private static uint AlignAndClamp(double value, uint min, uint max)
+        {
+            var aligned = (uint)Math.Round(value / ResolutionAlignment) * ResolutionAlignment;
+            return Math.Max(Math.Min(aligned, max), min);
         }
 
         private uint PublisherTargetFrameRate
@@ -780,7 +854,10 @@ namespace StreamVideo.Core.LowLevelClient
         private const string VideoCodecKeyVP8 = "vp8";
         private const string AudioCodecKeyRed = "red";
 
-        //StreamTOdo: Finish implementation. This currently is not exposed to the user + it doesn't take into account VideoInput resolution. We need publisher resolution to match with WebCamTexture size
+        // Some hardware encoders (e.g. older Android MediaCodec ones) expect dimensions that are multiples of 16
+        private const uint ResolutionAlignment = 16;
+
+        //StreamTOdo: Finish implementation. This currently is not exposed to the user. MaxResolution caps the camera resolution
         private readonly PublisherVideoSettings _publisherVideoSettings;
 
         private readonly IMediaInputProvider _mediaInputProvider;
@@ -797,6 +874,7 @@ namespace StreamVideo.Core.LowLevelClient
         private RenderTexture _publisherVideoTrackTexture;
         // Clockwise rotation baked into _publisherVideoTrackTexture; its size is swapped when sideways
         private int _publisherVideoRotation;
+        private bool _publisherVideoVerticallyMirrored;
         private bool _videoRotationUnsupportedLogged;
         private VideoStreamTrack _publisherVideoTrack;
         private AudioStreamTrack _publisherAudioTrack;
@@ -961,6 +1039,7 @@ namespace StreamVideo.Core.LowLevelClient
             var videoTransceiverInit = BuildTransceiverInit(TrackKind.Video, _publisherVideoSettings);
 
             PublisherVideoMediaStream = new MediaStream();
+            ReleasePublisherVideoTrackTexture();
             PublisherVideoTrack = CreatePublisherVideoTrack();
 
             PublisherVideoMediaStream.AddTrack(PublisherVideoTrack);
@@ -981,17 +1060,39 @@ namespace StreamVideo.Core.LowLevelClient
             }
         }
 
-        private void ReplaceActiveVideoTrack(VideoStreamTrack videoTrack)
+        /// <summary>
+        /// The new track is attached to the sender before the previous one is stopped, so a failed replace never
+        /// leaves the sender with a disposed track.
+        /// </summary>
+        private void ReplaceActiveVideoTrack(VideoStreamTrack videoTrack, RenderTexture previousTexture)
         {
+            var replaced = _videoTransceiver.Sender.ReplaceTrack(videoTrack);
+            if (!replaced && PublisherVideoTrack != null)
+            {
+                Logs.Error($"[{PeerType}] Failed to replace the publisher video track. Keeping the previous track.");
+                videoTrack.Dispose();
+                PublisherVideoTrack.ReplaceSourceTexture(_publisherVideoTrackTexture);
+                DestroyRenderTexture(previousTexture);
+                return;
+            }
+
+            if (!replaced)
+            {
+                Logs.Error($"[{PeerType}] Failed to replace the publisher video track.");
+            }
+
+            TryClearVideoTrack();
+            DestroyRenderTexture(previousTexture);
+
             PublisherVideoMediaStream.AddTrack(videoTrack);
-
-            _videoTransceiver.Sender.ReplaceTrack(videoTrack);
-
             PublisherVideoTrack = videoTrack;
             Logs.WarningIfDebug(
                 $"Executed {nameof(ReplaceActiveVideoTrack)} for video track not null: {videoTrack != null}");
         }
 
+        /// <summary>
+        /// Creates a new track and <see cref="_publisherVideoTrackTexture"/>. The caller owns the previous texture.
+        /// </summary>
         private VideoStreamTrack CreatePublisherVideoTrack()
         {
             if (_mediaInputProvider.VideoInput == null)
@@ -1000,14 +1101,8 @@ namespace StreamVideo.Core.LowLevelClient
                     $"Can't create publisher video track because `{nameof(_mediaInputProvider.VideoInput)}` is null");
             }
 
-            ReleasePublisherVideoTrackTexture();
-
-            var gfxType = SystemInfo.graphicsDeviceType;
-            var format = WebRTC.GetSupportedRenderTextureFormat(gfxType);
-
-            _publisherVideoRotation = GetUprightVideoRotation();
-            var res = PublisherTargetResolution;
-            _publisherVideoTrackTexture = new RenderTexture((int)res.Width, (int)res.Height, 0, format);
+            UpdatePublisherVideoOrientation();
+            _publisherVideoTrackTexture = CreatePublisherVideoTrackTexture();
 
 #if STREAM_DEBUG_ENABLED
             Debug.LogWarning(
@@ -1060,9 +1155,25 @@ namespace StreamVideo.Core.LowLevelClient
         private string PrintConnectionState()
             => $"PC Connection State: {PeerConnection.ConnectionState}, ICE Connection State: {PeerConnection.IceConnectionState}";
 
+        private RenderTexture CreatePublisherVideoTrackTexture()
+        {
+            var format = WebRTC.GetSupportedRenderTextureFormat(SystemInfo.graphicsDeviceType);
+            var res = PublisherTargetResolution;
+            return new RenderTexture((int)res.Width, (int)res.Height, 0, format);
+        }
+
         private void ReleasePublisherVideoTrackTexture()
         {
-            if (_publisherVideoTrackTexture == null)
+            DestroyRenderTexture(_publisherVideoTrackTexture);
+            _publisherVideoTrackTexture = null;
+        }
+
+        /// <summary>
+        /// Only call once no track uses <paramref name="texture"/> as its source.
+        /// </summary>
+        private void DestroyRenderTexture(RenderTexture texture)
+        {
+            if (texture == null)
             {
                 return;
             }
@@ -1070,7 +1181,7 @@ namespace StreamVideo.Core.LowLevelClient
             try
             {
                 // Unity gives warning when releasing an active texture
-                if (RenderTexture.active == _publisherVideoTrackTexture)
+                if (RenderTexture.active == texture)
                 {
                     RenderTexture.active = null;
                 }
@@ -1080,8 +1191,8 @@ namespace StreamVideo.Core.LowLevelClient
                 Logs.WarningIfDebug(e.Message);
             }
 
-            _publisherVideoTrackTexture.Release();
-            _publisherVideoTrackTexture = null;
+            texture.Release();
+            texture.SmartDestroy();
         }
 
         private void TryClearVideoTrack()
@@ -1183,10 +1294,9 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
+            var previousTexture = _publisherVideoTrackTexture;
             var newVideoTrack = CreatePublisherVideoTrack();
-
-            TryClearVideoTrack();
-            ReplaceActiveVideoTrack(newVideoTrack);
+            ReplaceActiveVideoTrack(newVideoTrack, previousTexture);
         }
 
         private void OnVideoSceneInputChanged(Camera camera)

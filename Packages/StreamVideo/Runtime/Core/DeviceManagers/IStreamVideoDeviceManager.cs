@@ -34,5 +34,15 @@ namespace StreamVideo.Core.DeviceManagers
         /// This can change whenever a selected device is changed. Subscribe to <see cref="DeviceManagerBase{TDeviceInfo}.SelectedDeviceChanged"/> to get notified when the selected device changes.
         /// </summary>
         WebCamTexture GetSelectedDeviceWebCamTexture();
+
+        /// <summary>
+        /// Texture showing the local camera upright, before, during, and after calls. During a call it shows exactly
+        /// what other participants receive, including the background filter.
+        /// Assign it once (e.g. to a RawImage); the same instance is returned for the lifetime of the client, so no
+        /// rebinding is needed for camera switches, filter changes, joining, or leaving calls.
+        /// It is black until the camera delivers frames and is resized in place when the video size or orientation
+        /// changes. Do not apply the camera's videoRotationAngle. Call from the main thread.
+        /// </summary>
+        Texture GetLocalPreviewTexture();
     }
 }

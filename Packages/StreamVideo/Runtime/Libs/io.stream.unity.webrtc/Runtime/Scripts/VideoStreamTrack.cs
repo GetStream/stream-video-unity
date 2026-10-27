@@ -238,6 +238,38 @@ namespace Unity.WebRTC
         }
 
         /// <summary>
+        ///     Replaces the source texture of a sending track, for example when its size changes, without recreating
+        ///     the track or touching the RTCRtpSender. The encoder picks up the new size with the next frame.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The track is not a sending track.</exception>
+        public void ReplaceSourceTexture(Texture texture)
+        {
+            if (texture == null)
+                throw new ArgumentNullException(nameof(texture));
+            if (m_source == null)
+                throw new InvalidOperationException("Only a sending track has a source texture.");
+
+            WebRTC.ValidateGraphicsFormat(texture.graphicsFormat);
+            var error = WebRTC.ValidateTextureSize(texture.width, texture.height, Application.platform);
+            if (error.errorType != RTCErrorType.None)
+                throw new ArgumentException(error.message);
+
+            m_source.sourceTexture_ = texture;
+
+            var previous = m_source.destTexture_;
+            if (previous != null && previous.width == texture.width && previous.height == texture.height)
+                return;
+
+            var dest = CreateRenderTexture(texture.width, texture.height);
+            m_source.destTexture_ = dest;
+            m_source.destTexturePtr_ = dest.GetNativeTexturePtr();
+
+            // The render thread reads the previous texture until UpdateTexture publishes the new pointer
+            if (previous != null)
+                WebRTC.DestroyOnMainThread(previous, 0.1f);
+        }
+
+        /// <summary>
         /// Video Receiver
         /// </summary>
         /// <param name="ptr"></param>

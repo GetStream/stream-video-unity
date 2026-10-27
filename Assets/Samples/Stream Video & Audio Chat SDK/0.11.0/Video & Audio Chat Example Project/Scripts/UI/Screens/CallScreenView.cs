@@ -200,8 +200,8 @@ namespace StreamVideo.ExampleProject.UI.Screens
             if (participant.IsLocalParticipant)
             {
                 // We won't receive TrackAdded event for the local participant. The preview texture instance stays
-                // the same for the whole call (filter toggles, camera switches), so assigning it once is enough
-                view.SetLocalCameraSource(_activeCall.GetLocalPreviewTexture());
+                // the same for the client lifetime (filter toggles, camera switches, calls), so assigning it once is enough
+                view.SetLocalCameraSource(VideoManager.Client.VideoDeviceManager.GetLocalPreviewTexture());
             }
 
             if (sortParticipantViews)

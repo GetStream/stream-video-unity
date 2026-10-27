@@ -7,28 +7,6 @@ namespace StreamVideo.Core.StatefulModels.Tracks
 {
     public class StreamVideoTrack : BaseStreamTrack<VideoStreamTrack>
     {
-        public event Action VideoRotationAngleChanged;
-
-        /// <summary>
-        /// Clockwise rotation required to display the video upright. Video is published upright, so this is 0
-        /// except for participants using older Unity SDK versions that published the camera sensor orientation.
-        /// </summary>
-        public int VideoRotationAngle
-        {
-            get => _videoRotationAngle;
-            internal set
-            {
-                if (_videoRotationAngle == value)
-                {
-                    return;
-                }
-
-                var prev = _videoRotationAngle;
-                _videoRotationAngle = value;
-                VideoRotationAngleChanged?.Invoke();
-            }
-        }
-        
         public StreamVideoTrack(MediaStreamTrack track)
             : base(track)
         {
@@ -85,6 +63,5 @@ namespace StreamVideo.Core.StatefulModels.Tracks
         internal RenderTexture TargetTexture => throw new NotSupportedException("This property is deprecated");
 
         private RawImage _targetImage;
-        private int _videoRotationAngle;
     }
 }

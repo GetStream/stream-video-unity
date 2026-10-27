@@ -206,15 +206,6 @@ namespace StreamVideo.Core.StatefulModels
             }
 
             InternalCustomData.ReplaceAllWith(participantCustomData);
-            TrySetVideoTrackRotationAngle();
-        }
-
-        private void TrySetVideoTrackRotationAngle()
-        {
-            if (_videoTrack != null && CustomData.TryGet<int>(VideoRotationAngleKey, out var angle))
-            {
-                _videoTrack.VideoRotationAngle = angle;
-            }
         }
 
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
@@ -284,7 +275,6 @@ namespace StreamVideo.Core.StatefulModels
                     }
                     
                     streamTrack = _videoTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
-                    TrySetVideoTrackRotationAngle();
                     break;
                 case TrackType.ScreenShare:
 
@@ -382,10 +372,6 @@ namespace StreamVideo.Core.StatefulModels
 
         protected override Task UploadCustomDataAsync()
             => Client.SetParticipantCustomDataAsync(this, InternalCustomData.InternalDictionary);
-
-        // Written only by SDK versions that published camera-oriented frames. Current publishers send upright
-        // frames and never set it, so receivers keep reading it to display those older publishers correctly.
-        private const string VideoRotationAngleKey = "videoRotationAngle";
 
         #region Tracks
 

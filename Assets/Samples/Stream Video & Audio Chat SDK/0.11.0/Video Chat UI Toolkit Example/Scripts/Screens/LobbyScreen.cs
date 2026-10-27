@@ -95,11 +95,11 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             CallControls.UpdateDeviceButton(_cameraButton, _cameraIcon, isCameraEnabled, "icon--videocam", "icon--videocam-off");
             CallControls.UpdateDeviceButton(_micButton, _micIcon, isMicEnabled, "icon--mic", "icon--mic-off");
 
-            var webCamTexture = client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
-            var isCapturing = webCamTexture != null && webCamTexture.isPlaying && webCamTexture.width > 16;
-            var rotation = isCapturing ? webCamTexture.videoRotationAngle : 0;
+            // Same upright preview used in a call. It is 16x16 until the camera delivers a frame.
+            var preview = client.VideoDeviceManager.GetLocalPreviewTexture();
+            var hasFrame = preview != null && preview.width > 16 && preview.height > 16;
             _previewView.SetName(userName);
-            _previewView.SetVideo(isCapturing ? webCamTexture : null, rotation, isCameraEnabled);
+            _previewView.SetVideo(hasFrame ? preview : null, 0, isCameraEnabled);
             _previewView.SetAudio(isMicEnabled, isSpeaking: false);
 
             UpdatePreviewSize();

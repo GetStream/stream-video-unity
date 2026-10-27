@@ -34,21 +34,22 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
             Participant.TrackAdded += OnTrackAdded;
         }
 
-        public void Update(IStreamCall call, bool highlightSpeaker)
+        public void Update(bool highlightSpeaker)
         {
             if (Participant.IsLocalParticipant)
             {
                 var client = _app.Client;
-                var webCamTexture = client.VideoDeviceManager.GetSelectedDeviceWebCamTexture();
-                var rotation = webCamTexture != null && webCamTexture.width > 16 ? webCamTexture.videoRotationAngle : 0;
-                _view.SetVideo(call.GetLocalPreviewTexture(), rotation, client.VideoDeviceManager.IsEnabled);
+                // Preview is already upright. It stays 16x16 until the camera delivers a frame.
+                var preview = client.VideoDeviceManager.GetLocalPreviewTexture();
+                var hasFrame = preview != null && preview.width > 16 && preview.height > 16;
+                _view.SetVideo(hasFrame ? preview : null, 0, client.VideoDeviceManager.IsEnabled);
                 _view.SetAudio(client.AudioDeviceManager.IsEnabled, Participant.IsSpeaking);
             }
             else
             {
                 var texture = _videoTarget != null ? _videoTarget.texture : null;
-                var rotation = _videoTrack?.VideoRotationAngle ?? 0;
-                _view.SetVideo(texture, rotation, Participant.IsVideoEnabled);
+                // Frames are rotated upright before encoding, so received video needs no display rotation.
+                _view.SetVideo(texture, 0, Participant.IsVideoEnabled);
                 _view.SetAudio(Participant.IsAudioEnabled, Participant.IsSpeaking);
                 UpdateRequestedResolution();
             }
@@ -82,7 +83,6 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
         private GameObject _audioSourceHost;
         private GameObject _videoTargetHost;
         private RawImage _videoTarget;
-        private StreamVideoTrack _videoTrack;
         private Vector2Int _lastRequestedResolution;
 
         private static string GetDisplayName(IStreamVideoCallParticipant participant)
@@ -117,7 +117,6 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
                     break;
 
                 case StreamVideoTrack videoTrack:
-                    _videoTrack = videoTrack;
                     videoTrack.SetRenderTarget(GetOrCreateVideoTarget());
                     break;
             }

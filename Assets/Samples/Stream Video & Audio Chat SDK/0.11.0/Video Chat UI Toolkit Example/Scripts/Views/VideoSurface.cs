@@ -4,8 +4,8 @@ using UnityEngine.UIElements;
 namespace StreamVideo.ExampleProject.UIToolkit.Views
 {
     /// <summary>
-    /// Renders a video texture inside a container so that it covers the whole container (cropping the overflow),
-    /// taking into account the rotation reported by the camera or the remote video track.
+    /// Renders a video texture inside a container so that it covers the whole container (cropping the overflow).
+    /// SDK preview and received tracks are already upright, so pass 0 for those.
     /// </summary>
     internal sealed class VideoSurface
     {

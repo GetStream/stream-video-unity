@@ -102,7 +102,7 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
 
             foreach (var tile in _tiles.Values)
             {
-                tile.Update(_call, highlightSpeaker: !isAlone);
+                tile.Update(highlightSpeaker: !isAlone);
             }
 
             var stageSize = _tilesContainer.contentRect.size;

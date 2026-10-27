@@ -573,7 +573,6 @@ namespace StreamVideo.Core.LowLevelClient
                 if (ActiveCall != null && !ReferenceEquals(ActiveCall, call))
                 {
                     ActiveCall.DetachBackgroundFilterEvents();
-                    LocalPreview.Release();
                 }
 
                 ActiveCall = call;
@@ -980,7 +979,6 @@ namespace StreamVideo.Core.LowLevelClient
                 }
 
                 BackgroundFilterController?.SetFilter(null);
-                LocalPreview.Release();
             }
         }
 
@@ -2744,13 +2742,8 @@ namespace StreamVideo.Core.LowLevelClient
 
         private void UpdateLocalPreview()
         {
-            var publisherTexture = Publisher?.PublisherVideoTrackTexture;
-            var showFiltered = BackgroundFilterController != null
-                               && BackgroundFilterController.IsCompositing
-                               && publisherTexture != null
-                               && publisherTexture.IsCreated();
-
-            LocalPreview.Render(VideoInput, showFiltered ? publisherTexture : null);
+            var published = Publisher?.PublishedVideoTexture;
+            LocalPreview.Render(VideoInput, published != null && published.IsCreated() ? published : null);
         }
 
         private void UpdateBackgroundFilterState()

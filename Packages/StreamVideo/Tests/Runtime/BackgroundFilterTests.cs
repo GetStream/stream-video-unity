@@ -37,39 +37,38 @@ namespace StreamVideo.Tests.Runtime
         }
 
         [UnityTest]
-        public IEnumerator When_toggling_background_filter_expect_same_local_preview_texture_until_leave()
-            => ConnectAndExecute(When_toggling_background_filter_expect_same_local_preview_texture_until_leave_Async);
+        public IEnumerator When_toggling_background_filter_and_rejoining_expect_same_local_preview_texture()
+            => ConnectAndExecute(When_toggling_background_filter_and_rejoining_expect_same_local_preview_texture_Async);
 
-        private async Task When_toggling_background_filter_expect_same_local_preview_texture_until_leave_Async(
+        private async Task When_toggling_background_filter_and_rejoining_expect_same_local_preview_texture_Async(
             ITestClient client)
         {
-            var firstCall = await client.JoinRandomCallAsync();
+            var deviceManager = client.Client.VideoDeviceManager;
 
-            var preview = firstCall.GetLocalPreviewTexture();
+            var preview = deviceManager.GetLocalPreviewTexture();
             Assert.That(preview, Is.Not.Null,
-                "Local preview must be available right after join, even before the camera delivers frames.");
+                "Local preview must be available before joining, even before the camera delivers frames.");
+
+            var firstCall = await client.JoinRandomCallAsync();
+            Assert.That(deviceManager.GetLocalPreviewTexture(), Is.SameAs(preview),
+                "Joining a call must not replace the preview instance.");
 
             firstCall.SetBackgroundFilter(BackgroundFilter.Blur(BlurIntensity.Medium));
-            Assert.That(firstCall.GetLocalPreviewTexture(), Is.SameAs(preview),
+            Assert.That(deviceManager.GetLocalPreviewTexture(), Is.SameAs(preview),
                 "Enabling a background filter must not replace the preview instance.");
 
             firstCall.SetBackgroundFilter(null);
-            Assert.That(firstCall.GetLocalPreviewTexture(), Is.SameAs(preview),
+            Assert.That(deviceManager.GetLocalPreviewTexture(), Is.SameAs(preview),
                 "Disabling a background filter must not replace the preview instance.");
 
             await firstCall.LeaveAsync();
-
-            // Object.Destroy is deferred to the end of the frame in play mode
-            var (isDestroyed, _) = await WaitForConditionAsync(() => preview == null);
-            Assert.That(isDestroyed, Is.True, "Leaving the call must destroy the preview texture.");
-            Assert.That(firstCall.GetLocalPreviewTexture(), Is.Null,
-                "A call that is no longer active must not return a preview texture.");
+            Assert.That(preview != null, Is.True, "Leaving a call must not destroy the preview texture.");
+            Assert.That(deviceManager.GetLocalPreviewTexture(), Is.SameAs(preview),
+                "The preview must stay the same after leaving so the pre-call UI keeps working.");
 
             var secondCall = await client.JoinRandomCallAsync();
-            var secondPreview = secondCall.GetLocalPreviewTexture();
-            Assert.That(secondPreview, Is.Not.Null, "The next call must provide its own preview texture.");
-            Assert.That(ReferenceEquals(secondPreview, preview), Is.False,
-                "The next call must not reuse the destroyed preview texture.");
+            Assert.That(deviceManager.GetLocalPreviewTexture(), Is.SameAs(preview),
+                "The next call must reuse the same preview instance.");
 
             await secondCall.LeaveAsync();
         }

@@ -98,6 +98,8 @@ namespace StreamVideo.Core.DeviceManagers
         /// </summary>
         public WebCamTexture GetSelectedDeviceWebCamTexture() => _activeCamera;
 
+        public Texture GetLocalPreviewTexture() => RtcSession.LocalPreview.GetOrCreate();
+
         internal StreamVideoDeviceManager(RtcSession rtcSession, IInternalStreamVideoClient client, ILogs logs)
             : base(rtcSession, client, logs)
         {

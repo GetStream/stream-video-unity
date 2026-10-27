@@ -15,7 +15,7 @@ namespace StreamVideo.Tests.Editor
         {
             _renderer = new LocalPreviewRenderer();
             _camera = CreateSource(64, 48);
-            _filtered = CreateSource(64, 48);
+            _published = CreatePublished(64, 48);
         }
 
         [TearDown]
@@ -23,7 +23,7 @@ namespace StreamVideo.Tests.Editor
         {
             _renderer.Dispose();
             Object.DestroyImmediate(_camera);
-            Object.DestroyImmediate(_filtered);
+            DestroyPublished(_published);
         }
 
         [Test]
@@ -47,24 +47,24 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
-        public void When_switching_between_camera_and_filtered_source_expect_same_instance()
+        public void When_switching_between_camera_and_published_source_expect_same_instance()
         {
             var texture = _renderer.GetOrCreate();
 
             _renderer.Render(_camera, null);
             Assert.That(_renderer.LastSource, Is.SameAs(_camera),
-                "Without a filtered frame the preview must show the camera.");
+                "Without a published frame the preview must show the camera.");
 
-            _renderer.Render(_camera, _filtered);
-            Assert.That(_renderer.LastSource, Is.SameAs(_filtered),
-                "With a filtered frame the preview must show it.");
+            _renderer.Render(_camera, _published);
+            Assert.That(_renderer.LastSource, Is.SameAs(_published),
+                "With a published frame the preview must show what other participants receive.");
 
             _renderer.Render(_camera, null);
             Assert.That(_renderer.LastSource, Is.SameAs(_camera),
-                "Turning the filter off must fall back to the camera.");
+                "Losing the published frame must fall back to the camera.");
 
             Assert.That(_renderer.GetOrCreate(), Is.SameAs(texture),
-                "Filter toggles must not replace the preview instance.");
+                "Source switches must not replace the preview instance.");
         }
 
         [Test]
@@ -92,22 +92,24 @@ namespace StreamVideo.Tests.Editor
         }
 
         [Test]
-        public void When_filtered_size_differs_expect_preview_sized_to_camera()
+        public void When_published_frame_is_upright_portrait_expect_same_instance_sized_to_published_frame()
         {
             var texture = _renderer.GetOrCreate();
-            var largerFiltered = CreateSource(128, 96);
+            var portrait = CreatePublished(48, 64);
             try
             {
-                _renderer.Render(_camera, largerFiltered);
+                _renderer.Render(_camera, portrait);
 
-                Assert.That(texture.width, Is.EqualTo(_camera.width),
-                    "Preview size must follow the camera so blur toggles do not change its size.");
-                Assert.That(texture.height, Is.EqualTo(_camera.height),
-                    "Preview size must follow the camera so blur toggles do not change its size.");
+                Assert.That(_renderer.GetOrCreate(), Is.SameAs(texture),
+                    "An orientation change must not replace the preview instance.");
+                Assert.That(texture.width, Is.EqualTo(portrait.width),
+                    "Preview width must match the upright published frame, not the camera sensor.");
+                Assert.That(texture.height, Is.EqualTo(portrait.height),
+                    "Preview height must match the upright published frame, not the camera sensor.");
             }
             finally
             {
-                Object.DestroyImmediate(largerFiltered);
+                DestroyPublished(portrait);
             }
         }
 
@@ -126,9 +128,22 @@ namespace StreamVideo.Tests.Editor
 
         private static Texture2D CreateSource(int width, int height) => new Texture2D(width, height);
 
+        private static RenderTexture CreatePublished(int width, int height)
+        {
+            var rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
+            rt.Create();
+            return rt;
+        }
+
+        private static void DestroyPublished(RenderTexture rt)
+        {
+            rt.Release();
+            Object.DestroyImmediate(rt);
+        }
+
         private LocalPreviewRenderer _renderer;
         private Texture2D _camera;
-        private Texture2D _filtered;
+        private RenderTexture _published;
     }
 }
 #endif

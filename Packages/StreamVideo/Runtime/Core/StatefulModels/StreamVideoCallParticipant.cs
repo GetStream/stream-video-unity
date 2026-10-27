@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-#if STREAM_DEBUG_ENABLED
-using StreamVideo.Core.BackgroundFilters;
-#endif
 using StreamVideo.Core.InternalDTO.Responses;
 using StreamVideo.Core.LowLevelClient;
 using StreamVideo.Core.Models.Sfu;
@@ -209,15 +206,6 @@ namespace StreamVideo.Core.StatefulModels
             }
 
             InternalCustomData.ReplaceAllWith(participantCustomData);
-            TrySetVideoTrackRotationAngle();
-        }
-
-        private void TrySetVideoTrackRotationAngle()
-        {
-            if (_videoTrack != null && CustomData.TryGet<int>(VideoRotationAngleKey, out var angle))
-            {
-                _videoTrack.VideoRotationAngle = angle;
-            }
         }
 
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
@@ -242,8 +230,6 @@ namespace StreamVideo.Core.StatefulModels
             _audioTrack?.Update();
             _videoTrack?.Update();
             _screenShareTrack?.Update();
-
-            UploadLocalParticipantPublishedVideoRotationAngle();
         }
 
         //StreamTodo: solve this better. IL2CPP fails to generate C++ code for TryConvertTo and fails with
@@ -289,7 +275,6 @@ namespace StreamVideo.Core.StatefulModels
                     }
                     
                     streamTrack = _videoTrack = new StreamVideoTrack((VideoStreamTrack)mediaStreamTrack);
-                    TrySetVideoTrackRotationAngle();
                     break;
                 case TrackType.ScreenShare:
 
@@ -388,8 +373,6 @@ namespace StreamVideo.Core.StatefulModels
         protected override Task UploadCustomDataAsync()
             => Client.SetParticipantCustomDataAsync(this, InternalCustomData.InternalDictionary);
 
-        private const string VideoRotationAngleKey = "videoRotationAngle";
-
         #region Tracks
 
         private StreamAudioTrack _audioTrack;
@@ -424,42 +407,5 @@ namespace StreamVideo.Core.StatefulModels
             }
         }
 
-        private void UploadLocalParticipantPublishedVideoRotationAngle()
-        {
-            if (Client.InternalLowLevelClient.RtcSession == null ||
-                Client.InternalLowLevelClient.RtcSession.VideoInput == null)
-            {
-                return;
-            }
-
-            if (!IsLocalParticipant)
-            {
-                return;
-            }
-
-            var videoInput = Client.InternalLowLevelClient.RtcSession.VideoInput;
-            if (!videoInput.isPlaying || videoInput.width <= 16)
-            {
-                return;
-            }
-
-            var angle = videoInput.videoRotationAngle;
-            var hasPrevAngle = CustomData.TryGet<int>(VideoRotationAngleKey, out var prevAngle);
-            if (hasPrevAngle && Mathf.Abs(angle - prevAngle) <= 0)
-            {
-                return;
-            }
-
-#if STREAM_DEBUG_ENABLED && STREAM_LOG_BG_FILTER
-            CameraOrientationDebug.Log(Logs, "publisher.customDataAngle",
-                "publishingAngle=" + angle
-                + " prev=" + (hasPrevAngle ? prevAngle.ToString() : "none")
-                + " | " + CameraOrientationDebug.DescribeWebCam(videoInput)
-                + " | " + CameraOrientationDebug.DescribeScreen());
-#endif
-
-            //StreamTodo: there can be potentially multiple video tracks so best to store this by track ID
-            CustomData.SetAsync(VideoRotationAngleKey, angle);
-        }
     }
 }

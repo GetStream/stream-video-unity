@@ -238,11 +238,11 @@ namespace Unity.WebRTC
         }
 
         /// <summary>
-        ///     Stream: replaces the source texture of a sending track, e.g. when its size changes, without recreating
+        ///     Replaces the source texture of a sending track, for example when its size changes, without recreating
         ///     the track or touching the RTCRtpSender. The encoder picks up the new size with the next frame.
         /// </summary>
         /// <exception cref="InvalidOperationException">The track is not a sending track.</exception>
-        internal void ReplaceSourceTexture(Texture texture)
+        public void ReplaceSourceTexture(Texture texture)
         {
             if (texture == null)
                 throw new ArgumentNullException(nameof(texture));

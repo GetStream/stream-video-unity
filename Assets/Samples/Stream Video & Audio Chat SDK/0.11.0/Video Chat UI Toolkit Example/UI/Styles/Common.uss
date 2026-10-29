@@ -35,7 +35,7 @@
     -unity-font: url("../Fonts/Inter-SemiBold.ttf");
 }
 
-/* Margins are set from code to match Screen.safeArea and the software keyboard */
+/* Margins are set from code to match Screen.safeArea */
 .safe-area {
     flex-grow: 1;
     overflow: hidden;

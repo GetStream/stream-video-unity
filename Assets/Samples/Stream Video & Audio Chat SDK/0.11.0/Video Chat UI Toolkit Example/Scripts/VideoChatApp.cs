@@ -247,6 +247,8 @@ namespace StreamVideo.ExampleProject.UIToolkit
         {
             _joinCancellation?.Cancel();
 
+            _startCallScreen?.Hide();
+            _startCallScreen?.Dispose();
             _callScreen?.Hide();
             _lobbyScreen?.Hide();
 

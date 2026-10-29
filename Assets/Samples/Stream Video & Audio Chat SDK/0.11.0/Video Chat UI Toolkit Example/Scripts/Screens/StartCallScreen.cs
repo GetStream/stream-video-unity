@@ -1,5 +1,6 @@
 using System;
 using StreamVideo.ExampleProject.UIToolkit.Views;
+using StreamVideo.Libs.KeyboardAvoidance;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -28,8 +29,23 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             _callIdInput.RegisterCallback<FocusOutEvent>(_ => _callIdField.RemoveFromClassList(FocusedClass));
             _callIdInput.RegisterCallback<KeyDownEvent>(OnCallIdKeyDown, TrickleDown.TrickleDown);
 
+            // PointerDown focuses the button before clicked runs. Button derives from TextElement and
+            // matches this field's keyboard settings, so UI Toolkit keeps the soft keyboard open and
+            // drops the handle. Close it while this field still owns the keyboard.
+            _joinButton.RegisterCallback<PointerDownEvent>(_ => DismissKeyboard(), TrickleDown.TrickleDown);
+            _startNewCallButton.RegisterCallback<PointerDownEvent>(_ => DismissKeyboard(), TrickleDown.TrickleDown);
+
             _joinButton.clicked += OnJoinClicked;
             _startNewCallButton.clicked += OnStartNewCallClicked;
+
+#if UNITY_2022_3_OR_NEWER
+            // Unity's Android input strip is its own window above the keyboard, and Unity reports no geometry
+            // for it, so it would cover this field. Typing straight into the field avoids that.
+            _callIdInput.hideMobileInput = true;
+#endif
+
+            // This screen is the element allowed to move. It shifts only enough to uncover the focused field.
+            _keyboardAvoidance = new KeyboardAvoidanceController(Root, Root);
 
             OnCallIdChanged();
         }
@@ -38,26 +54,32 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
         {
             SetVisible();
             SetError(null);
+            _keyboardAvoidance.Enable();
+        }
+
+        internal void Dispose()
+        {
+            _keyboardAvoidance.Dispose();
         }
 
         protected override void OnHide()
         {
-            // Leaving the field open keeps the keyboard up and the next screen inset.
-            _callIdInput.Blur();
-            ResetKeyboardShift();
+            // Enter submits without focusing a button, so the field can still own the keyboard here.
+            DismissKeyboard();
+            _keyboardAvoidance.Disable();
         }
 
         protected override void OnUpdate()
         {
             _header.SetUser(App.LocalUserName);
-            KeepCallIdAboveKeyboard();
+            SubmitOnKeyboardDone();
+            _keyboardAvoidance.Tick();
         }
 
         private const string FocusedClass = "is-focused";
         private const string ErrorClass = "is-error";
         private const string DisabledClass = "is-disabled";
         private const string BusyClass = "is-busy";
-        private const float KeyboardClearance = 12f;
 
         private readonly AccountHeaderView _header;
         private readonly VisualElement _callIdField;
@@ -67,10 +89,10 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
         private readonly Label _errorLabel;
         private readonly Button _joinButton;
         private readonly Button _startNewCallButton;
+        private readonly KeyboardAvoidanceController _keyboardAvoidance;
 
+        private bool _keyboardDone;
         private bool _isBusy;
-        private float _keyboardShift;
-        private float _keyboardLastFrame;
 
         private string CallId => _callIdInput.value?.Trim() ?? string.Empty;
 
@@ -92,8 +114,28 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             }
         }
 
+        // The soft keyboard's Done key sends no Return key event, so watch the keyboard status instead. Android
+        // also reports Done after a tap outside closes the keyboard, so only a Done seen while the field still
+        // owns the keyboard counts. Submit after UI Toolkit closes it, when the field holds the final text.
+        private void SubmitOnKeyboardDone()
+        {
+            var keyboard = _callIdInput.touchScreenKeyboard;
+            if (keyboard != null)
+            {
+                _keyboardDone = keyboard.status == TouchScreenKeyboard.Status.Done;
+                return;
+            }
+
+            if (_keyboardDone)
+            {
+                _keyboardDone = false;
+                OnJoinClicked();
+            }
+        }
+
         private async void OnJoinClicked()
         {
+            DismissKeyboard();
             var callId = CallId;
             if (_isBusy || callId.Length == 0 || !App.IsConnected)
             {
@@ -125,6 +167,7 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
 
         private async void OnStartNewCallClicked()
         {
+            DismissKeyboard();
             if (_isBusy || !App.IsConnected)
             {
                 return;
@@ -146,58 +189,16 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             }
         }
 
-        /// <summary>
-        /// The bottom inset recenters this screen in the space above the keyboard.
-        /// When the centered content is taller than that space, slide the screen up until the call ID field is visible.
-        /// </summary>
-        private void KeepCallIdAboveKeyboard()
+        private void DismissKeyboard()
         {
-            var keyboard = MobileKeyboard.CoverageFromBottom();
-            if (keyboard <= 0f || Root.parent == null || _callIdField.layout.height <= 0f)
+            var keyboard = _callIdInput.touchScreenKeyboard;
+            if (keyboard != null)
             {
-                _keyboardLastFrame = 0f;
-                ResetKeyboardShift();
-                return;
+                keyboard.active = false;
             }
 
-            // ScreenAdapter applies the inset during this Update, but the layout still reflects the previous frame.
-            var layoutIncludesKeyboard = _keyboardLastFrame > 0f;
-            _keyboardLastFrame = keyboard;
-            if (!layoutIncludesKeyboard)
-            {
-                return;
-            }
-
-            // worldBound includes the shift from earlier frames. Adding it back is the centered position.
-            var visibleBottom = Root.parent.worldBound.yMax - KeyboardClearance;
-            var restingFieldBottom = _callIdField.worldBound.yMax + _keyboardShift;
-            var needed = Mathf.Max(0f, restingFieldBottom - visibleBottom);
-
-            var visibleTop = Root.parent.worldBound.yMin + KeyboardClearance;
-            var restingFieldTop = _callIdField.worldBound.yMin + _keyboardShift;
-            if (restingFieldTop - needed < visibleTop)
-            {
-                needed = Mathf.Max(0f, restingFieldTop - visibleTop);
-            }
-
-            if (Mathf.Abs(needed - _keyboardShift) < 0.5f)
-            {
-                return;
-            }
-
-            _keyboardShift = needed;
-            Root.style.translate = new Translate(0f, -needed, 0f);
-        }
-
-        private void ResetKeyboardShift()
-        {
-            if (_keyboardShift <= 0f)
-            {
-                return;
-            }
-
-            _keyboardShift = 0f;
-            Root.style.translate = new Translate(0f, 0f, 0f);
+            _keyboardDone = false;
+            _callIdInput.Blur();
         }
 
         private void SetBusy(VisualElement button, bool isBusy)

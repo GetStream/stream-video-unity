@@ -10,8 +10,8 @@ namespace StreamVideo.ExampleProject.UIToolkit
     /// Keeps a single layout usable on every screen:
     /// - scales the panel so that UI sizes match density-independent pixels on mobile,
     /// - toggles the `portrait` / `landscape` USS classes on the app root,
-    /// - insets the content by <see cref="Screen.safeArea"/> (notches, rounded corners, home indicator),
-    /// - and by the software keyboard, so a focused field can sit above it.
+    /// - insets the content by <see cref="Screen.safeArea"/> (notches, rounded corners, home indicator).
+    /// The software keyboard is handled separately, and only moves a focused field when it is actually covered.
     /// </summary>
     internal sealed class ScreenAdapter
     {
@@ -35,15 +35,13 @@ namespace StreamVideo.ExampleProject.UIToolkit
         {
             var screenSize = new Vector2Int(Screen.width, Screen.height);
             var safeArea = Screen.safeArea;
-            var keyboard = MobileKeyboard.CoverageFromBottom();
-            if (screenSize == _lastScreenSize && safeArea == _lastSafeArea && Mathf.Abs(keyboard - _lastKeyboard) < 0.5f)
+            if (screenSize == _lastScreenSize && safeArea == _lastSafeArea)
             {
                 return;
             }
 
             _lastScreenSize = screenSize;
             _lastSafeArea = safeArea;
-            _lastKeyboard = keyboard;
 
             var scale = CalculateScale(screenSize);
             _panelSettings.scale = scale;
@@ -51,8 +49,7 @@ namespace StreamVideo.ExampleProject.UIToolkit
             _safeArea.style.marginLeft = safeArea.xMin / scale;
             _safeArea.style.marginRight = (screenSize.x - safeArea.xMax) / scale;
             _safeArea.style.marginTop = (screenSize.y - safeArea.yMax) / scale;
-            // The keyboard covers the home indicator, so the larger bottom inset wins.
-            _safeArea.style.marginBottom = Mathf.Max(safeArea.yMin, keyboard) / scale;
+            _safeArea.style.marginBottom = safeArea.yMin / scale;
 
             IsLandscape = screenSize.x > screenSize.y;
             _appRoot.EnableInClassList(LandscapeClass, IsLandscape);
@@ -70,7 +67,6 @@ namespace StreamVideo.ExampleProject.UIToolkit
 
         private Vector2Int _lastScreenSize;
         private Rect _lastSafeArea;
-        private float _lastKeyboard = -1f;
 
         private static float CalculateScale(Vector2Int screenSize)
         {

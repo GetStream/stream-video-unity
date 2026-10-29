@@ -99,9 +99,9 @@ namespace StreamVideo.Core.StatefulModels
         ParticipantCount ParticipantCount { get; }
 
         /// <summary>
-        /// Participant that is currently the most actively speaking.
-        /// When dominant speaker changes the <see cref="DominantSpeakerChanged"/> event will trigger.
-        /// You can also get the <see cref="PreviousDominantSpeaker"/>
+        /// Participant named by the latest <see cref="DominantSpeakerChanged"/> event.
+        /// Null until that event matches someone in the call, and null when it names an unknown session.
+        /// A change fires <see cref="DominantSpeakerChanged"/>. <see cref="PreviousDominantSpeaker"/> is the prior value.
         /// </summary>
         IStreamVideoCallParticipant DominantSpeaker { get; }
 

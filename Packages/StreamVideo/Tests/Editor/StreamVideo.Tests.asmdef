@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "StreamVideo.Core",
+        "Google.Protobuf",
         "StreamVideo.EditorTools",
         "StreamVideo.Libs",
         "StreamVideo.Tests.Shared",

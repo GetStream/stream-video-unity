@@ -92,7 +92,7 @@ namespace StreamVideo.Core.StatefulModels
 
         public IStreamVideoCallParticipant DominantSpeaker
         {
-            get => _dominantSpeaker ?? Session.Participants.FirstOrDefault();
+            get => _dominantSpeaker;
             private set
             {
                 var prev = _dominantSpeaker;
@@ -774,10 +774,43 @@ namespace StreamVideo.Core.StatefulModels
 
         internal void UpdateFromSfu(DominantSpeakerChanged dominantSpeakerChanged, ICache cache)
         {
-            var prev = DominantSpeaker;
-            DominantSpeaker = Participants.FirstOrDefault(p => p.SessionId == dominantSpeakerChanged.SessionId);
+            var participants = Participants;
+            StreamVideoCallParticipant match = null;
+            if (participants != null)
+            {
+                foreach (var participant in participants)
+                {
+                    if (participant.SessionId == dominantSpeakerChanged.SessionId)
+                    {
+                        match = (StreamVideoCallParticipant)participant;
+                        break;
+                    }
+                }
+            }
 
-            if (prev != DominantSpeaker)
+            var flagsChanged = false;
+            if (participants != null)
+            {
+                foreach (var participant in participants)
+                {
+                    var callParticipant = (StreamVideoCallParticipant)participant;
+                    var isDominantSpeaker = callParticipant == match;
+                    if (callParticipant.IsDominantSpeaker == isDominantSpeaker)
+                    {
+                        continue;
+                    }
+
+                    callParticipant.IsDominantSpeaker = isDominantSpeaker;
+                    flagsChanged = true;
+                }
+            }
+
+            // The setter sorts when the elected participant changes. Flags are already written, so that
+            // sort sees the live speaker. A repeat event for the same participant still needs one sort
+            // when a snapshot left the flags stale.
+            var speakerUnchanged = _dominantSpeaker == match;
+            DominantSpeaker = match;
+            if (speakerUnchanged && flagsChanged)
             {
                 UpdateSortedParticipants();
             }
@@ -1103,13 +1136,51 @@ namespace StreamVideo.Core.StatefulModels
 
         private void UpdateSortedParticipants()
         {
-            _participantComparer.Reset();
-            _sortedParticipants.Sort(_participantComparer);
-
-            if (_participantComparer.OrderChanged)
+            using (new ListPoolScope<IStreamVideoCallParticipant>(out var previousOrder))
             {
-                SortedParticipantsUpdated?.Invoke();
+                for (var i = 0; i < _sortedParticipants.Count; i++)
+                {
+                    previousOrder.Add(_sortedParticipants[i]);
+                }
+
+                _sortedParticipants.Clear();
+
+                var participants = Participants;
+                if (participants != null)
+                {
+                    for (var i = 0; i < participants.Count; i++)
+                    {
+                        _sortedParticipants.Add(participants[i]);
+                    }
+                }
+
+                _participantComparer.Reset();
+                var sorted = _sortedParticipants
+                    .OrderBy(participant => participant, _participantComparer)
+                    .ToList();
+                _sortedParticipants.Clear();
+                _sortedParticipants.AddRange(sorted);
+
+                if (previousOrder.Count == _sortedParticipants.Count)
+                {
+                    var orderChanged = false;
+                    for (var i = 0; i < previousOrder.Count; i++)
+                    {
+                        if (!ReferenceEquals(previousOrder[i], _sortedParticipants[i]))
+                        {
+                            orderChanged = true;
+                            break;
+                        }
+                    }
+
+                    if (!orderChanged)
+                    {
+                        return;
+                    }
+                }
             }
+
+            SortedParticipantsUpdated?.Invoke();
         }
 
         private void UpdateMembersFromDto(IEnumerable<MemberResponseInternalDTO> membersDtos)

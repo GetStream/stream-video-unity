@@ -48,12 +48,14 @@ namespace StreamVideo.Core.StatefulModels
         bool IsVideoEnabled { get; }
         
         /// <summary>
-        /// Is this participant currently streaming an audio track
+        /// Whether this participant is currently sending microphone audio.
+        /// Remote participants use the received audio track. The local participant uses the publisher microphone and does not need a received audio track.
         /// </summary>
         bool IsAudioEnabled { get; }
         
         /// <summary>
         /// Is this participant currently the most actively speaking participant.
+        /// True only for the participant named by the latest <see cref="IStreamCall.DominantSpeakerChanged"/> event.
         /// </summary>
         bool IsDominantSpeaker { get; }
         

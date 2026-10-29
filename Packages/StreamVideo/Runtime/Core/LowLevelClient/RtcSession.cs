@@ -1832,8 +1832,7 @@ namespace StreamVideo.Core.LowLevelClient
 
                 if (participantSfuDto != null)
                 {
-                    // Handles updating PublishedTracks
-                    participant.UpdateFromSfu(participantSfuDto);
+                    participant.UpdateIdentityFromSfu(participantSfuDto);
                 }
                 else
                 {
@@ -1868,8 +1867,7 @@ namespace StreamVideo.Core.LowLevelClient
             {
                 if (participantSfuDto != null)
                 {
-                    // Handles updating PublishedT
-                    participant.UpdateFromSfu(participantSfuDto);
+                    participant.UpdateIdentityFromSfu(participantSfuDto);
                 }
                 else
                 {
@@ -2348,7 +2346,17 @@ namespace StreamVideo.Core.LowLevelClient
                 return;
             }
 
-            var participant = _cache.TryCreateOrUpdate(participantUpdated.Participant);
+            var dto = participantUpdated.Participant;
+            StreamVideoCallParticipant participant;
+            if (_cache.CallParticipants.TryGet(dto.SessionId, out participant))
+            {
+                participant.UpdateIdentityFromSfu(dto);
+            }
+            else
+            {
+                participant = _cache.TryCreateOrUpdate(dto);
+            }
+
             TryAssignPendingTracks(participant?.TrackLookupPrefix);
         }
 

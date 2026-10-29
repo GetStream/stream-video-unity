@@ -34,7 +34,19 @@ namespace StreamVideo.Core.StatefulModels
         public bool IsScreenSharing => ScreenShareTrack?.IsEnabled ?? false;
 
         public bool IsVideoEnabled => VideoTrack?.IsEnabled ?? false;
-        public bool IsAudioEnabled => AudioTrack?.IsEnabled ?? false;
+
+        public bool IsAudioEnabled
+        {
+            get
+            {
+                if (IsLocalParticipant)
+                {
+                    return LowLevelClient.RtcSession.PublisherAudioTrackIsEnabled;
+                }
+
+                return AudioTrack?.IsEnabled ?? false;
+            }
+        }
 
         #region Tracks
 
@@ -92,7 +104,7 @@ namespace StreamVideo.Core.StatefulModels
             }
         }
 
-        public bool IsDominantSpeaker { get; private set; }
+        public bool IsDominantSpeaker { get; internal set; }
 
         public float AudioLevel
         {
@@ -167,19 +179,7 @@ namespace StreamVideo.Core.StatefulModels
 
         //StreamTodo: perhaps distinguish to UpdateFromSfu interface
         void IUpdateableFrom<Participant, StreamVideoCallParticipant>.UpdateFromDto(Participant dto, ICache cache)
-        {
-            UserId = dto.UserId;
-            SessionId = dto.SessionId;
-            _publishedTracks.TryReplaceEnumsFromDtoCollection(dto.PublishedTracks, TrackTypeExt.ToPublicEnum);
-            TrackLookupPrefix = dto.TrackLookupPrefix;
-            ConnectionQuality = dto.ConnectionQuality.ToPublicEnum();
-            IsSpeaking = dto.IsSpeaking;
-            IsDominantSpeaker = dto.IsDominantSpeaker;
-            AudioLevel = dto.AudioLevel;
-            Name = dto.Name;
-            Image = dto.Image;
-            _roles.TryReplaceValuesFromDto(dto.Roles);
-        }
+            => ApplySfuParticipant(dto, includeRealtimeMediaState: true);
 
         void IUpdateableFrom<CallParticipantResponseInternalDTO, StreamVideoCallParticipant>.UpdateFromDto(
             CallParticipantResponseInternalDTO dto, ICache cache)
@@ -210,10 +210,13 @@ namespace StreamVideo.Core.StatefulModels
 
         //StreamTodo: solve with a generic interface and best to be handled by cache layer
         internal void UpdateFromSfu(Participant dto)
-        {
-            ((IUpdateableFrom<Participant, StreamVideoCallParticipant>)this).UpdateFromDto(dto, Cache);
-        }
-        
+            => ApplySfuParticipant(dto, includeRealtimeMediaState: true);
+
+        // Identity and published tracks only. Speaking, level, dominant speaker, and connection quality
+        // stay on their own SFU events.
+        internal void UpdateIdentityFromSfu(Participant dto)
+            => ApplySfuParticipant(dto, includeRealtimeMediaState: false);
+
         internal void UpdateFromSfu(AudioLevel audioLevel)
         {
             IsSpeaking = audioLevel.IsSpeaking;
@@ -223,6 +226,26 @@ namespace StreamVideo.Core.StatefulModels
         internal void UpdateFromSfu(ConnectionQualityInfo connectionQualityInfo)
         {
             ConnectionQuality = connectionQualityInfo.ConnectionQuality.ToPublicEnum();
+        }
+
+        private void ApplySfuParticipant(Participant dto, bool includeRealtimeMediaState)
+        {
+            UserId = dto.UserId;
+            SessionId = dto.SessionId;
+            _publishedTracks.TryReplaceEnumsFromDtoCollection(dto.PublishedTracks, TrackTypeExt.ToPublicEnum);
+            TrackLookupPrefix = dto.TrackLookupPrefix;
+
+            if (includeRealtimeMediaState)
+            {
+                ConnectionQuality = dto.ConnectionQuality.ToPublicEnum();
+                IsSpeaking = dto.IsSpeaking;
+                IsDominantSpeaker = dto.IsDominantSpeaker;
+                AudioLevel = dto.AudioLevel;
+            }
+
+            Name = dto.Name;
+            Image = dto.Image;
+            _roles.TryReplaceValuesFromDto(dto.Roles);
         }
 
         internal void Update()

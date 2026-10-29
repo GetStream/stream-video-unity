@@ -43,20 +43,19 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
                 var preview = client.VideoDeviceManager.GetLocalPreviewTexture();
                 var hasFrame = preview != null && preview.width > 16 && preview.height > 16;
                 _view.SetVideo(hasFrame ? preview : null, 0, client.VideoDeviceManager.IsEnabled);
-                _view.SetAudio(client.AudioDeviceManager.IsEnabled, Participant.IsSpeaking);
             }
             else
             {
                 var texture = _videoTarget != null ? _videoTarget.texture : null;
                 // Frames are rotated upright before encoding, so received video needs no display rotation.
                 _view.SetVideo(texture, 0, Participant.IsVideoEnabled);
-                _view.SetAudio(Participant.IsAudioEnabled, Participant.IsSpeaking);
                 UpdateRequestedResolution();
             }
 
             _view.SetName(GetDisplayName(Participant));
-            _view.SetHighlighted(highlightSpeaker && Participant.IsDominantSpeaker);
+            _view.SetAudio(Participant.IsAudioEnabled, Participant.IsSpeaking);
             _view.SetConnectionQuality(Participant.ConnectionQuality);
+            _view.SetHighlighted(highlightSpeaker && Participant.IsDominantSpeaker);
         }
 
         public void Dispose()

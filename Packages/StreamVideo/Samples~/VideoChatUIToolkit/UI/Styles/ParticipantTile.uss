@@ -58,6 +58,9 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    -unity-text-align: middle-left;
+    /* Glyphs sit slightly below the line-box center beside the icon. */
+    translate: 0 -1px;
 }
 
 .app-root .participant-tile__audio-indicator {

@@ -8,7 +8,7 @@ namespace StreamVideo.ExampleProject.UIToolkit
 {
     /// <summary>
     /// Keeps a single layout usable on every screen:
-    /// - scales the panel so that UI sizes match density-independent pixels on mobile,
+    /// - scales the panel so that UI sizes match density-independent pixels on phones, and iPad points on tablets,
     /// - toggles the `portrait` / `landscape` USS classes on the app root,
     /// - insets the content by <see cref="Screen.safeArea"/> (notches, rounded corners, home indicator).
     /// The software keyboard is handled separately, and only moves a focused field when it is actually covered.
@@ -61,6 +61,12 @@ namespace StreamVideo.ExampleProject.UIToolkit
         private const float MinLogicalShortSide = 360;
         private const float DesktopReferenceDpi = 96;
 
+        // Android's sw600dp tablet breakpoint. Phones stay below it
+        private const float TabletMinLogicalShortSide = 600;
+
+        // iPad point density. Tablets are viewed from further away, so their logical pixel is physically larger
+        private const float TabletReferenceDpi = 132;
+
         private readonly PanelSettings _panelSettings;
         private readonly VisualElement _appRoot;
         private readonly VisualElement _safeArea;
@@ -76,6 +82,11 @@ namespace StreamVideo.ExampleProject.UIToolkit
             if (Application.isMobilePlatform)
             {
                 var scale = dpi > 0 ? dpi / MobileReferenceDpi : shortSide / 390f;
+                if (shortSide / scale >= TabletMinLogicalShortSide)
+                {
+                    scale = dpi / TabletReferenceDpi;
+                }
+
                 return Mathf.Max(1f, Mathf.Min(scale, shortSide / MinLogicalShortSide));
             }
 

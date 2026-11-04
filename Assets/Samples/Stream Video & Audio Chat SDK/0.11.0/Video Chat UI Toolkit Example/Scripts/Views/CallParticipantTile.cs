@@ -4,7 +4,6 @@ using StreamVideo.Core;
 using StreamVideo.Core.StatefulModels;
 using StreamVideo.Core.StatefulModels.Tracks;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
@@ -42,13 +41,11 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
                 // Preview is already upright. It stays 16x16 until the camera delivers a frame.
                 var preview = client.VideoDeviceManager.GetLocalPreviewTexture();
                 var hasFrame = preview != null && preview.width > 16 && preview.height > 16;
-                _view.SetVideo(hasFrame ? preview : null, 0, client.VideoDeviceManager.IsEnabled);
+                _view.SetVideo(hasFrame ? preview : null, client.VideoDeviceManager.IsEnabled);
             }
             else
             {
-                var texture = _videoTarget != null ? _videoTarget.texture : null;
-                // Frames are rotated upright before encoding, so received video needs no display rotation.
-                _view.SetVideo(texture, 0, Participant.IsVideoEnabled);
+                _view.SetTrackVideo(Participant.IsVideoEnabled);
                 UpdateRequestedResolution();
             }
 
@@ -67,11 +64,6 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
                 Object.Destroy(_audioSourceHost);
             }
 
-            if (_videoTargetHost != null)
-            {
-                Object.Destroy(_videoTargetHost);
-            }
-
             Root.RemoveFromHierarchy();
         }
 
@@ -80,8 +72,6 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
         private readonly HashSet<IStreamTrack> _processedTracks = new HashSet<IStreamTrack>();
 
         private GameObject _audioSourceHost;
-        private GameObject _videoTargetHost;
-        private RawImage _videoTarget;
         private Vector2Int _lastRequestedResolution;
 
         private static string GetDisplayName(IStreamVideoCallParticipant participant)
@@ -116,27 +106,16 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
                     break;
 
                 case StreamVideoTrack videoTrack:
-                    videoTrack.SetRenderTarget(GetOrCreateVideoTarget());
+                    if (Participant.IsLocalParticipant)
+                    {
+                        return;
+                    }
+
+                    // The local tile shows GetLocalPreviewTexture instead. Binding the published track here
+                    // would replace that preview, because both write the same Image.
+                    videoTrack.SetRenderTarget(_view.VideoImage);
                     break;
             }
-        }
-
-        /// <summary>
-        /// <see cref="StreamVideoTrack"/> writes the received texture into a uGUI <see cref="RawImage"/>.
-        /// UI Toolkit has no RawImage, so we keep an inactive one as a texture holder and read the texture from it every frame.
-        /// </summary>
-        private RawImage GetOrCreateVideoTarget()
-        {
-            if (_videoTarget != null)
-            {
-                return _videoTarget;
-            }
-
-            _videoTargetHost = new GameObject("Video: " + Participant.UserId, typeof(RectTransform));
-            _videoTargetHost.SetActive(false);
-            _videoTargetHost.transform.SetParent(_app.transform, worldPositionStays: false);
-            _videoTarget = _videoTargetHost.AddComponent<RawImage>();
-            return _videoTarget;
         }
 
         /// <summary>

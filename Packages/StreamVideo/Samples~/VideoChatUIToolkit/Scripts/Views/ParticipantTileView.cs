@@ -11,6 +11,8 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
     {
         public VisualElement Root { get; }
 
+        public Image VideoImage => _video.Image;
+
         public ParticipantTileView(VisualElement root)
         {
             Root = root;
@@ -35,12 +37,25 @@ namespace StreamVideo.ExampleProject.UIToolkit.Views
         }
 
         /// <param name="texture">Video texture. Placeholder is shown when null or when video is disabled</param>
-        /// <param name="rotationAngle">Clockwise rotation required to display the video upright</param>
         /// <param name="isVideoEnabled">Is video being published</param>
-        public void SetVideo(Texture texture, int rotationAngle, bool isVideoEnabled)
+        public void SetVideo(Texture texture, bool isVideoEnabled)
         {
-            var showVideo = isVideoEnabled && texture != null;
-            _video.SetSource(showVideo ? texture : null, rotationAngle);
+            var source = isVideoEnabled ? texture : null;
+            _video.SetSource(source);
+            SetVideoShown(source != null);
+        }
+
+        /// <summary>
+        /// Shows video that a track writes into <see cref="VideoImage"/>. Does not replace the texture.
+        /// </summary>
+        public void SetTrackVideo(bool isVideoEnabled)
+        {
+            SetVideoShown(isVideoEnabled && _video.Image.image != null);
+        }
+
+        private void SetVideoShown(bool showVideo)
+        {
+            _video.Image.visible = showVideo;
             _placeholder.EnableInClassList(HiddenClass, showVideo);
         }
 

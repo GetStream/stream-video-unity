@@ -4,8 +4,7 @@
     "references": [
         "StreamVideo.Libs",
         "StreamVideo.Core",
-        "Unity.WebRTC",
-        "UnityEngine.UI"
+        "Unity.WebRTC"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

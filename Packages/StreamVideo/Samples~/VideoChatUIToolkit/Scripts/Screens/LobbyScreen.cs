@@ -99,7 +99,7 @@ namespace StreamVideo.ExampleProject.UIToolkit.Screens
             var preview = client.VideoDeviceManager.GetLocalPreviewTexture();
             var hasFrame = preview != null && preview.width > 16 && preview.height > 16;
             _previewView.SetName(userName);
-            _previewView.SetVideo(hasFrame ? preview : null, 0, isCameraEnabled);
+            _previewView.SetVideo(hasFrame ? preview : null, isCameraEnabled);
             _previewView.SetAudio(isMicEnabled, isSpeaking: false);
 
             UpdatePreviewSize();

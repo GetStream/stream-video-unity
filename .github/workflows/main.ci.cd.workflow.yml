@@ -69,10 +69,27 @@ jobs:
       - name: Install Git
         run: git config --global --add safe.directory /github/workspace
 
+      # v1.2.0 exits 100 when one apt name is missing. On Ubuntu 26.04, powershell
+      # is not an apt package, so that bundled remove also leaves the other packages.
       - name: Free Disk space
-        uses: jlumbroso/free-disk-space@v1.2.0
+        uses: lumbroso-commons/free-disk-space@v1.3.2
         with:
           dotnet: false
+          # v1.3.x prunes every image by default. Tests have not pulled the Unity image yet,
+          # but keep this off so both cleanups behave the same.
+          docker-images: false
+
+      - name: Remove packages skipped on Ubuntu 26.04
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get remove -y azure-cli || true
+          sudo apt-get remove -y google-chrome-stable || true
+          sudo apt-get remove -y firefox || true
+          sudo apt-get remove -y libgl1-mesa-dri || true
+          sudo apt-get remove -y google-cloud-cli || true
+          sudo rm -rf /opt/microsoft/powershell
+          sudo apt-get autoremove -y
+          sudo apt-get clean
 
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
@@ -201,10 +218,24 @@ jobs:
           bash .github/workflows/scripts/assert-tests-ran.sh artifacts/playmode-results.xml
 
       - name: Free Disk space
-        uses: jlumbroso/free-disk-space@v1.2.0
+        uses: lumbroso-commons/free-disk-space@v1.3.2
         if: matrix.target_platform == 'android' || matrix.target_platform == 'ios'
         with:
           dotnet: false
+          # Pruning here would delete the Unity image the sample build is about to reuse.
+          docker-images: false
+
+      - name: Remove packages skipped on Ubuntu 26.04
+        if: runner.os == 'Linux' && (matrix.target_platform == 'android' || matrix.target_platform == 'ios')
+        run: |
+          sudo apt-get remove -y azure-cli || true
+          sudo apt-get remove -y google-chrome-stable || true
+          sudo apt-get remove -y firefox || true
+          sudo apt-get remove -y libgl1-mesa-dri || true
+          sudo apt-get remove -y google-cloud-cli || true
+          sudo rm -rf /opt/microsoft/powershell
+          sudo apt-get autoremove -y
+          sudo apt-get clean
 
       - name: List changes
         run: |

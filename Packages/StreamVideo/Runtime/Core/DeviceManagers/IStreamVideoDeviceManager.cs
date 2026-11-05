@@ -41,7 +41,9 @@ namespace StreamVideo.Core.DeviceManagers
         /// Assign it once (e.g. to a RawImage); the same instance is returned for the lifetime of the client, so no
         /// rebinding is needed for camera switches, filter changes, joining, or leaving calls.
         /// It is black until the camera delivers frames and is resized in place when the video size or orientation
-        /// changes. Do not apply the camera's videoRotationAngle. Call from the main thread.
+        /// changes. A UI Toolkit <see cref="UnityEngine.UIElements.Image"/> does not regenerate its crop when that
+        /// same texture instance changes size; call <see cref="UnityEngine.UIElements.VisualElement.MarkDirtyRepaint"/>
+        /// when the width or height changes. Do not apply the camera's videoRotationAngle. Call from the main thread.
         /// </summary>
         Texture GetLocalPreviewTexture();
     }

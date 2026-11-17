@@ -43,9 +43,9 @@ namespace StreamVideo.EditorTools
             var parser = new BuildSettingsCommandLineParser();
             var builder = new StreamAppBuilder();
 
-            var (buildSettings, authCredentials) = parser.Parse();
+            var buildSettings = parser.Parse();
 
-            var report = builder.BuildSampleApp(buildSettings, authCredentials);
+            var report = builder.BuildSampleApp(buildSettings);
             EditorApplication.Exit(report.summary.totalErrors > 0 ? 1 : 0);
         }
 

@@ -1,31 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
 using StreamVideo.EditorTools.Builders;
-using StreamVideo.Libs.Auth;
-using StreamVideo.Libs.Serialization;
 using UnityEditor;
 using UnityEngine;
 
 namespace StreamVideo.EditorTools.CommandLineParsers
 {
-    public class BuildSettingsCommandLineParser : CommandLineParserBase<(BuildSettings buildSettings, AuthCredentials authCredentials)>
+    public class BuildSettingsCommandLineParser : CommandLineParserBase<BuildSettings>
     {
         public const string ApiCompatibilityArgKey = "-apiCompatibility";
         public const string ScriptingBackendArgKey = "-scriptingBackend";
         public const string BuildTargetPlatformArgKey = "-buildTargetPlatform";
         public const string BuildTargetPathArgKey = "-buildTargetPath";
 
-        public const string StreamBase64TestDataArgKey = "-streamBase64TestDataSet";
-        public const string TestDataSetIndexArgKey = "-testDataSetIndex";
-
-        protected override (BuildSettings buildSettings, AuthCredentials authCredentials) Parse(
-            IDictionary<string, string> args)
+        protected override BuildSettings Parse(IDictionary<string, string> args)
         {
             if (IsAnyRequiredArgMissing(args, out var missingArgsInfo, BuildTargetPlatformArgKey,
-                    ApiCompatibilityArgKey, ScriptingBackendArgKey, BuildTargetPathArgKey, StreamBase64TestDataArgKey))
+                    ApiCompatibilityArgKey, ScriptingBackendArgKey, BuildTargetPathArgKey))
             {
                 throw new ArgumentException($"Missing argument: `{missingArgsInfo}`");
             }
@@ -56,80 +47,7 @@ namespace StreamVideo.EditorTools.CommandLineParsers
             var scriptingImplementation = GetScriptingImplementation(scriptingBackend);
             var targetPath = args[BuildTargetPathArgKey];
 
-            var testAuthDataSet = ParseTestAuthDataSetArg(args, out var optionalTestDataIndex);
-
-            return (new BuildSettings(buildTargetGroup, apiCompatibilityLevel, scriptingImplementation, targetPath),
-                testAuthDataSet.GetAdminData(forceIndex: optionalTestDataIndex));
-        }
-
-        public TestAuthDataSets ParseTestAuthDataSetArg(IDictionary<string, string> args, out int? forceDataSetIndex)
-        {
-            if (!args.ContainsKey(StreamBase64TestDataArgKey))
-            {
-                throw new ArgumentException($"Tests CLI - Missing argument: `{StreamBase64TestDataArgKey}`");
-            }
-
-            if (!args.ContainsKey(TestDataSetIndexArgKey))
-            {
-                Debug.LogWarning($"Tests CLI - Missing argument: {nameof(TestDataSetIndexArgKey)}. Ignored");
-            }
-
-            forceDataSetIndex = GetOptionalTestDataIndex();
-            var base64TestAuthDataSet = args[StreamBase64TestDataArgKey];
-
-            return DeserializeFromBase64(base64TestAuthDataSet);
-            
-            int? GetOptionalTestDataIndex()
-            {
-                if (!args.TryGetValue(TestDataSetIndexArgKey, out var arg))
-                {
-                    return default;
-                }
-
-                return int.Parse(arg);
-            }
-        }
-        
-        public TestAuthDataSets DeserializeFromBase64(string urlSafeBase64)
-        {
-            Debug.Log($"Test Data Set. URL-safe Base 64 encoded length: {urlSafeBase64.Length}");
-
-            var base64Set = UrlSafeBase64ToBase64(urlSafeBase64);
-            var decodedBytes = Convert.FromBase64String(base64Set);
-
-            var decodedString = DecompressString(decodedBytes);
-            Debug.Log($"Test Data Set. Decompressed to UTF8 string length: {decodedString.Length}");
-            
-            var serializer = new NewtonsoftJsonSerializer();
-            var testAuthDataSet =  serializer.Deserialize<TestAuthDataSets>(decodedString);
-            Debug.Log($"Test Data Set. Admin sets: {testAuthDataSet.Admins.Length}, User sets: {testAuthDataSet.Users.Length}");
-
-            return testAuthDataSet;
-        }
-
-        private static string UrlSafeBase64ToBase64(string urlSafeBase64)
-        {
-            var result = urlSafeBase64.Replace('_', '/').Replace('-', '+');
-            switch(urlSafeBase64.Length % 4) {
-                case 2: result += "=="; break;
-                case 3: result += "="; break;
-            }
-
-            return result;
-        }
-        
-        private static string DecompressString(byte[] bytes)
-        {
-            using (var memoryStream = new MemoryStream(bytes))
-            {
-                using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
-                {
-                    using (var reader = new StreamReader(gzipStream, Encoding.UTF8))
-                    {
-                        return reader.ReadToEnd();
-                    }
-                }
-            }
+            return new BuildSettings(buildTargetGroup, apiCompatibilityLevel, scriptingImplementation, targetPath);
         }
 
         private static BuildTargetGroup GetBuildTargetGroup(BuildTargetPlatform targetPlatform)

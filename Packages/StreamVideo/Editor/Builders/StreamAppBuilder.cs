@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using StreamVideo.Libs.Auth;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -9,7 +8,7 @@ namespace StreamVideo.EditorTools.Builders
 {
     public class StreamAppBuilder
     {
-        public BuildReport BuildSampleApp(BuildSettings settings, AuthCredentials authCredentials)
+        public BuildReport BuildSampleApp(BuildSettings settings)
         {
             var buildTarget = GetBuildTargetFromGroup(settings.BuildTargetGroup);
 
